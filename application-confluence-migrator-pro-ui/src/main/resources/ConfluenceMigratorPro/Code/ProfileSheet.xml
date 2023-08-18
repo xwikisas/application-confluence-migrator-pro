@@ -64,9 +64,9 @@
         &lt;input type="text" id="xwikidoctitleinput" name="title" value="" class=""
           placeholder="$!escapetool.xml($services.localization.render('confluencepro.profile.title.placeholder'))"&gt;
         #if ("$!request.package" != '')
-          &lt;input class="form-control" type="hidden" 
-            name="ConfluenceMigratorPro.Code.ProfileClass_0_package" 
-            id="ConfluenceMigratorPro.Code.ProfileClass_0_package" 
+          &lt;input class="form-control" type="hidden"
+            name="ConfluenceMigratorPro.Code.ProfileClass_0_package"
+            id="ConfluenceMigratorPro.Code.ProfileClass_0_package"
             value="$!escapetool.xml($request.package)" /&gt;
         #end
       &lt;/dd&gt;
@@ -76,8 +76,8 @@
 
 #end
 #**
- * The view of the Migration when the context action is `view`. If the `package` of the object is populated 
- * and the `executed` flag is set to false, execute the migration for that package. Otherwise, display the 
+ * The view of the Migration when the context action is `view`. If the `package` of the object is populated
+ * and the `executed` flag is set to false, execute the migration for that package. Otherwise, display the
  * report of the execution.
  *#
 #macro(docView)
@@ -123,46 +123,40 @@
   ## Migrated with issues section
   #set ($json = $obj.getProperty('problems').value)
   #set ($jsonObject = $jsontool.fromString($json))
-  #if ($jsonObject.keySet().size() &gt; 0)
-    #displaySubtitle('warning', 'confluencepro.profile.raport.problems.done.title', '', [$jsonObject.keySet().size()])
-    #displayJson($jsonObject)
-  #end
+  #displaySubtitle('warning', 'confluencepro.profile.raport.problems.done.title', '', [$jsonObject.keySet().size()])
+  #displayJson($jsonObject)
   ## Skipped section
   #set ($json = $obj.getProperty('skipped').value)
   #set ($jsonObject = $jsontool.fromString($json))
-  #if ($jsonObject.keySet().size() &gt; 0)
-    #displaySubtitle('cross', 'confluencepro.profile.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
-    #displayJson($jsonObject)
-  #end
+  #displaySubtitle('cross', 'confluencepro.profile.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
+  #displayJson($jsonObject)
   ## Other issues section
-  #if ($jsonObject.keySet().size() &gt; 0)
-    #set ($json = $obj.getProperty('otherIssues').value)
-    #set ($jsonObject = $jsontool.fromString($json))
-    #set ($errors = $jsonObject.get('ERROR'))
-    #set ($warns = $jsonObject.get('WARN'))
-    #set ($problems = 0)
-    #if ($errors.size() &gt; 0)
-      #set ($problems = $problems + $errors.size())
-    #end
-    #if ($warns.size() &gt; 0)
-      #set ($problems = $problems + $warns.size())
-    #end
-    #displaySubtitle('question', 'confluencepro.profile.raport.problems.other.title', '', [$problems])
-    &lt;div class="cfm-problem-pages"&gt;
-    #foreach ($entry in $jsonObject.entrySet())
-      &lt;div class="cfm-problem-page"&gt;
-        &lt;div class="cfm-page"&gt;
-          $escapetool.xml($entry.key)
-        &lt;/div&gt;
-        &lt;div class="cfm-problems"&gt;
-          #foreach ($problem in $entry.value)
-            &lt;div class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/div&gt;
-          #end
-        &lt;/div&gt;
+  #set ($json = $obj.getProperty('otherIssues').value)
+  #set ($jsonObject = $jsontool.fromString($json))
+  #set ($errors = $jsonObject.get('ERROR'))
+  #set ($warns = $jsonObject.get('WARN'))
+  #set ($problems = 0)
+  #if ($errors.size() &gt; 0)
+    #set ($problems = $problems + $errors.size())
+  #end
+  #if ($warns.size() &gt; 0)
+    #set ($problems = $problems + $warns.size())
+  #end
+  #displaySubtitle('question', 'confluencepro.profile.raport.problems.other.title', '', [$problems])
+  &lt;div class="cfm-problem-pages"&gt;
+  #foreach ($entry in $jsonObject.entrySet())
+    &lt;div class="cfm-problem-page"&gt;
+      &lt;div class="cfm-page"&gt;
+        $escapetool.xml($entry.key)
       &lt;/div&gt;
-    #end
+      &lt;div class="cfm-problems"&gt;
+        #foreach ($problem in $entry.value)
+          &lt;div class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/div&gt;
+        #end
+      &lt;/div&gt;
     &lt;/div&gt;
   #end
+  &lt;/div&gt;
   ## Logs section
   #set ($json = $obj.getProperty('logs').value)
   #set ($jsonObject = $jsontool.fromString($json))
