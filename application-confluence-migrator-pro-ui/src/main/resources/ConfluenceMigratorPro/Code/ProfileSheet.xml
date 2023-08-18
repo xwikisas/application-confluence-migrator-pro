@@ -1,0 +1,330 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.ProfileSheet" locale="">
+  <web>ConfluenceMigratorPro.Code</web>
+  <name>ProfileSheet</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <originalMetadataAuthor>XWiki.superadmin</originalMetadataAuthor>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
+
+{{velocity output="false"}}
+#set ($discard = $xwiki.jsfx.use('uicomponents/job/job.js', true))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobRequestFix'))
+#set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.Code.ProfileSheetExtensions'))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.ProfileSheetExtensions'))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobDoneEventEmitter'))
+#**
+ * The view of the Migration when it is created. The title needs to be set and, if the request contains it,
+ * the package field of the object is populated.
+ *#
+#macro(newDocView)
+
+  {{html}}
+  &lt;div class="xform"&gt;
+    ## &lt;input type="hidden" name="form_token" value="$!escapetool.xml($services.csrf.token)" /&gt;
+    &lt;dl id="titleinput" class="form-group"&gt;
+      &lt;dt&gt;
+        &lt;label for="xwikidoctitleinput"&gt;
+          &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.profile.title.label'))&lt;/h2&gt;
+        &lt;/label&gt;
+      &lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;input type="text" id="xwikidoctitleinput" name="title" value="" class=""
+          placeholder="$!escapetool.xml($services.localization.render('confluencepro.profile.title.placeholder'))"&gt;
+        #if ("$!request.package" != '')
+          &lt;input class="form-control" type="hidden" 
+            name="ConfluenceMigratorPro.Code.ProfileClass_0_package" 
+            id="ConfluenceMigratorPro.Code.ProfileClass_0_package" 
+            value="$!escapetool.xml($request.package)" /&gt;
+        #end
+      &lt;/dd&gt;
+    &lt;/dl&gt;
+  &lt;/div&gt;
+  {{/html}}
+
+#end
+#**
+ * The view of the Migration when the context action is `view`. If the `package` of the object is populated 
+ * and the `executed` flag is set to false, execute the migration for that package. Otherwise, display the 
+ * report of the execution.
+ *#
+#macro(docView)
+  ## Handle the upload and selection of a package using the attachment picker.
+  #if ("$request.package" != '' &amp;&amp; $services.csrf.isTokenValid($request.form_token))
+    #set ($discard = $doc.set('package', $request.package))
+    #set ($discard = $doc.save())
+  #end
+  ## End of upload handling.
+  #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.ProfileClass'))
+  #if ($obj.getProperty('executed').value == 1)
+    #displayRaport($obj)
+  #else
+    #runAndDisplayJob($obj)
+  #end
+#end
+#**
+ * Display a raport of the last executed job on this page.
+ *#
+#macro(displayRaport $obj)
+
+  {{html}}
+  #set ($discard = $xwiki.ssfx.use('uicomponents/logging/logging.css', true))
+  #set ($discard = $xwiki.jsfx.use('uicomponents/logging/logging.js', true))
+  ## Spaces section
+  #set ($spaces = $obj.getProperty('spaces').value)
+  &lt;div class="cfmSheetHeaderGroup"&gt;
+    #displaySubtitle('check', 'confluencepro.profile.raport.imported.title', '', [$spaces.size()])
+    &lt;button id="cfmResetMigration" type="button" class="btn btn-warning"&gt;
+      $escapetool.xml($services.localization.render('confluencepro.profile.raport.reset.button'))
+    &lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div class="imported-spaces"&gt;
+  #set ($options = {})
+  #foreach ($space in $spaces)
+    #set ($discard = $options.put('root', "document:xwiki:${space}.WebHome"))
+    #set ($discard = $options.put('showRoot', 'true'))
+    #set ($discard = $options.put('links', 'true'))
+    &lt;div class="imported-space"&gt;
+      #documentTree($options)
+    &lt;/div&gt;
+  #end
+  ## Migrated with issues section
+  #set ($json = $obj.getProperty('problems').value)
+  #set ($jsonObject = $jsontool.fromString($json))
+  #if ($jsonObject.keySet().size() &gt; 0)
+    #displaySubtitle('warning', 'confluencepro.profile.raport.problems.done.title', '', [$jsonObject.keySet().size()])
+    #displayJson($jsonObject)
+  #end
+  ## Skipped section
+  #set ($json = $obj.getProperty('skipped').value)
+  #set ($jsonObject = $jsontool.fromString($json))
+  #if ($jsonObject.keySet().size() &gt; 0)
+    #displaySubtitle('cross', 'confluencepro.profile.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
+    #displayJson($jsonObject)
+  #end
+  ## Other issues section
+  #if ($jsonObject.keySet().size() &gt; 0)
+    #set ($json = $obj.getProperty('otherIssues').value)
+    #set ($jsonObject = $jsontool.fromString($json))
+    #set ($errors = $jsonObject.get('ERROR'))
+    #set ($warns = $jsonObject.get('WARN'))
+    #set ($problems = 0)
+    #if ($errors.size() &gt; 0)
+      #set ($problems = $problems + $errors.size())
+    #end
+    #if ($warns.size() &gt; 0)
+      #set ($problems = $problems + $warns.size())
+    #end
+    #displaySubtitle('question', 'confluencepro.profile.raport.problems.other.title', '', [$problems])
+    &lt;div class="cfm-problem-pages"&gt;
+    #foreach ($entry in $jsonObject.entrySet())
+      &lt;div class="cfm-problem-page"&gt;
+        &lt;div class="cfm-page"&gt;
+          $escapetool.xml($entry.key)
+        &lt;/div&gt;
+        &lt;div class="cfm-problems"&gt;
+          #foreach ($problem in $entry.value)
+            &lt;div class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/div&gt;
+          #end
+        &lt;/div&gt;
+      &lt;/div&gt;
+    #end
+    &lt;/div&gt;
+  #end
+  ## Logs section
+  #set ($json = $obj.getProperty('logs').value)
+  #set ($jsonObject = $jsontool.fromString($json))
+  #displaySubtitle('info', 'confluencepro.profile.raport.logs.title', '', [])
+  &lt;ul class="log"&gt;
+  #foreach ($log in $jsonObject)
+    &lt;li class="log-item log-item-$!{log.level.toLowerCase()}"&gt;
+      &lt;div&gt;
+        $escapetool.xml($log.message)
+      &lt;/div&gt;
+    #if ($log.throwable)
+      &lt;div class="stacktrace"&gt;
+        $escapetool.xml($log.throwable)
+      &lt;/div&gt;
+    #end
+    &lt;/li&gt;
+  #end
+  &lt;/ul&gt;
+  {{/html}}
+
+#end
+#**
+ * Display the properties of a json in a structured way.
+ * @param $jsonObject the json that needs displaying. It should have the pattern: { key1: [vals..], key2: [vals..], ..}
+ *#
+#macro(displayJson $jsonObject)
+  &lt;div class="cfm-problem-pages"&gt;
+  #foreach ($entry in $jsonObject.entrySet())
+    #set ($docRef = $services.model.resolveDocument($entry.key))
+    &lt;div class="cfm-problem-page"&gt;
+      &lt;div class="cfm-page"&gt;
+        &lt;a href="$escapetool.xml($xwiki.getURL($docRef))"&gt;$escapetool.xml($docRef.name)&lt;/a&gt;
+      &lt;/div&gt;
+      &lt;div class="cfm-problems"&gt;
+        #foreach ($problem in $entry.value)
+          &lt;div class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/div&gt;
+        #end
+      &lt;/div&gt;
+    &lt;/div&gt;
+  #end
+  &lt;/div&gt;
+#end
+#**
+ * Run the migration job if the `executed` is false and if there is a `package` set. Display the status and the logs of the job.
+ *
+ * @param $obj the migration object of this page.
+ *#
+#macro(runAndDisplayJob $obj)
+  ## Either start of display job.
+  #set ($confluenceJob = $services.confluencemigration.getLastJob($doc.documentReference))
+  #set ($package = $obj.getProperty('package').value)
+  #if ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED')
+    #if ("$!package" != '')
+      #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
+      #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
+      #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
+      #set ($confluenceJob = $services.confluencemigration.migrate($doc.documentReference, $attachDoc.getAttachment($attachRef.name).getContentInputStream()))
+      #displayJob($confluenceJob)
+    #else
+      No package to start the migration
+      #displayZipPickerForm
+    #end
+  #else
+    #displayJob($confluenceJob)
+  #end
+#end
+#**
+ * Display the job.
+ *
+ * @param $confluenceJob the job that will be displayed.
+ *#
+#macro(displayJob $confluenceJob)
+
+  #set ($jobStatusURL = $doc.getURL('ConfluenceMigratorPro.Code.JobJSON', 'get', $escapetool.url({
+    'outputSyntax': 'plain',
+    'docRef': $services.model.serialize($doc.documentReference)
+  })))
+  {{html}}
+  #template('job_macros.vm')
+  #set ($jobStatus = $confluenceJob.status)
+  #set ($jobState = $jobStatus.state)
+  #set ($finished = $jobState == 'FINISHED')
+  #set ($jobRequest = $jobStatus.request)
+  #if (!$jobStatusURL)
+    #set ($jobStatusURL = $doc.getURL('get', $escapetool.url({
+      'xpage': 'job_status_json',
+      'outputSyntax': 'plain',
+      'jobId': $jobRequest.id,
+      'translationPrefix': $translationPrefix
+    })))
+  #end
+  &lt;div class="xcontent job-status" data-url="$escapetool.xml($jobStatusURL)"&gt;
+    &lt;div class="job-loading-status"&gt;
+      &lt;div class="loading-icon loading"&gt;&lt;/div&gt;
+      &lt;span class="loading-text"&gt;$escapetool.xml($services.localization.render('confluencepro.job.status.readingPackage'))&lt;/span&gt;
+    &lt;/div&gt;
+    #set($titleKey = "${translationPrefix}.label")
+    #if ($services.localization.get($titleKey))
+      &lt;h2&gt;$services.localization.render($titleKey)&lt;/h2&gt;
+      #set($titleHintKey = "${translationPrefix}.hint")
+      #if ($services.localization.get($titleHintKey))
+        &lt;p class="text-muted small"&gt;$services.localization.render($titleHintKey)&lt;/p&gt;
+      #end
+    #end
+    #if (!$finished)
+      #displayJobProgressBar($jobStatus)
+      #displayJobQuestion($jobStatus)
+    #else
+      #jobFinishedMessage($status, $translationPrefix)
+    #end
+    #if ($showLogs || $isAdvancedUser || $isSuperAdmin)
+      #displayJobStatusLog($jobStatus true)
+    #end
+  &lt;/div&gt;
+  {{/html}}
+
+#end
+#**
+ * Display a form with a zip picker and a submit button.
+ *#
+#macro(displayZipPickerForm)
+
+  {{html clean="false"}}
+  &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.zippicker.title'))&lt;/h2&gt;
+  &lt;form class="xform"&gt;
+  &lt;input type="hidden" name="form_token" value="$!escapetool.xml($services.csrf.token)" /&gt;
+  #set ($zipExtension = '.zip')
+  #set ($zipMediaType = 'application/zip')
+  #set ($parameters = {
+      'data-upload-allowed': $services.security.authorization.hasAccess('edit'),
+      'data-accept': "$zipExtension, $zipMediaType",
+      'placeholder': $services.localization.render('confluencepro.zippicker.placeholder'),
+      'name': 'package',
+      'data-document-reference': 'ConfluenceMigratorPro.WebHome'
+  })
+  #set ($discard = $parameters.put('class', "$!parameters.get('class') pick-attachment-resource"))
+  #attachmentPicker_import
+  #suggestInput($parameters)
+  &lt;button type="submit" class="btn btn-primary"&gt;
+  $escapetool.xml($services.localization.render('confluencepro.zippicker.button.submit'))
+  &lt;/button&gt;
+  &lt;/form&gt;
+  {{/html}}
+
+#end
+{{/velocity}}
+
+{{template name="documentTree_macros.vm" /}}
+
+{{velocity}}
+#set ($discard = $doc.use('ConfluenceMigratorPro.Code.ProfileClass'))
+#if ($xcontext.action == 'edit' || $xcontext.action == 'admin')
+  #if ($doc.isNew())
+    #newDocView
+  #else
+  #end
+#elseif ($hasAdmin)
+  #docView
+#else
+  {{error}}
+  {{translation key="confluencepro.norights" /}}
+  {{/error}}
+#end
+{{/velocity}}</content>
+</xwikidoc>

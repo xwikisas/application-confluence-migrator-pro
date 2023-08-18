@@ -1,0 +1,6 @@
+com.xwiki.confluencepro.ConfluenceMigrationScriptService
+com.xwiki.confluencepro.internal.ConfluenceMigrationJob
+com.xwiki.confluencepro.internal.DefaultConfluenceMigratorManager
+com.xwiki.confluencepro.internal.DefaultConfluenceMigratorPrerequisites
+com.xwiki.confluencepro.internal.listener.ConfluenceJobDoneListener
+com.xwiki.confluencepro.internal.ConfluencePackageReadListener

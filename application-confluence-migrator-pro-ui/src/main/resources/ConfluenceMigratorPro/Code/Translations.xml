@@ -1,0 +1,140 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.Translations" locale="">
+  <web>ConfluenceMigratorPro.Code</web>
+  <name>Translations</name>
+  <language/>
+  <defaultLanguage>en</defaultLanguage>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <originalMetadataAuthor>XWiki.superadmin</originalMetadataAuthor>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>Translations</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>plain/1.0</syntaxId>
+  <hidden>true</hidden>
+  <content>confluencepro.panel.title=Confluence Migrator Pro
+
+confluencepro.zippicker.title=Select a confluence package to start the migration
+confluencepro.zippicker.placeholder=Pick a confluence export package...
+confluencepro.zippicker.button.submit=Migrate
+
+confluencepro.norights=Only the admin can perform the migration.
+confluencepro.upload.submit=Upload new package
+confluencepro.upload.cancel=Cancel selection
+
+confluencepro.packages.title=Step 2 - Choose a backup package
+confluencepro.profiles.title=Your migrations
+
+confluencepro.prerequisites.title=Step 1 - Prerequisites
+confluencepro.prerequisites.hint=It is highly recommended to have all the prerequisites satisfied before proceeding with the migration.
+confluencepro.prerequisites.completed=completed
+confluencepro.prerequisites.incomplete=not completed
+confluencepro.prerequisites.memory=Set -Xmx ({0}) and -Xms ({1}) to at least half the memory of the machine ({2} for {3} RAM).
+confluencepro.prerequisites.notifications=Deactivate notifications in "xwiki.properties": "notifications.enabled" and "notifications.emails.enabled" (optional).
+confluencepro.prerequisites.userNotifications=Deactivate notifications on your own profile ("never" for automatic page watching, disable page notifications).
+confluencepro.prerequisites.userNotificationsCleanup=Clean the Notification Preferences (optional).
+confluencepro.prerequisites.solr=To minimize migration duration, we recommend to ensure that the Solr queue is empty before starting the migration. Check the Solr queue size in the Wiki Administration, Solr Search Section (optional).
+confluencepro.prerequisites.listener.docMoved=Deactivate Document Moved Listener (important for large spaces).
+confluencepro.prerequisites.listener.automaticWatch=Deactivate Automatic Watch Mode Listener (important for large spaces).
+confluencepro.prerequisites.listener.liveNotification=Deactivate Live Notification Email Listener (important for large spaces).
+
+confluencepro.profile.raport.imported.title=The imported pages from the {0} selected Confluence Space(s).
+confluencepro.profile.raport.logs.title=The logs of the migration.
+confluencepro.profile.raport.reset.button=Restart the migration
+confluencepro.profile.raport.reset.fail=Failed to restart the migration
+confluencepro.profile.raport.reset.success=Restarting migration
+confluencepro.profile.raport.reset.progress=Sending request
+confluencepro.profile.raport.problems.skipped.title={0} page(s) have encountered critical issues during the import.
+confluencepro.profile.raport.problems.done.title={0} page(s) have encountered non-critical issues during the import.
+confluencepro.profile.raport.problems.other.title={0} other issue(s) were encountered during the import.
+
+confluencepro.profile.title.label=Set the title of the migration
+confluencepro.profile.title.placeholder=Type the desired title...
+
+confluencepro.profile.livetable.doc.title =Profile
+confluencepro.profile.livetable._actions=Actions
+confluencepro.profile.livetable._actions.select=Select package
+confluencepro.profile.livetable.job_status=Migration status
+confluencepro.profile.livetable.executed=Is executed?
+confluencepro.profile.livetable.doc.date=Creation date
+confluencepro.profile.livetable.doc.author=Creator
+confluencepro.profile.livetable.state.running=Running
+confluencepro.profile.livetable.state.none=Not started
+confluencepro.profile.livetable.state.waiting=Waiting
+confluencepro.profile.livetable.state.done=Done
+
+confluencepro.profile.popup.title=Insert the title of the profile
+confluencepro.profile.popup.placeholder=Type the profile title...
+confluencepro.profile.popup.startMigration=Start migration
+
+confluencepro.job.question.title=Select the Confluence spaces that you want to be imported.
+confluencepro.job.question.additionalInfo.documentsCount=Documents:
+confluencepro.job.question.additionalInfo.attachmentsCount=Attachments:
+confluencepro.job.question.selectAll=Select all
+confluencepro.job.question.search.placeholder=Search for a space...
+confluencepro.job.question.showMore.message={0} more spaces available.
+confluencepro.job.question.showMore.link=Load more..
+confluencepro.job.status.readingPackage=Analyzing the confluence package...</content>
+  <object>
+    <name>ConfluenceMigratorPro.Code.Translations</name>
+    <number>0</number>
+    <className>XWiki.TranslationDocumentClass</className>
+    <guid>d7080879-050f-4548-8212-19b448cbc015</guid>
+    <class>
+      <name>XWiki.TranslationDocumentClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <scope>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>scope</name>
+        <number>1</number>
+        <prettyName>Scope</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>GLOBAL|WIKI|USER|ON_DEMAND</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </scope>
+    </class>
+    <property>
+      <scope>WIKI</scope>
+    </property>
+  </object>
+</xwikidoc>

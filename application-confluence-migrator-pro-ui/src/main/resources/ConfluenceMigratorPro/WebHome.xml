@@ -1,0 +1,304 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.WebHome" locale="">
+  <web>ConfluenceMigratorPro</web>
+  <name>WebHome</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>Main.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <originalMetadataAuthor>XWiki.superadmin</originalMetadataAuthor>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>ConfluenceMigratorPro</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
+
+{{velocity output="false"}}
+#template('attachment_macros.vm')
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JavaScript'))
+{{/velocity}}
+
+{{velocity}}
+## Prerequisites Section ##
+#set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
+#set ($prerequisitesComplete = 'completed')
+#macro (addPrerequisiteToList $list $icon $translationKey $url $params)
+  #if ($icon != 'check')
+    #set ($prerequisitesComplete = 'incomplete')
+  #end
+  #set ($discard = $list.add({
+    'icon': $icon,
+    'translationKey': "confluencepro.prerequisites.$translationKey",
+    'url': "$!url",
+    'params': $params
+  }))
+#end
+#set ($prerequisites = [])
+#addPrerequisiteToList($prerequisites, $services.confluencemigration.checkMemory(), 'memory', 'https://www.xwiki.org/xwiki/bin/view/Documentation/AdminGuide/Performances/#HMemory', [$services.confluencemigration.xmx, $services.confluencemigration.xms, $mathtool.div($services.confluencemigration.memory, 2), $services.confluencemigration.memory])
+#addPrerequisiteToList($prerequisites, $services.confluencemigration.checkWikiNotifications(), 'notifications', 'https://extensions.xwiki.org/xwiki/bin/view/Extension/Notifications%20Application/#HEnableanddisabletheextension')
+#addPrerequisiteToList($prerequisites, $services.confluencemigration.checkCurrentUserNotification(), 'userNotifications', $xwiki.getURL($xcontext.userReference, 'view', 'category=notifications'))
+#addPrerequisiteToList($prerequisites, $services.confluencemigration.checkCurrentUserNotificationCleanup(), 'userNotificationsCleanup', '')
+#set ($searchAdminSectionURL = $xwiki.getURL('XWiki.XWikiPreferences', 'admin', 'editor=globaladmin&amp;amp;section=Search'))
+#set ($solrQueuePrerequisiteIcon = "exclamation")
+#if ($services.solr.getQueueSize() == 0)
+  #set ($solrQueuePrerequisiteIcon = "check")
+#end
+#addPrerequisiteToList($prerequisites, $solrQueuePrerequisiteIcon, 'solr', $searchAdminSectionURL)
+#set ($listenerAdminDoc = $xwiki.getDocument('XWiki.ListenerAdmin'))
+#set ($automaticWatchURL = $listenerAdminDoc.getURL('view', '#|t=listeners&amp;amp;listenerClass=AutomaticWatchModeListener'))
+#set ($liveNotificationURL = $listenerAdminDoc.getURL('view', '#|t=listeners&amp;amp;listenerClass=LiveNotificationEmailListener'))
+#set ($documentMovedURL = $listenerAdminDoc.getURL('view', '#|t=listeners&amp;amp;listenerClass=DocumentMovedListener'))
+#addPrerequisiteToList($prerequisites, $services.confluencemigration.checkListener('org.xwiki.notifications.filters.internal.DocumentMovedListener', true), 'listener.docMoved', $documentMovedURL)
+#addPrerequisiteToList($prerequisites, $services.confluencemigration.checkListener('org.xwiki.notifications.filters.watch.internal.AutomaticWatchModeListener', true), 'listener.automaticWatch', $automaticWatchURL)
+#addPrerequisiteToList($prerequisites, $services.confluencemigration.checkListener('org.xwiki.notifications.notifiers.internal.email.live.LiveNotificationEmailListener', true), 'listener.liveNotification', $liveNotificationURL)
+{{html}}
+&lt;a role="button" data-toggle="collapse" href="#cfmPrerequisitesCollapse" aria-expanded="false" aria-controls="cfmPrerequisitesCollapse"&gt;
+#displaySubtitle('caret-down', 'confluencepro.prerequisites.title', $prerequisitesComplete)
+&lt;/a&gt;
+
+&lt;div id="cfmPrerequisitesCollapse" class="cfmPrerequisites collapse"&gt;
+  &lt;div class="box infomessage"&gt;
+    &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.prerequisites.hint'))&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;ul&gt;
+  #foreach($prerequisite in $prerequisites)
+    &lt;li&gt;
+      $services.icon.renderHTML($prerequisite.icon)
+      #if ("$prerequisite.url" != '')
+        &lt;a href="$prerequisite.url" target="_blank"&gt;
+          $escapetool.xml($services.localization.render($prerequisite.translationKey, $prerequisite.params))
+        &lt;/a&gt;
+      #else
+        $escapetool.xml($services.localization.render($prerequisite.translationKey, $prerequisite.params))
+      #end
+    &lt;/li&gt;
+  #end
+  &lt;/ul&gt;
+&lt;/div&gt;
+{{/html}}
+{{/velocity}}
+
+{{velocity}}
+{{html}}
+#displaySubtitle('cube', 'confluencepro.packages.title')
+{{/html}}
+
+#showAttachmentsLiveData($doc 'confluencePackages')
+
+{{html}}
+#if($hasEdit || $hasAdmin)
+  &lt;form  action="$doc.getURL("upload")" enctype="multipart/form-data" method="post" id="AddAttachment"&gt;
+  &lt;div&gt;
+  ## CSRF prevention
+  &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
+  &lt;fieldset id="attachform"&gt;
+    &lt;div class="fileupload-field"&gt;&lt;label class="sr-only" for="xwikiuploadfile"&gt;$services.localization.render('core.viewers.attachments.upload.file')&lt;/label&gt;&lt;input id="xwikiuploadfile" type="file" name="filepath" size="40" class="uploadFileInput noitems" data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;&lt;/div&gt;
+    &lt;div&gt;
+      &lt;span class="buttonwrapper"&gt;&lt;input type="submit" value="$escapetool.xml($services.localization.render('confluencepro.upload.submit'))" class="button btn btn-primary"/&gt;&lt;/span&gt;
+      &lt;span class="buttonwrapper"&gt;&lt;a class="cancel secondary button btn btn-primary" href="$doc.getURL()"&gt;$escapetool.xml($services.localization.render('confluencepro.upload.cancel'))&lt;/a&gt;&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
+  &lt;/div&gt;
+  &lt;/form&gt;
+#end
+
+
+&lt;div class="modal fade profileNameModal" tabindex="-1" role="dialog"&gt;
+  &lt;div class="modal-dialog modal-lg"&gt;
+    &lt;div class="modal-content"&gt;
+      &lt;div class="modal-header"&gt;
+        &lt;button type="button" class="close" data-dismiss="modal"&gt;&amp;times;&lt;/button&gt;
+        &lt;div class="modal-title"&gt;$escapetool.xml($services.localization.render('confluencepro.profile.popup.title'))&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="modal-body xform"&gt;
+        &lt;div class="imageEditor" data-src="$escapetool.xml($services.model.serialize($attachment.getReference()))"&gt;&lt;/div&gt;
+        &lt;input id="confluence-profile-name" type="text" placeholder="$escapetool.xml($services.localization.render('confluencepro.profile.popup.placeholder'))"/&gt;
+      &lt;/div&gt;
+      &lt;div class="modal-footer"&gt;
+        &lt;input type="button" class="btn btn-primary save"  data-dismiss="modal"
+          value="$escapetool.xml($services.localization.render('confluencepro.profile.popup.startMigration'))" data-filename="$attachment.getFilename()"&gt;
+        &lt;input type="button" class="btn btn-default" data-dismiss="modal"
+          value="$escapetool.xml($services.localization.render('cancel'))"&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+#displaySubtitle('book', 'confluencepro.profiles.title')
+{{/html}}
+
+#displayProfilesLiveData
+{{/velocity}}</content>
+  <object>
+    <name>ConfluenceMigratorPro.WebHome</name>
+    <number>0</number>
+    <className>XWiki.StyleSheetExtension</className>
+    <guid>10c7fd81-0e12-4c75-b5bb-ac8bfb9e5252</guid>
+    <class>
+      <name>XWiki.StyleSheetExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <contentType>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>contentType</name>
+        <number>6</number>
+        <prettyName>Content Type</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>CSS|LESS</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </contentType>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>.cfmPrerequisites ul{
+  list-style: none;
+}
+
+.cfmTitle.active .cfmTitleIcon {
+  -webkit-transform: rotate(180deg);
+  -moz-transform: rotate(180deg);
+  transform: rotate(180deg);
+}
+
+.cfmTitle a {
+  color: inherit;
+}
+
+.cfmTitle::after {
+  font-style: italic;
+  color: #bbb;
+  margin-left: 0.5em;
+}
+
+.cfmTitle.completed::after {
+  content: "(${services.localization.render('confluencepro.prerequisites.completed')})"
+}
+
+.cfmTitle.incomplete::after {
+  content: "(${services.localization.render('confluencepro.prerequisites.incomplete')})"
+}</code>
+    </property>
+    <property>
+      <contentType>CSS</contentType>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>1</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+</xwikidoc>
