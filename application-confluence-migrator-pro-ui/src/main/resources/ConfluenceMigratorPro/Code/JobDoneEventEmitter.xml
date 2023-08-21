@@ -27,7 +27,7 @@
   <defaultLanguage/>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
-  <parent>ConfluenceMigratorPro.Code.ProfileSheetExtensions</parent>
+  <parent>ConfluenceMigratorPro.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
   <originalMetadataAuthor>XWiki.superadmin</originalMetadataAuthor>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>

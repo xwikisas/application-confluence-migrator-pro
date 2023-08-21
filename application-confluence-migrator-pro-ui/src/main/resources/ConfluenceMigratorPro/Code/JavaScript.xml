@@ -138,17 +138,6 @@
       package: package
     }));
   });
-  $('.collapse').on('show.bs.collapse', function () {
-    if ($(this).attr('id')) {
-      $('.cfmTitle a[href$="#' + $(this).attr('id') + '"]').parent().addClass('active');
-    }
-  });
-
-  $('.collapse').on('hide.bs.collapse', function () {
-    if ($(this).attr('id')) {
-      $('.cfmTitle a[href$="#' + $(this).attr('id') + '"]').parent().removeClass('active');
-    }
-  });
 });</code>
     </property>
     <property>

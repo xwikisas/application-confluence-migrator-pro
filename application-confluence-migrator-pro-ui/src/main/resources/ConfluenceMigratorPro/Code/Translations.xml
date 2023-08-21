@@ -63,15 +63,20 @@ confluencepro.prerequisites.listener.docMoved=Deactivate Document Moved Listener
 confluencepro.prerequisites.listener.automaticWatch=Deactivate Automatic Watch Mode Listener (important for large spaces).
 confluencepro.prerequisites.listener.liveNotification=Deactivate Live Notification Email Listener (important for large spaces).
 
+confluencepro.profile.raport.imported.success=Migration complete. See your report below.
 confluencepro.profile.raport.imported.title=The imported pages from the {0} selected Confluence Space(s).
 confluencepro.profile.raport.logs.title=The logs of the migration.
+confluencepro.profile.raport.viewall.button=View all migrations
 confluencepro.profile.raport.reset.button=Restart the migration
+confluencepro.profile.raport.reset.confirm=Are you sure you want to restart the migration?
 confluencepro.profile.raport.reset.fail=Failed to restart the migration
 confluencepro.profile.raport.reset.success=Restarting migration
 confluencepro.profile.raport.reset.progress=Sending request
 confluencepro.profile.raport.problems.skipped.title={0} page(s) have encountered critical issues during the import.
 confluencepro.profile.raport.problems.done.title={0} page(s) have encountered non-critical issues during the import.
 confluencepro.profile.raport.problems.other.title={0} other issue(s) were encountered during the import.
+confluencepro.profile.raport.problems.other.error=Encountered errors
+confluencepro.profile.raport.problems.other.warn=Encountered warnings
 
 confluencepro.profile.title.label=Set the title of the migration
 confluencepro.profile.title.placeholder=Type the desired title...

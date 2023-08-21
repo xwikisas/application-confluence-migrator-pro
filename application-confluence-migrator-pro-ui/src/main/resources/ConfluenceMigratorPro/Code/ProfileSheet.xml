@@ -42,8 +42,8 @@
 {{velocity output="false"}}
 #set ($discard = $xwiki.jsfx.use('uicomponents/job/job.js', true))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobRequestFix'))
-#set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.Code.ProfileSheetExtensions'))
-#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.ProfileSheetExtensions'))
+#set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.Code.ProfileSheet'))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.ProfileSheet'))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobDoneEventEmitter'))
 #**
  * The view of the Migration when it is created. The title needs to be set and, if the request contains it,
@@ -64,9 +64,9 @@
         &lt;input type="text" id="xwikidoctitleinput" name="title" value="" class=""
           placeholder="$!escapetool.xml($services.localization.render('confluencepro.profile.title.placeholder'))"&gt;
         #if ("$!request.package" != '')
-          &lt;input class="form-control" type="hidden"
-            name="ConfluenceMigratorPro.Code.ProfileClass_0_package"
-            id="ConfluenceMigratorPro.Code.ProfileClass_0_package"
+          &lt;input class="form-control" type="hidden" 
+            name="ConfluenceMigratorPro.Code.ProfileClass_0_package" 
+            id="ConfluenceMigratorPro.Code.ProfileClass_0_package" 
             value="$!escapetool.xml($request.package)" /&gt;
         #end
       &lt;/dd&gt;
@@ -76,8 +76,8 @@
 
 #end
 #**
- * The view of the Migration when the context action is `view`. If the `package` of the object is populated
- * and the `executed` flag is set to false, execute the migration for that package. Otherwise, display the
+ * The view of the Migration when the context action is `view`. If the `package` of the object is populated 
+ * and the `executed` flag is set to false, execute the migration for that package. Otherwise, display the 
  * report of the execution.
  *#
 #macro(docView)
@@ -99,27 +99,37 @@
  *#
 #macro(displayRaport $obj)
 
+  #if ("$request.displaySuccess" == '1')
+    {{success}}
+      $services.rendering.escape($services.localization.render('confluencepro.profile.raport.imported.success'), $xwiki.currentContentSyntaxId)
+    {{/success}}
+
+  #end
   {{html}}
   #set ($discard = $xwiki.ssfx.use('uicomponents/logging/logging.css', true))
   #set ($discard = $xwiki.jsfx.use('uicomponents/logging/logging.js', true))
   ## Spaces section
   #set ($spaces = $obj.getProperty('spaces').value)
-  &lt;div class="cfmSheetHeaderGroup"&gt;
-    #displaySubtitle('check', 'confluencepro.profile.raport.imported.title', '', [$spaces.size()])
-    &lt;button id="cfmResetMigration" type="button" class="btn btn-warning"&gt;
-      $escapetool.xml($services.localization.render('confluencepro.profile.raport.reset.button'))
-    &lt;/button&gt;
-  &lt;/div&gt;
-  &lt;div class="imported-spaces"&gt;
+  #displaySubtitle('check', 'confluencepro.profile.raport.imported.title', '', [$spaces.size()])
+  &lt;ul class="imported-spaces"&gt;
   #set ($options = {})
   #foreach ($space in $spaces)
-    #set ($discard = $options.put('root', "document:xwiki:${space}.WebHome"))
-    #set ($discard = $options.put('showRoot', 'true'))
-    #set ($discard = $options.put('links', 'true'))
-    &lt;div class="imported-space"&gt;
-      #documentTree($options)
-    &lt;/div&gt;
+    &lt;li&gt;
+      &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
+        &lt;div class="cfmTitleIcon"&gt;
+          $services.icon.renderHTML('caret-down')
+        &lt;/div&gt;
+        &lt;span&gt;$escapetool.xml($space)&lt;/span&gt;
+      &lt;/a&gt;
+      #set ($discard = $options.put('root', "document:xwiki:${space}.WebHome"))
+      #set ($discard = $options.put('links', 'true'))
+      #set ($discard = $options.put('compact', 'true'))
+      &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;
+        #documentTree($options)
+      &lt;/div&gt;
+    &lt;li&gt;
   #end
+  &lt;/ul&gt;
   ## Migrated with issues section
   #set ($json = $obj.getProperty('problems').value)
   #set ($jsonObject = $jsontool.fromString($json))
@@ -145,16 +155,23 @@
   #displaySubtitle('question', 'confluencepro.profile.raport.problems.other.title', '', [$problems])
   &lt;div class="cfm-problem-pages"&gt;
   #foreach ($entry in $jsonObject.entrySet())
-    &lt;div class="cfm-problem-page"&gt;
+    &lt;li class="cfm-problem-page"&gt;
       &lt;div class="cfm-page"&gt;
-        $escapetool.xml($entry.key)
+        &lt;a role="button" data-toggle="collapse" href="#cfmOtherIssues${foreach.count}" aria-expanded="false" aria-controls="cfmOtherIssues${foreach.count}"&gt;
+          &lt;div class="cfmTitleIcon"&gt;
+            $services.icon.renderHTML('caret-down')
+          &lt;/div&gt;
+        &lt;/a&gt;
+        $escapetool.xml($services.localization.render("confluencepro.profile.raport.problems.other.$entry.key.toLowerCase()"))
       &lt;/div&gt;
-      &lt;div class="cfm-problems"&gt;
-        #foreach ($problem in $entry.value)
-          &lt;div class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/div&gt;
-        #end
+      &lt;div id="cfmOtherIssues${foreach.count}" class="cfm-problems collapse"&gt;
+        &lt;ul&gt;
+          #foreach ($problem in $entry.value)
+            &lt;li class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/li&gt;
+          #end
+        &lt;/ul&gt;
       &lt;/div&gt;
-    &lt;/div&gt;
+    &lt;/li&gt;
   #end
   &lt;/div&gt;
   ## Logs section
@@ -175,6 +192,14 @@
     &lt;/li&gt;
   #end
   &lt;/ul&gt;
+  &lt;div class="cfmButtonGroup"&gt;
+    &lt;button id="cfmResetMigration" type="button" class="btn btn-default"&gt;
+      $escapetool.xml($services.localization.render('confluencepro.profile.raport.reset.button'))
+    &lt;/button&gt;
+    &lt;button class="btn btn-link"&gt;
+      &lt;a href="$xwiki.getURL($doc.documentReference.parent)"&gt;$escapetool.xml($services.localization.render('confluencepro.profile.raport.viewall.button'))&lt;/a&gt;
+    &lt;/button&gt;
+  &lt;/div&gt;
   {{/html}}
 
 #end
@@ -186,18 +211,40 @@
   &lt;div class="cfm-problem-pages"&gt;
   #foreach ($entry in $jsonObject.entrySet())
     #set ($docRef = $services.model.resolveDocument($entry.key))
-    &lt;div class="cfm-problem-page"&gt;
+    &lt;li class="cfm-problem-page"&gt;
       &lt;div class="cfm-page"&gt;
-        &lt;a href="$escapetool.xml($xwiki.getURL($docRef))"&gt;$escapetool.xml($docRef.name)&lt;/a&gt;
+        &lt;a role="button" data-toggle="collapse" href="#cfmPage${foreach.count}Issues" aria-expanded="false" aria-controls="cfmPage${foreach.count}Issues"&gt;
+          &lt;div class="cfmTitleIcon"&gt;
+            $services.icon.renderHTML('caret-down')
+          &lt;/div&gt;
+        &lt;/a&gt;
+        &lt;a href="$escapetool.xml($xwiki.getURL($docRef))"&gt;$escapetool.xml("#renderReferenceNicely($docRef)")&lt;/a&gt;
       &lt;/div&gt;
-      &lt;div class="cfm-problems"&gt;
-        #foreach ($problem in $entry.value)
-          &lt;div class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/div&gt;
-        #end
+      &lt;div id="cfmPage${foreach.count}Issues" class="cfm-problems collapse"&gt;
+        &lt;ul&gt;
+          #foreach ($problem in $entry.value)
+            &lt;li class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/li&gt;
+          #end
+        &lt;/ul&gt;
       &lt;/div&gt;
-    &lt;/div&gt;
+    &lt;/li&gt;
   #end
   &lt;/div&gt;
+#end
+#**
+ * @param $ref an entity reference.
+ * @return a string of the form space1 &gt; space2 &gt; ... &gt; spacen.
+ *#
+#macro (renderReferenceNicely $ref)
+  #set ($tmp = '')
+  #foreach ($space in $ref.spaceReferences)
+    #if ($foreach.count == 1)
+      #set ($tmp = $space.name)
+    #else
+      #set ($tmp = "$tmp &gt; $space.name")
+    #end
+  #end
+  $tmp
 #end
 #**
  * Run the migration job if the `executed` is false and if there is a `package` set. Display the status and the logs of the job.
@@ -321,4 +368,516 @@
   {{/error}}
 #end
 {{/velocity}}</content>
+  <object>
+    <name>ConfluenceMigratorPro.Code.ProfileSheet</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>8753e50f-2868-403d-9f62-7cbde9895a8f</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>define('confluence-job', {
+  prefix: 'confluencepro.job.question.',
+  keys: [
+    'additionalInfo.documentsCount',
+    'additionalInfo.attachmentsCount',
+    'showMore.message',
+    'showMore.link'
+  ]
+});
+require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($, l10n, JobRunner) {
+  let checkedValues = new Set();
+  // Send search request to server and update the displayed questions.
+  let searchAndDisplay = function (url, qSearch, offset) {
+    if (!url) {
+      return;
+    }
+    let template = $('.available-space.hidden');
+    $.getJSON(url + '&amp;qSearch=' + qSearch + '&amp;offset=' + offset)
+      .done(function (data) {
+        if (offset == 0) {
+          $('.available-space').each(function() {
+            if (this.className === 'available-space' &amp;&amp; !$(this).find('input').prop('checked')) {
+              this.remove();
+            }
+          });
+        }
+        data.results.forEach(function(space, index) {
+          if (checkedValues.has(space.reference)) {
+            return;
+          }
+          let element = template.clone();
+          element.toggleClass('hidden');
+          element.find('label')
+            .attr('for', 'confluence_space_' + index)
+            .append(document.createTextNode(space.reference));
+          element.find('input')
+              .attr('id', 'confluence_space_' + index)
+              .prop('disabled', false)
+              .val(space.reference);
+          $('.available-spaces').append(element);
+          for (const [key, value] of Object.entries(space.properties)) {
+            element.find('.cfmProperties').append('&lt;span&gt;' + l10n['additionalInfo.' + key] + ' ' + value + '&lt;/span&gt;');
+          }
+        });
+        let remaining = data.total - (offset + data.results.length);
+        if (remaining &gt; 0) {
+          $('.cfmShowMoreGroup').removeClass('hidden');
+          $('.cfmShowMoreMessage').text(l10n.get('showMore.message', remaining));
+          $('.cfmShowMoreLink').text(l10n.get('showMore.link')).data('offset', data.total - remaining);
+        } else {
+          $('.cfmShowMoreGroup').addClass('hidden');
+        }
+      });
+  };
+  let initQuestion = function () {
+    $('.job-loading-status').hide();
+    searchAndDisplay($('.cfmSearch input').data('url'), '', 0);
+  };
+  // Add listener to the show more link.
+  $(document).on('click', '.cfmShowMoreLink', function (event) {
+    event.preventDefault();
+    let offset = $(this).data('offset');
+    if (offset) {
+      searchAndDisplay($('.cfmSearch input').data('url'), $('.cfmSearch input').val(), offset);
+    }
+  });
+  // Add listener to job question search input.
+  let timeout;
+  $(document).on('input', '.cfmSearch input', function() {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    let input = $(this);
+    timeout = setTimeout(function () { searchAndDisplay(input.data('url'), input.val(), 0); }, 1000);
+  });
+  // Add listener to selectall checkbox.
+  $(document).on('change', '#cfmSelectAllInput', function () {
+    $('.available-space input').prop('checked', $(this).prop('checked'))
+  });
+  $(document).on('change', '.available-space input', function () {
+    if (!$(this).prop('checked')) {
+      checkedValues.delete($(this).val());
+      $('#cfmSelectAllInput').prop('checked', false);
+    } else {
+      checkedValues.add($(this).val());
+    }
+  });
+  $('.ui-question').each(function() {
+    let uiQuestion = $(this);
+    // Register for any event in the future
+    uiQuestion.on('job:question:loaded', initQuestion);
+  });
+  $('.job-status').on('xwiki:job:done', function() {
+    location.reload();
+  });
+});</code>
+    </property>
+    <property>
+      <name>Job related JavaScript</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+  <object>
+    <name>ConfluenceMigratorPro.Code.ProfileSheet</name>
+    <number>1</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>dec20898-0fa9-4eeb-81ed-cdfd0151168e</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>define('confluence-sheet', {
+  prefix: 'confluencepro.profile.raport.reset.',
+  keys: [
+    'confirm',
+    'fail',
+    'success',
+    'progress'
+  ]
+});
+require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
+  $(document).on('click', '#cfmResetMigration', function(event) {
+
+    var notification = new XWiki.widgets.Notification(l10n.progress, 'inprogress');
+    if (!confirm(l10n.confirm)) {
+      notification.hide();
+      return;
+    }
+    let migrationClass = 'ConfluenceMigratorPro.Code.ProfileClass';
+    let restURL = XWiki.currentDocument.getRestURL() + '/objects/' + migrationClass + '/0/properties/executed';
+    $.ajax(restURL, {
+      method: 'PUT',
+      contentType: 'text/plain',
+      data: '0'
+    }).then(data =&gt; {
+      notification.replace(new XWiki.widgets.Notification(l10n.success, 'done'));
+      setTimeout(function() {
+        location.reload();
+      }, 1000);
+    }).catch(() =&gt; {
+      notification.replace(new XWiki.widgets.Notification(l10n.fail, 'error'));
+    });
+  })
+});</code>
+    </property>
+    <property>
+      <name>Sheet related JavaScript</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+  <object>
+    <name>ConfluenceMigratorPro.Code.ProfileSheet</name>
+    <number>0</number>
+    <className>XWiki.StyleSheetExtension</className>
+    <guid>1f15f84c-68e0-4966-94e3-c02caad8acdd</guid>
+    <class>
+      <name>XWiki.StyleSheetExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <contentType>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>contentType</name>
+        <number>6</number>
+        <prettyName>Content Type</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>CSS|LESS</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </contentType>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>.available-space {
+  margin-top: .5em;
+  padding-bottom: .5em;
+  display: grid;
+  grid-template-areas: "a b"
+                       "c d";
+  grid-template-columns: fit-content(1ch) 1fr;
+  gap: 0 0.5em;
+}
+
+.available-space label {
+  font-weight: normal;
+  grid-area: b;
+}
+
+.available-space input {
+  grid-area: a;
+}
+
+.available-space .cfmProperties {
+  grid-area: d;
+}
+
+.available-space span {
+  margin-right: 0.5em;
+  font-weight: lighter;
+}
+
+.imported-spaces {
+  list-style-type: none;
+}
+
+.imported-space {
+  padding: 1em;
+}
+
+.cfmToolbar {
+  display: flex;
+  margin-bottom: 2em;
+  align-items: flex-end;
+  gap: 0 2em;
+}
+
+.cfmButtonGroup {
+  margin-top: 2em;
+}
+
+.cfmShowMoreGroup {
+  font-style: italic;
+}
+
+.job-loading-status {
+  display: flex;
+  align-items: center;
+}
+
+.job-loading-status .loading-icon {
+  height: 1em;
+  width: 1em;
+  margin-right: 1em;
+}
+
+.cfm-problem-pages &gt; ul {
+  list-style: none;
+}</code>
+    </property>
+    <property>
+      <contentType>CSS</contentType>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
 </xwikidoc>

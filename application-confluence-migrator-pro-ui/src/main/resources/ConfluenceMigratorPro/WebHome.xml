@@ -264,16 +264,6 @@
   list-style: none;
 }
 
-.cfmTitle.active .cfmTitleIcon {
-  -webkit-transform: rotate(180deg);
-  -moz-transform: rotate(180deg);
-  transform: rotate(180deg);
-}
-
-.cfmTitle a {
-  color: inherit;
-}
-
 .cfmTitle::after {
   font-style: italic;
   color: #bbb;
