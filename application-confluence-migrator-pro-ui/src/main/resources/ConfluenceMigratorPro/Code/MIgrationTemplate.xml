@@ -20,9 +20,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.ProfileTemplate" locale="">
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.MigrationTemplate" locale="">
   <web>ConfluenceMigratorPro.Code</web>
-  <name>ProfileTemplate</name>
+  <name>MigrationTemplate</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
@@ -39,12 +39,12 @@
   <hidden>true</hidden>
   <content/>
   <object>
-    <name>ConfluenceMigratorPro.Code.ProfileTemplate</name>
+    <name>ConfluenceMigratorPro.Code.MigrationTemplate</name>
     <number>0</number>
-    <className>ConfluenceMigratorPro.Code.ProfileClass</className>
+    <className>ConfluenceMigratorPro.Code.MigrationClass</className>
     <guid>acedb91d-903a-4035-8d2b-cd75b2058587</guid>
     <class>
-      <name>ConfluenceMigratorPro.Code.ProfileClass</name>
+      <name>ConfluenceMigratorPro.Code.MigrationClass</name>
       <customClass/>
       <customMapping/>
       <defaultViewSheet/>

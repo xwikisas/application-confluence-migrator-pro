@@ -20,9 +20,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.ProfileClass" locale="">
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.MigrationClass" locale="">
   <web>ConfluenceMigratorPro.Code</web>
-  <name>ProfileClass</name>
+  <name>MigrationClass</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
@@ -39,7 +39,7 @@
   <hidden>true</hidden>
   <content/>
   <class>
-    <name>ConfluenceMigratorPro.Code.ProfileClass</name>
+    <name>ConfluenceMigratorPro.Code.MigrationClass</name>
     <customClass/>
     <customMapping/>
     <defaultViewSheet/>
@@ -192,7 +192,7 @@
     </spaces>
   </class>
   <object>
-    <name>ConfluenceMigratorPro.Code.ProfileClass</name>
+    <name>ConfluenceMigratorPro.Code.MigrationClass</name>
     <number>0</number>
     <className>XWiki.ClassSheetBinding</className>
     <guid>535c0d5e-60ad-4b75-bf95-40c062cebe94</guid>
@@ -232,11 +232,11 @@
       </sheet>
     </class>
     <property>
-      <sheet>ConfluenceMigratorPro.Code.ProfileSheet</sheet>
+      <sheet>ConfluenceMigratorPro.Code.MigrationSheet</sheet>
     </property>
   </object>
   <object>
-    <name>ConfluenceMigratorPro.Code.ProfileClass</name>
+    <name>ConfluenceMigratorPro.Code.MigrationClass</name>
     <number>0</number>
     <className>XWiki.DocumentSheetBinding</className>
     <guid>63ceca67-7f78-4e6b-bf50-3259b347cbdc</guid>

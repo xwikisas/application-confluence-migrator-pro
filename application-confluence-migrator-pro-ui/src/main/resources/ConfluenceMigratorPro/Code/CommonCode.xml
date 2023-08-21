@@ -63,7 +63,7 @@
 #**
  * Display a livedata of the profile pages.
  *#
-#macro (displayProfilesLiveData)
+#macro (displayMigrationsLiveData)
 #set ($liveDataConfig = {
   'meta': {
     'propertyDescriptors': [
@@ -72,9 +72,9 @@
   }
 })
 {{liveData 
-  id='migrationProfiles'
+  id='confluenceMigrationss'
   source='liveTable'
-  sourceParameters="resultPage=ConfluenceMigratorPro.Code.LivedataJSON&amp;className=ConfluenceMigratorPro.Code.ProfileClass&amp;translationPrefix=confluencepro.profile.livetable."
+  sourceParameters="resultPage=ConfluenceMigratorPro.Code.LivedataJSON&amp;className=ConfluenceMigratorPro.Code.MigrationClass&amp;translationPrefix=confluencepro.migration.livetable."
   properties="doc.title,job_status,executed,doc.date,doc.author,_actions"
   sort='doc.name:asc'}}$jsontool.serialize($liveDataConfig){{/liveData}}
 #end
@@ -318,11 +318,11 @@
   color: inherit;
 }
 
-.profileState {
+.migrationState {
   display: flex;
   align-items: center;
 }
-.profileState .profileStateIcon {
+.migrationState .migrationStateIcon {
   width: 1em;
   margin-right: 0.5em;
 }</code>

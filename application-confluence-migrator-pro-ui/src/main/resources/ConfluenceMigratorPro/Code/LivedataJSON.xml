@@ -45,10 +45,10 @@
   #set($map = {})
   #gridresult_buildJSON("$!request.classname" $request.collist.split(',') $map)
   ## Add the status of the executed/executing job.
-  #macro (profileStatus $icon $message)
-    &lt;div class="profileState"&gt;
-      &lt;div class="profileStateIcon"&gt;$icon&lt;/div&gt;
-      &lt;div class="profileStateText"&gt;$message&lt;/div&gt;
+  #macro (migrationStatus $icon $message)
+    &lt;div class="migrationState"&gt;
+      &lt;div class="migrationStateIcon"&gt;$icon&lt;/div&gt;
+      &lt;div class="migrationStateText"&gt;$message&lt;/div&gt;
     &lt;/div&gt;
   #end
   #foreach($row in $map.get('rows'))
@@ -56,17 +56,17 @@
       #set ($rowDocRef = $services.model.resolveDocument($row.get('doc_fullName')))
       #set ($jobState = $services.confluencemigration.getLastJob($rowDocRef).status.state)
       #if ("$!jobState" == '' || $jobState == 'NONE')
-        #set ($discard = $row.put('job_status', "#profileStatus($services.icon.renderHTML('cross'), $services.localization.render('confluencepro.profile.livetable.state.none'))"))
+        #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('cross'), $services.localization.render('confluencepro.migration.livetable.state.none'))"))
       #elseif ($jobState == 'WAITING')
-        #set ($discard = $row.put('job_status', "#profileStatus($services.icon.renderHTML('warning'), $services.localization.render('confluencepro.profile.livetable.state.waiting'))"))
+        #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('warning'), $services.localization.render('confluencepro.migration.livetable.state.waiting'))"))
       #elseif ($jobState == 'RUNNING')
         #set ($icon = "&lt;div class='loading'&gt;&lt;/div&gt;")
-        #set ($discard = $row.put('job_status', "#profileStatus($icon, $services.localization.render('confluencepro.profile.livetable.state.running'))"))
+        #set ($discard = $row.put('job_status', "#migrationStatus($icon, $services.localization.render('confluencepro.migration.livetable.state.running'))"))
       #else
-        #set ($discard = $row.put('job_status', "#profileStatus($services.icon.renderHTML('check'), $services.localization.render('confluencepro.profile.livetable.state.done'))"))
+        #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('check'), $services.localization.render('confluencepro.migration.livetable.state.done'))"))
       #end
     #else
-      #set ($discard = $row.put('job_status', "#profileStatus($services.icon.renderHTML('check'), $services.localization.render('confluencepro.profile.livetable.state.done'))"))
+      #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('check'), $services.localization.render('confluencepro.migration.livetable.state.done'))"))
     #end
   #end
   $jsontool.serialize($map)

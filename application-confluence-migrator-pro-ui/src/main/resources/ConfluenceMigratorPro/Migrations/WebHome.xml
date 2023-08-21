@@ -40,6 +40,6 @@
   <content>{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
 
 {{velocity}}
-#displayProfilesLiveData
+#displayMigrationsLiveData
 {{/velocity}}</content>
 </xwikidoc>

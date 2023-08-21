@@ -129,30 +129,30 @@
 #end
 
 
-&lt;div class="modal fade profileNameModal" tabindex="-1" role="dialog"&gt;
+&lt;div class="modal fade migrationNameModal" tabindex="-1" role="dialog"&gt;
   &lt;div class="modal-dialog modal-lg"&gt;
     &lt;div class="modal-content"&gt;
       &lt;div class="modal-header"&gt;
         &lt;button type="button" class="close" data-dismiss="modal"&gt;&amp;times;&lt;/button&gt;
-        &lt;div class="modal-title"&gt;$escapetool.xml($services.localization.render('confluencepro.profile.popup.title'))&lt;/div&gt;
+        &lt;div class="modal-title"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.popup.title'))&lt;/div&gt;
       &lt;/div&gt;
       &lt;div class="modal-body xform"&gt;
         &lt;div class="imageEditor" data-src="$escapetool.xml($services.model.serialize($attachment.getReference()))"&gt;&lt;/div&gt;
-        &lt;input id="confluence-profile-name" type="text" placeholder="$escapetool.xml($services.localization.render('confluencepro.profile.popup.placeholder'))"/&gt;
+        &lt;input id="confluence-migration-name" type="text" placeholder="$escapetool.xml($services.localization.render('confluencepro.migration.popup.placeholder'))"/&gt;
       &lt;/div&gt;
       &lt;div class="modal-footer"&gt;
         &lt;input type="button" class="btn btn-primary save"  data-dismiss="modal"
-          value="$escapetool.xml($services.localization.render('confluencepro.profile.popup.startMigration'))" data-filename="$attachment.getFilename()"&gt;
+          value="$escapetool.xml($services.localization.render('confluencepro.migration.popup.startMigration'))" data-filename="$attachment.getFilename()"&gt;
         &lt;input type="button" class="btn btn-default" data-dismiss="modal"
           value="$escapetool.xml($services.localization.render('cancel'))"&gt;
       &lt;/div&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 &lt;/div&gt;
-#displaySubtitle('book', 'confluencepro.profiles.title')
+#displaySubtitle('book', 'confluencepro.migrations.title')
 {{/html}}
 
-#displayProfilesLiveData
+#displayMigrationsLiveData
 {{/velocity}}</content>
   <object>
     <name>ConfluenceMigratorPro.WebHome</name>

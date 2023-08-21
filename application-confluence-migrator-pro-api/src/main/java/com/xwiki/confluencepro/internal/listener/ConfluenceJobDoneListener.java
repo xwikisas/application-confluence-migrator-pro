@@ -42,8 +42,8 @@ import com.xwiki.confluencepro.internal.ConfluenceMigrationJob;
 @Singleton
 public class ConfluenceJobDoneListener extends AbstractEventListener
 {
-//    private static final LocalDocumentReference PROFILE_OBJECT = new LocalDocumentReference(Arrays.asList(
-//        "ConfluenceMigratorPro", "Code"), "ProfileClass");
+//    private static final LocalDocumentReference MIGRATION_OBJECT = new LocalDocumentReference(Arrays.asList(
+//        "ConfluenceMigratorPro", "Code"), "MigrationClass");
 //
 //    @Inject
 //    private Provider<XWikiContext> contextProvider;
@@ -69,7 +69,7 @@ public class ConfluenceJobDoneListener extends AbstractEventListener
 //            XWikiDocument document =
 //                context.getWiki().getDocument(job.getStatus().getRequest().getDocumentReference(), context).clone();
 //            // Set executed to true.
-//            BaseObject object = document.getXObject(PROFILE_OBJECT);
+//            BaseObject object = document.getXObject(MIGRATION_OBJECT);
 //            object.set("executed", 1, context);
 //            // Set imported spaces.
 //            jobExecutor.getCurrentJob(FilterStreamConverterJob.ROOT_GROUP);
