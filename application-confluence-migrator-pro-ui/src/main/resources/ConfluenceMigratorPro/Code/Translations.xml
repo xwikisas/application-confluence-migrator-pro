@@ -104,7 +104,7 @@ confluencepro.job.question.selectAll=Select all
 confluencepro.job.question.search.placeholder=Search for a space...
 confluencepro.job.question.showMore.message={0} more spaces available.
 confluencepro.job.question.showMore.link=Load more..
-confluencepro.job.status.readingPackage=Analyzing the confluence package...</content>
+confluencepro.job.status.readingPackage=Analyzing the confluence package. This may take a while..</content>
   <object>
     <name>ConfluenceMigratorPro.Code.Translations</name>
     <number>0</number>

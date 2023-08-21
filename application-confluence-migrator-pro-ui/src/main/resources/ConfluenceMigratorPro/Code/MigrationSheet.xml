@@ -457,12 +457,13 @@
     </property>
     <property>
       <code>define('confluence-job', {
-  prefix: 'confluencepro.job.question.',
+  prefix: 'confluencepro.job.',
   keys: [
-    'additionalInfo.documentsCount',
-    'additionalInfo.attachmentsCount',
-    'showMore.message',
-    'showMore.link'
+    'question.additionalInfo.documentsCount',
+    'question.additionalInfo.attachmentsCount',
+    'question.showMore.message',
+    'question.showMore.link',
+    'status.runningJob'
   ]
 });
 require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($, l10n, JobRunner) {
@@ -503,8 +504,8 @@ require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($
         let remaining = data.total - (offset + data.results.length);
         if (remaining &gt; 0) {
           $('.cfmShowMoreGroup').removeClass('hidden');
-          $('.cfmShowMoreMessage').text(l10n.get('showMore.message', remaining));
-          $('.cfmShowMoreLink').text(l10n.get('showMore.link')).data('offset', data.total - remaining);
+          $('.cfmShowMoreMessage').text(l10n.get('question.showMore.message', remaining));
+          $('.cfmShowMoreLink').text(l10n.get('question.showMore.link')).data('offset', data.total - remaining);
         } else {
           $('.cfmShowMoreGroup').addClass('hidden');
         }
@@ -512,6 +513,10 @@ require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($
   };
   let initQuestion = function () {
     $('.job-loading-status').hide();
+    $(this).find('.btn-primary').on('click', function () {
+      $('.job-loading-status').show();
+      $('.job-loading-status .loading-text').text(l10n.get('status.runningJob'));
+    });
     searchAndDisplay($('.cfmSearch input').data('url'), '', 0);
   };
   // Add listener to the show more link.
