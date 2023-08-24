@@ -21,7 +21,9 @@ package com.xwiki.confluencepro;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.xwiki.job.AbstractRequest;
 import org.xwiki.model.reference.DocumentReference;
@@ -41,11 +43,19 @@ public class ConfluenceMigrationJobRequest extends AbstractRequest
 
     private final DocumentReference documentReference;
 
+    private final Map<String, Object> inputProperties;
+
+    private final Map<String, Object> outputProperties;
+
     /**
      * @param confluencePackage the input stream of the confluence zip package.
      * @param documentReference see {@link #getDocumentReference()}.
+     * @param inputProperties see {@link #getInputProperties()}.
+     * @param outputProperties see {@link #getOutputProperties()}.
      */
-    public ConfluenceMigrationJobRequest(InputStream confluencePackage, DocumentReference documentReference)
+
+    public ConfluenceMigrationJobRequest(InputStream confluencePackage, DocumentReference documentReference,
+        Map<String, Object> inputProperties, Map<String, Object> outputProperties)
     {
         this.documentReference = documentReference;
         this.confluencePackage = confluencePackage;
@@ -57,6 +67,16 @@ public class ConfluenceMigrationJobRequest extends AbstractRequest
         }
         jobId.add(documentReference.getName());
         setId(jobId);
+        if (inputProperties == null) {
+            this.inputProperties = new HashMap<>();
+        } else {
+            this.inputProperties = inputProperties;
+        }
+        if (outputProperties == null) {
+            this.outputProperties = new HashMap<>();
+        } else {
+            this.outputProperties = outputProperties;
+        }
     }
 
     /**
@@ -68,10 +88,26 @@ public class ConfluenceMigrationJobRequest extends AbstractRequest
     }
 
     /**
-      * @return the reference to the document where this job was started.
+     * @return the reference to the document where this job was started.
      */
     public DocumentReference getDocumentReference()
     {
         return documentReference;
+    }
+
+    /**
+     * @return the input properties for the confluence filter stream.
+     */
+    public Map<String, Object> getInputProperties()
+    {
+        return inputProperties;
+    }
+
+    /**
+     * @return the output properties for the instance filter stream.
+     */
+    public Map<String, Object> getOutputProperties()
+    {
+        return outputProperties;
     }
 }

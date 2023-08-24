@@ -70,9 +70,12 @@ public class ConfluenceMigrationScriptService implements ScriptService
     /**
      * @param documentReference the reference of the document that performs the migration.
      * @param confluencePackage the input stream for the package that will be used for the migration.
+     * @param inputProperties the properties for the confluence input filter stream.
+     * @param outputProperties the properties for the instance output filter stream.
      * @return the job.
      */
-    public Job migrate(DocumentReference documentReference, InputStream confluencePackage)
+    public Job migrate(DocumentReference documentReference, InputStream confluencePackage,
+        Map<String, Object> inputProperties, Map<String, Object> outputProperties)
     {
         if (!authorization.hasAccess(Right.ADMIN)) {
             return null;
@@ -82,7 +85,7 @@ public class ConfluenceMigrationScriptService implements ScriptService
             return lastJob;
         }
         ConfluenceMigrationJobRequest jobRequest =
-            new ConfluenceMigrationJobRequest(confluencePackage, documentReference);
+            new ConfluenceMigrationJobRequest(confluencePackage, documentReference, inputProperties, outputProperties);
         try {
             lastJob = jobExecutor.execute(ConfluenceMigrationJob.JOBTYPE, jobRequest);
             lastJobMap.put(documentReference, lastJob);

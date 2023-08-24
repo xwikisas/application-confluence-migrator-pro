@@ -101,7 +101,7 @@ public class SpaceQuestion
 
     /**
      * @param docId the string that identifies the document.
-     * @return true is the the document is selected, false otherwise.
+     * @return true is the document is selected, false otherwise.
      */
     public boolean isSelected(String docId)
     {

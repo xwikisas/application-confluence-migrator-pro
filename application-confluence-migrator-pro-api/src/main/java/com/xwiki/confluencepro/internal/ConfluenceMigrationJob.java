@@ -145,6 +145,16 @@ public class ConfluenceMigrationJob
             .collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getDefaultValue()), HashMap::putAll);
 
         inputProperties.put("source", getRequest().getConfluencePackage());
+        for (Map.Entry<String, Object> entry : request.getInputProperties().entrySet()) {
+            if (entry.getValue() != null && !entry.getValue().toString().isEmpty()) {
+                inputProperties.put(entry.getKey(), entry.getValue());
+            }
+        }
+        for (Map.Entry<String, Object> entry : request.getOutputProperties().entrySet()) {
+            if (entry.getValue() != null && !entry.getValue().toString().isEmpty()) {
+                outputProperties.put(entry.getKey(), entry.getValue());
+            }
+        }
         FilterStreamConverterJobRequest filterJobRequest =
             new FilterStreamConverterJobRequest(FilterStreamType.unserialize(input), inputProperties,
                 FilterStreamType.unserialize(output), outputProperties);

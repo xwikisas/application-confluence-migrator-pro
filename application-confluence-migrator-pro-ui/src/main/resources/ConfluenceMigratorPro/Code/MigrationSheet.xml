@@ -45,6 +45,54 @@
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobDoneEventEmitter'))
+## Start of macro ##
+#macro (displayFormField $type $propertyDescriptor)
+  #set ($propertyDescriptorId = $propertyDescriptor.id)
+  #if ($type == 'input')
+    #set ($propertyDescriptorInputId = "qproperty_inputProperties[]")
+  #else
+    #set ($propertyDescriptorInputId = "qproperty_outputProperties[]")
+  #end
+  #set ($propertyDescriptorLabel = $services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}"))
+  #if ("$!propertyDescriptorLabel" == "confluencepro.job.question.advanced.$propertyDescriptorId")
+    #set ($propertyDescriptorLabel = $propertyDescriptor.name)
+  #end
+  #set ($propertyDescriptorAbout = $services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.description"))
+  #if ("$!propertyDescriptorAbout" == "confluencepro.job.question.advanced.${propertyDescriptorId}.description")
+    #set ($propertyDescriptorAbout = $propertyDescriptor.description)
+  #end
+  #set ($propertyDescriptorSupportedFormats = $services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.supportedformats"))
+  &lt;dt&gt;
+    &lt;label for="$!escapetool.xml($propertyDescriptorId)"&gt;$propertyDescriptorLabel&lt;/label&gt;
+    #if ("$!propertyDescriptorAbout" != '')
+      &lt;span class="xHint"&gt;$propertyDescriptorAbout&lt;/span&gt;
+    #end
+    #if ("$!propertyDescriptorSupportedFormats" != "confluencepro.job.question.advanced.${propertyDescriptorId}.supportedformats")
+      &lt;span class="xHint"&gt;&lt;tt&gt;$propertyDescriptorSupportedFormats&lt;/tt&gt;&lt;/span&gt;
+    #end
+  &lt;/dt&gt;
+  &lt;dd&gt;
+    #set ($fieldValue = '')
+    #foreach ($typeDefaultEntry in $filterDefaults.get($type).entrySet())
+      #if ($typeDefaultEntry.key == $propertyDescriptorId)
+        #set ($fieldValue = $typeDefaultEntry.value)
+      #end
+    #end
+    #set ($propertyDescriptorInputValue = '')
+    #if (($propertyDescriptor.defaultValue || "$!propertyDescriptor.defaultValue" != '') &amp;&amp;
+      ($propertyDescriptor.type.getName() == 'boolean' || $propertyDescriptor.type.getName() == 'int' || $propertyDescriptor.type.getName() == 'java.lang.String'))
+      #set ($propertyDescriptorInputValue = $propertyDescriptor.defaultValue)
+    #end
+    #if ($request.get($propertyDescriptorInputId))
+      #set ($propertyDescriptorInputValue = $request.get($propertyDescriptorInputId))
+    #elseif ("$!fieldValue" != '')
+      #set ($propertyDescriptorInputValue = $fieldValue)
+    #end
+    &lt;input type="text" class="cfm-${type}-filter-property"
+      value="$!escapetool.xml($propertyDescriptorInputValue)"
+      data-key="$!escapetool.xml($propertyDescriptorId)" /&gt;
+  &lt;/dd&gt;
+#end
 #**
  * The view of the Migration when it is created. The title needs to be set and, if the request contains it,
  * the package field of the object is populated.
@@ -70,6 +118,28 @@
             value="$!escapetool.xml($request.package)" /&gt;
         #end
       &lt;/dd&gt;
+    &lt;/dl&gt;
+  &lt;/div&gt;
+  ## Advanced options
+  &lt;a data-toggle="collapse" href="#advancedInputFields" role="button" aria-expanded="false" aria-controls="advancedInputFields" class="advanced-fields collapsed"&gt;
+    $services.localization.render('confluencepro.job.question.advanced.link')
+  &lt;/a&gt;
+  &lt;div class="xform collapse confluence-migrator-collapse" id="advancedInputFields"&gt;
+    &lt;h2&gt;$services.localization.render('confluencepro.job.question.advanced.input')&lt;/h2&gt;
+    &lt;dl&gt;
+      &lt;input type="hidden" id="cfm-input-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_inputProperties" /&gt;
+      #set ($descriptor = $services.filter.getInputFilterStreamDescriptor('confluence+xml'))
+      #foreach ($propertyDescriptor in $descriptor.properties)
+        #displayFormField('input', $propertyDescriptor)
+      #end
+    &lt;/dl&gt;
+    &lt;h2&gt;$services.localization.render('confluencepro.job.question.advanced.output')&lt;/h2&gt;
+    &lt;dl&gt;
+      &lt;input type="hidden" id="cfm-output-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties" /&gt;
+      #set ($descriptor = $services.filter.getOutputFilterStreamDescriptor('xwiki+instance'))
+      #foreach ($propertyDescriptor in $descriptor.properties)
+        #displayFormField('output', $propertyDescriptor)
+      #end
     &lt;/dl&gt;
   &lt;/div&gt;
   {{/html}}
@@ -260,7 +330,9 @@
       #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
       #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
       #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
-      #set ($confluenceJob = $services.confluencemigration.migrate($doc.documentReference, $attachDoc.getAttachment($attachRef.name).getContentInputStream()))
+      #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
+      #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
+      #set ($confluenceJob = $services.confluencemigration.migrate($doc.documentReference, $attachDoc.getAttachment($attachRef.name).getContentInputStream(), $inputProperties, $outputProperties))
       #displayJob($confluenceJob)
     #else
       No package to start the migration
@@ -498,7 +570,7 @@ require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($
               .val(space.reference);
           $('.available-spaces').append(element);
           for (const [key, value] of Object.entries(space.properties)) {
-            element.find('.cfmProperties').append('&lt;span&gt;' + l10n['additionalInfo.' + key] + ' ' + value + '&lt;/span&gt;');
+            element.find('.cfmProperties').append('&lt;span&gt;' + l10n['question.additionalInfo.' + key] + ' ' + value + '&lt;/span&gt;');
           }
         });
         let remaining = data.total - (offset + data.results.length);
@@ -666,6 +738,16 @@ require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($
   ]
 });
 require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
+  let inputFilterJson = {};
+  let outputFilterJson = {};
+  $('.cfm-input-filter-property').on('change', function() {
+    inputFilterJson[$(this).data('key')] = $(this).val();
+    $('#cfm-input-properties').val(JSON.stringify(inputFilterJson));
+  });
+  $('.cfm-output-filter-property').on('change', function() {
+    outputFilterJson[$(this).data('key')] = $(this).val();
+    $('#cfm-output-properties').val(JSON.stringify(outputFilterJson));
+  });
   $(document).on('click', '#cfmResetMigration', function(event) {
 
     var notification = new XWiki.widgets.Notification(l10n.progress, 'inprogress');

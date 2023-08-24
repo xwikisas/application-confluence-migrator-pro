@@ -76,6 +76,24 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
     </imported>
+    <inputProperties>
+      <contenttype>---</contenttype>
+      <customDisplay/>
+      <disabled>0</disabled>
+      <editor>---</editor>
+      <hint/>
+      <name>inputProperties</name>
+      <number>9</number>
+      <picker>1</picker>
+      <prettyName>inputProperties</prettyName>
+      <restricted>0</restricted>
+      <rows>5</rows>
+      <size>40</size>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+    </inputProperties>
     <logs>
       <contenttype>---</contenttype>
       <customDisplay/>
@@ -112,6 +130,24 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </otherIssues>
+    <outputProperties>
+      <contenttype>---</contenttype>
+      <customDisplay/>
+      <disabled>0</disabled>
+      <editor>---</editor>
+      <hint/>
+      <name>outputProperties</name>
+      <number>10</number>
+      <picker>1</picker>
+      <prettyName>outputProperties</prettyName>
+      <restricted>0</restricted>
+      <rows>5</rows>
+      <size>40</size>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+    </outputProperties>
     <package>
       <customDisplay/>
       <disabled>0</disabled>

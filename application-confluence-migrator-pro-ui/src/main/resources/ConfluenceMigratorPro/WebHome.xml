@@ -41,7 +41,6 @@
 
 {{velocity output="false"}}
 #template('attachment_macros.vm')
-#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JavaScript'))
 {{/velocity}}
 
 {{velocity}}

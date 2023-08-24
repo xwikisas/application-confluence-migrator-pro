@@ -104,7 +104,11 @@ confluencepro.job.question.selectAll=Select all
 confluencepro.job.question.search.placeholder=Search for a space...
 confluencepro.job.question.showMore.message={0} more spaces available.
 confluencepro.job.question.showMore.link=Load more..
-confluencepro.job.status.readingPackage=Analyzing the confluence package. This may take a while..</content>
+confluencepro.job.status.readingPackage=Analysing the Confluence package. This may take a while..
+confluencepro.job.status.runningJob=Your pages are being imported and moved into the correct location. This may take a while..
+confluencepro.job.question.advanced.link=Advanced migration options
+confluencepro.job.question.advanced.input=Properties of the input filter stream (Confluence XML)
+confluencepro.job.question.advanced.output=Properties of the output filter stream (XWiki instance)</content>
   <object>
     <name>ConfluenceMigratorPro.Code.Translations</name>
     <number>0</number>
