@@ -44,7 +44,20 @@
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobDoneEventEmitter'))
+#set ($prefilledValues = {
+  'input': {
+  },
+  'output': {
+    'stoppedWhenSaveFail': 'false'
+  }
+})
 ## Start of macro ##
+#**
+ * Display a form field given a descriptor. The method uses the outside param $prefilledValues.
+ *
+ * @param $type 'input' or 'output'.
+ * @param propertyDescriptor the descriptor from which to extract data and display an input.
+ *#
 #macro (displayFormField $type $propertyDescriptor)
   #set ($propertyDescriptorId = $propertyDescriptor.id)
   #if ($type == 'input')
@@ -71,21 +84,25 @@
     #end
   &lt;/dt&gt;
   &lt;dd&gt;
-    #set ($fieldValue = '')
-    #foreach ($typeDefaultEntry in $filterDefaults.get($type).entrySet())
-      #if ($typeDefaultEntry.key == $propertyDescriptorId)
-        #set ($fieldValue = $typeDefaultEntry.value)
+    #if ("$!prefilledValues.get($type).get($propertyDescriptorId)" == '')
+      #set ($fieldValue = '')
+      #foreach ($typeDefaultEntry in $filterDefaults.get($type).entrySet())
+        #if ($typeDefaultEntry.key == $propertyDescriptorId)
+          #set ($fieldValue = $typeDefaultEntry.value)
+        #end
       #end
-    #end
-    #set ($propertyDescriptorInputValue = '')
-    #if (($propertyDescriptor.defaultValue || "$!propertyDescriptor.defaultValue" != '') &amp;&amp;
-      ($propertyDescriptor.type.getName() == 'boolean' || $propertyDescriptor.type.getName() == 'int' || $propertyDescriptor.type.getName() == 'java.lang.String'))
-      #set ($propertyDescriptorInputValue = $propertyDescriptor.defaultValue)
-    #end
-    #if ($request.get($propertyDescriptorInputId))
-      #set ($propertyDescriptorInputValue = $request.get($propertyDescriptorInputId))
-    #elseif ("$!fieldValue" != '')
-      #set ($propertyDescriptorInputValue = $fieldValue)
+      #set ($propertyDescriptorInputValue = '')
+      #if (($propertyDescriptor.defaultValue || "$!propertyDescriptor.defaultValue" != '') &amp;&amp;
+        ($propertyDescriptor.type.getName() == 'boolean' || $propertyDescriptor.type.getName() == 'int' || $propertyDescriptor.type.getName() == 'java.lang.String'))
+        #set ($propertyDescriptorInputValue = $propertyDescriptor.defaultValue)
+      #end
+      #if ($request.get($propertyDescriptorInputId))
+        #set ($propertyDescriptorInputValue = $request.get($propertyDescriptorInputId))
+      #elseif ("$!fieldValue" != '')
+        #set ($propertyDescriptorInputValue = $fieldValue)
+      #end
+    #else
+      #set ($propertyDescriptorInputValue = $prefilledValues.get($type).get($propertyDescriptorId))
     #end
     &lt;input type="text" class="cfm-${type}-filter-property"
       value="$!escapetool.xml($propertyDescriptorInputValue)"
@@ -335,6 +352,8 @@
       #if ("$!outputProperties.get('authorPreserved')" == 'false')
         #set ($discard = $outputProperties.putIfAbsent('author', $xcontext.userReference))
       #end
+      #set ($discard = $inputProperties.putAll($prefilledValues.get('input')))
+      #set ($discard = $outputProperties.putAll($prefilledValues.get('output')))
       #set ($confluenceJob = $services.confluencemigration.migrate($doc.documentReference, $attachDoc.getAttachment($attachRef.name).getContentInputStream(), $inputProperties, $outputProperties))
       #displayJob($confluenceJob)
     #else
