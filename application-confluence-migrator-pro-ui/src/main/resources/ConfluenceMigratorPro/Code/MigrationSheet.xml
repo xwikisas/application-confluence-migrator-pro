@@ -332,6 +332,7 @@
       #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
       #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
       #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
+      #set ($discard = $outputProperties.putIfAbsent('author', $xcontext.userReference))
       #set ($confluenceJob = $services.confluencemigration.migrate($doc.documentReference, $attachDoc.getAttachment($attachRef.name).getContentInputStream(), $inputProperties, $outputProperties))
       #displayJob($confluenceJob)
     #else
