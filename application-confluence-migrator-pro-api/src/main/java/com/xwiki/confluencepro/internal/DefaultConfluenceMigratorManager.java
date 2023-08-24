@@ -22,9 +22,11 @@ package com.xwiki.confluencepro.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.inject.Inject;
@@ -85,7 +87,7 @@ public class DefaultConfluenceMigratorManager implements ConfluenceMigratorManag
             object.set("executed", 1, context);
             SpaceQuestion spaceQuestion = (SpaceQuestion) jobStatus.getQuestion();
             // Set imported spaces.
-            List<String> spaces = new ArrayList<>();
+            Set<String> spaces = new HashSet<>();
             if (spaceQuestion != null) {
                 extractSpaces(spaceQuestion, spaces);
             }
@@ -94,7 +96,7 @@ public class DefaultConfluenceMigratorManager implements ConfluenceMigratorManag
                     extractSpaces((SpaceQuestion) question, spaces);
                 }
             }
-            object.set("spaces", spaces, context);
+            object.set("spaces", new ArrayList<>(spaces), context);
 
             // Set logs json.
             Gson gson = new Gson();
@@ -114,7 +116,7 @@ public class DefaultConfluenceMigratorManager implements ConfluenceMigratorManag
         }
     }
 
-    private void extractDocsFromLogs(ConfluenceMigrationJobStatus jobStatus, List<String> spaces, BaseObject object,
+    private void extractDocsFromLogs(ConfluenceMigrationJobStatus jobStatus, Set<String> spaces, BaseObject object,
         Gson gson, XWikiContext context)
     {
         Map<String, List<String>> otherIssues = new TreeMap<>();
@@ -186,7 +188,7 @@ public class DefaultConfluenceMigratorManager implements ConfluenceMigratorManag
         logList.add(logMap);
     }
 
-    private void extractSpaces(SpaceQuestion spaceQuestion, List<String> spaces)
+    private void extractSpaces(SpaceQuestion spaceQuestion, Set<String> spaces)
     {
         for (EntitySelection entitySelection : spaceQuestion.getConfluenceSpaces().keySet()) {
             if (entitySelection.isSelected()) {

@@ -166,10 +166,14 @@ public class ConfluenceMigrationJob
         filterJob.initialize(filterJobRequest);
         filterJob.run();
 
-        SpaceQuestion spaceQuestion = (SpaceQuestion) filterJob.getStatus().getQuestion();
+        SpaceQuestion spaceQuestion =
+            (SpaceQuestion) getStatus().getAskedQuestions().values()
+                .stream()
+                .filter(q -> q instanceof SpaceQuestion).findFirst()
+                .orElse(null);
         WikiReference wikiReference = this.request.getDocumentReference().getWikiReference();
         if (wikiReference != null) {
-            runNestedPagesMigrator(filterJob, spaceQuestion, wikiReference);
+            runNestedPagesMigrator(spaceQuestion, wikiReference);
         } else {
             logger.error("Could not start the nested migration job because the the wiki couldn't be determined.");
         }
@@ -179,13 +183,12 @@ public class ConfluenceMigrationJob
         migratorManager.updateAndSaveMigration(getStatus());
     }
 
-    private void runNestedPagesMigrator(Job filterJob, SpaceQuestion spaceQuestion, WikiReference wikiReference)
+    private void runNestedPagesMigrator(SpaceQuestion spaceQuestion, WikiReference wikiReference)
     {
         MigrationConfiguration configuration = new MigrationConfiguration(wikiReference);
         configuration.setAddAutoRedirect(false);
 
         if (spaceQuestion != null) {
-            getStatus().addAskedQuestion(filterJob.getRequest().getId(), spaceQuestion);
             for (EntitySelection entitySelection : spaceQuestion.getConfluenceSpaces().keySet()) {
                 configuration.addIncludedSpace(
                     new SpaceReference(entitySelection.getEntityReference().getName(), wikiReference));

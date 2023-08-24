@@ -86,6 +86,7 @@ public class ConfluenceMigrationScriptService implements ScriptService
         }
         ConfluenceMigrationJobRequest jobRequest =
             new ConfluenceMigrationJobRequest(confluencePackage, documentReference, inputProperties, outputProperties);
+        jobRequest.setInteractive(true);
         try {
             lastJob = jobExecutor.execute(ConfluenceMigrationJob.JOBTYPE, jobRequest);
             lastJobMap.put(documentReference, lastJob);

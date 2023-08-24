@@ -32,11 +32,15 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.event.ConfluenceFilteringEvent;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceXMLPackage;
 import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceInputFilterStream;
+import org.xwiki.job.AbstractJobStatus;
 import org.xwiki.job.Job;
 import org.xwiki.job.JobContext;
+import org.xwiki.job.event.status.CancelableJobStatus;
+import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.observation.AbstractEventListener;
+import org.xwiki.observation.event.CancelableEvent;
 import org.xwiki.observation.event.Event;
 import org.xwiki.refactoring.job.question.EntitySelection;
 
@@ -70,6 +74,7 @@ public class ConfluencePackageReadListener extends AbstractEventListener
         ConfluenceXMLPackage confluencePackage = (ConfluenceXMLPackage) data;
 
         Job job = this.jobContext.getCurrentJob();
+        JobStatus jobStatusToAsk = getRootJobStatus(job);
         Map<EntitySelection, Map<String, String>> confluenceSpaces = new HashMap<>();
         for (Map.Entry<String, Long> space : confluencePackage.getSpacesByKey().entrySet()) {
             EntityReference spaceRef = new EntityReference(space.getKey(), EntityType.DOCUMENT);
@@ -85,29 +90,65 @@ public class ConfluencePackageReadListener extends AbstractEventListener
             additionalInfo.put("attachmentsCount", Integer.toString(attachmentsNumber));
             confluenceSpaces.put(new EntitySelection(spaceRef), additionalInfo);
         }
+        SpaceQuestion question =
+            createAndAskQuestion((CancelableEvent) event, confluenceSpaces, jobStatusToAsk);
+
+        boolean anySelected = false;
+        for (EntitySelection entitySelection : question.getConfluenceSpaces().keySet()) {
+            if (!entitySelection.isSelected()) {
+                confluencePackage.getPages()
+                    .remove(confluencePackage.getSpacesByKey().get(entitySelection.getEntityReference().getName()));
+            } else {
+                anySelected = true;
+            }
+        }
+        if (!anySelected) {
+            ((CancelableEvent) event).cancel();
+        }
+    }
+
+    private SpaceQuestion createAndAskQuestion(CancelableEvent event,
+        Map<EntitySelection, Map<String, String>> confluenceSpaces, JobStatus jobStatusToAsk)
+    {
         SpaceQuestion question = new SpaceQuestion(confluenceSpaces);
+        if (jobStatusToAsk instanceof ConfluenceMigrationJobStatus) {
+            ((ConfluenceMigrationJobStatus) jobStatusToAsk).addAskedQuestion(jobStatusToAsk.getRequest().getId(),
+                question);
+        }
         question.unselectAll();
         if (
-            job != null
-                && job.getStatus() != null
-                && job.getStatus().getRequest() != null
-                && job.getStatus().getRequest().isInteractive()
+            jobStatusToAsk != null
+                && jobStatusToAsk.getRequest() != null
+                && jobStatusToAsk.getRequest().isInteractive()
         )
         {
             try {
-                boolean ack = job.getStatus().ask(question, 1, TimeUnit.MINUTES);
+                boolean ack = jobStatusToAsk.ask(question, 1, TimeUnit.DAYS);
+                if (((CancelableJobStatus) jobStatusToAsk).isCanceled()) {
+                    event.cancel();
+                }
             } catch (InterruptedException e) {
                 // What now?
             }
         } else {
             question.selectAll();
         }
+        return question;
+    }
 
-        for (EntitySelection entitySelection : question.getConfluenceSpaces().keySet()) {
-            if (!entitySelection.isSelected()) {
-                confluencePackage.getPages()
-                    .remove(confluencePackage.getSpacesByKey().get(entitySelection.getEntityReference().getName()));
+    private JobStatus getRootJobStatus(Job job)
+    {
+        JobStatus jobStatus = job.getStatus();
+        if (jobStatus == null) {
+            return null;
+        }
+        JobStatus jobParentStatus = ((AbstractJobStatus<?>) jobStatus).getParentJobStatus();
+        while (true) {
+            if (jobParentStatus == null) {
+                return jobStatus;
             }
+            jobStatus = jobParentStatus;
+            jobParentStatus = ((AbstractJobStatus<?>) jobParentStatus).getParentJobStatus();
         }
     }
 }
