@@ -29,7 +29,6 @@
   <creator>xwiki:XWiki.Admin</creator>
   <parent>WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
-  <originalMetadataAuthor>XWiki.superadmin</originalMetadataAuthor>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <version>1.1</version>
   <title/>
@@ -99,15 +98,13 @@
  *#
 #macro(newDocView)
 
-  {{html}}
+  {{html clean="false"}}
+  &lt;label for="xwikidoctitleinput"&gt;
+    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.migration.title.label'))&lt;/h2&gt;
+  &lt;/label&gt;
   &lt;div class="xform"&gt;
     ## &lt;input type="hidden" name="form_token" value="$!escapetool.xml($services.csrf.token)" /&gt;
     &lt;dl id="titleinput" class="form-group"&gt;
-      &lt;dt&gt;
-        &lt;label for="xwikidoctitleinput"&gt;
-          &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.migration.title.label'))&lt;/h2&gt;
-        &lt;/label&gt;
-      &lt;/dt&gt;
       &lt;dd&gt;
         &lt;input type="text" id="xwikidoctitleinput" name="title" value="" class=""
           placeholder="$!escapetool.xml($services.localization.render('confluencepro.migration.title.placeholder'))"&gt;
@@ -122,6 +119,9 @@
   &lt;/div&gt;
   ## Advanced options
   &lt;a data-toggle="collapse" href="#advancedInputFields" role="button" aria-expanded="false" aria-controls="advancedInputFields" class="advanced-fields collapsed"&gt;
+    &lt;div class="cfmTitleIcon"&gt;
+      $services.icon.renderHTML('caret-down')
+    &lt;/div&gt;
     $services.localization.render('confluencepro.job.question.advanced.link')
   &lt;/a&gt;
   &lt;div class="xform collapse confluence-migrator-collapse" id="advancedInputFields"&gt;
@@ -626,7 +626,9 @@ require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($
     uiQuestion.on('job:question:loaded', initQuestion);
   });
   $('.job-status').on('xwiki:job:done', function() {
-    location.reload();
+    const parser = new URL(window.location);
+    parser.searchParams.set('displaySuccess', 1);
+    window.location = parser.href;
   });
 });</code>
     </property>
