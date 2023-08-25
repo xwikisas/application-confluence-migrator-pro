@@ -164,6 +164,11 @@ public class DefaultConfluenceMigratorManager implements ConfluenceMigratorManag
         if (!logEvent.getLevel().equals(LogLevel.ERROR) && !logEvent.getLevel().equals(LogLevel.WARN)) {
             return Optional.empty();
         }
+        if (logEvent.getArgumentArray() == null) {
+            otherIssues.computeIfAbsent(logEvent.getLevel().toString(), k -> new ArrayList<>())
+                .add(logEvent.getFormattedMessage());
+            return Optional.empty();
+        }
         Optional<PageIdentifier> pageIdentifier =
             Arrays.stream(logEvent.getArgumentArray()).filter(a -> a instanceof PageIdentifier)
                 .map(a -> (PageIdentifier) a).findFirst();
