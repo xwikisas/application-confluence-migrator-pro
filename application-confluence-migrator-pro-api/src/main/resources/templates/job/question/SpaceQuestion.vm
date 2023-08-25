@@ -31,12 +31,16 @@
     'total': 0,
     'results': []
   })
+  ## We cant use $question.confluenceSpaces.get($space). There might be an issue with the hashing.
+  #set ($spacesMap = $collectiontool.getOrderedMap())
+  #set ($discard = $spacesMap.putAll($question.confluenceSpaces))
   #set ($spaces = [])
-  #set ($discard = $spaces.addAll($question.confluenceSpaces.entrySet()))
+  #set ($discard = $spaces.addAll($question.confluenceSpaces.keySet()))
+  #set ($spaces = $collectiontool.sort($spaces, 'entityReference:asc'))
   #if ("$!request.qSearch" != '')
     #set ($filteredSpaces = [])
     #foreach ($space in $spaces)
-      #set ($spaceRef = $services.model.serialize($space.key.entityReference))
+      #set ($spaceRef = $services.model.serialize($space.entityReference))
       #if ($spaceRef.toLowerCase().contains("$!request.qSearch"))
         #set ($discard = $filteredSpaces.add($space))
       #end
@@ -52,10 +56,10 @@
     #set ($rightIndex = $spaces.size())
   #end
   #foreach ($space in $spaces.subList($offset, $rightIndex))
-    #set ($spaceRef = $services.model.serialize($space.key.entityReference))
+    #set ($spaceRef = $services.model.serialize($space.entityReference))
     #set ($spaceData = {
       'reference': $spaceRef,
-      'properties': $space.value
+      'properties': $spacesMap.get($space)
     })
     #set ($discard = $data.results.add($spaceData))
   #end
