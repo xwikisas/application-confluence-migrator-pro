@@ -46,6 +46,7 @@
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobDoneEventEmitter'))
 #set ($prefilledValues = {
   'input': {
+    'prefixedMacros': 'attachments, gallery'
   },
   'output': {
     'stoppedWhenSaveFail': 'false'
