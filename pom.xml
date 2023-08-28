@@ -66,4 +66,12 @@
       </extension>
     </extensions>
   </build>
+  <profiles>
+    <profile>
+      <id>integration-tests</id>
+      <modules>
+        <module>application-confluence-migrator-pro-test</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>

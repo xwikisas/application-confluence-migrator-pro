@@ -1,4 +1,4 @@
-## Task Manager Application
+## Confluence Migrator Application (Pro)
 
 XWiki Confluence Migrator Pro helps admins to import confluence packages into their XWiki instance.
 
@@ -10,8 +10,8 @@ XWiki Confluence Migrator Pro helps admins to import confluence packages into th
 * Minimal XWiki version supported: XWiki 13.10
 * Translations: N/A
 * Sonar Dashboard: N/A
-* Continuous Integration Status: [![Build Status](http://ci.xwikisas.
-  com/view/All/job/xwikisas/job/application-task/job/master/badge/icon)](http://ci.xwikisas.com/view/All/job/xwikisas/job/application-confluence-migrator-ui/job/master/)
+* Continuous Integration Status: [![Build Status](http://ci.xwikisas.com/view/All/job/xwikisas/job/application-confluence-migrator-pro/job/master/badge/icon)](http://ci.xwikisas.
+  com/view/All/job/xwikisas/job/application-confluence-migrator-ui/job/master/)
 
 # Release
 
