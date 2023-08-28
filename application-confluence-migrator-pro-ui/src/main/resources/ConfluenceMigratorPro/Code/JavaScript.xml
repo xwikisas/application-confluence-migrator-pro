@@ -125,7 +125,7 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery'], function ($) {
+      <code>require(['jquery', 'xwiki-meta'], function ($, xcontext) {
   $(document).on('click', '.startMigration', function (event) {
     event.preventDefault();
     let jobDocumentRef = XWiki.Model.resolve('ConfluenceMigratorPro.Migrations.Migration' + Date.now(), XWiki.EntityType.DOCUMENT, XWiki.currentDocument.documentReference);
@@ -134,7 +134,8 @@
     window.location.href = jobDocument.getURL('edit', $.param({
       template: 'ConfluenceMigratorPro.Code.MigrationTemplate',
       parent: 'ConfluenceMigratorPro.WebHome',
-      package: package
+      package: package,
+      'form_token': xcontext.form_token
     }));
   });
 });</code>
