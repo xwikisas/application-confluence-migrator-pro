@@ -44,6 +44,11 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
+      <groupId>com.xwiki.licensing</groupId>
+      <artifactId>application-licensing-licensor-api</artifactId>
+      <version>${licensing.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.webjars.bower</groupId>
       <artifactId>diff-dom</artifactId>
       <version>4.2.3</version>

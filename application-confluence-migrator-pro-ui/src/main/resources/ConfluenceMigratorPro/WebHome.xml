@@ -43,6 +43,10 @@
 {{/velocity}}
 
 {{velocity}}
+#set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
+#if (!$services.licensing.licensor.hasLicensureForEntity($mainReference))
+  {{error}}#getMissingLicenseMessage('taskmanager.extension.name'){{/error}}
+#else
 ## Prerequisites Section ##
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
 #set ($prerequisitesComplete = 'completed')
@@ -100,9 +104,7 @@
   &lt;/ul&gt;
 &lt;/div&gt;
 {{/html}}
-{{/velocity}}
 
-{{velocity}}
 {{html}}
 #displaySubtitle('cube', 'confluencepro.packages.title')
 {{/html}}
@@ -151,6 +153,7 @@
 {{/html}}
 
 #displayMigrationsLiveData
+#end
 {{/velocity}}</content>
   <object>
     <name>ConfluenceMigratorPro.WebHome</name>
