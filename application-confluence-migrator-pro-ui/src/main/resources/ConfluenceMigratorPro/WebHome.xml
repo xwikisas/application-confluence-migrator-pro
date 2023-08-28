@@ -45,7 +45,7 @@
 {{velocity}}
 #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
 #if (!$services.licensing.licensor.hasLicensureForEntity($mainReference))
-  {{error}}#getMissingLicenseMessage('taskmanager.extension.name'){{/error}}
+  {{error}}#getMissingLicenseMessage('confluencepro.extension.name'){{/error}}
 #else
 ## Prerequisites Section ##
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))

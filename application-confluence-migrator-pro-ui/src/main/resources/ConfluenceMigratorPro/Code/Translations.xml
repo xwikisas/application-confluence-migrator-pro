@@ -37,6 +37,7 @@
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
   <content>confluencepro.panel.title=Confluence Migrator Pro
+confluencepro.extension.name=Confluence Migrator Pro
 
 confluencepro.zippicker.title=Select a confluence package to start the migration
 confluencepro.zippicker.placeholder=Pick a confluence export package...
