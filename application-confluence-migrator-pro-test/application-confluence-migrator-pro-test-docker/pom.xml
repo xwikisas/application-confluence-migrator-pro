@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.xwiki.confluencepro</groupId>
+    <artifactId>application-confluence-migrator-pro-test</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>application-confluence-migrator-pro-test-docker</artifactId>
+  <properties>
+    <!-- Functional tests are allowed to output content to the console -->
+    <xwiki.surefire.captureconsole.skip>true</xwiki.surefire.captureconsole.skip>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>com.xwiki.confluencepro</groupId>
+      <artifactId>application-confluence-migrator-pro-ui</artifactId>
+      <version>${project.version}</version>
+      <type>xar</type>
+      <exclusions>
+        <!-- Run the functional tests without a license. -->
+        <exclusion>
+          <groupId>com.xwiki.licensing</groupId>
+          <artifactId>application-licensing-licensor-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Use a fake licensor script service while running the functional tests. -->
+    <dependency>
+      <groupId>com.xwiki.licensing</groupId>
+      <artifactId>application-licensing-test-api</artifactId>
+      <version>${licensing.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- Add Panel deps which is optional in application-confluence-migrator-pro-ui in order to test registration in
+    the App panel -->
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-panels-ui</artifactId>
+      <version>${platform.version}</version>
+      <type>xar</type>
+    </dependency>
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-test-docker</artifactId>
+      <version>${platform.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.xwiki.licensing</groupId>
+      <artifactId>application-licensing-test-dependencies</artifactId>
+      <version>${licensing.version}</version>
+      <type>pom</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.xwiki.confluencepro</groupId>
+      <artifactId>application-confluence-migrator-pro-test-pageobjects</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-panels-test-pageobjects</artifactId>
+      <version>${platform.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <testSourceDirectory>src/test/it</testSourceDirectory>
+    <plugins>
+      <!-- We need to explicitly include the failsafe plugin since it's not part of the default maven lifecycle -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+  <profiles>
+    <profile>
+      <id>clover</id>
+      <!-- Add the Clover JAR to the WAR so that it's available at runtime when XWiki executes.
+           It's needed because instrumented jars in the WAR will call Clover APIs at runtime when they execute. -->
+      <dependencies>
+        <dependency>
+          <groupId>org.openclover</groupId>
+          <artifactId>clover</artifactId>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <systemProperties combine.children="append">
+                <!-- Tell the Docker-based test to activate the Clover profile so that the Clover JAR is added to
+                     WEB-INF/lib -->
+                <property>
+                  <name>xwiki.test.ui.profiles</name>
+                  <value>clover</value>
+                </property>
+              </systemProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

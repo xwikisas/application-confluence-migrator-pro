@@ -1,0 +1,223 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.MigrationTemplate" locale="">
+  <web>ConfluenceMigratorPro.Code</web>
+  <name>MigrationTemplate</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content/>
+  <object>
+    <name>ConfluenceMigratorPro.Code.MigrationTemplate</name>
+    <number>0</number>
+    <className>ConfluenceMigratorPro.Code.MigrationClass</className>
+    <guid>acedb91d-903a-4035-8d2b-cd75b2058587</guid>
+    <class>
+      <name>ConfluenceMigratorPro.Code.MigrationClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <executed>
+        <customDisplay/>
+        <defaultValue/>
+        <disabled>0</disabled>
+        <displayFormType/>
+        <displayType/>
+        <hint/>
+        <name>executed</name>
+        <number>6</number>
+        <prettyName>executed</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </executed>
+      <imported>
+        <customDisplay/>
+        <disabled>0</disabled>
+        <hint/>
+        <name>imported</name>
+        <number>3</number>
+        <numberType>long</numberType>
+        <prettyName>imported</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
+      </imported>
+      <logs>
+        <contenttype>---</contenttype>
+        <customDisplay/>
+        <disabled>0</disabled>
+        <editor>---</editor>
+        <hint/>
+        <name>logs</name>
+        <number>7</number>
+        <picker>1</picker>
+        <prettyName>logs</prettyName>
+        <restricted>0</restricted>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </logs>
+      <otherIssues>
+        <contenttype>---</contenttype>
+        <customDisplay/>
+        <disabled>0</disabled>
+        <editor>---</editor>
+        <hint/>
+        <name>otherIssues</name>
+        <number>8</number>
+        <picker>1</picker>
+        <prettyName>otherIssues</prettyName>
+        <restricted>0</restricted>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </otherIssues>
+      <package>
+        <customDisplay/>
+        <disabled>0</disabled>
+        <hint/>
+        <name>package</name>
+        <number>2</number>
+        <picker>1</picker>
+        <prettyName>package</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </package>
+      <problems>
+        <contenttype>---</contenttype>
+        <customDisplay/>
+        <disabled>0</disabled>
+        <editor>---</editor>
+        <hint/>
+        <name>problems</name>
+        <number>6</number>
+        <picker>1</picker>
+        <prettyName>problems</prettyName>
+        <restricted>0</restricted>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </problems>
+      <skipped>
+        <contenttype>---</contenttype>
+        <customDisplay/>
+        <disabled>0</disabled>
+        <editor>---</editor>
+        <hint/>
+        <name>skipped</name>
+        <number>7</number>
+        <picker>1</picker>
+        <prettyName>skipped</prettyName>
+        <restricted>0</restricted>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </skipped>
+      <spaces>
+        <cache>0</cache>
+        <classname/>
+        <customDisplay/>
+        <defaultValue/>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText/>
+        <hint/>
+        <idField/>
+        <largeStorage>0</largeStorage>
+        <multiSelect>1</multiSelect>
+        <name>spaces</name>
+        <number>1</number>
+        <picker>1</picker>
+        <prettyName>spaces</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators/>
+        <size>1</size>
+        <sort/>
+        <sql/>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <valueField/>
+        <classType>com.xpn.xwiki.objects.classes.PageClass</classType>
+      </spaces>
+    </class>
+    <property>
+      <executed>0</executed>
+    </property>
+    <property>
+      <imported/>
+    </property>
+    <property>
+      <logs/>
+    </property>
+    <property>
+      <otherIssues/>
+    </property>
+    <property>
+      <package/>
+    </property>
+    <property>
+      <problems/>
+    </property>
+    <property>
+      <skipped/>
+    </property>
+    <property>
+      <spaces/>
+    </property>
+  </object>
+</xwikidoc>

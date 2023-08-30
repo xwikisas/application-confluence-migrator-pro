@@ -1,0 +1,4 @@
+com.xwiki.confluencepro.internal.ConfluenceFilteringListener
+com.xwiki.confluencepro.internal.ConfluenceMigrationJob
+com.xwiki.confluencepro.internal.DefaultConfluenceMigrationManager
+com.xwiki.confluencepro.internal.DefaultConfluenceMigrationPrerequisites

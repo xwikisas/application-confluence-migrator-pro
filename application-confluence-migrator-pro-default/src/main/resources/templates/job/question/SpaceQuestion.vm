@@ -1,0 +1,110 @@
+## ---------------------------------------------------------------------------
+## See the NOTICE file distributed with this work for additional
+## information regarding copyright ownership.
+##
+## This is free software; you can redistribute it and/or modify it
+## under the terms of the GNU Lesser General Public License as
+## published by the Free Software Foundation; either version 2.1 of
+## the License, or (at your option) any later version.
+##
+## This software is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+## Lesser General Public License for more details.
+##
+## You should have received a copy of the GNU Lesser General Public
+## License along with this software; if not, write to the Free
+## Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+## 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+## ---------------------------------------------------------------------------
+#if ($request.qaction == 'data')
+  $response.setContentType("application/json")
+  #set ($offset = "$!request.offset")
+  #if ($offset == '')
+    #set ($offset = '0')
+  #end
+  #set ($offset = $numbertool.toNumber($offset))
+  #set ($limit = 10)
+  #set ($jobStatus = $job.status)
+  #set ($question = $jobStatus.question)
+  #set ($data = {
+    'total': 0,
+    'results': []
+  })
+  ## We cant use $question.confluenceSpaces.get($space). There might be an issue with the hashing.
+  #set ($spacesMap = $collectiontool.getOrderedMap())
+  #set ($discard = $spacesMap.putAll($question.confluenceSpaces))
+  #set ($spaces = [])
+  #set ($discard = $spaces.addAll($question.confluenceSpaces.keySet()))
+  #set ($spaces = $collectiontool.sort($spaces, 'entityReference:asc'))
+  #if ("$!request.qSearch" != '')
+    #set ($filteredSpaces = [])
+    #foreach ($space in $spaces)
+      #set ($spaceRef = $services.model.serialize($space.entityReference))
+      #if ($spaceRef.toLowerCase().contains("$!request.qSearch"))
+        #set ($discard = $filteredSpaces.add($space))
+      #end
+    #end
+    #set ($spaces = $filteredSpaces)
+  #end
+  #set ($discard = $data.put('total', $spaces.size()))
+  #if ($offset > $spaces.size())
+    #set ($offset = $spaces.size())
+  #end
+  #set ($rightIndex = $offset + $limit)
+  #if ($rightIndex > $spaces.size())
+    #set ($rightIndex = $spaces.size())
+  #end
+  #foreach ($space in $spaces.subList($offset, $rightIndex))
+    #set ($spaceRef = $services.model.serialize($space.entityReference))
+    #set ($spaceData = {
+      'reference': $spaceRef,
+      'properties': $spacesMap.get($space)
+    })
+    #set ($discard = $data.results.add($spaceData))
+  #end
+  $jsontool.serialize($data)
+#else
+  #template('job/question/macros.vm')
+  #questionHeader()
+  #set ($jobStatus = $job.status)
+  #set ($question = $jobStatus.question)
+  <div class="confluenceSpaces">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <p class="panel-title">$escapetool.xml($services.localization.render('confluencepro.job.question.title'))</p>
+      </div>
+      <div class="panel-body">
+        <div class="cfmToolbar">
+          <div class="cfmSelectAll">
+            <input id="cfmSelectAllInput" name="qproperty_selectAllSpaces" type="checkbox" />
+            <label for="cfmSelectAllInput">$escapetool.xml($services.localization.render('confluencepro.job.question.selectAll'))</label>
+          </div>
+          <div class="cfmSearch">
+            <input
+              type="text" data-url="$escapetool.xml($xwiki.relativeRequestURL)?qaction=data"
+              placeholder="$escapetool.xml($services.localization.render('confluencepro.job.question.search.placeholder'))">
+          </div>
+        </div>
+        <div class="available-spaces">
+          <div class="available-space hidden">
+            <input disabled type="checkbox" name="qproperty_selectedDocuments[]"/>
+  	        <label></label>
+            <div class="cfmProperties"></div>
+          </div>
+        </div>
+        <div class="cfmShowMoreGroup">
+          <span class="cfmShowMoreMessage"></span>
+          <a class="cfmShowMoreLink" href="#"></a>
+        </div>
+      </div>
+    </div>
+    <p class="buttons-question">
+      <button class="btn btn-primary btAnswerConfirm">$escapetool.xml($services.localization.render('job.question.button.confirm'))</button>
+      #if ($jobStatus.cancelable)
+        <button class="btn btn-default btAnswerCancel">$escapetool.xml($services.localization.render('job.question.button.cancel'))</button>
+      #end
+    </p>
+  </div>
+  #questionFooter()
+#end

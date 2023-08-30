@@ -1,0 +1,995 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.MigrationSheet" locale="">
+  <web>ConfluenceMigratorPro.Code</web>
+  <name>MigrationSheet</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
+
+{{velocity output="false"}}
+#set ($discard = $xwiki.jsfx.use('uicomponents/job/job.js', true))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobRequestFix'))
+#set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobDoneEventEmitter'))
+#set ($prefilledValues = {
+  'input': {
+    'prefixedMacros': 'attachments,gallery,chart'
+  },
+  'output': {
+    'stoppedWhenSaveFail': 'false'
+  }
+})
+## Start of macro ##
+#**
+ * Display a form field given a descriptor. The method uses the outside param $prefilledValues.
+ *
+ * @param $type 'input' or 'output'.
+ * @param propertyDescriptor the descriptor from which to extract data and display an input.
+ *#
+#macro (displayFormField $type $propertyDescriptor)
+  #set ($propertyDescriptorId = $propertyDescriptor.id)
+  #if ($type == 'input')
+    #set ($propertyDescriptorInputId = "qproperty_inputProperties[]")
+  #else
+    #set ($propertyDescriptorInputId = "qproperty_outputProperties[]")
+  #end
+  #set ($propertyDescriptorLabel = $services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}"))
+  #if ("$!propertyDescriptorLabel" == "confluencepro.job.question.advanced.$propertyDescriptorId")
+    #set ($propertyDescriptorLabel = $propertyDescriptor.name)
+  #end
+  #set ($propertyDescriptorAbout = $services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.description"))
+  #if ("$!propertyDescriptorAbout" == "confluencepro.job.question.advanced.${propertyDescriptorId}.description")
+    #set ($propertyDescriptorAbout = $propertyDescriptor.description)
+  #end
+  #set ($propertyDescriptorSupportedFormats = $services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.supportedformats"))
+  &lt;dt&gt;
+    &lt;label for="$!escapetool.xml($propertyDescriptorId)"&gt;$propertyDescriptorLabel&lt;/label&gt;
+    #if ("$!propertyDescriptorAbout" != '')
+      &lt;span class="xHint"&gt;$propertyDescriptorAbout&lt;/span&gt;
+    #end
+    #if ("$!propertyDescriptorSupportedFormats" != "confluencepro.job.question.advanced.${propertyDescriptorId}.supportedformats")
+      &lt;span class="xHint"&gt;&lt;tt&gt;$propertyDescriptorSupportedFormats&lt;/tt&gt;&lt;/span&gt;
+    #end
+  &lt;/dt&gt;
+  &lt;dd&gt;
+    #if ("$!prefilledValues.get($type).get($propertyDescriptorId)" == '')
+      #set ($fieldValue = '')
+      #foreach ($typeDefaultEntry in $filterDefaults.get($type).entrySet())
+        #if ($typeDefaultEntry.key == $propertyDescriptorId)
+          #set ($fieldValue = $typeDefaultEntry.value)
+        #end
+      #end
+      #set ($propertyDescriptorInputValue = '')
+      #if (($propertyDescriptor.defaultValue || "$!propertyDescriptor.defaultValue" != '') &amp;&amp;
+        ($propertyDescriptor.type.getName() == 'boolean' || $propertyDescriptor.type.getName() == 'int' || $propertyDescriptor.type.getName() == 'java.lang.String'))
+        #set ($propertyDescriptorInputValue = $propertyDescriptor.defaultValue)
+      #end
+      #if ($request.get($propertyDescriptorInputId))
+        #set ($propertyDescriptorInputValue = $request.get($propertyDescriptorInputId))
+      #elseif ("$!fieldValue" != '')
+        #set ($propertyDescriptorInputValue = $fieldValue)
+      #end
+    #else
+      #set ($propertyDescriptorInputValue = $prefilledValues.get($type).get($propertyDescriptorId))
+    #end
+    &lt;input type="text" class="cfm-${type}-filter-property"
+      value="$!escapetool.xml($propertyDescriptorInputValue)"
+      data-key="$!escapetool.xml($propertyDescriptorId)" /&gt;
+  &lt;/dd&gt;
+#end
+#**
+ * The view of the Migration when it is created. The title needs to be set and, if the request contains it,
+ * the package field of the object is populated.
+ *#
+#macro(newDocView)
+
+  {{html clean="false"}}
+  &lt;label for="xwikidoctitleinput"&gt;
+    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.migration.title.label'))&lt;/h2&gt;
+  &lt;/label&gt;
+  &lt;div class="xform"&gt;
+    ## &lt;input type="hidden" name="form_token" value="$!escapetool.xml($services.csrf.token)" /&gt;
+    &lt;dl id="titleinput" class="form-group"&gt;
+      &lt;dd&gt;
+        &lt;input type="text" id="xwikidoctitleinput" name="title" value="" class=""
+          placeholder="$!escapetool.xml($services.localization.render('confluencepro.migration.title.placeholder'))"&gt;
+        #if ("$!request.package" != '')
+          &lt;input class="form-control" type="hidden" 
+            name="ConfluenceMigratorPro.Code.MigrationClass_0_package"
+            id="ConfluenceMigratorPro.Code.MigrationClass_0_package"
+            value="$!escapetool.xml($request.package)" /&gt;
+        #end
+      &lt;/dd&gt;
+    &lt;/dl&gt;
+  &lt;/div&gt;
+  ## Advanced options
+  &lt;a data-toggle="collapse" href="#advancedInputFields" role="button" aria-expanded="false" aria-controls="advancedInputFields" class="advanced-fields collapsed"&gt;
+    &lt;div class="cfmTitleIcon"&gt;
+      $services.icon.renderHTML('caret-down')
+    &lt;/div&gt;
+    $services.localization.render('confluencepro.job.question.advanced.link')
+  &lt;/a&gt;
+  &lt;div class="xform collapse confluence-migrator-collapse" id="advancedInputFields"&gt;
+    &lt;h2&gt;$services.localization.render('confluencepro.job.question.advanced.input')&lt;/h2&gt;
+    &lt;dl&gt;
+      &lt;input type="hidden" id="cfm-input-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_inputProperties" /&gt;
+      #set ($descriptor = $services.filter.getInputFilterStreamDescriptor('confluence+xml'))
+      #foreach ($propertyDescriptor in $descriptor.properties)
+        #displayFormField('input', $propertyDescriptor)
+      #end
+    &lt;/dl&gt;
+    &lt;h2&gt;$services.localization.render('confluencepro.job.question.advanced.output')&lt;/h2&gt;
+    &lt;dl&gt;
+      &lt;input type="hidden" id="cfm-output-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties" /&gt;
+      #set ($descriptor = $services.filter.getOutputFilterStreamDescriptor('xwiki+instance'))
+      #foreach ($propertyDescriptor in $descriptor.properties)
+        #displayFormField('output', $propertyDescriptor)
+      #end
+    &lt;/dl&gt;
+  &lt;/div&gt;
+  {{/html}}
+
+#end
+#**
+ * The view of the Migration when the context action is `view`. If the `package` of the object is populated 
+ * and the `executed` flag is set to false, execute the migration for that package. Otherwise, display the 
+ * report of the execution.
+ *#
+#macro(docView)
+  ## Handle the upload and selection of a package using the attachment picker.
+  #if ("$request.package" != '' &amp;&amp; $services.csrf.isTokenValid($request.form_token))
+    #set ($discard = $doc.set('package', $request.package))
+    #set ($discard = $doc.save())
+  #end
+  ## End of upload handling.
+  #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
+  #if ($obj.getProperty('executed').value == 1)
+    #displayRaport($obj)
+  #else
+    #runAndDisplayJob($obj)
+  #end
+#end
+#**
+ * Display a raport of the last executed job on this page.
+ *#
+#macro(displayRaport $obj)
+
+  #if ("$request.displaySuccess" == '1')
+    {{success}}
+      $services.rendering.escape($services.localization.render('confluencepro.migration.raport.imported.success'), $xwiki.currentContentSyntaxId)
+    {{/success}}
+
+  #end
+  {{html}}
+  #set ($discard = $xwiki.ssfx.use('uicomponents/logging/logging.css', true))
+  #set ($discard = $xwiki.jsfx.use('uicomponents/logging/logging.js', true))
+  ## Spaces section
+  #set ($spaces = $obj.getProperty('spaces').value)
+  #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$spaces.size()])
+  &lt;ul class="imported-spaces"&gt;
+  #set ($options = {})
+  #foreach ($space in $spaces)
+    &lt;li&gt;
+      &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
+        &lt;div class="cfmTitleIcon"&gt;
+          $services.icon.renderHTML('caret-down')
+        &lt;/div&gt;
+        &lt;span&gt;$escapetool.xml($space)&lt;/span&gt;
+      &lt;/a&gt;
+      #set ($discard = $options.put('root', "document:xwiki:${space}.WebHome"))
+      #set ($discard = $options.put('links', 'true'))
+      #set ($discard = $options.put('compact', 'true'))
+      &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;
+        #documentTree($options)
+      &lt;/div&gt;
+    &lt;li&gt;
+  #end
+  &lt;/ul&gt;
+  ## Migrated with issues section
+  #set ($json = $obj.getProperty('problems').value)
+  #set ($jsonObject = $jsontool.fromString($json))
+  #displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.keySet().size()])
+  #displayJson($jsonObject)
+  ## Skipped section
+  #set ($json = $obj.getProperty('skipped').value)
+  #set ($jsonObject = $jsontool.fromString($json))
+  #displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
+  #displayJson($jsonObject)
+  ## Other issues section
+  #set ($json = $obj.getProperty('otherIssues').value)
+  #set ($jsonObject = $jsontool.fromString($json))
+  #set ($errors = $jsonObject.get('ERROR'))
+  #set ($warns = $jsonObject.get('WARN'))
+  #set ($problems = 0)
+  #if ($errors.size() &gt; 0)
+    #set ($problems = $problems + $errors.size())
+  #end
+  #if ($warns.size() &gt; 0)
+    #set ($problems = $problems + $warns.size())
+  #end
+  #displaySubtitle('question', 'confluencepro.migration.raport.problems.other.title', '', [$problems])
+  &lt;div class="cfm-problem-pages"&gt;
+  #foreach ($entry in $jsonObject.entrySet())
+    &lt;li class="cfm-problem-page"&gt;
+      &lt;div class="cfm-page"&gt;
+        &lt;a role="button" data-toggle="collapse" href="#cfmOtherIssues${foreach.count}" aria-expanded="false" aria-controls="cfmOtherIssues${foreach.count}"&gt;
+          &lt;div class="cfmTitleIcon"&gt;
+            $services.icon.renderHTML('caret-down')
+          &lt;/div&gt;
+        &lt;/a&gt;
+        $escapetool.xml($services.localization.render("confluencepro.migration.raport.problems.other.$entry.key.toLowerCase()"))
+      &lt;/div&gt;
+      &lt;div id="cfmOtherIssues${foreach.count}" class="cfm-problems collapse"&gt;
+        &lt;ul&gt;
+          #foreach ($problem in $entry.value)
+            &lt;li class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/li&gt;
+          #end
+        &lt;/ul&gt;
+      &lt;/div&gt;
+    &lt;/li&gt;
+  #end
+  &lt;/div&gt;
+  ## Logs section
+  #set ($json = $obj.getProperty('logs').value)
+  #set ($jsonObject = $jsontool.fromString($json))
+  #displaySubtitle('info', 'confluencepro.migration.raport.logs.title', '', [])
+  &lt;ul class="log"&gt;
+  #foreach ($log in $jsonObject)
+    &lt;li class="log-item log-item-$!{log.level.toLowerCase()}"&gt;
+      &lt;div&gt;
+        $escapetool.xml($log.message)
+      &lt;/div&gt;
+    #if ($log.throwable)
+      &lt;div class="stacktrace"&gt;
+        $escapetool.xml($log.throwable)
+      &lt;/div&gt;
+    #end
+    &lt;/li&gt;
+  #end
+  &lt;/ul&gt;
+  &lt;div class="cfmButtonGroup"&gt;
+    &lt;button id="cfmResetMigration" type="button" class="btn btn-default"&gt;
+      $escapetool.xml($services.localization.render('confluencepro.migration.raport.reset.button'))
+    &lt;/button&gt;
+    &lt;button class="btn btn-link"&gt;
+      &lt;a href="$xwiki.getURL($doc.documentReference.parent)"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.viewall.button'))&lt;/a&gt;
+    &lt;/button&gt;
+  &lt;/div&gt;
+  {{/html}}
+
+#end
+#**
+ * Display the properties of a json in a structured way.
+ * @param $jsonObject the json that needs displaying. It should have the pattern: { key1: [vals..], key2: [vals..], ..}
+ *#
+#macro(displayJson $jsonObject)
+  &lt;div class="cfm-problem-pages"&gt;
+  #foreach ($entry in $jsonObject.entrySet())
+    #set ($docRef = $services.model.resolveDocument($entry.key))
+    &lt;li class="cfm-problem-page"&gt;
+      &lt;div class="cfm-page"&gt;
+        &lt;a role="button" data-toggle="collapse" href="#cfmPage${foreach.count}Issues" aria-expanded="false" aria-controls="cfmPage${foreach.count}Issues"&gt;
+          &lt;div class="cfmTitleIcon"&gt;
+            $services.icon.renderHTML('caret-down')
+          &lt;/div&gt;
+        &lt;/a&gt;
+        &lt;a href="$escapetool.xml($xwiki.getURL($docRef))"&gt;$escapetool.xml("#renderReferenceNicely($docRef)")&lt;/a&gt;
+      &lt;/div&gt;
+      &lt;div id="cfmPage${foreach.count}Issues" class="cfm-problems collapse"&gt;
+        &lt;ul&gt;
+          #foreach ($problem in $entry.value)
+            &lt;li class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/li&gt;
+          #end
+        &lt;/ul&gt;
+      &lt;/div&gt;
+    &lt;/li&gt;
+  #end
+  &lt;/div&gt;
+#end
+#**
+ * @param $ref an entity reference.
+ * @return a string of the form space1 &gt; space2 &gt; ... &gt; spacen.
+ *#
+#macro (renderReferenceNicely $ref)
+  #set ($tmp = '')
+  #foreach ($space in $ref.spaceReferences)
+    #if ($foreach.count == 1)
+      #set ($tmp = $space.name)
+    #else
+      #set ($tmp = "$tmp &gt; $space.name")
+    #end
+  #end
+  $tmp
+#end
+#**
+ * Run the migration job if the `executed` is false and if there is a `package` set. Display the status and the logs of the job.
+ *
+ * @param $obj the migration object of this page.
+ *#
+#macro(runAndDisplayJob $obj)
+  ## Either start of display job.
+  #set ($confluenceJob = $services.confluenceMigration.getLastJob($doc.documentReference))
+  #set ($package = $obj.getProperty('package').value)
+  #if ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED')
+    #if ("$!package" != '')
+      #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
+      #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
+      #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
+      #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
+      #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
+      #if ("$!outputProperties.get('authorPreserved')" == 'false')
+        #set ($discard = $outputProperties.putIfAbsent('author', $xcontext.userReference))
+      #end
+      #set ($discard = $inputProperties.putAll($prefilledValues.get('input')))
+      #set ($discard = $outputProperties.putAll($prefilledValues.get('output')))
+      #set ($confluenceJob = $services.confluenceMigration.migrate($doc.documentReference, $attachDoc.getAttachment($attachRef.name).getContentInputStream(), $inputProperties, $outputProperties))
+      #displayJob($confluenceJob)
+    #else
+      No package to start the migration
+      #displayZipPickerForm
+    #end
+  #else
+    #displayJob($confluenceJob)
+  #end
+#end
+#**
+ * Display the job.
+ *
+ * @param $confluenceJob the job that will be displayed.
+ *#
+#macro(displayJob $confluenceJob)
+
+  #set ($jobStatusURL = $doc.getURL('ConfluenceMigratorPro.Code.JobJSON', 'get', $escapetool.url({
+    'outputSyntax': 'plain',
+    'docRef': $services.model.serialize($doc.documentReference)
+  })))
+  {{html}}
+  #template('job_macros.vm')
+  #set ($jobStatus = $confluenceJob.status)
+  #set ($jobState = $jobStatus.state)
+  #set ($finished = $jobState == 'FINISHED')
+  #set ($jobRequest = $jobStatus.request)
+  #if (!$jobStatusURL)
+    #set ($jobStatusURL = $doc.getURL('get', $escapetool.url({
+      'xpage': 'job_status_json',
+      'outputSyntax': 'plain',
+      'jobId': $jobRequest.id,
+      'translationPrefix': $translationPrefix
+    })))
+  #end
+  &lt;div class="xcontent job-status" data-url="$escapetool.xml($jobStatusURL)"&gt;
+    &lt;div class="job-loading-status"&gt;
+      &lt;div class="loading-icon loading"&gt;&lt;/div&gt;
+      &lt;span class="loading-text"&gt;$escapetool.xml($services.localization.render('confluencepro.job.status.readingPackage'))&lt;/span&gt;
+    &lt;/div&gt;
+    #set($titleKey = "${translationPrefix}.label")
+    #if ($services.localization.get($titleKey))
+      &lt;h2&gt;$services.localization.render($titleKey)&lt;/h2&gt;
+      #set($titleHintKey = "${translationPrefix}.hint")
+      #if ($services.localization.get($titleHintKey))
+        &lt;p class="text-muted small"&gt;$services.localization.render($titleHintKey)&lt;/p&gt;
+      #end
+    #end
+    #if (!$finished)
+      #displayJobProgressBar($jobStatus)
+      #displayJobQuestion($jobStatus)
+    #else
+      #jobFinishedMessage($status, $translationPrefix)
+    #end
+    #if ($showLogs || $isAdvancedUser || $isSuperAdmin)
+      #displayJobStatusLog($jobStatus true)
+    #end
+  &lt;/div&gt;
+  {{/html}}
+
+#end
+#**
+ * Display a form with a zip picker and a submit button.
+ *#
+#macro(displayZipPickerForm)
+
+  {{html clean="false"}}
+  &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.zippicker.title'))&lt;/h2&gt;
+  &lt;form class="xform"&gt;
+  &lt;input type="hidden" name="form_token" value="$!escapetool.xml($services.csrf.token)" /&gt;
+  #set ($zipExtension = '.zip')
+  #set ($zipMediaType = 'application/zip')
+  #set ($parameters = {
+      'data-upload-allowed': $services.security.authorization.hasAccess('edit'),
+      'data-accept': "$zipExtension, $zipMediaType",
+      'placeholder': $services.localization.render('confluencepro.zippicker.placeholder'),
+      'name': 'package',
+      'data-document-reference': 'ConfluenceMigratorPro.WebHome'
+  })
+  #set ($discard = $parameters.put('class', "$!parameters.get('class') pick-attachment-resource"))
+  #attachmentPicker_import
+  #suggestInput($parameters)
+  &lt;button type="submit" class="btn btn-primary"&gt;
+  $escapetool.xml($services.localization.render('confluencepro.zippicker.button.submit'))
+  &lt;/button&gt;
+  &lt;/form&gt;
+  {{/html}}
+
+#end
+{{/velocity}}
+
+{{template name="documentTree_macros.vm" /}}
+
+{{velocity}}
+#set ($discard = $doc.use('ConfluenceMigratorPro.Code.MigrationClass'))
+#if ($xcontext.action == 'edit' || $xcontext.action == 'admin')
+  #if ($doc.isNew())
+    #newDocView
+  #else
+  #end
+#elseif ($hasAdmin)
+  #docView
+#else
+  {{error}}
+  {{translation key="confluencepro.norights" /}}
+  {{/error}}
+#end
+{{/velocity}}</content>
+  <object>
+    <name>ConfluenceMigratorPro.Code.MigrationSheet</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>8753e50f-2868-403d-9f62-7cbde9895a8f</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>define('confluence-job', {
+  prefix: 'confluencepro.job.',
+  keys: [
+    'question.additionalInfo.documentsCount',
+    'question.additionalInfo.attachmentsCount',
+    'question.showMore.message',
+    'question.showMore.link',
+    'status.runningJob'
+  ]
+});
+require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($, l10n, JobRunner) {
+  let checkedValues = new Set();
+  // Send search request to server and update the displayed questions.
+  let searchAndDisplay = function (url, qSearch, offset) {
+    if (!url) {
+      return;
+    }
+    let template = $('.available-space.hidden');
+    $.getJSON(url + '&amp;qSearch=' + qSearch + '&amp;offset=' + offset)
+      .done(function (data) {
+        if (offset == 0) {
+          $('.available-space').each(function() {
+            if (this.className === 'available-space' &amp;&amp; !$(this).find('input').prop('checked')) {
+              this.remove();
+            }
+          });
+        }
+        data.results.forEach(function(space, index) {
+          if (checkedValues.has(space.reference)) {
+            return;
+          }
+          let element = template.clone();
+          element.toggleClass('hidden');
+          element.find('label')
+            .attr('for', 'confluence_space_' + index)
+            .append(document.createTextNode(space.reference));
+          element.find('input')
+              .attr('id', 'confluence_space_' + index)
+              .prop('disabled', false)
+              .val(space.reference);
+          $('.available-spaces').append(element);
+          for (const [key, value] of Object.entries(space.properties)) {
+            element.find('.cfmProperties').append('&lt;span&gt;' + l10n['question.additionalInfo.' + key] + ' ' + value + '&lt;/span&gt;');
+          }
+        });
+        let remaining = data.total - (offset + data.results.length);
+        if (remaining &gt; 0) {
+          $('.cfmShowMoreGroup').removeClass('hidden');
+          $('.cfmShowMoreMessage').text(l10n.get('question.showMore.message', remaining));
+          $('.cfmShowMoreLink').text(l10n.get('question.showMore.link')).data('offset', data.total - remaining);
+        } else {
+          $('.cfmShowMoreGroup').addClass('hidden');
+        }
+      });
+  };
+  let initQuestion = function () {
+    $('.job-loading-status').hide();
+    $(this).find('.btn-primary').on('click', function () {
+      $('.job-loading-status').show();
+      $('.job-loading-status .loading-text').text(l10n.get('status.runningJob'));
+    });
+    searchAndDisplay($('.cfmSearch input').data('url'), '', 0);
+  };
+  // Add listener to the show more link.
+  $(document).on('click', '.cfmShowMoreLink', function (event) {
+    event.preventDefault();
+    let offset = $(this).data('offset');
+    if (offset) {
+      searchAndDisplay($('.cfmSearch input').data('url'), $('.cfmSearch input').val(), offset);
+    }
+  });
+  // Add listener to job question search input.
+  let timeout;
+  $(document).on('input', '.cfmSearch input', function() {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    let input = $(this);
+    timeout = setTimeout(function () { searchAndDisplay(input.data('url'), input.val(), 0); }, 1000);
+  });
+  // Add listener to selectall checkbox.
+  $(document).on('change', '#cfmSelectAllInput', function () {
+    $('.available-space input').prop('checked', $(this).prop('checked'))
+  });
+  $(document).on('change', '.available-space input', function () {
+    if (!$(this).prop('checked')) {
+      checkedValues.delete($(this).val());
+      $('#cfmSelectAllInput').prop('checked', false);
+    } else {
+      checkedValues.add($(this).val());
+    }
+  });
+  $('.ui-question').each(function() {
+    let uiQuestion = $(this);
+    // Register for any event in the future
+    uiQuestion.on('job:question:loaded', initQuestion);
+  });
+  $('.job-status').on('xwiki:job:done', function() {
+    const parser = new URL(window.location);
+    parser.searchParams.set('displaySuccess', 1);
+    window.location = parser.href;
+  });
+});</code>
+    </property>
+    <property>
+      <name>Job related JavaScript</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+  <object>
+    <name>ConfluenceMigratorPro.Code.MigrationSheet</name>
+    <number>1</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>dec20898-0fa9-4eeb-81ed-cdfd0151168e</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>define('confluence-sheet', {
+  prefix: 'confluencepro.migration.raport.reset.',
+  keys: [
+    'confirm',
+    'fail',
+    'success',
+    'progress'
+  ]
+});
+require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
+  let inputFilterJson = {};
+  let outputFilterJson = {};
+  $('.cfm-input-filter-property').on('change', function() {
+    inputFilterJson[$(this).data('key')] = $(this).val();
+    $('#cfm-input-properties').val(JSON.stringify(inputFilterJson));
+  });
+  $('.cfm-output-filter-property').on('change', function() {
+    outputFilterJson[$(this).data('key')] = $(this).val();
+    $('#cfm-output-properties').val(JSON.stringify(outputFilterJson));
+  });
+  $(document).on('click', '#cfmResetMigration', function(event) {
+
+    var notification = new XWiki.widgets.Notification(l10n.progress, 'inprogress');
+    if (!confirm(l10n.confirm)) {
+      notification.hide();
+      return;
+    }
+    let migrationClass = 'ConfluenceMigratorPro.Code.MigrationClass';
+    let restURL = XWiki.currentDocument.getRestURL() + '/objects/' + migrationClass + '/0/properties/executed';
+    $.ajax(restURL, {
+      method: 'PUT',
+      contentType: 'text/plain',
+      data: '0'
+    }).then(data =&gt; {
+      notification.replace(new XWiki.widgets.Notification(l10n.success, 'done'));
+      setTimeout(function() {
+        location.reload();
+      }, 1000);
+    }).catch(() =&gt; {
+      notification.replace(new XWiki.widgets.Notification(l10n.fail, 'error'));
+    });
+  })
+});</code>
+    </property>
+    <property>
+      <name>Sheet related JavaScript</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+  <object>
+    <name>ConfluenceMigratorPro.Code.MigrationSheet</name>
+    <number>0</number>
+    <className>XWiki.StyleSheetExtension</className>
+    <guid>1f15f84c-68e0-4966-94e3-c02caad8acdd</guid>
+    <class>
+      <name>XWiki.StyleSheetExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <contentType>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>contentType</name>
+        <number>6</number>
+        <prettyName>Content Type</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>CSS|LESS</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </contentType>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>.available-space {
+  margin-top: .5em;
+  padding-bottom: .5em;
+  display: grid;
+  grid-template-areas: "a b"
+                       "c d";
+  grid-template-columns: fit-content(1ch) 1fr;
+  gap: 0 0.5em;
+}
+
+.available-space label {
+  font-weight: normal;
+  grid-area: b;
+}
+
+.available-space input {
+  grid-area: a;
+}
+
+.available-space .cfmProperties {
+  grid-area: d;
+}
+
+.available-space span {
+  margin-right: 0.5em;
+  font-weight: lighter;
+}
+
+.imported-spaces {
+  list-style-type: none;
+}
+
+.imported-space {
+  padding: 1em;
+}
+
+.cfmToolbar {
+  display: flex;
+  margin-bottom: 2em;
+  align-items: flex-end;
+  gap: 0 2em;
+}
+
+.cfmButtonGroup {
+  margin-top: 2em;
+}
+
+.cfmShowMoreGroup {
+  font-style: italic;
+}
+
+.job-loading-status {
+  display: flex;
+  align-items: center;
+}
+
+.job-loading-status .loading-icon {
+  height: 1em;
+  width: 1em;
+  margin-right: 1em;
+}
+
+.cfm-problem-pages &gt; ul {
+  list-style: none;
+}</code>
+    </property>
+    <property>
+      <contentType>CSS</contentType>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+</xwikidoc>
