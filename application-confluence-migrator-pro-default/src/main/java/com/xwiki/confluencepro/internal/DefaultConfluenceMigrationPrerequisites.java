@@ -47,7 +47,7 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
-import com.xwiki.confluencepro.ConfluenceMigratorPrerequisites;
+import com.xwiki.confluencepro.ConfluenceMigrationPrerequisites;
 
 /**
  * @version $Id$
@@ -55,7 +55,7 @@ import com.xwiki.confluencepro.ConfluenceMigratorPrerequisites;
  */
 @Component
 @Singleton
-public class DefaultConfluenceMigratorPrerequisites implements ConfluenceMigratorPrerequisites
+public class DefaultConfluenceMigrationPrerequisites implements ConfluenceMigrationPrerequisites
 {
     private static final String ERROR = "cross";
 

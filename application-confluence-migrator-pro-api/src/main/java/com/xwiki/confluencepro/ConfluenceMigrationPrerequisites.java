@@ -26,7 +26,7 @@ import org.xwiki.component.annotation.Role;
  * @version $Id$
  */
 @Role
-public interface ConfluenceMigratorPrerequisites
+public interface ConfluenceMigrationPrerequisites
 {
     /**
      * Check if the maximum memory and the initial memory are at least half of the machine memory.

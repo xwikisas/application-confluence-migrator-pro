@@ -44,6 +44,8 @@ import org.xwiki.observation.event.CancelableEvent;
 import org.xwiki.observation.event.Event;
 import org.xwiki.refactoring.job.question.EntitySelection;
 
+import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
+
 /**
  * Listener that will ask different questions when the Confluence migration job runs.
  *
@@ -51,9 +53,9 @@ import org.xwiki.refactoring.job.question.EntitySelection;
  * @since 3.0
  */
 @Component
-@Named("com.xwiki.confluencemigrator.internal.DocumentsGeneratingListener")
+@Named("com.xwiki.confluencepro.internal.ConfluenceFilteringListener")
 @Singleton
-public class ConfluencePackageReadListener extends AbstractEventListener
+public class ConfluenceFilteringListener extends AbstractEventListener
 {
     @Inject
     private JobContext jobContext;
@@ -61,9 +63,9 @@ public class ConfluencePackageReadListener extends AbstractEventListener
     /**
      * Default constructor.
      */
-    public ConfluencePackageReadListener()
+    public ConfluenceFilteringListener()
     {
-        super(ConfluencePackageReadListener.class.getName(),
+        super(ConfluenceFilteringListener.class.getName(),
             Collections.singletonList(new ConfluenceFilteringEvent()));
     }
 

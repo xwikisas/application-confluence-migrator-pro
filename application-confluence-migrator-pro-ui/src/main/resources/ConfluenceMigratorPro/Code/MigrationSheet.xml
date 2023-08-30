@@ -341,7 +341,7 @@
  *#
 #macro(runAndDisplayJob $obj)
   ## Either start of display job.
-  #set ($confluenceJob = $services.confluencemigration.getLastJob($doc.documentReference))
+  #set ($confluenceJob = $services.confluenceMigration.getLastJob($doc.documentReference))
   #set ($package = $obj.getProperty('package').value)
   #if ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED')
     #if ("$!package" != '')
@@ -355,7 +355,7 @@
       #end
       #set ($discard = $inputProperties.putAll($prefilledValues.get('input')))
       #set ($discard = $outputProperties.putAll($prefilledValues.get('output')))
-      #set ($confluenceJob = $services.confluencemigration.migrate($doc.documentReference, $attachDoc.getAttachment($attachRef.name).getContentInputStream(), $inputProperties, $outputProperties))
+      #set ($confluenceJob = $services.confluenceMigration.migrate($doc.documentReference, $attachDoc.getAttachment($attachRef.name).getContentInputStream(), $inputProperties, $outputProperties))
       #displayJob($confluenceJob)
     #else
       No package to start the migration

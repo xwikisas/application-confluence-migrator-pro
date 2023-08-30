@@ -50,17 +50,18 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
-import com.xwiki.confluencepro.ConfluenceMigratorManager;
+import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
+import com.xwiki.confluencepro.ConfluenceMigrationManager;
 
 /**
- * The default implementation of {@link ConfluenceMigratorManager}.
+ * The default implementation of {@link ConfluenceMigrationManager}.
  *
  * @version $Id$
  * @since 1.0
  */
 @Component
 @Singleton
-public class DefaultConfluenceMigratorManager implements ConfluenceMigratorManager
+public class DefaultConfluenceMigrationManager implements ConfluenceMigrationManager
 {
     private static final LocalDocumentReference MIGRATION_OBJECT =
         new LocalDocumentReference(Arrays.asList("ConfluenceMigratorPro", "Code"), "MigrationClass");
@@ -81,7 +82,7 @@ public class DefaultConfluenceMigratorManager implements ConfluenceMigratorManag
         try {
 
             XWikiDocument document =
-                context.getWiki().getDocument(jobStatus.getRequest().getDocumentReference(), context).clone();
+                context.getWiki().getDocument(jobStatus.getRequest().getStatusDocumentReference(), context).clone();
             // Set executed to true.
             BaseObject object = document.getXObject(MIGRATION_OBJECT);
             object.set("executed", 1, context);

@@ -53,7 +53,7 @@
   #foreach($row in $map.get('rows'))
     #if ($row.get('executed_value') == '0')
       #set ($rowDocRef = $services.model.resolveDocument($row.get('doc_fullName')))
-      #set ($jobState = $services.confluencemigration.getLastJob($rowDocRef).status.state)
+      #set ($jobState = $services.confluenceMigration.getLastJob($rowDocRef).status.state)
       #if ("$!jobState" == '' || $jobState == 'NONE')
         #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('cross'), $services.localization.render('confluencepro.migration.livetable.state.none'))"))
       #elseif ($jobState == 'WAITING')

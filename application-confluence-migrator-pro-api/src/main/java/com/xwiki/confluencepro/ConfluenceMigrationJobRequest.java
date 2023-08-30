@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.xwiki.job.AbstractRequest;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.SpaceReference;
+import org.xwiki.model.reference.EntityReference;
 
 /**
  * The request used to configure the confluence migration job.
@@ -41,7 +41,7 @@ public class ConfluenceMigrationJobRequest extends AbstractRequest
 
     private final InputStream confluencePackage;
 
-    private final DocumentReference documentReference;
+    private final DocumentReference statusDocumentReference;
 
     private final Map<String, Object> inputProperties;
 
@@ -49,23 +49,22 @@ public class ConfluenceMigrationJobRequest extends AbstractRequest
 
     /**
      * @param confluencePackage the input stream of the confluence zip package.
-     * @param documentReference see {@link #getDocumentReference()}.
+     * @param statusDocumentReference see {@link #getStatusDocumentReference()}.
      * @param inputProperties see {@link #getInputProperties()}.
      * @param outputProperties see {@link #getOutputProperties()}.
      */
 
-    public ConfluenceMigrationJobRequest(InputStream confluencePackage, DocumentReference documentReference,
+    public ConfluenceMigrationJobRequest(InputStream confluencePackage, DocumentReference statusDocumentReference,
         Map<String, Object> inputProperties, Map<String, Object> outputProperties)
     {
-        this.documentReference = documentReference;
+        this.statusDocumentReference = statusDocumentReference;
         this.confluencePackage = confluencePackage;
         List<String> jobId = new ArrayList<>();
         jobId.add("confluence");
-        jobId.add("migrator");
-        for (SpaceReference spaceReference : documentReference.getSpaceReferences()) {
-            jobId.add(spaceReference.getName());
+        jobId.add("migration");
+        for (EntityReference er : statusDocumentReference.getReversedReferenceChain()) {
+            jobId.add(er.getName());
         }
-        jobId.add(documentReference.getName());
         setId(jobId);
         if (inputProperties == null) {
             this.inputProperties = new HashMap<>();
@@ -90,9 +89,9 @@ public class ConfluenceMigrationJobRequest extends AbstractRequest
     /**
      * @return the reference to the document where this job was started.
      */
-    public DocumentReference getDocumentReference()
+    public DocumentReference getStatusDocumentReference()
     {
-        return documentReference;
+        return statusDocumentReference;
     }
 
     /**

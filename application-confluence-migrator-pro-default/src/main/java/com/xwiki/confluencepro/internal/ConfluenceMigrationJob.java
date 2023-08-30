@@ -30,7 +30,6 @@ import javax.inject.Provider;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
-import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceInputFilterStreamFactory;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
@@ -40,7 +39,6 @@ import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanCreatorJo
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanExecutorJob;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanExecutorRequest;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanRequest;
-import org.xwiki.filter.FilterStreamFactory;
 import org.xwiki.filter.descriptor.FilterStreamDescriptor;
 import org.xwiki.filter.input.InputFilterStreamFactory;
 import org.xwiki.filter.instance.internal.input.InstanceInputFilterStreamFactory;
@@ -50,14 +48,14 @@ import org.xwiki.filter.output.OutputFilterStreamFactory;
 import org.xwiki.filter.type.FilterStreamType;
 import org.xwiki.job.AbstractJob;
 import org.xwiki.job.Job;
-import org.xwiki.job.JobGroupPath;
 import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.refactoring.job.question.EntitySelection;
 
 import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
-import com.xwiki.confluencepro.ConfluenceMigratorManager;
+import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
+import com.xwiki.confluencepro.ConfluenceMigrationManager;
 
 /**
  * The job that will migrate the confluence package into XWiki and also run the nested pages migration.
@@ -74,17 +72,15 @@ public class ConfluenceMigrationJob
     /**
      * The identifier for the job.
      */
-    public static final String JOBTYPE = "confluence.migrator";
-
-    /**
-     * The root group of the job.
-     */
-    public static final JobGroupPath ROOT_GROUP =
-        new JobGroupPath(Arrays.asList("confluence", "migrator"));
+    public static final String JOBTYPE = "confluence.migration";
 
     @Inject
-    @Named("context")
-    private Provider<ComponentManager> componentManagerProvider;
+    @Named(ConfluenceInputFilterStreamFactory.ROLEHINT)
+    private InputFilterStreamFactory inputFilterStreamFactory;
+
+    @Inject
+    @Named(InstanceInputFilterStreamFactory.ROLEHINT)
+    private OutputFilterStreamFactory outputFilterStreamFactory;
 
     @Inject
     @Named(FilterStreamConverterJob.JOBTYPE)
@@ -99,7 +95,7 @@ public class ConfluenceMigrationJob
     private Provider<Job> migrationPlanExecutorProvider;
 
     @Inject
-    private ConfluenceMigratorManager migratorManager;
+    private ConfluenceMigrationManager migrationManager;
 
     /**
      * @return the job type.
@@ -126,14 +122,10 @@ public class ConfluenceMigrationJob
     @Override
     protected void runInternal() throws Exception
     {
-        String input = ConfluenceInputFilterStreamFactory.ROLEHINT;
-        String output = InstanceInputFilterStreamFactory.ROLEHINT;
+        FilterStreamDescriptor inputDescriptor = inputFilterStreamFactory.getDescriptor();
+        FilterStreamDescriptor outputDescriptor = outputFilterStreamFactory.getDescriptor();
 
-        FilterStreamDescriptor inputDescriptor = this.componentManagerProvider.get()
-            .<FilterStreamFactory>getInstance(InputFilterStreamFactory.class, input).getDescriptor();
-        FilterStreamDescriptor outputDescriptor = this.componentManagerProvider.get()
-            .<FilterStreamFactory>getInstance(OutputFilterStreamFactory.class, output).getDescriptor();
-
+        // Not using Collectors.toMap() because of https://bugs.openjdk.org/browse/JDK-8148463
         Map<String, Object> inputProperties = inputDescriptor
             .getProperties()
             .stream()
@@ -155,9 +147,9 @@ public class ConfluenceMigrationJob
                 outputProperties.put(entry.getKey(), entry.getValue());
             }
         }
-        FilterStreamConverterJobRequest filterJobRequest =
-            new FilterStreamConverterJobRequest(FilterStreamType.unserialize(input), inputProperties,
-                FilterStreamType.unserialize(output), outputProperties);
+        FilterStreamConverterJobRequest filterJobRequest = new FilterStreamConverterJobRequest(
+            FilterStreamType.unserialize(ConfluenceInputFilterStreamFactory.ROLEHINT), inputProperties,
+            FilterStreamType.unserialize(InstanceInputFilterStreamFactory.ROLEHINT), outputProperties);
         filterJobRequest.setInteractive(true);
         logger.info("Starting Filter Job");
         progressManager.pushLevelProgress(3, this);
@@ -171,7 +163,7 @@ public class ConfluenceMigrationJob
                 .stream()
                 .filter(q -> q instanceof SpaceQuestion).findFirst()
                 .orElse(null);
-        WikiReference wikiReference = this.request.getDocumentReference().getWikiReference();
+        WikiReference wikiReference = this.request.getStatusDocumentReference().getWikiReference();
         if (wikiReference != null) {
             runNestedPagesMigrator(spaceQuestion, wikiReference);
         } else {
@@ -180,7 +172,7 @@ public class ConfluenceMigrationJob
 
         progressManager.popLevelProgress(this);
 
-        migratorManager.updateAndSaveMigration(getStatus());
+        migrationManager.updateAndSaveMigration(getStatus());
     }
 
     private void runNestedPagesMigrator(SpaceQuestion spaceQuestion, WikiReference wikiReference)

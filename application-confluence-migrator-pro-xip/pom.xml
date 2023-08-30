@@ -24,7 +24,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
-    <artifactId>application-confluence-migrator-pro-parent</artifactId>
+    <artifactId>application-confluence-migrator-pro</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
 

@@ -17,18 +17,16 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package com.xwiki.confluencepro.internal;
+package com.xwiki.confluencepro;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.xwiki.job.AbstractJobStatus;
+import org.xwiki.job.DefaultJobStatus;
 import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.logging.LoggerManager;
 import org.xwiki.observation.ObservationManager;
-
-import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
 
 /**
  * Custom Job Status that holds the questions asked by sub-jobs.
@@ -36,7 +34,7 @@ import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
  * @since 1.0
  * @version $Id$
  */
-public class ConfluenceMigrationJobStatus extends AbstractJobStatus<ConfluenceMigrationJobRequest>
+public class ConfluenceMigrationJobStatus extends DefaultJobStatus<ConfluenceMigrationJobRequest>
 {
     private final Map<List<String>, Object> askedQuestions = new HashMap<>();
 
@@ -50,7 +48,7 @@ public class ConfluenceMigrationJobStatus extends AbstractJobStatus<ConfluenceMi
         JobStatus parentJobStatus, ObservationManager observationManager,
         LoggerManager loggerManager)
     {
-        super(ConfluenceMigrationJob.JOBTYPE, request, parentJobStatus, observationManager, loggerManager);
+        super("confluence.migration", request, parentJobStatus, observationManager, loggerManager);
         setCancelable(true);
     }
 

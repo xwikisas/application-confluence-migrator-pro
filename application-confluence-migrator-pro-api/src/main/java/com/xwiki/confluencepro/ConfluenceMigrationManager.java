@@ -21,8 +21,6 @@ package com.xwiki.confluencepro;
 
 import org.xwiki.component.annotation.Role;
 
-import com.xwiki.confluencepro.internal.ConfluenceMigrationJobStatus;
-
 /**
  * Manages the pages of the Confluence Migrator.
  *
@@ -30,7 +28,7 @@ import com.xwiki.confluencepro.internal.ConfluenceMigrationJobStatus;
  * @since 1.0
  */
 @Role
-public interface ConfluenceMigratorManager
+public interface ConfluenceMigrationManager
 {
     /**
      * Update the migration identified by the request of the job. The informations will be extracted from the execution

@@ -59,7 +59,7 @@
 #if ($xcontext.action == 'get' &amp;&amp; "$!request.docRef" != '')
   #set ($docRef = $services.model.resolveDocument($request.docRef))
   #set ($doc = $xwiki.getDocument($docRef))
-  #set($job = $services.confluencemigration.getLastJob($doc.documentReference))
+  #set($job = $services.confluenceMigration.getLastJob($doc.documentReference))
   #getJobStatusJSON($job.status $json)
   #set($jobStatus = $job.status)
   #set ($json.message = "#filterStreamJobMessage($jobStatus)")

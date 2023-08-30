@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package com.xwiki.confluencepro;
+package com.xwiki.confluencepro.script;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -37,7 +37,8 @@ import org.xwiki.script.service.ScriptService;
 import org.xwiki.security.authorization.ContextualAuthorizationManager;
 import org.xwiki.security.authorization.Right;
 
-import com.xwiki.confluencepro.internal.ConfluenceMigrationJob;
+import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
+import com.xwiki.confluencepro.ConfluenceMigrationPrerequisites;
 
 /**
  * Expose various FilterStream related APIs to scripts.
@@ -53,8 +54,7 @@ public class ConfluenceMigrationScriptService implements ScriptService
     /**
      * The rolehint of the class.
      */
-    // TODO change name to multispacemigrator
-    public static final String ROLEHINT = "confluencemigration";
+    public static final String ROLEHINT = "confluenceMigration";
 
     @Inject
     private ContextualAuthorizationManager authorization;
@@ -63,7 +63,7 @@ public class ConfluenceMigrationScriptService implements ScriptService
     private JobExecutor jobExecutor;
 
     @Inject
-    private ConfluenceMigratorPrerequisites prerequisites;
+    private ConfluenceMigrationPrerequisites prerequisites;
 
     private final Map<DocumentReference, Job> lastJobMap = new HashMap<>();
 
@@ -88,7 +88,7 @@ public class ConfluenceMigrationScriptService implements ScriptService
             new ConfluenceMigrationJobRequest(confluencePackage, documentReference, inputProperties, outputProperties);
         jobRequest.setInteractive(true);
         try {
-            lastJob = jobExecutor.execute(ConfluenceMigrationJob.JOBTYPE, jobRequest);
+            lastJob = jobExecutor.execute("confluence.migration", jobRequest);
             lastJobMap.put(documentReference, lastJob);
             return lastJob;
         } catch (JobException ignored) {
