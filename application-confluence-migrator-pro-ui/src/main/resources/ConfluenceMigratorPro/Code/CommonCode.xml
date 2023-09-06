@@ -166,7 +166,16 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery'], function ($) {
+      <code>define('attachment-delete', {
+  prefix: 'core.viewers.attachments.delete.',
+  keys: [
+    'inProgress',
+    'done',
+    'error'
+  ]
+});
+
+require(['jquery', 'xwiki-l10n!attachment-delete'], function ($, l10n) {
   $('.collapse').on('show.bs.collapse', function () {
     if ($(this).attr('id')) {
       $('a[href$="#' + $(this).attr('id') + '"]').find('.cfmTitleIcon').addClass('active');
@@ -177,6 +186,36 @@
     if ($(this).attr('id')) {
       $('a[href$="#' + $(this).attr('id') + '"]').find('.cfmTitleIcon').removeClass('active');
     }
+  });
+
+  $(function() {
+    // Since the associated liveData is refreshed on file upload, we don't need a response container.
+    new XWiki.FileUploader($('#AddAttachment input[type=file]')[0], {
+      'progressAutohide': true,
+      'responseContainer' : document.createElement('div')
+    });
+  });
+
+  $(document).on('xwiki:html5upload:done', function(e) {
+    $('#confluencePackages').data('liveData').updateEntries();
+  });
+
+  $(document).on('click', '#confluencePackages .attachmentActions .actiondelete', function(e) {
+    e.preventDefault();
+    let notification;
+    $.ajax({
+      url : $(e.currentTarget).prop('href'),
+      beforeSend : function() {
+        notification = new XWiki.widgets.Notification(l10n.inProgress, 'inprogress');
+      },
+      success : function() {
+        $('#confluencePackages').data('liveData').updateEntries()
+        notification.replace(new XWiki.widgets.Notification(l10n.done, 'done'));
+      },
+      error: function() {
+        notification.replace(new XWiki.widgets.Notification(l10n.error, 'error'));
+      }
+    })
   });
 });</code>
     </property>

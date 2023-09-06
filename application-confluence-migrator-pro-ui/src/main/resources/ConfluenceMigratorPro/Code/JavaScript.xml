@@ -278,8 +278,8 @@
     <property>
       <content>{{velocity}}
 {{html clean="false"}}
-#set ($isConfluenceHome = $doc.documentReference.equals($services.model.resolveDocument('ConfluenceMigratorPro.WebHome')))
-#if ($isConfluenceHome &amp;&amp; $services.security.authorization.hasAccess('admin', $xcontext.user) &amp;&amp; $attachment.getFilename().contains(".zip"))
+#set ($isPackageStore = $doc.documentReference.equals($services.model.resolveDocument('ConfluenceMigratorPro.Code.PackagesStore')))
+#if ($isPackageStore &amp;&amp; $services.security.authorization.hasAccess('admin', $xcontext.user) &amp;&amp; $attachment.getFilename().contains(".zip"))
 &lt;a class="startMigration action" data-package="$escapetool.xml($services.model.serialize($attachment.getReference(), 'default'))" title="$services.localization.render('confluencepro.migration.livetable._actions.select')" href="#"&gt;
   &lt;span class="action-icon"&gt;$services.icon.renderHTML('play')&lt;/span&gt;&lt;span class="action-label"&gt;$services.localization.render('confluencepro.migration.livetable._actions.select')
   &lt;/span&gt;
