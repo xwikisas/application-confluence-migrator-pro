@@ -178,6 +178,20 @@
       $('a[href$="#' + $(this).attr('id') + '"]').find('.cfmTitleIcon').removeClass('active');
     }
   });
+
+  $(function() {
+    // Since the associated liveData is refreshed on file upload, we don't need a response container.
+    new XWiki.FileUploader($('#addConfluencePackage input[type=file]')[0], {
+      'progressAutohide': true,
+      'responseContainer' : document.createElement('div')
+    });
+  });
+
+  $(document).on('xwiki:html5upload:done', function(e) {
+    if ($(e.target).prop('id') == 'confluenceUploadFile') {
+      $('#confluencePackages').data('liveData').updateEntries();
+    }
+  });
 });</code>
     </property>
     <property>

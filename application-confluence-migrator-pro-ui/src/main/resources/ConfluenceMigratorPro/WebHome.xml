@@ -51,6 +51,13 @@
 #else
 ## Prerequisites Section ##
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
+#set ($discard = $xwiki.ssfx.use('uicomponents/widgets/upload.css', true))
+#set ($discard = $xwiki.jsfx.use('uicomponents/widgets/upload.js', {
+  'forceSkinAction': true,
+  'language': $xcontext.locale
+}))
+## Reuse Attachments tab delete action events for the uploaded packages livedata.
+$xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'language': ${xcontext.locale}})
 #set ($prerequisitesComplete = 'completed')
 #macro (addPrerequisiteToList $list $icon $translationKey $url $params)
   #if ($icon != 'check')
@@ -83,7 +90,7 @@
 #addPrerequisiteToList($prerequisites, $services.confluenceMigration.checkListener('org.xwiki.notifications.notifiers.internal.email.live.LiveNotificationEmailListener', true), 'listener.liveNotification', $liveNotificationURL)
 {{html}}
 &lt;a role="button" data-toggle="collapse" href="#cfmPrerequisitesCollapse" aria-expanded="false" aria-controls="cfmPrerequisitesCollapse"&gt;
-#displaySubtitle('caret-down', 'confluencepro.prerequisites.title', $prerequisitesComplete)
+#displaySubtitle('caret-down', 'confluencepro.prerequisites.title', $prerequisitesComplete, {})
 &lt;/a&gt;
 
 &lt;div id="cfmPrerequisitesCollapse" class="cfmPrerequisites collapse"&gt;
@@ -108,22 +115,24 @@
 {{/html}}
 
 {{html}}
-#displaySubtitle('cube', 'confluencepro.packages.title')
+#displaySubtitle('cube', 'confluencepro.packages.title', '', {})
 {{/html}}
 
-#showAttachmentsLiveData($doc 'confluencePackages')
+#set ($storeDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.PackagesStore'))
+#showAttachmentsLiveData($storeDoc 'confluencePackages')
 
 {{html}}
 #if($hasEdit || $hasAdmin)
-  &lt;form  action="$doc.getURL("upload")" enctype="multipart/form-data" method="post" id="AddAttachment"&gt;
+  &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
   &lt;div&gt;
   ## CSRF prevention
   &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
-  &lt;fieldset id="attachform"&gt;
-    &lt;div class="fileupload-field"&gt;&lt;label class="sr-only" for="xwikiuploadfile"&gt;$services.localization.render('core.viewers.attachments.upload.file')&lt;/label&gt;&lt;input id="xwikiuploadfile" type="file" name="filepath" size="40" class="uploadFileInput noitems" data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;&lt;/div&gt;
-    &lt;div&gt;
-      &lt;span class="buttonwrapper"&gt;&lt;input type="submit" value="$escapetool.xml($services.localization.render('confluencepro.upload.submit'))" class="button btn btn-primary"/&gt;&lt;/span&gt;
-      &lt;span class="buttonwrapper"&gt;&lt;a class="cancel secondary button btn btn-primary" href="$doc.getURL()"&gt;$escapetool.xml($services.localization.render('confluencepro.upload.cancel'))&lt;/a&gt;&lt;/span&gt;
+  &lt;fieldset&gt;
+    &lt;div class="fileupload-field"&gt;
+      &lt;label class="sr-only" for="confluenceUploadFile"&gt;$escapetool.xml(
+        $services.localization.render('core.viewers.attachments.upload.file'))&lt;/label&gt;
+      &lt;input id="confluenceUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems"
+        data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;
     &lt;/div&gt;
   &lt;/fieldset&gt;
   &lt;/div&gt;
@@ -151,7 +160,7 @@
     &lt;/div&gt;
   &lt;/div&gt;
 &lt;/div&gt;
-#displaySubtitle('book', 'confluencepro.migrations.title')
+#displaySubtitle('book', 'confluencepro.migrations.title', '', {})
 {{/html}}
 
 #displayMigrationsLiveData
