@@ -121,12 +121,17 @@
 
 {{html}}
 #if($hasEdit || $hasAdmin)
-  &lt;form  action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="AddAttachment"&gt;
+  &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
   &lt;div&gt;
   ## CSRF prevention
   &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
-  &lt;fieldset id="attachform"&gt;
-    &lt;div class="fileupload-field"&gt;&lt;label class="sr-only" for="xwikiuploadfile"&gt;$services.localization.render('core.viewers.attachments.upload.file')&lt;/label&gt;&lt;input id="xwikiuploadfile" type="file" name="filepath" size="40" class="uploadFileInput noitems" data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;&lt;/div&gt;
+  &lt;fieldset&gt;
+    &lt;div class="fileupload-field"&gt;
+      &lt;label class="sr-only" for="confluenceUploadFile"&gt;$escapetool.xml(
+        $services.localization.render('core.viewers.attachments.upload.file'))&lt;/label&gt;
+      &lt;input id="confluenceUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems"
+        data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;
+    &lt;/div&gt;
   &lt;/fieldset&gt;
   &lt;/div&gt;
   &lt;/form&gt;
