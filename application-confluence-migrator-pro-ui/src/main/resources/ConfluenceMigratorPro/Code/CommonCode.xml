@@ -166,16 +166,7 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>define('xwiki-confluence-migrator-messages', {
-  prefix: 'core.viewers.attachments.delete.',
-  keys: [
-    'inProgress',
-    'done',
-    'error'
-  ]
-});
-
-require(['jquery', 'xwiki-l10n!xwiki-confluence-migrator-messages'], function ($, l10n) {
+      <code>require(['jquery'], function ($) {
   $('.collapse').on('show.bs.collapse', function () {
     if ($(this).attr('id')) {
       $('a[href$="#' + $(this).attr('id') + '"]').find('.cfmTitleIcon').addClass('active');
@@ -200,24 +191,6 @@ require(['jquery', 'xwiki-l10n!xwiki-confluence-migrator-messages'], function ($
     if ($(e.target).prop('id') == 'confluenceUploadFile') {
       $('#confluencePackages').data('liveData').updateEntries();
     }
-  });
-
-  $(document).on('click', '#confluencePackages .attachmentActions .actiondelete', function(e) {
-    e.preventDefault();
-    let notification;
-    $.ajax({
-      url : $(e.currentTarget).prop('href'),
-      beforeSend : function() {
-        notification = new XWiki.widgets.Notification(l10n.inProgress, 'inprogress');
-      },
-      success : function() {
-        $('#confluencePackages').data('liveData').updateEntries()
-        notification.replace(new XWiki.widgets.Notification(l10n.done, 'done'));
-      },
-      error: function() {
-        notification.replace(new XWiki.widgets.Notification(l10n.error, 'error'));
-      }
-    })
   });
 });</code>
     </property>
