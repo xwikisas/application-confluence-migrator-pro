@@ -56,6 +56,7 @@
   'forceSkinAction': true,
   'language': $xcontext.locale
 }))
+## Reuse Attachments tab delete action events for the uploaded packages livedata.
 $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'language': ${xcontext.locale}})
 #set ($prerequisitesComplete = 'completed')
 #macro (addPrerequisiteToList $list $icon $translationKey $url $params)
