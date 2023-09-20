@@ -19,10 +19,11 @@
  */
 package com.xwiki.confluencepro.internal;
 
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,20 +32,20 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.event.ConfluenceFilteringEvent;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceXMLPackage;
-import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceInputFilterStream;
 import org.xwiki.job.AbstractJobStatus;
 import org.xwiki.job.Job;
 import org.xwiki.job.JobContext;
-import org.xwiki.job.event.status.CancelableJobStatus;
 import org.xwiki.job.event.status.JobStatus;
-import org.xwiki.model.EntityType;
-import org.xwiki.model.reference.EntityReference;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.CancelableEvent;
 import org.xwiki.observation.event.Event;
 import org.xwiki.refactoring.job.question.EntitySelection;
 
-import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
+import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
+import com.xwiki.licensing.License;
+import com.xwiki.licensing.LicenseType;
+import com.xwiki.licensing.Licensor;
 
 /**
  * Listener that will ask different questions when the Confluence migration job runs.
@@ -60,6 +61,9 @@ public class ConfluenceFilteringListener extends AbstractEventListener
     @Inject
     private JobContext jobContext;
 
+    @Inject
+    private Licensor licensor;
+
     /**
      * Default constructor.
      */
@@ -72,28 +76,13 @@ public class ConfluenceFilteringListener extends AbstractEventListener
     @Override
     public void onEvent(Event event, Object source, Object data)
     {
-        ConfluenceInputFilterStream filterStream = (ConfluenceInputFilterStream) source;
         ConfluenceXMLPackage confluencePackage = (ConfluenceXMLPackage) data;
 
         Job job = this.jobContext.getCurrentJob();
         JobStatus jobStatusToAsk = getRootJobStatus(job);
-        Map<EntitySelection, Map<String, String>> confluenceSpaces = new HashMap<>();
-        for (Map.Entry<String, Long> space : confluencePackage.getSpacesByKey().entrySet()) {
-            EntityReference spaceRef = new EntityReference(space.getKey(), EntityType.DOCUMENT);
-            Map<String, String> additionalInfo = new HashMap<>();
-            additionalInfo.put("documentsCount",
-                Integer.toString(confluencePackage.getPages().get(space.getValue()).size()));
-
-            int attachmentsNumber = confluencePackage.getPages().get(space.getValue())
-                .stream()
-                .map(p -> confluencePackage.getAttachments(p).size())
-                .reduce(Integer::sum).orElse(0);
-
-            additionalInfo.put("attachmentsCount", Integer.toString(attachmentsNumber));
-            confluenceSpaces.put(new EntitySelection(spaceRef), additionalInfo);
-        }
         SpaceQuestion question =
-            createAndAskQuestion((CancelableEvent) event, confluenceSpaces, jobStatusToAsk);
+            new ConfluenceQuestionManager().createAndAskQuestion((CancelableEvent) event, confluencePackage,
+                jobStatusToAsk);
 
         boolean anySelected = false;
         for (EntitySelection entitySelection : question.getConfluenceSpaces().keySet()) {
@@ -107,35 +96,29 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         if (!anySelected) {
             ((CancelableEvent) event).cancel();
         }
-    }
 
-    private SpaceQuestion createAndAskQuestion(CancelableEvent event,
-        Map<EntitySelection, Map<String, String>> confluenceSpaces, JobStatus jobStatusToAsk)
-    {
-        SpaceQuestion question = new SpaceQuestion(confluenceSpaces);
-        if (jobStatusToAsk instanceof ConfluenceMigrationJobStatus) {
-            ((ConfluenceMigrationJobStatus) jobStatusToAsk).addAskedQuestion(jobStatusToAsk.getRequest().getId(),
-                question);
-        }
-        question.unselectAll();
-        if (
-            jobStatusToAsk != null
-                && jobStatusToAsk.getRequest() != null
-                && jobStatusToAsk.getRequest().isInteractive()
-        )
-        {
-            try {
-                boolean ack = jobStatusToAsk.ask(question, 1, TimeUnit.DAYS);
-                if (((CancelableJobStatus) jobStatusToAsk).isCanceled()) {
-                    event.cancel();
+        // If there is no license, the user can still trial the application by importing one space and 30 of its pages.
+        if (jobStatusToAsk != null && jobStatusToAsk.getRequest() instanceof ConfluenceMigrationJobRequest) {
+            String wiki = ((ConfluenceMigrationJobRequest) jobStatusToAsk.getRequest()).getStatusDocumentReference()
+                .getWikiReference().getName();
+            License license = licensor.getLicense(
+                new DocumentReference(wiki, Arrays.asList("ConfluenceMigratorPro", "Code"), "MigrationClass"));
+            if (license == null || !license.getType().equals(LicenseType.PAID)) {
+                // We expect only one space, but, if somehow the user selected more, process only the first one.
+                boolean moreThanOne = false;
+                Iterator<Map.Entry<Long, List<Long>>> iterator = confluencePackage.getPages().entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<Long, List<Long>> entry = iterator.next();
+                    if (!moreThanOne) {
+                        confluencePackage.getPages()
+                            .put(entry.getKey(), entry.getValue().subList(0, Integer.min(30, entry.getValue().size())));
+                        moreThanOne = true;
+                    } else {
+                        iterator.remove();
+                    }
                 }
-            } catch (InterruptedException e) {
-                // What now?
             }
-        } else {
-            question.selectAll();
         }
-        return question;
     }
 
     private JobStatus getRootJobStatus(Job job)
