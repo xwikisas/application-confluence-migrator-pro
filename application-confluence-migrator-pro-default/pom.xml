@@ -59,7 +59,12 @@
       <artifactId>xwiki-platform-notifications-filters-api</artifactId>
       <version>${platform.version}</version>
     </dependency>
-
+    <!-- Needed for the application trial. -->
+    <dependency>
+      <groupId>com.xwiki.licensing</groupId>
+      <artifactId>application-licensing-licensor-api</artifactId>
+      <version>${licensing.version}</version>
+    </dependency>
   </dependencies>
 
 </project>

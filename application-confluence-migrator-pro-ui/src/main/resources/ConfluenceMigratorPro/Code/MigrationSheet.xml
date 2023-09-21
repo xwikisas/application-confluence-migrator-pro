@@ -340,7 +340,12 @@
  * @param $obj the migration object of this page.
  *#
 #macro(runAndDisplayJob $obj)
-  ## Either start of display job.
+  #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
+  #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
+  #if ("$!license" == '' || $license.type != 'PAID')
+    #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.TrialScript'))
+    {{warning}}$services.localization.render('confluencepro.migration.missingLicense'){{/warning}}
+  #end
   #set ($confluenceJob = $services.confluenceMigration.getLastJob($doc.documentReference))
   #set ($package = $obj.getProperty('package').value)
   #if ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED')
@@ -578,6 +583,7 @@ require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($
             }
           });
         }
+        let createdElements = [];
         data.results.forEach(function(space, index) {
           if (checkedValues.has(space.reference)) {
             return;
@@ -591,10 +597,14 @@ require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($
               .attr('id', 'confluence_space_' + index)
               .prop('disabled', false)
               .val(space.reference);
-          $('.available-spaces').append(element);
+          createdElements.push(element);
           for (const [key, value] of Object.entries(space.properties)) {
             element.find('.cfmProperties').append('&lt;span&gt;' + l10n['question.additionalInfo.' + key] + ' ' + value + '&lt;/span&gt;');
           }
+        });
+        $('.ui-question').trigger("confluence:job:spaces:loaded", [createdElements]);
+        createdElements.each(function (elem) {
+          $('.available-spaces').append(elem);
         });
         let remaining = data.total - (offset + data.results.length);
         if (remaining &gt; 0) {

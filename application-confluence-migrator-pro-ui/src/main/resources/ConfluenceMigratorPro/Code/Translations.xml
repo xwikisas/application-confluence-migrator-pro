@@ -39,6 +39,8 @@
   <content>confluencepro.panel.title=Confluence Migrator Pro
 confluencepro.extension.name=Confluence Migrator Pro
 
+confluencepro.extension.missingLicense=The application is running in trial mode. In order to unlock the full capabilities please obtain a license from the {0}administration section{1}.
+
 confluencepro.zippicker.title=Select a confluence package to start the migration
 confluencepro.zippicker.placeholder=Pick a confluence export package...
 confluencepro.zippicker.button.submit=Migrate
@@ -80,6 +82,8 @@ confluencepro.migration.raport.problems.other.warn=Encountered warnings
 
 confluencepro.migration.title.label=Set the title of the migration
 confluencepro.migration.title.placeholder=Type the desired title...
+confluencepro.migration.missingLicense=As part of a trial, you can migrate one space per migration. In order to unlock the full capabilities please obtain a license
+
 
 confluencepro.migration.livetable.doc.title=Migration
 confluencepro.migration.livetable._actions=Actions
