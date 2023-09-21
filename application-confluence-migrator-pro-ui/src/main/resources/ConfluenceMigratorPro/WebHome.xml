@@ -47,8 +47,11 @@
 {{velocity}}
 #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
 #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
-#if ("$!license" == '' || $license.type != 'PAID')
-  {{warning}}$services.localization.render('confluencepro.extension.missingLicense', ['[[', "&gt;&gt;path:#getLicensesAdminSectionURL]]"]){{/warning}}
+#if ("$!license" == '' || $license.type == 'FREE')
+  {{error}}#getMissingLicenseMessage('confluencepro.extension.name'){{/error}}
+#else
+#if ($license.type == 'TRIAL')
+  {{warning}}$services.localization.render('confluencepro.extension.missingLicense', ['[[', ">>path:#getLicensesAdminSectionURL]]"]){{/warning}}
 #end
 ## Prerequisites Section ##
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
@@ -165,6 +168,7 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 {{/html}}
 
 #displayMigrationsLiveData
+#end
 {{/velocity}}</content>
   <object>
     <name>ConfluenceMigratorPro.WebHome</name>
