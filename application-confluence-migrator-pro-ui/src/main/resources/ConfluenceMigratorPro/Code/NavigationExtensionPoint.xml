@@ -177,7 +177,7 @@ target=ConfluenceMigratorPro.WebHome
 icon=icon:copy</parameters>
     </property>
     <property>
-      <scope/>
+      <scope>wiki</scope>
     </property>
   </object>
 </xwikidoc>

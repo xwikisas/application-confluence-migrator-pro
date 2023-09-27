@@ -82,7 +82,7 @@ confluencepro.migration.raport.problems.other.warn=Encountered warnings
 
 confluencepro.migration.title.label=Set the title of the migration
 confluencepro.migration.title.placeholder=Type the desired title...
-confluencepro.migration.missingLicense=As part of a trial, you can migrate one space per migration. In order to unlock the full capabilities please obtain a license
+confluencepro.migration.missingLicense=As part of a trial, you can migrate one space per migration. In order to unlock the full capabilities please obtain a license.
 
 
 confluencepro.migration.livetable.doc.title=Migration

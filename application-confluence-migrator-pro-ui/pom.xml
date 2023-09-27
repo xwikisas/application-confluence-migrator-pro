@@ -30,6 +30,13 @@
   <artifactId>application-confluence-migrator-pro-ui</artifactId>
   <name>Confluence Migrator Pro - UI</name>
   <packaging>xar</packaging>
+  <properties>
+    <xwiki.extension.licensing.publicDocuments>
+      ConfluenceMigratorPro.WebHome,
+      ConfluenceMigratorPro.Migrations.WebHome,
+      ConfluenceMigratorPro.Code.CommonCode
+    </xwiki.extension.licensing.publicDocuments>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>com.xwiki.confluencepro</groupId>
@@ -73,4 +80,18 @@
       <scope>runtime</scope>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.xwiki.commons</groupId>
+        <artifactId>xwiki-commons-tool-xar-plugin</artifactId>
+        <configuration>
+          <visibleTechnicalPages>
+            <visibleTechnicalPage>.*/ConfluenceMigratorPro/WebHome\.xml</visibleTechnicalPage>
+            <visibleTechnicalPage>.*/ConfluenceMigratorPro/Migrations/WebHome\.xml</visibleTechnicalPage>
+          </visibleTechnicalPages>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
