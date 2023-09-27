@@ -28,7 +28,6 @@
     <version>1.0.1-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.example</groupId>
   <artifactId>application-confluence-migrator-pro-xip</artifactId>
 
   <name>XWiki Pro - Macros XIP</name>
