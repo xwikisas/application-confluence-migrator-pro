@@ -30,9 +30,9 @@
 
   <artifactId>application-confluence-migrator-pro-xip</artifactId>
 
-  <name>XWiki Pro - Macros XIP</name>
+  <name>Confluence Migrator Pro - XIP</name>
   <packaging>xip</packaging>
-  <description>XIP for offline installation of the Pro Macro</description>
+  <description>XIP for offline installation of the Confluence Migrator Pro</description>
   <dependencies>
     <dependency>
       <groupId>com.xwiki.confluencepro</groupId>

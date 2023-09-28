@@ -30,6 +30,7 @@
   <artifactId>application-confluence-migrator-pro-ui</artifactId>
   <name>Confluence Migrator Pro - UI</name>
   <packaging>xar</packaging>
+  <description>The Confluence Migrator Pro is an all-in-one toolkit that allows you to migrate and reorganise your data in only a few minutes! The migrator is available for any deployment method, whether it is on your server or in the XWiki Cloud. Try it now.</description>
   <properties>
     <xwiki.extension.licensing.publicDocuments>
       ConfluenceMigratorPro.WebHome,

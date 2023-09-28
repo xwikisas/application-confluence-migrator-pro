@@ -28,6 +28,7 @@
     <version>1.0.1-SNAPSHOT</version>
   </parent>
   <artifactId>application-confluence-migrator-pro-default</artifactId>
+  <name>Confluence Migrator Pro - Default API</name>
   <dependencies>
     <dependency>
       <groupId>com.xwiki.confluencepro</groupId>
