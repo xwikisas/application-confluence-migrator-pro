@@ -44,7 +44,6 @@ import org.xwiki.observation.event.Event;
 import org.xwiki.refactoring.job.question.EntitySelection;
 
 import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
-import com.xwiki.licensing.License;
 import com.xwiki.licensing.LicenseType;
 import com.xwiki.licensing.Licensor;
 
@@ -106,9 +105,9 @@ public class ConfluenceFilteringListener extends AbstractEventListener
             if (licensor == null) {
                 return;
             }
-            License license = licensor.getLicense(
-                new DocumentReference(wiki, Arrays.asList("ConfluenceMigratorPro", "Code"), "MigrationClass"));
-            if (license == null || !license.getType().equals(LicenseType.PAID)) {
+            DocumentReference mainRef =
+                new DocumentReference(wiki, Arrays.asList("ConfluenceMigratorPro", "Code"), "MigrationClass");
+            if (!licensor.hasLicensure(mainRef) || licensor.getLicense(mainRef).getType().equals(LicenseType.TRIAL)) {
                 reduceNumberOfPagesToProcess(confluencePackage);
             }
         }

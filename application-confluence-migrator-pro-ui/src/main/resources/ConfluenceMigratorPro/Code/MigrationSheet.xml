@@ -342,7 +342,7 @@
 #macro(runAndDisplayJob $obj)
   #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
   #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
-  #if ("$!license" == '' || $license.type != 'PAID')
+  #if (!$services.licensing.licensor.hasLicensureForEntity($mainReference) || $license.type == 'TRIAL')
     #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.TrialScript'))
     {{warning}}$services.localization.render('confluencepro.migration.missingLicense'){{/warning}}
   #end

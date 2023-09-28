@@ -46,10 +46,10 @@
 
 {{velocity}}
 #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
-#set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
-#if ($license.type == 'FREE')
+#if (!$services.licensing.licensor.hasLicensureForEntity($mainReference))
   {{error}}#getMissingLicenseMessage('confluencepro.extension.name'){{/error}}
 #else
+#set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
 #if ($license.type == 'TRIAL')
   {{warning}}$services.localization.render('confluencepro.extension.missingLicense', ['[[', ">>path:#getLicensesAdminSectionURL]]"]){{/warning}}
 #end
