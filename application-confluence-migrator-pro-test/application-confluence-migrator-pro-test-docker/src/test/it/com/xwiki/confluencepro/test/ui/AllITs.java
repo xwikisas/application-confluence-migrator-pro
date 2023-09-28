@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Nested;
 import org.xwiki.test.docker.junit5.UITest;
 
 @UITest
-public class AllIT
+public class AllITs
 {
     @Nested
     @DisplayName("Confluence Tests")

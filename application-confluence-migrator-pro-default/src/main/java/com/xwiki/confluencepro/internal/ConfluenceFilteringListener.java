@@ -27,6 +27,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
@@ -62,7 +63,7 @@ public class ConfluenceFilteringListener extends AbstractEventListener
     private JobContext jobContext;
 
     @Inject
-    private Licensor licensor;
+    private Provider<Licensor> licensorProvider;
 
     /**
      * Default constructor.
@@ -101,22 +102,31 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         if (jobStatusToAsk != null && jobStatusToAsk.getRequest() instanceof ConfluenceMigrationJobRequest) {
             String wiki = ((ConfluenceMigrationJobRequest) jobStatusToAsk.getRequest()).getStatusDocumentReference()
                 .getWikiReference().getName();
+            Licensor licensor = licensorProvider.get();
+            if (licensor == null) {
+                return;
+            }
             License license = licensor.getLicense(
                 new DocumentReference(wiki, Arrays.asList("ConfluenceMigratorPro", "Code"), "MigrationClass"));
             if (license == null || !license.getType().equals(LicenseType.PAID)) {
-                // We expect only one space, but, if somehow the user selected more, process only the first one.
-                boolean moreThanOne = false;
-                Iterator<Map.Entry<Long, List<Long>>> iterator = confluencePackage.getPages().entrySet().iterator();
-                while (iterator.hasNext()) {
-                    Map.Entry<Long, List<Long>> entry = iterator.next();
-                    if (!moreThanOne) {
-                        confluencePackage.getPages()
-                            .put(entry.getKey(), entry.getValue().subList(0, Integer.min(30, entry.getValue().size())));
-                        moreThanOne = true;
-                    } else {
-                        iterator.remove();
-                    }
-                }
+                reduceNumberOfPagesToProcess(confluencePackage);
+            }
+        }
+    }
+
+    private void reduceNumberOfPagesToProcess(ConfluenceXMLPackage confluencePackage)
+    {
+        // We expect only one space, but, if somehow the user selected more, process only the first one.
+        boolean moreThanOne = false;
+        Iterator<Map.Entry<Long, List<Long>>> iterator = confluencePackage.getPages().entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Long, List<Long>> entry = iterator.next();
+            if (!moreThanOne) {
+                confluencePackage.getPages()
+                    .put(entry.getKey(), entry.getValue().subList(0, Integer.min(30, entry.getValue().size())));
+                moreThanOne = true;
+            } else {
+                iterator.remove();
             }
         }
     }
