@@ -20,6 +20,7 @@
 package com.xwiki.confluencepro.script;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,8 +29,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.context.concurrent.ContextStoreManager;
 import org.xwiki.job.Job;
-import org.xwiki.job.JobException;
 import org.xwiki.job.JobExecutor;
 import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.model.reference.DocumentReference;
@@ -65,6 +66,9 @@ public class ConfluenceMigrationScriptService implements ScriptService
     @Inject
     private ConfluenceMigrationPrerequisites prerequisites;
 
+    @Inject
+    private ContextStoreManager contextStoreManager;
+
     private final Map<DocumentReference, Job> lastJobMap = new HashMap<>();
 
     /**
@@ -88,10 +92,13 @@ public class ConfluenceMigrationScriptService implements ScriptService
             new ConfluenceMigrationJobRequest(confluencePackage, documentReference, inputProperties, outputProperties);
         jobRequest.setInteractive(true);
         try {
+            Map<String, Serializable> migrationContext =
+                this.contextStoreManager.save(this.contextStoreManager.getSupportedEntries());
+            jobRequest.setContext(migrationContext);
             lastJob = jobExecutor.execute("confluence.migration", jobRequest);
             lastJobMap.put(documentReference, lastJob);
             return lastJob;
-        } catch (JobException ignored) {
+        } catch (Exception ignored) {
 
         }
         return null;
