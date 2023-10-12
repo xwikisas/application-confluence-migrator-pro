@@ -53,7 +53,6 @@ public class ConfluenceMigrationJobRequest extends AbstractRequest
      * @param inputProperties see {@link #getInputProperties()}.
      * @param outputProperties see {@link #getOutputProperties()}.
      */
-
     public ConfluenceMigrationJobRequest(InputStream confluencePackage, DocumentReference statusDocumentReference,
         Map<String, Object> inputProperties, Map<String, Object> outputProperties)
     {

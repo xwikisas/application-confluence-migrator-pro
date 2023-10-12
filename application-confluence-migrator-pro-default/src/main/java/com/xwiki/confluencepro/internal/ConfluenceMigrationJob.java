@@ -30,19 +30,14 @@ import javax.inject.Provider;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
-import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceInputFilterStreamFactory;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.internal.DefaultNestedPagesMigrator;
-import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanCreatorJob;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanCreatorJobStatus;
-import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanExecutorJob;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanExecutorRequest;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanRequest;
 import org.xwiki.filter.descriptor.FilterStreamDescriptor;
 import org.xwiki.filter.input.InputFilterStreamFactory;
-import org.xwiki.filter.instance.internal.input.InstanceInputFilterStreamFactory;
-import org.xwiki.filter.internal.job.FilterStreamConverterJob;
 import org.xwiki.filter.job.FilterStreamConverterJobRequest;
 import org.xwiki.filter.output.OutputFilterStreamFactory;
 import org.xwiki.filter.type.FilterStreamType;
@@ -74,24 +69,26 @@ public class ConfluenceMigrationJob
      */
     public static final String JOBTYPE = "confluence.migration";
 
+    private static final String NPMIG = "npmig";
+
     @Inject
-    @Named(ConfluenceInputFilterStreamFactory.ROLEHINT)
+    @Named("confluence+xml")
     private InputFilterStreamFactory inputFilterStreamFactory;
 
     @Inject
-    @Named(InstanceInputFilterStreamFactory.ROLEHINT)
+    @Named("xwiki+instance")
     private OutputFilterStreamFactory outputFilterStreamFactory;
 
     @Inject
-    @Named(FilterStreamConverterJob.JOBTYPE)
+    @Named("filter.converter")
     private Provider<Job> filterJobProvider;
 
     @Inject
-    @Named(MigrationPlanCreatorJob.JOB_TYPE)
+    @Named(NPMIG)
     private Provider<Job> migrationPlanCreatorProvider;
 
     @Inject
-    @Named(MigrationPlanExecutorJob.JOB_TYPE)
+    @Named("npmig.executor")
     private Provider<Job> migrationPlanExecutorProvider;
 
     @Inject
@@ -148,8 +145,8 @@ public class ConfluenceMigrationJob
             }
         }
         FilterStreamConverterJobRequest filterJobRequest = new FilterStreamConverterJobRequest(
-            FilterStreamType.unserialize(ConfluenceInputFilterStreamFactory.ROLEHINT), inputProperties,
-            FilterStreamType.unserialize(InstanceInputFilterStreamFactory.ROLEHINT), outputProperties);
+            FilterStreamType.unserialize("confluence+xml"), inputProperties,
+            FilterStreamType.unserialize("xwiki+instance"), outputProperties);
         filterJobRequest.setInteractive(true);
         logger.info("Starting Filter Job");
         progressManager.pushLevelProgress(3, this);
@@ -203,7 +200,7 @@ public class ConfluenceMigrationJob
         MigrationPlanTree planTree = ((MigrationPlanCreatorJobStatus) planCreationJob.getStatus()).getPlan();
         MigrationPlanExecutorRequest migrationRequest = new MigrationPlanExecutorRequest();
         migrationRequest.setId(
-            Arrays.asList(MigrationPlanCreatorJob.JOB_TYPE, DefaultNestedPagesMigrator.EXECUTE_PLAN,
+            Arrays.asList(NPMIG, DefaultNestedPagesMigrator.EXECUTE_PLAN,
                 configuration.getWikiReference().getName()));
         migrationRequest.setConfiguration(configuration);
         migrationRequest.setPlan(planTree);
@@ -217,7 +214,7 @@ public class ConfluenceMigrationJob
     {
         MigrationPlanRequest migrationPlanRequest = new MigrationPlanRequest();
         migrationPlanRequest.setId(
-            Arrays.asList(MigrationPlanCreatorJob.JOB_TYPE, DefaultNestedPagesMigrator.CREATE_PLAN,
+            Arrays.asList(NPMIG, DefaultNestedPagesMigrator.CREATE_PLAN,
                 configuration.getWikiReference().getName()));
         migrationPlanRequest.setConfiguration(configuration);
 
