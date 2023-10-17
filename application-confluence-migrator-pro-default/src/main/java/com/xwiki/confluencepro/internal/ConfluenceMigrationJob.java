@@ -144,9 +144,15 @@ public class ConfluenceMigrationJob
                 outputProperties.put(entry.getKey(), entry.getValue());
             }
         }
+
+        boolean rightOnly = "true".equals(request.getOutputProperties().getOrDefault("rightOnly", "false"));
+        String ofHINT = rightOnly
+            ? ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT
+            : "xwiki+instance";
+
         FilterStreamConverterJobRequest filterJobRequest = new FilterStreamConverterJobRequest(
             FilterStreamType.unserialize("confluence+xml"), inputProperties,
-            FilterStreamType.unserialize("xwiki+instance"), outputProperties);
+            FilterStreamType.unserialize(ofHINT), outputProperties);
         filterJobRequest.setInteractive(true);
         logger.info("Starting Filter Job");
         progressManager.pushLevelProgress(3, this);
@@ -155,16 +161,18 @@ public class ConfluenceMigrationJob
         filterJob.initialize(filterJobRequest);
         filterJob.run();
 
-        SpaceQuestion spaceQuestion =
-            (SpaceQuestion) getStatus().getAskedQuestions().values()
-                .stream()
-                .filter(q -> q instanceof SpaceQuestion).findFirst()
-                .orElse(null);
-        WikiReference wikiReference = this.request.getStatusDocumentReference().getWikiReference();
-        if (wikiReference != null) {
-            runNestedPagesMigrator(spaceQuestion, wikiReference);
-        } else {
-            logger.error("Could not start the nested migration job because the the wiki couldn't be determined.");
+        if (!rightOnly) {
+            SpaceQuestion spaceQuestion =
+                (SpaceQuestion) getStatus().getAskedQuestions().values()
+                    .stream()
+                    .filter(q -> q instanceof SpaceQuestion).findFirst()
+                    .orElse(null);
+            WikiReference wikiReference = this.request.getStatusDocumentReference().getWikiReference();
+            if (wikiReference != null) {
+                runNestedPagesMigrator(spaceQuestion, wikiReference);
+            } else {
+                logger.error("Could not start the nested migration job because the the wiki couldn't be determined.");
+            }
         }
 
         progressManager.popLevelProgress(this);
