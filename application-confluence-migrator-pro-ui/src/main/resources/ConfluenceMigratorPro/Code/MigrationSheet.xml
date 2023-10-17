@@ -151,7 +151,7 @@
         #displayFormField('input', $propertyDescriptor)
       #end
     &lt;/dl&gt;
-    &lt;h2&gt;$services.localization.render('confluencepro.job.onlyrights.title')&lt;/h2&gt;
+    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.title'))&lt;/h2&gt;
     &lt;p&gt;$services.localization.render('confluencepro.job.onlyrights.description')&lt;/p&gt;
     &lt;dl&gt;
       &lt;dt&gt;
