@@ -267,7 +267,7 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
             try {
                 doc = contextProvider.get().getWiki().getDocument(docRef, contextProvider.get());
             } catch (XWikiException e) {
-                logger.error("Could not get document [{}]", docRef);
+                logger.error("Could not get document [{}]", docRef, e);
             }
 
             if (doc != null) {
@@ -283,7 +283,7 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
                     contextProvider.get().getWiki().saveDocument(doc, contextProvider.get());
                     logger.info("Saved document [{}]", docRef);
                 } catch (XWikiException e) {
-                    logger.error("Could not save document [{}]", docRef);
+                    logger.error("Could not save document [{}]", docRef, e);
                 }
             }
 
