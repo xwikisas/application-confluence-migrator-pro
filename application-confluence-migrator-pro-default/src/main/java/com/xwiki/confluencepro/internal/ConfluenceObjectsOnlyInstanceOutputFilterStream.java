@@ -328,7 +328,7 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
     }
 
     private DocumentReference getDocumentReference(String key, FilterEventParameters parameters,
-                                                     DocumentReference def)
+        DocumentReference def)
     {
         Object reference = get(Object.class, key, parameters, def, false, false);
 
