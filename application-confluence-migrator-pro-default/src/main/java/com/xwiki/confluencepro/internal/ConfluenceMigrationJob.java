@@ -69,26 +69,30 @@ public class ConfluenceMigrationJob
      */
     public static final String JOBTYPE = "confluence.migration";
 
-    private static final String NPMIG = "npmig";
+    private static final String NPMIG_ROLEHINT = "npmig";
+    private static final String CONFLUENCE_XML_ROLEHINT = "confluence+xml";
+    private static final String XWIKI_INSTANCE_ROLEHINT = "xwiki+instance";
+    private static final String FILTER_CONVERTER_ROLEHINT = "filter.converter";
+    private static final String NPMIG_EXECUTOR_ROLEHINT = "npmig.executor";
 
     @Inject
-    @Named("confluence+xml")
+    @Named(CONFLUENCE_XML_ROLEHINT)
     private InputFilterStreamFactory inputFilterStreamFactory;
 
     @Inject
-    @Named("xwiki+instance")
+    @Named(XWIKI_INSTANCE_ROLEHINT)
     private OutputFilterStreamFactory outputFilterStreamFactory;
 
     @Inject
-    @Named("filter.converter")
+    @Named(FILTER_CONVERTER_ROLEHINT)
     private Provider<Job> filterJobProvider;
 
     @Inject
-    @Named(NPMIG)
+    @Named(NPMIG_ROLEHINT)
     private Provider<Job> migrationPlanCreatorProvider;
 
     @Inject
-    @Named("npmig.executor")
+    @Named(NPMIG_EXECUTOR_ROLEHINT)
     private Provider<Job> migrationPlanExecutorProvider;
 
     @Inject
@@ -146,13 +150,13 @@ public class ConfluenceMigrationJob
         }
 
         boolean rightOnly = "true".equals(request.getOutputProperties().getOrDefault("rightOnly", "false"));
-        String ofHINT = rightOnly
+        String outputStreamRoleHint = rightOnly
             ? ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT
-            : "xwiki+instance";
+            : XWIKI_INSTANCE_ROLEHINT;
 
         FilterStreamConverterJobRequest filterJobRequest = new FilterStreamConverterJobRequest(
-            FilterStreamType.unserialize("confluence+xml"), inputProperties,
-            FilterStreamType.unserialize(ofHINT), outputProperties);
+            FilterStreamType.unserialize(CONFLUENCE_XML_ROLEHINT), inputProperties,
+            FilterStreamType.unserialize(outputStreamRoleHint), outputProperties);
         filterJobRequest.setInteractive(true);
         logger.info("Starting Filter Job");
         progressManager.pushLevelProgress(3, this);
@@ -208,7 +212,7 @@ public class ConfluenceMigrationJob
         MigrationPlanTree planTree = ((MigrationPlanCreatorJobStatus) planCreationJob.getStatus()).getPlan();
         MigrationPlanExecutorRequest migrationRequest = new MigrationPlanExecutorRequest();
         migrationRequest.setId(
-            Arrays.asList(NPMIG, DefaultNestedPagesMigrator.EXECUTE_PLAN,
+            Arrays.asList(NPMIG_ROLEHINT, DefaultNestedPagesMigrator.EXECUTE_PLAN,
                 configuration.getWikiReference().getName()));
         migrationRequest.setConfiguration(configuration);
         migrationRequest.setPlan(planTree);
@@ -222,7 +226,7 @@ public class ConfluenceMigrationJob
     {
         MigrationPlanRequest migrationPlanRequest = new MigrationPlanRequest();
         migrationPlanRequest.setId(
-            Arrays.asList(NPMIG, DefaultNestedPagesMigrator.CREATE_PLAN,
+            Arrays.asList(NPMIG_ROLEHINT, DefaultNestedPagesMigrator.CREATE_PLAN,
                 configuration.getWikiReference().getName()));
         migrationPlanRequest.setConfiguration(configuration);
 
