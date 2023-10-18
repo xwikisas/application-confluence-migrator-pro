@@ -21,6 +21,7 @@ package com.xwiki.confluencepro.script;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.context.concurrent.ContextStoreManager;
 import org.xwiki.job.Job;
@@ -64,6 +66,9 @@ public class ConfluenceMigrationScriptService implements ScriptService
     private JobExecutor jobExecutor;
 
     @Inject
+    private Logger logger;
+
+    @Inject
     private ConfluenceMigrationPrerequisites prerequisites;
 
     @Inject
@@ -93,13 +98,13 @@ public class ConfluenceMigrationScriptService implements ScriptService
         jobRequest.setInteractive(true);
         try {
             Map<String, Serializable> migrationContext =
-                this.contextStoreManager.save(this.contextStoreManager.getSupportedEntries());
+                this.contextStoreManager.save(Collections.singletonList("wiki"));
             jobRequest.setContext(migrationContext);
             lastJob = jobExecutor.execute("confluence.migration", jobRequest);
             lastJobMap.put(documentReference, lastJob);
             return lastJob;
-        } catch (Exception ignored) {
-
+        } catch (Exception e) {
+            logger.error("Failed to execute the migration job for [{}].", documentReference, e);
         }
         return null;
     }
