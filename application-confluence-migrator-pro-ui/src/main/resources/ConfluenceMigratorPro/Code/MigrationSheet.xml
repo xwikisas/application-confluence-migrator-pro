@@ -151,6 +151,20 @@
         #displayFormField('input', $propertyDescriptor)
       #end
     &lt;/dl&gt;
+    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.title'))&lt;/h2&gt;
+    &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.description'))&lt;/p&gt;
+    &lt;dl&gt;
+      &lt;dt&gt;
+        &lt;label for="onlyRights"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.title'))&lt;/label&gt;
+        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.hint'))&lt;/span&gt;
+      &lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;input id="onlyRights" type="text" class="cfm-output-filter-property" value="false" data-key="rightOnly"/&gt;
+      &lt;/dd&gt;
+    &lt;/dl&gt;
+    &lt;div class="box warningmessage"&gt;
+      &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.warning'))&lt;/p&gt;
+    &lt;/div&gt;
     &lt;h2&gt;$services.localization.render('confluencepro.job.question.advanced.output')&lt;/h2&gt;
     &lt;dl&gt;
       &lt;input type="hidden" id="cfm-output-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties" /&gt;
