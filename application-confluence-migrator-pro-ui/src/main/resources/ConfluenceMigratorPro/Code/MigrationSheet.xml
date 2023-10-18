@@ -234,7 +234,7 @@
   #set ($errors = $jsonObject.get('ERROR'))
   #set ($warns = $jsonObject.get('WARN'))
   #set ($problems = 0)
-  #if ($errors.size() &gt; 0)
+  #if ("$!errors" != '' &amp;&amp; $errors.size() &gt; 0)
     #set ($problems = $problems + $errors.size())
   #end
   #if ($warns.size() &gt; 0)
