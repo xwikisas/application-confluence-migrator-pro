@@ -66,15 +66,15 @@
   #else
     #set ($propertyDescriptorInputId = "qproperty_outputProperties[]")
   #end
-  #set ($propertyDescriptorLabel = $services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}"))
+  #set ($propertyDescriptorLabel = $escapetool.xml($services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}")))
   #if ("$!propertyDescriptorLabel" == "confluencepro.job.question.advanced.$propertyDescriptorId")
     #set ($propertyDescriptorLabel = $propertyDescriptor.name)
   #end
-  #set ($propertyDescriptorAbout = $services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.description"))
+  #set ($propertyDescriptorAbout = $escapetool.xml($services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.description")))
   #if ("$!propertyDescriptorAbout" == "confluencepro.job.question.advanced.${propertyDescriptorId}.description")
     #set ($propertyDescriptorAbout = $propertyDescriptor.description)
   #end
-  #set ($propertyDescriptorSupportedFormats = $services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.supportedformats"))
+  #set ($propertyDescriptorSupportedFormats = $escapetool.xml($services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.supportedformats")))
   &lt;dt&gt;
     &lt;label for="$!escapetool.xml($propertyDescriptorId)"&gt;$propertyDescriptorLabel&lt;/label&gt;
     #if ("$!propertyDescriptorAbout" != '')
@@ -140,10 +140,10 @@
     &lt;div class="cfmTitleIcon"&gt;
       $services.icon.renderHTML('caret-down')
     &lt;/div&gt;
-    $services.localization.render('confluencepro.job.question.advanced.link')
+    $escapetool.xml($services.localization.render('confluencepro.job.question.advanced.link'))
   &lt;/a&gt;
   &lt;div class="xform collapse confluence-migrator-collapse" id="advancedInputFields"&gt;
-    &lt;h2&gt;$services.localization.render('confluencepro.job.question.advanced.input')&lt;/h2&gt;
+    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.input'))&lt;/h2&gt;
     &lt;dl&gt;
       &lt;input type="hidden" id="cfm-input-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_inputProperties" /&gt;
       #set ($descriptor = $services.filter.getInputFilterStreamDescriptor('confluence+xml'))
@@ -165,7 +165,7 @@
     &lt;div class="box warningmessage"&gt;
       &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.warning'))&lt;/p&gt;
     &lt;/div&gt;
-    &lt;h2&gt;$services.localization.render('confluencepro.job.question.advanced.output')&lt;/h2&gt;
+    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.output'))&lt;/h2&gt;
     &lt;dl&gt;
       &lt;input type="hidden" id="cfm-output-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties" /&gt;
       #set ($descriptor = $services.filter.getOutputFilterStreamDescriptor('xwiki+instance'))
@@ -416,10 +416,10 @@
     &lt;/div&gt;
     #set($titleKey = "${translationPrefix}.label")
     #if ($services.localization.get($titleKey))
-      &lt;h2&gt;$services.localization.render($titleKey)&lt;/h2&gt;
+      &lt;h2&gt;$escapetool.xml($services.localization.render($titleKey))&lt;/h2&gt;
       #set($titleHintKey = "${translationPrefix}.hint")
       #if ($services.localization.get($titleHintKey))
-        &lt;p class="text-muted small"&gt;$services.localization.render($titleHintKey)&lt;/p&gt;
+        &lt;p class="text-muted small"&gt;$escapetool.xml($services.localization.render($titleHintKey))&lt;/p&gt;
       #end
     #end
     #if (!$finished)
