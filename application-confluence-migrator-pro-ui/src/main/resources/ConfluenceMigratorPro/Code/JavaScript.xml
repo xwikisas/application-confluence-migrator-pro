@@ -130,12 +130,12 @@
     event.preventDefault();
     let jobDocumentRef = XWiki.Model.resolve('ConfluenceMigratorPro.Migrations.Migration' + Date.now(), XWiki.EntityType.DOCUMENT, XWiki.currentDocument.documentReference);
     let jobDocument = new XWiki.Document(jobDocumentRef);
-    let package = $(this).data('package');
+    let packageName = $(this).data('package');
     window.location.href = jobDocument.getURL('edit', $.param({
       template: 'ConfluenceMigratorPro.Code.MigrationTemplate',
       parent: 'ConfluenceMigratorPro.WebHome',
-      package: package,
-      'form_token': xcontext.form_token
+      package: packageName,
+      form_token: xcontext.form_token
     }));
   });
 });</code>

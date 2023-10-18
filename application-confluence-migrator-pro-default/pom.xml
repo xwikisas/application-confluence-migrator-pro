@@ -29,6 +29,9 @@
   </parent>
   <artifactId>application-confluence-migrator-pro-default</artifactId>
   <name>Confluence Migrator Pro - Default API</name>
+  <properties>
+    <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>com.xwiki.confluencepro</groupId>
