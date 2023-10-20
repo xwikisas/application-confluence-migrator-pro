@@ -89,8 +89,9 @@ public class ConfluenceFilteringListener extends AbstractEventListener
             if (entitySelection.isSelected()) {
                 anySelected = true;
             } else {
-                confluencePackage.getPages()
-                    .remove(confluencePackage.getSpacesByKey().get(entitySelection.getEntityReference().getName()));
+                Long spaceId = confluencePackage.getSpacesByKey().get(entitySelection.getEntityReference().getName());
+                confluencePackage.getPages().remove(spaceId);
+                confluencePackage.getBlogPages().remove(spaceId);
             }
         }
         if (!anySelected) {
