@@ -86,11 +86,11 @@ public class ConfluenceFilteringListener extends AbstractEventListener
 
         boolean anySelected = false;
         for (EntitySelection entitySelection : question.getConfluenceSpaces().keySet()) {
-            if (!entitySelection.isSelected()) {
+            if (entitySelection.isSelected()) {
+                anySelected = true;
+            } else {
                 confluencePackage.getPages()
                     .remove(confluencePackage.getSpacesByKey().get(entitySelection.getEntityReference().getName()));
-            } else {
-                anySelected = true;
             }
         }
         if (!anySelected) {
