@@ -49,7 +49,7 @@ confluencepro.norights=Only the admin can perform the migration.
 confluencepro.upload.submit=Upload new package
 confluencepro.upload.cancel=Cancel selection
 
-confluencepro.packages.title=Step 2 - Choose a backup package
+confluencepro.packages.title=Step 2 - Choose an export package
 confluencepro.migrations.title=Your migrations
 
 confluencepro.prerequisites.title=Step 1 - Prerequisites
