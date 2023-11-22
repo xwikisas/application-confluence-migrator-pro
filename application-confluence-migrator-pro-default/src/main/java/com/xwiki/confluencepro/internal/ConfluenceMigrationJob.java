@@ -123,31 +123,9 @@ public class ConfluenceMigrationJob
     @Override
     protected void runInternal() throws Exception
     {
-        FilterStreamDescriptor inputDescriptor = inputFilterStreamFactory.getDescriptor();
-        FilterStreamDescriptor outputDescriptor = outputFilterStreamFactory.getDescriptor();
+        Map<String, Object> inputProperties = getFilterInputProperties();
 
-        // Not using Collectors.toMap() because of https://bugs.openjdk.org/browse/JDK-8148463
-        Map<String, Object> inputProperties = inputDescriptor
-            .getProperties()
-            .stream()
-            .collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getDefaultValue()), HashMap::putAll);
-
-        Map<String, Object> outputProperties = outputDescriptor
-            .getProperties()
-            .stream()
-            .collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getDefaultValue()), HashMap::putAll);
-
-        inputProperties.put("source", getRequest().getConfluencePackage());
-        for (Map.Entry<String, Object> entry : request.getInputProperties().entrySet()) {
-            if (entry.getValue() != null && !entry.getValue().toString().isEmpty()) {
-                inputProperties.put(entry.getKey(), entry.getValue());
-            }
-        }
-        for (Map.Entry<String, Object> entry : request.getOutputProperties().entrySet()) {
-            if (entry.getValue() != null && !entry.getValue().toString().isEmpty()) {
-                outputProperties.put(entry.getKey(), entry.getValue());
-            }
-        }
+        Map<String, Object> outputProperties = getFilterOutputProperties();
 
         boolean rightOnly = "true".equals(request.getOutputProperties().getOrDefault("rightOnly", "false"));
         String outputStreamRoleHint = rightOnly
@@ -182,6 +160,42 @@ public class ConfluenceMigrationJob
         progressManager.popLevelProgress(this);
 
         migrationManager.updateAndSaveMigration(getStatus());
+    }
+
+    private Map<String, Object> getFilterOutputProperties()
+    {
+        FilterStreamDescriptor outputDescriptor = outputFilterStreamFactory.getDescriptor();
+        Map<String, Object> outputProperties = outputDescriptor
+            .getProperties()
+            .stream()
+            .collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getDefaultValue()), HashMap::putAll);
+        for (Map.Entry<String, Object> entry : request.getOutputProperties().entrySet()) {
+            if (entry.getValue() != null && !entry.getValue().toString().isEmpty()) {
+                outputProperties.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return outputProperties;
+    }
+
+    private Map<String, Object> getFilterInputProperties()
+    {
+        FilterStreamDescriptor inputDescriptor = inputFilterStreamFactory.getDescriptor();
+
+        // Not using Collectors.toMap() because of https://bugs.openjdk.org/browse/JDK-8148463
+        Map<String, Object> inputProperties = inputDescriptor
+            .getProperties()
+            .stream()
+            .collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getDefaultValue()), HashMap::putAll);
+
+        if (getRequest().getConfluencePackage() != null) {
+            inputProperties.put("source", getRequest().getConfluencePackage());
+        }
+        for (Map.Entry<String, Object> entry : request.getInputProperties().entrySet()) {
+            if (entry.getValue() != null && !entry.getValue().toString().isEmpty()) {
+                inputProperties.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return inputProperties;
     }
 
     private void runNestedPagesMigrator(SpaceQuestion spaceQuestion, WikiReference wikiReference)

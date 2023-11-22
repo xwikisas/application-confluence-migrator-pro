@@ -126,14 +126,25 @@
       &lt;dd&gt;
         &lt;input type="text" id="xwikidoctitleinput" name="title" value="" class=""
           placeholder="$!escapetool.xml($services.localization.render('confluencepro.migration.title.placeholder'))"&gt;
-        #if ("$!request.package" != '')
-          &lt;input class="form-control" type="hidden" 
-            name="ConfluenceMigratorPro.Code.MigrationClass_0_package"
-            id="ConfluenceMigratorPro.Code.MigrationClass_0_package"
-            value="$!escapetool.xml($request.package)" /&gt;
-        #end
       &lt;/dd&gt;
     &lt;/dl&gt;
+    #if ("$!request.package" != '')
+      &lt;input class="form-control" type="hidden"
+        name="ConfluenceMigratorPro.Code.MigrationClass_0_package"
+        id="ConfluenceMigratorPro.Code.MigrationClass_0_package"
+        value="$!escapetool.xml($request.package)" /&gt;
+    #elseif ("$!request.isPath" == '1')
+      &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.migration.source.title'))&lt;/h2&gt;
+      &lt;dl&gt;
+        &lt;dt&gt;
+          &lt;label for="source"&gt;$escapetool.xml($services.localization.render("confluencepro.job.question.advanced.source"))&lt;/label&gt;
+          &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render("confluencepro.job.question.advanced.source.description"))&lt;/span&gt;
+        &lt;/dt&gt;
+        &lt;dd&gt;
+          &lt;input type="text" class="cfm-input-filter-property" value="" data-key="source"&gt;
+        &lt;/dd&gt;
+      &lt;/dl&gt;
+    #end
   &lt;/div&gt;
   ## Advanced options
   &lt;a data-toggle="collapse" href="#advancedInputFields" role="button" aria-expanded="false" aria-controls="advancedInputFields" class="advanced-fields collapsed"&gt;
@@ -148,7 +159,9 @@
       &lt;input type="hidden" id="cfm-input-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_inputProperties" /&gt;
       #set ($descriptor = $services.filter.getInputFilterStreamDescriptor('confluence+xml'))
       #foreach ($propertyDescriptor in $descriptor.properties)
-        #displayFormField('input', $propertyDescriptor)
+        #if ($propertyDescriptor.id != 'source')
+          #displayFormField('input', $propertyDescriptor)
+        #end
       #end
     &lt;/dl&gt;
     &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.title'))&lt;/h2&gt;
@@ -362,19 +375,24 @@
   #end
   #set ($confluenceJob = $services.confluenceMigration.getLastJob($doc.documentReference))
   #set ($package = $obj.getProperty('package').value)
+  #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
+  #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
   #if ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED')
-    #if ("$!package" != '')
-      #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
-      #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
-      #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
-      #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
-      #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
+    #if ("$!package" != '' || "$!inputProperties.source" != '')
+      ## If the package is missing, then the migration will use the 'source' parameter of the input properties.
+      #set ($attachmentInputStream = $NULL)
+      #if ("$!package" != '')
+        #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
+        #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
+        #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
+        #set ($attachmentInputStream = $attachDoc.getAttachment($attachRef.name).getContentInputStream())
+      #end
       #if ("$!outputProperties.get('authorPreserved')" == 'false')
         #set ($discard = $outputProperties.putIfAbsent('author', $xcontext.userReference))
       #end
       #set ($discard = $inputProperties.putAll($prefilledValues.get('input')))
       #set ($discard = $outputProperties.putAll($prefilledValues.get('output')))
-      #set ($confluenceJob = $services.confluenceMigration.migrate($doc.documentReference, $attachDoc.getAttachment($attachRef.name).getContentInputStream(), $inputProperties, $outputProperties))
+      #set ($confluenceJob = $services.confluenceMigration.migrate($doc.documentReference, $attachmentInputStream, $inputProperties, $outputProperties))
       #displayJob($confluenceJob)
     #else
       No package to start the migration

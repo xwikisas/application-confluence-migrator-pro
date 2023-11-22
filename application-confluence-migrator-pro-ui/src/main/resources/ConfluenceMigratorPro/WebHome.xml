@@ -51,7 +51,7 @@
 #else
 #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
 #if ($license.type == 'TRIAL')
-  {{warning}}$services.localization.render('confluencepro.extension.missingLicense', ['[[', ">>path:#getLicensesAdminSectionURL]]"]){{/warning}}
+  {{warning}}$services.localization.render('confluencepro.extension.missingLicense', ['[[', "&gt;&gt;path:#getLicensesAdminSectionURL]]"]){{/warning}}
 #end
 ## Prerequisites Section ##
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
@@ -120,6 +120,7 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 
 {{html}}
 #displaySubtitle('cube', 'confluencepro.packages.title', '', {})
+&lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.packages.hint'))&lt;/p&gt;
 {{/html}}
 
 #set ($storeDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.PackagesStore'))
@@ -142,8 +143,17 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
   &lt;/div&gt;
   &lt;/form&gt;
 #end
-
-
+&lt;br/&gt;
+#set ($escapedMessage = $escapetool.xml($services.localization.render('confluencepro.packages.serverPath')))
+#set ($editURL = $xwiki.getURL("ConfluenceMigratorPro.Migrations.Migration${datetool.date.time}", 'edit', $escapetool.url({
+  'template': 'ConfluenceMigratorPro.Code.MigrationTemplate',
+  'parent': 'ConfluenceMigratorPro.Migrations.WebHome',
+  'isPath': '1',
+  'form_token': $services.csrf.token
+})))
+#set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;0}', "&lt;a href='$editURL'&gt;"))
+#set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;1}', '&lt;/a&gt;'))
+&lt;p&gt;$escapedMessage&lt;/p&gt;
 &lt;div class="modal fade migrationNameModal" tabindex="-1" role="dialog"&gt;
   &lt;div class="modal-dialog modal-lg"&gt;
     &lt;div class="modal-content"&gt;

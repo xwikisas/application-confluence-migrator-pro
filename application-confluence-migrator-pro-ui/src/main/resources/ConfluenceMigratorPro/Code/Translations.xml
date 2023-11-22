@@ -49,7 +49,9 @@ confluencepro.norights=Only the admin can perform the migration.
 confluencepro.upload.submit=Upload new package
 confluencepro.upload.cancel=Cancel selection
 
-confluencepro.packages.title=Step 2 - Choose a backup package
+confluencepro.packages.title=Step 2 - Choose an export package
+confluencepro.packages.hint=To start a migration, select an existing package or upload a new one.
+confluencepro.packages.serverPath=Alternatively, {0}select an export from the server{1}.
 confluencepro.migrations.title=Your migrations
 
 confluencepro.prerequisites.title=Step 1 - Prerequisites
@@ -81,6 +83,7 @@ confluencepro.migration.raport.problems.other.error=Encountered errors
 confluencepro.migration.raport.problems.other.warn=Encountered warnings
 
 confluencepro.migration.title.label=Set the title of the migration
+confluencepro.migration.source.title=Set the source package of the migration
 confluencepro.migration.title.placeholder=Type the desired title...
 confluencepro.migration.missingLicense=As part of a trial, you can migrate one space per migration. In order to unlock the full capabilities please obtain a license.
 
@@ -113,6 +116,8 @@ confluencepro.job.status.runningJob=Your pages are being imported and moved into
 confluencepro.job.question.advanced.link=Advanced migration options
 confluencepro.job.question.advanced.input=Properties of the input filter stream (Confluence XML)
 confluencepro.job.question.advanced.output=Properties of the output filter stream (XWiki instance)
+confluencepro.job.question.advanced.source=The source package
+confluencepro.job.question.advanced.source.description=The path to the package that will be migrated e.g. file://home/Downloads/confluencePackage.zip.
 confluencepro.job.onlyrights.title=Right-only Import
 confluencepro.job.onlyrights.description=If you have already migrated your content and wish to import Confluence rights without modifying the content, you can do so setting this option to "true".
 confluencepro.job.onlyrights.warning=If you set this field to true, options in the next section will be ignored (because the default instance output filter stream is replaced with a custom one).
