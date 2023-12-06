@@ -49,6 +49,7 @@
     'prefixedMacros': 'attachments,gallery,chart'
   },
   'output': {
+    'versionPreserved': 'true',
     'stoppedWhenSaveFail': 'false'
   }
 })
