@@ -76,8 +76,6 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 #end
 #set ($prerequisites = [])
 #addPrerequisiteToList($prerequisites, $services.confluenceMigration.checkMemory(), 'memory', 'https://www.xwiki.org/xwiki/bin/view/Documentation/AdminGuide/Performances/#HMemory', [$services.confluenceMigration.xmx, $services.confluenceMigration.xms, $mathtool.div($services.confluenceMigration.memory, 2), $services.confluenceMigration.memory])
-#addPrerequisiteToList($prerequisites, $services.confluenceMigration.checkWikiNotifications(), 'notifications', 'https://extensions.xwiki.org/xwiki/bin/view/Extension/Notifications%20Application/#HEnableanddisabletheextension', [])
-#addPrerequisiteToList($prerequisites, $services.confluenceMigration.checkCurrentUserNotification(), 'userNotifications', $xwiki.getURL($xcontext.userReference, 'view', 'category=notifications'), [])
 #addPrerequisiteToList($prerequisites, $services.confluenceMigration.checkCurrentUserNotificationCleanup(), 'userNotificationsCleanup', '', [])
 #set ($searchAdminSectionURL = $xwiki.getURL('XWiki.XWikiPreferences', 'admin', 'editor=globaladmin&amp;amp;section=Search'))
 #set ($listenerAdminDoc = $xwiki.getDocument('XWiki.ListenerAdmin'))
