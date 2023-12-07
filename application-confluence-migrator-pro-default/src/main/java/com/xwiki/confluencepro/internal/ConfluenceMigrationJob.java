@@ -70,9 +70,13 @@ public class ConfluenceMigrationJob
     public static final String JOBTYPE = "confluence.migration";
 
     private static final String NPMIG_ROLEHINT = "npmig";
+
     private static final String CONFLUENCE_XML_ROLEHINT = "confluence+xml";
+
     private static final String XWIKI_INSTANCE_ROLEHINT = "xwiki+instance";
+
     private static final String FILTER_CONVERTER_ROLEHINT = "filter.converter";
+
     private static final String NPMIG_EXECUTOR_ROLEHINT = "npmig.executor";
 
     @Inject
@@ -123,6 +127,7 @@ public class ConfluenceMigrationJob
     @Override
     protected void runInternal() throws Exception
     {
+        migrationManager.awaitPrerequisitesDisabling();
         Map<String, Object> inputProperties = getFilterInputProperties();
 
         Map<String, Object> outputProperties = getFilterOutputProperties();
@@ -160,6 +165,7 @@ public class ConfluenceMigrationJob
         progressManager.popLevelProgress(this);
 
         migrationManager.updateAndSaveMigration(getStatus());
+        migrationManager.enablePrerequisites();
     }
 
     private Map<String, Object> getFilterOutputProperties()

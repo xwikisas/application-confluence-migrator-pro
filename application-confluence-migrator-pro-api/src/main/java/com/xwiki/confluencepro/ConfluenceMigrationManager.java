@@ -37,4 +37,14 @@ public interface ConfluenceMigrationManager
      * @param jobStatus the status of the executed job.
      */
     void updateAndSaveMigration(ConfluenceMigrationJobStatus jobStatus);
+
+    /**
+     * Disable the prerequisites of the migration.
+     */
+    void awaitPrerequisitesDisabling();
+
+    /**
+     * Enable the prerequisites of the migration.
+     */
+    void enablePrerequisites();
 }

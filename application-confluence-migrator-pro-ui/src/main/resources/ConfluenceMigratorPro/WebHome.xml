@@ -80,11 +80,6 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 #addPrerequisiteToList($prerequisites, $services.confluenceMigration.checkCurrentUserNotification(), 'userNotifications', $xwiki.getURL($xcontext.userReference, 'view', 'category=notifications'), [])
 #addPrerequisiteToList($prerequisites, $services.confluenceMigration.checkCurrentUserNotificationCleanup(), 'userNotificationsCleanup', '', [])
 #set ($searchAdminSectionURL = $xwiki.getURL('XWiki.XWikiPreferences', 'admin', 'editor=globaladmin&amp;amp;section=Search'))
-#set ($solrQueuePrerequisiteIcon = "exclamation")
-#if ($services.solr.getQueueSize() == 0)
-  #set ($solrQueuePrerequisiteIcon = "check")
-#end
-#addPrerequisiteToList($prerequisites, $solrQueuePrerequisiteIcon, 'solr', $searchAdminSectionURL, [])
 #set ($listenerAdminDoc = $xwiki.getDocument('XWiki.ListenerAdmin'))
 #set ($automaticWatchURL = $listenerAdminDoc.getURL('view', '#|t=listeners&amp;amp;listenerClass=AutomaticWatchModeListener'))
 #set ($liveNotificationURL = $listenerAdminDoc.getURL('view', '#|t=listeners&amp;amp;listenerClass=LiveNotificationEmailListener'))
