@@ -19,11 +19,19 @@
  */
 package com.xwiki.confluencepro.internal;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.observation.EventListener;
+import org.xwiki.observation.ObservationManager;
 import org.xwiki.search.solr.internal.api.SolrIndexer;
+
+import com.xwiki.confluencepro.ConfluenceMigrationPrerequisites;
 
 /**
  * Manages the prerequisites of a confluence migration.
@@ -35,15 +43,34 @@ import org.xwiki.search.solr.internal.api.SolrIndexer;
 @Singleton
 public class ConfluenceMigrationPrerequisitesManager
 {
+    private static final String LISTENER_NOTIFICATION_FILTERS = "NotificationsFiltersPreferences-DocumentMovedListener";
+
+    private static final String LISTENER_NOTIFICATION_EMAIL = "Live Notification Email Listener";
+
+    private static final String LISTENER_AUTOMATIC_NOTIFICATION = "AutomaticNotificationsWatchModeListener";
+
+    private static final String LISTENER_NOTIFICATION_PREFILTERING = "Prefiltering Live Notification Email Listener";
+
     @Inject
     private SolrIndexer solrIndexer;
+
+    @Inject
+    private ConfluenceMigrationPrerequisites prerequisites;
+
+    @Inject
+    private ObservationManager observationManager;
+
+    private Map<EventListener, Integer> removedListeners = new HashMap<>();
 
     /**
      * Reenable the prerequisites. See {@link #disablePrerequisites()} for the list of prerequisites.
      */
     public void enablePrerequisites()
     {
-
+        addListener(LISTENER_AUTOMATIC_NOTIFICATION);
+        addListener(LISTENER_NOTIFICATION_PREFILTERING);
+        addListener(LISTENER_NOTIFICATION_FILTERS);
+        addListener(LISTENER_NOTIFICATION_EMAIL);
     }
 
     /**
@@ -62,6 +89,44 @@ public class ConfluenceMigrationPrerequisitesManager
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        prerequisites.checkCurrentUserNotificationCleanup();
+
+        removeListener(LISTENER_AUTOMATIC_NOTIFICATION);
+        removeListener(LISTENER_NOTIFICATION_EMAIL);
+        removeListener(LISTENER_NOTIFICATION_FILTERS);
+        removeListener(LISTENER_NOTIFICATION_PREFILTERING);
+    }
+
+    private synchronized void removeListener(String listenerName)
+    {
+        EventListener listener = this.observationManager.getListener(listenerName);
+        if (listener == null) {
+            listener = this.removedListeners.keySet().stream().filter(e -> listenerName.equals(e.getName())).findFirst()
+                .orElse(null);
+            if (listener == null) {
+                return;
+            }
+        }
+        this.removedListeners.put(listener, this.removedListeners.getOrDefault(listener, 0) + 1);
+        if (this.removedListeners.get(listener) == 1) {
+            this.observationManager.removeListener(listenerName);
+        }
+    }
+
+    private synchronized void addListener(String listenerName)
+    {
+        EventListener listener =
+            this.removedListeners.keySet().stream().filter(k -> listenerName.equals(k.getName())).findFirst()
+                .orElse(null);
+        if (listener == null) {
+            return;
+        }
+        int layers = this.removedListeners.get(listener) - 1;
+        if (layers <= 0) {
+            this.observationManager.addListener(listener);
+            this.removedListeners.remove(listener);
         }
     }
 }
