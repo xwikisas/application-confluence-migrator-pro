@@ -25,8 +25,8 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.ObservationManager;
 import org.xwiki.search.solr.internal.api.SolrIndexer;
@@ -60,6 +60,9 @@ public class ConfluenceMigrationPrerequisitesManager
     @Inject
     private ObservationManager observationManager;
 
+    @Inject
+    private Logger logger;
+
     private Map<EventListener, Integer> removedListeners = new HashMap<>();
 
     /**
@@ -83,6 +86,7 @@ public class ConfluenceMigrationPrerequisitesManager
         // 5 minutes
         long timeout = 5L * 60 * 1000000000;
 
+        logger.info("Waiting for the solr queue to be empty..");
         while (solrIndexer.getQueueSize() > 0 || System.nanoTime() - startTime >= timeout) {
             try {
                 Thread.sleep(5000);
@@ -91,6 +95,7 @@ public class ConfluenceMigrationPrerequisitesManager
             }
         }
 
+        logger.info("Clearing user notifications preferences..");
         prerequisites.checkCurrentUserNotificationCleanup();
 
         removeListener(LISTENER_AUTOMATIC_NOTIFICATION);
@@ -101,6 +106,7 @@ public class ConfluenceMigrationPrerequisitesManager
 
     private synchronized void removeListener(String listenerName)
     {
+        logger.info("Disabling listener [{}]..", listenerName);
         EventListener listener = this.observationManager.getListener(listenerName);
         if (listener == null) {
             listener = this.removedListeners.keySet().stream().filter(e -> listenerName.equals(e.getName())).findFirst()
@@ -117,6 +123,7 @@ public class ConfluenceMigrationPrerequisitesManager
 
     private synchronized void addListener(String listenerName)
     {
+        logger.info("Enabling listener [{}]..", listenerName);
         EventListener listener =
             this.removedListeners.keySet().stream().filter(k -> listenerName.equals(k.getName())).findFirst()
                 .orElse(null);
@@ -127,6 +134,8 @@ public class ConfluenceMigrationPrerequisitesManager
         if (layers <= 0) {
             this.observationManager.addListener(listener);
             this.removedListeners.remove(listener);
+        } else {
+            this.removedListeners.put(listener, layers);
         }
     }
 }
