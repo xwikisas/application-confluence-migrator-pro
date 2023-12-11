@@ -75,6 +75,9 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     @Inject
     private QueryManager queryManager;
 
+    @Inject
+    private ConfluenceMigrationPrerequisitesManager prerequisitesManager;
+
     @Override
     public void updateAndSaveMigration(ConfluenceMigrationJobStatus jobStatus)
     {
@@ -115,6 +118,18 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         } catch (XWikiException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void disablePrerequisites()
+    {
+        prerequisitesManager.disablePrerequisites();
+    }
+
+    @Override
+    public void enablePrerequisites()
+    {
+        prerequisitesManager.enablePrerequisites();
     }
 
     private void extractDocsFromLogs(ConfluenceMigrationJobStatus jobStatus, Set<String> spaces, BaseObject object,
