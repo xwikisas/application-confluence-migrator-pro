@@ -181,10 +181,13 @@
 
   $(function() {
     // Since the associated liveData is refreshed on file upload, we don't need a response container.
-    new XWiki.FileUploader($('#addConfluencePackage input[type=file]')[0], {
-      'progressAutohide': true,
-      'responseContainer' : document.createElement('div')
-    });
+    const input = document.querySelector('#addConfluencePackage input[type=file]');
+    if (input &amp;&amp; XWiki.FileUploader) {
+      new XWiki.FileUploader(input, {
+        'progressAutohide': true,
+        'responseContainer' : document.createElement('div')
+      });
+    }
   });
 
   $(document).on('xwiki:html5upload:done', function(e) {
