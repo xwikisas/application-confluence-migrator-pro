@@ -78,7 +78,9 @@ public class ConfluenceMigrationPrerequisitesManager
 
     /**
      * Disable/deactivate a list of prerequisites that will make the migration run smoother. Among the prerequisites, we
-     * have the following: Wait for the solr indexer queue size to be empty. The timeout period is of 5 minutes.
+     * have the following: Wait for the solr indexer queue size to be empty. The timeout period is of 5 minutes;
+     * Clear the user notification preferences; Remove the NotificationsFiltersPreferences, Live Notification Email,
+     * AutomaticNotificationsWatchMode and Prefiltering Live Notification listeners.
      */
     public void disablePrerequisites()
     {

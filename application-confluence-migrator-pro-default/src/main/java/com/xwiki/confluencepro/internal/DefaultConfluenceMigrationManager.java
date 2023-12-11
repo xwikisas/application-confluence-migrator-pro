@@ -121,7 +121,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     }
 
     @Override
-    public void awaitPrerequisitesDisabling()
+    public void disablePrerequisites()
     {
         prerequisitesManager.disablePrerequisites();
     }

@@ -127,7 +127,7 @@ public class ConfluenceMigrationJob
     @Override
     protected void runInternal() throws Exception
     {
-        migrationManager.awaitPrerequisitesDisabling();
+        migrationManager.disablePrerequisites();
         Map<String, Object> inputProperties = getFilterInputProperties();
 
         Map<String, Object> outputProperties = getFilterOutputProperties();

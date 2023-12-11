@@ -41,7 +41,7 @@ public interface ConfluenceMigrationManager
     /**
      * Disable the prerequisites of the migration.
      */
-    void awaitPrerequisitesDisabling();
+    void disablePrerequisites();
 
     /**
      * Enable the prerequisites of the migration.
