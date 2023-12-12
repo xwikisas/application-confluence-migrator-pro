@@ -157,7 +157,7 @@
   &lt;div class="xform collapse confluence-migrator-collapse" id="advancedInputFields"&gt;
     &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.input'))&lt;/h2&gt;
     &lt;dl&gt;
-      &lt;input type="hidden" id="cfm-input-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_inputProperties" /&gt;
+      &lt;input type="hidden" id="cfm-input-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_inputProperties" value="$escapetool.xml($jsontool.serialize($prefilledValues['input']))" /&gt;
       #set ($descriptor = $services.filter.getInputFilterStreamDescriptor('confluence+xml'))
       #foreach ($propertyDescriptor in $descriptor.properties)
         #if ($propertyDescriptor.id != 'source')
@@ -181,7 +181,7 @@
     &lt;/div&gt;
     &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.output'))&lt;/h2&gt;
     &lt;dl&gt;
-      &lt;input type="hidden" id="cfm-output-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties" /&gt;
+      &lt;input type="hidden" id="cfm-output-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties" value="$escapetool.xml($jsontool.serialize($prefilledValues['output']))" /&gt;
       #set ($descriptor = $services.filter.getOutputFilterStreamDescriptor('xwiki+instance'))
       #foreach ($propertyDescriptor in $descriptor.properties)
         #displayFormField('output', $propertyDescriptor)
@@ -391,8 +391,6 @@
       #if ("$!outputProperties.get('authorPreserved')" == 'false')
         #set ($discard = $outputProperties.putIfAbsent('author', $xcontext.userReference))
       #end
-      #set ($discard = $inputProperties.putAll($prefilledValues.get('input')))
-      #set ($discard = $outputProperties.putAll($prefilledValues.get('output')))
       #set ($confluenceJob = $services.confluenceMigration.migrate($doc.documentReference, $attachmentInputStream, $inputProperties, $outputProperties))
       #displayJob($confluenceJob)
     #else
@@ -806,18 +804,31 @@ require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($
   ]
 });
 require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
-  let inputFilterJson = {};
-  let outputFilterJson = {};
-  $('.cfm-input-filter-property').on('change', function() {
-    inputFilterJson[$(this).data('key')] = $(this).val();
-    $('#cfm-input-properties').val(JSON.stringify(inputFilterJson));
-  });
-  $('.cfm-output-filter-property').on('change', function() {
-    outputFilterJson[$(this).data('key')] = $(this).val();
-    $('#cfm-output-properties').val(JSON.stringify(outputFilterJson));
-  });
-  $(document).on('click', '#cfmResetMigration', function(event) {
+  function handleFilterPropertyChange() {
+    const input = document.getElementById(
+      this.classList.contains('cfm-input-filter-property')
+        ? 'cfm-input-properties'
+        : 'cfm-output-properties'
+    );
 
+    if (input) {
+      let json = {};
+      try {
+        json = JSON.parse(input.value);
+      } catch (e) {
+        console.error("Could not parse the json value of input", input, e);
+      }
+      json[this.dataset.key] = this.value;
+      input.value = JSON.stringify(json);
+    } else {
+        console.error("BUG: could not find the input to update for this property", this);
+    }
+  };
+
+  $('.cfm-input-filter-property').on('change', handleFilterPropertyChange);
+  $('.cfm-output-filter-property').on('change', handleFilterPropertyChange);
+
+  $(document).on('click', '#cfmResetMigration', function() {
     var notification = new XWiki.widgets.Notification(l10n.progress, 'inprogress');
     if (!confirm(l10n.confirm)) {
       notification.hide();
@@ -829,7 +840,7 @@ require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
       method: 'PUT',
       contentType: 'text/plain',
       data: '0'
-    }).then(data =&gt; {
+    }).then(() =&gt; {
       notification.replace(new XWiki.widgets.Notification(l10n.success, 'done'));
       setTimeout(function() {
         location.reload();
