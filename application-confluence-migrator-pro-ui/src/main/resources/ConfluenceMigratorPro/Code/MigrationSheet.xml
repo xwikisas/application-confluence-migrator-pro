@@ -265,7 +265,7 @@
   #if ("$!errors" != '' &amp;&amp; $errors.size() &gt; 0)
     #set ($problems = $problems + $errors.size())
   #end
-  #if ($warns.size() &gt; 0)
+  #if ("$!warns" != '' &amp;&amp; $warns.size() &gt; 0)
     #set ($problems = $problems + $warns.size())
   #end
   #displaySubtitle('question', 'confluencepro.migration.raport.problems.other.title', '', [$problems])
