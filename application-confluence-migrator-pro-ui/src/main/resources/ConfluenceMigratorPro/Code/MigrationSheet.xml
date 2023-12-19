@@ -198,7 +198,7 @@
  *#
 #macro(docView)
   ## Handle the upload and selection of a package using the attachment picker.
-  #if ("$request.package" != '' &amp;&amp; $services.csrf.isTokenValid($request.form_token))
+  #if ("$!request.package" != '' &amp;&amp; $services.csrf.isTokenValid($request.form_token))
     #set ($discard = $doc.set('package', $request.package))
     #set ($discard = $doc.save())
   #end
@@ -265,7 +265,7 @@
   #if ("$!errors" != '' &amp;&amp; $errors.size() &gt; 0)
     #set ($problems = $problems + $errors.size())
   #end
-  #if ($warns.size() &gt; 0)
+  #if ("$!warns" != '' &amp;&amp; $warns.size() &gt; 0)
     #set ($problems = $problems + $warns.size())
   #end
   #displaySubtitle('question', 'confluencepro.migration.raport.problems.other.title', '', [$problems])
