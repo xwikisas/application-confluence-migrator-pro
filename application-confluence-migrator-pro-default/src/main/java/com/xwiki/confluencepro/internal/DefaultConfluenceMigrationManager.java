@@ -36,6 +36,7 @@ import javax.inject.Singleton;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.PageIdentifier;
+import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
 import org.xwiki.logging.LogLevel;
 import org.xwiki.logging.event.LogEvent;
 import org.xwiki.model.reference.EntityReferenceSerializer;
@@ -101,6 +102,18 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                 }
             }
             object.set("spaces", new ArrayList<>(spaces), context);
+
+            // Set the imported macros.
+            LogEvent macrosFoundLog = jobStatus.getLogTail().getLogEvents(0, -1)
+                .stream()
+                .filter(jobLog ->
+                    jobLog.getMarker() != null && jobLog.getMarker().contains(ConfluenceFilter.LOG_MACROS_FOUND))
+                .findFirst()
+                .orElse(null);
+
+            if (macrosFoundLog != null && macrosFoundLog.getArgumentArray().length != 0) {
+                object.set("macros", macrosFoundLog.getArgumentArray()[0], context);
+            }
 
             // Set logs json.
             Gson gson = new Gson();
