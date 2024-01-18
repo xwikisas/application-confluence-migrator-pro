@@ -59,7 +59,7 @@ import com.xpn.xwiki.internal.filter.output.EntityOutputFilterStream;
  * copy of it from version 15.10.6+. The purpose of this listener is to work around the issue XWIKI-21801.
  *
  * @version $Id$
- * @since 1.0
+ * @since 1.8.3
  */
 // TODO: Remove this class once the parent of the app will be >= 15.10.6
 @Component

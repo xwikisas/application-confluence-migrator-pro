@@ -50,7 +50,7 @@ import com.xpn.xwiki.internal.filter.output.EntityOutputFilterStream;
  * 15.10.6 of XWiki. This version contains the fix to XWIKI-21801.
  *
  * @version $Id$
- * @since 1.
+ * @since 1.8.3
  */
 // TODO: Remove this class once the parent of the app will be >= 15.10.6
 public class DocumentInstanceOutputFilterStream extends AbstractBeanOutputFilterStream<DocumentInstanceOutputProperties>
