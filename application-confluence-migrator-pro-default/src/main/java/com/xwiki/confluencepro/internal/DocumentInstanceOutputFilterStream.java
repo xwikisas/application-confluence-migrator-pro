@@ -47,7 +47,8 @@ import com.xpn.xwiki.internal.filter.output.EntityOutputFilterStream;
 
 /**
  * This is a copy of {@link com.xpn.xwiki.internal.filter.output.DocumentInstanceOutputFilterStream} from version
- * 15.10.6 of XWiki. This version contains the fix to XWIKI-21801.
+ * 15.10.6 of XWiki. This version contains the fix to XWIKI-21801: Duplicate versions in history of documents not based
+ * on JRCS.
  *
  * @version $Id$
  * @since 1.8.3
@@ -100,7 +101,7 @@ public class DocumentInstanceOutputFilterStream extends AbstractBeanOutputFilter
     }
 
     @Override
-        public void setProperties(DocumentInstanceOutputProperties properties) throws FilterException
+    public void setProperties(DocumentInstanceOutputProperties properties) throws FilterException
     {
         super.setProperties(properties);
 

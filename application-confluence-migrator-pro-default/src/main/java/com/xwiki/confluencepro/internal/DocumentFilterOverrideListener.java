@@ -20,7 +20,7 @@
 
 package com.xwiki.confluencepro.internal;
 
-import java.util.List;
+import java.util.Collections;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -29,7 +29,6 @@ import javax.inject.Singleton;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
-import org.xwiki.bridge.event.WikiReadyEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
 import org.xwiki.component.descriptor.DefaultComponentDependency;
@@ -56,7 +55,8 @@ import com.xpn.xwiki.internal.filter.output.EntityOutputFilterStream;
 
 /**
  * Listener that will replace the {@link com.xpn.xwiki.internal.filter.output.DocumentInstanceOutputFilterStream} with a
- * copy of it from version 15.10.6+. The purpose of this listener is to work around the issue XWIKI-21801.
+ * copy of it from version 15.10.6+. The purpose of this listener is to work around the issue XWIKI-21801: Duplicate
+ * versions in history of documents not based on JRCS.
  *
  * @version $Id$
  * @since 1.8.3
@@ -72,8 +72,6 @@ public class DocumentFilterOverrideListener extends AbstractEventListener implem
      */
     public static final String ROLE_HINT = "com.xwiki.confluencepro.internal.DocumentFilterOverrideListener";
 
-    private static final List<Event> EVENTS = List.of(new WikiReadyEvent());
-
     @Inject
     private ComponentManager componentManager;
 
@@ -88,7 +86,7 @@ public class DocumentFilterOverrideListener extends AbstractEventListener implem
      */
     public DocumentFilterOverrideListener()
     {
-        super(ROLE_HINT, EVENTS);
+        super(ROLE_HINT, Collections.emptyList());
     }
 
     @Override
