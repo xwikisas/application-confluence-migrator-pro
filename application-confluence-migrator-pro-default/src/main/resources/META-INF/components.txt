@@ -4,3 +4,4 @@ com.xwiki.confluencepro.internal.ConfluenceMigrationPrerequisitesManager
 com.xwiki.confluencepro.internal.ConfluenceObjectsOnlyInstanceOutputFilterStream
 com.xwiki.confluencepro.internal.DefaultConfluenceMigrationManager
 com.xwiki.confluencepro.internal.DefaultConfluenceMigrationPrerequisites
+com.xwiki.confluencepro.internal.DocumentFilterOverrideListener
