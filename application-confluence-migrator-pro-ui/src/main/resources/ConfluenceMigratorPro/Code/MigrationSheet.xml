@@ -237,7 +237,7 @@
         &lt;/div&gt;
         &lt;span&gt;$escapetool.xml($space)&lt;/span&gt;
       &lt;/a&gt;
-      #set ($discard = $options.put('root', "document:xwiki:${space}.WebHome"))
+      #set ($discard = $options.put('root', "document:${xcontext.wiki}:${space}.WebHome"))
       #set ($discard = $options.put('links', 'true'))
       #set ($discard = $options.put('compact', 'true'))
       &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;

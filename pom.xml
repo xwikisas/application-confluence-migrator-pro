@@ -29,7 +29,7 @@
   </parent>
   <groupId>com.xwiki.confluencepro</groupId>
   <artifactId>application-confluence-migrator-pro</artifactId>
-  <version>1.8.1-SNAPSHOT</version>
+  <version>1.8.4-SNAPSHOT</version>
   <name>Confluence Migrator Pro - Parent POM</name>
   <packaging>pom</packaging>
   <issueManagement>
@@ -47,7 +47,7 @@
     <listeneradmin.version>1.0.2</listeneradmin.version>
     <xwiki.extension.name>Confluence Migrator Application (Pro)</xwiki.extension.name>
     <xwiki.extension.category>application</xwiki.extension.category>
-    <confluence.xml.version>9.31.0</confluence.xml.version>
+    <confluence.xml.version>9.31.3</confluence.xml.version>
     <nestedpages.migrator.version>0.10.1</nestedpages.migrator.version>
     <xwiki.enforcer.enforce-javase-dependencies.skip>true</xwiki.enforcer.enforce-javase-dependencies.skip>
   </properties>
@@ -66,6 +66,25 @@
         <version>${commons.version}</version>
       </extension>
     </extensions>
+    <!--  TODO: Remove this section once the parent of the application is >= 15.10.6  -->
+    <plugins>
+      <plugin>
+        <!-- Apply the Checkstyle configurations defined in the top level pom.xml file -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- Specify the "default" execution id so that the "blocker" one is always executed -->
+            <id>default</id>
+            <configuration>
+              <excludes>
+                **/DocumentInstanceOutputFilterStream.java
+              </excludes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
   <profiles>
     <profile>
