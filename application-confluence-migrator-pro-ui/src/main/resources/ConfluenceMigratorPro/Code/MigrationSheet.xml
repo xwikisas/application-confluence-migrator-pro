@@ -369,7 +369,8 @@
   $tmp
 #end
 #**
- * Run the migration job if the `executed` is false and if there is a `package` set. Display the status and the logs of the job.
+ * Run the migration job if the `executed` flag is false and if there is a `package` set.
+ * Display the status and the logs of the job.
  *
  * @param $obj the migration object of this page.
  *#

@@ -160,7 +160,7 @@ public class ConfluenceMigrationJob
             if (wikiReference != null) {
                 runNestedPagesMigrator(spaceQuestion, wikiReference);
             } else {
-                logger.error("Could not start the nested migration job because the the wiki couldn't be determined.");
+                logger.error("Could not start the nested migration job because the wiki couldn't be determined.");
             }
         }
 
