@@ -165,15 +165,21 @@
         #end
       #end
     &lt;/dl&gt;
-    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.title'))&lt;/h2&gt;
-    &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.description'))&lt;/p&gt;
+    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.general.title'))&lt;/h2&gt;
     &lt;dl&gt;
       &lt;dt&gt;
-        &lt;label for="onlyRights"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.title'))&lt;/label&gt;
+        &lt;label for="skipQuestions"&gt;$escapetool.xml($services.localization.render('confluencepro.job.skipquestions.question.title'))&lt;/label&gt;
+        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.skipquestions.question.hint'))&lt;/span&gt;
+      &lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;input id="skipQuestions" type="text" class="cfm-output-filter-property" value="false" data-key="skipQuestions"/&gt;
+      &lt;/dd&gt;
+      &lt;dt&gt;
+        &lt;label for="rightOnly"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.title'))&lt;/label&gt;
         &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.hint'))&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;
-        &lt;input id="onlyRights" type="text" class="cfm-output-filter-property" value="false" data-key="rightOnly"/&gt;
+        &lt;input id="rightOnly" type="text" class="cfm-output-filter-property" value="false" data-key="rightOnly"/&gt;
       &lt;/dd&gt;
     &lt;/dl&gt;
     &lt;div class="box warningmessage"&gt;

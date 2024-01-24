@@ -132,7 +132,7 @@ public class ConfluenceMigrationJob
 
         Map<String, Object> outputProperties = getFilterOutputProperties();
 
-        boolean rightOnly = "true".equals(request.getOutputProperties().getOrDefault("rightOnly", "false"));
+        boolean rightOnly = isGeneralParameterEnabled("rightOnly");
         String outputStreamRoleHint = rightOnly
             ? ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT
             : XWIKI_INSTANCE_ROLEHINT;
@@ -140,7 +140,9 @@ public class ConfluenceMigrationJob
         FilterStreamConverterJobRequest filterJobRequest = new FilterStreamConverterJobRequest(
             FilterStreamType.unserialize(CONFLUENCE_XML_ROLEHINT), inputProperties,
             FilterStreamType.unserialize(outputStreamRoleHint), outputProperties);
-        filterJobRequest.setInteractive(true);
+        boolean interactive = !isGeneralParameterEnabled("skipQuestions");
+        filterJobRequest.setInteractive(interactive);
+        request.setInteractive(interactive);
         logger.info("Starting Filter Job");
         progressManager.pushLevelProgress(3, this);
         progressManager.startStep(this);
@@ -166,6 +168,11 @@ public class ConfluenceMigrationJob
 
         migrationManager.updateAndSaveMigration(getStatus());
         migrationManager.enablePrerequisites();
+    }
+
+    private boolean isGeneralParameterEnabled(String parameterName)
+    {
+        return "true".equals(request.getOutputProperties().getOrDefault(parameterName, "false"));
     }
 
     private Map<String, Object> getFilterOutputProperties()
