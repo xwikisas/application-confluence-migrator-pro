@@ -19,16 +19,20 @@
  */
 package com.xwiki.confluencepro.internal;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -48,6 +52,7 @@ import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
 import org.xwiki.refactoring.job.question.EntitySelection;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
@@ -70,8 +75,14 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final String PAGES_KEY = "pages";
 
+    private static final List<String> CONFLUENCE_MIGRATOR_SPACE = Arrays.asList("ConfluenceMigratorPro", "Code");
+
+    private static final String OCCURRENCE_KEY_FORMAT = "%s_oc";
+
     private static final LocalDocumentReference MIGRATION_OBJECT =
-        new LocalDocumentReference(Arrays.asList("ConfluenceMigratorPro", "Code"), "MigrationClass");
+        new LocalDocumentReference(CONFLUENCE_MIGRATOR_SPACE, "MigrationClass");
+
+    private static final ArrayList<LogEvent> EMPTY_ARRAY_LIST = new ArrayList<>();
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -158,12 +169,12 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
             Map<String, Map<String, Object>> macroMap = createSerializableMacroMap(macroPages);
 
-            persistMacroMap(context, macroMap, gson, spaces);
+            persistMacroMap(context, macroMap, gson);
 
-            object.set("macros", gson.toJson(macroMap.keySet()), context);
-            object.set("skipped", gson.toJson(skipped), context);
-            object.set("problems", gson.toJson(problematic), context);
-            object.set("otherIssues", gson.toJson(otherIssues), context);
+            object.setLargeStringValue("macros", gson.toJson(macroMap.keySet()));
+            object.setLargeStringValue("skipped", gson.toJson(skipped));
+            object.setLargeStringValue("problems", gson.toJson(problematic));
+            object.setLargeStringValue("otherIssues", gson.toJson(otherIssues));
         } catch (QueryException e) {
             throw new RuntimeException(e);
         }
@@ -176,48 +187,75 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         object.set("logs", gson.toJson(logList), context);
     }
 
-    private void persistMacroMap(XWikiContext context, Map<String, Map<String, Object>> macroMap, Gson gson,
-        String space)
+    private void persistMacroMap(XWikiContext context, Map<String, Map<String, Object>> macroMap, Gson gson)
     {
         try {
             XWikiDocument macroCountDoc = context.getWiki().getDocument(
-                new DocumentReference(context.getWikiId(), Arrays.asList("ConfluenceMigratorPro", "Code"),
+                new DocumentReference(context.getWikiId(), CONFLUENCE_MIGRATOR_SPACE,
                     "MigratedMacrosCountJSON"), context);
-            Map<String, Map<String, Integer>> persistedMacroMap = gson.fromJson(macroCountDoc.getContent(), Map.class);
-
+            Map<String, Map<String, Integer>> occurenceMap = contentToMap(macroCountDoc, gson,
+                new TypeToken<Map<String, Map<String, Integer>>>()
+                {
+                }.getType());
             XWikiDocument macroDocListDoc = context.getWiki().getDocument(
-                new DocumentReference(context.getWikiId(), Arrays.asList("ConfluenceMigratorPro", "Code"),
+                new DocumentReference(context.getWikiId(), CONFLUENCE_MIGRATOR_SPACE,
                     "MigratedMacrosDocsJSON"), context);
-            Map<String, Map<String, Set<String>>> persistedMacroPagesMap =
-                gson.fromJson(macroCountDoc.getContent(), Map.class);
+            Map<String, Map<String, Set<String>>> pagesMap = contentToMap(macroDocListDoc, gson,
+                new TypeToken<Map<String, Map<String, Set<String>>>>()
+                {
+                }.getType());
 
             for (Map.Entry<String, Map<String, Object>> macroEntry : macroMap.entrySet()) {
                 String macroId = macroEntry.getKey();
-                Map<String, Integer> persistedMacroVals =
-                    persistedMacroMap.computeIfAbsent(macroId, k -> new HashMap<>());
-                int newSpaceOc = (int) macroEntry.getValue().get(OCCURRENCES_KEY);
-                int oldOc = persistedMacroVals.getOrDefault(OCCURRENCES_KEY, 0);
-                int oldSpaceOc = persistedMacroVals.getOrDefault(String.format("%s_oc", space), 0);
-                persistedMacroVals.put(OCCURRENCES_KEY, oldOc - oldSpaceOc + newSpaceOc);
-                persistedMacroVals.put(String.format(String.format("%s_oc", space)), newSpaceOc);
-                int newSpacePg = ((List<String>) macroEntry.getValue().get(PAGES_KEY)).size();
-                int oldPg = persistedMacroVals.getOrDefault(PAGES_KEY, 0);
-                int oldSpacePg = persistedMacroVals.getOrDefault(String.format("%s_pg", space), 0);
-                persistedMacroVals.put(PAGES_KEY, oldPg - oldSpacePg + newSpacePg);
-                persistedMacroVals.put(String.format("%s_pg", space), newSpacePg);
+                Map<String, Object> macroSpacesData = macroEntry.getValue();
+                for (Map.Entry<String, Object> macroData : macroSpacesData.entrySet()) {
+                    String spaceKey = macroData.getKey();
+                    Map<String, Integer> macroOccurenceMap =
+                        occurenceMap.computeIfAbsent(macroId, k -> new HashMap<>());
 
-                Map<String, Set<String>> persistedMacroPagesVals = persistedMacroPagesMap.computeIfAbsent(macroId,
-                    k -> new HashMap<>());
-                persistedMacroPagesVals.put(space, (Set<String>)macroEntry.getValue().get(PAGES_KEY));
+                    if (macroData.getValue() instanceof Integer) {
+
+                        int occurrences = macroOccurenceMap.getOrDefault(OCCURRENCES_KEY, 0);
+                        int oldSpaceOccurrences = macroOccurenceMap.getOrDefault(spaceKey, 0);
+                        int newSpaceOccurrences = (Integer) macroData.getValue();
+
+                        macroOccurenceMap.put(OCCURRENCES_KEY, occurrences - oldSpaceOccurrences + newSpaceOccurrences);
+                        macroOccurenceMap.put(spaceKey, newSpaceOccurrences);
+                    } else if (macroData.getValue() instanceof Set) {
+                        Set<String> pages = (Set<String>) macroData.getValue();
+
+                        int pagesCount = macroOccurenceMap.getOrDefault(PAGES_KEY, 0);
+                        int oldPagesCount = macroOccurenceMap.getOrDefault(spaceKey, 0);
+                        int newPagesCount = pages.size();
+                        macroOccurenceMap.put(PAGES_KEY, pagesCount - oldPagesCount + newPagesCount);
+                        macroOccurenceMap.put(spaceKey, newPagesCount);
+
+                        pagesMap.computeIfAbsent(macroId, k -> new HashMap<>()).put(spaceKey, pages);
+                    }
+                }
             }
-
-            macroCountDoc.setContent(gson.toJson(persistedMacroMap));
+            Map<String, Map<String, Integer>> sortedOccurrences = occurenceMap.entrySet()
+                .stream()
+                .sorted(
+                    Map.Entry.comparingByValue((Comparator.comparingInt(o -> o.getOrDefault(OCCURRENCES_KEY, 0)))))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (o1, o2) -> o2, LinkedHashMap::new));
+            macroCountDoc.setContent(gson.toJson(sortedOccurrences));
             context.getWiki().saveDocument(macroCountDoc, context);
-
-
+            macroDocListDoc.setContent(gson.toJson(pagesMap));
+            context.getWiki().saveDocument(macroDocListDoc, context);
         } catch (XWikiException e) {
 
         }
+    }
+
+    private Map contentToMap(XWikiDocument doc, Gson gson, Type type)
+    {
+        Map map =
+            gson.fromJson(doc.getContent(), type);
+        if (map == null) {
+            map = new HashMap<>();
+        }
+        return map;
     }
 
     private List<String[]> executeDocumentQuery(Map<String, ArrayList<LogEvent>> pageToLog,
@@ -239,7 +277,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     private void prepareDocumentLogMappings(Map<String, ArrayList<LogEvent>> pageToLog, String title,
         Map<String, List<String>> skipped, String serializedDocRef, Map<String, List<String>> problematic)
     {
-        pageToLog.get(title).forEach(logEvent -> {
+        pageToLog.getOrDefault(title, EMPTY_ARRAY_LIST).forEach(logEvent -> {
             if (logEvent.getLevel().equals(LogLevel.ERROR)) {
                 skipped.computeIfAbsent(serializedDocRef, k -> new ArrayList<>())
                     .add(logEvent.getFormattedMessage());
@@ -258,12 +296,15 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
             Map<String, Integer> pageMacroCount = (Map<String, Integer>) macroPage.getValue();
             String page = macroPage.getKey();
+            String space = page.substring(0, page.indexOf('.') > 0 ? page.indexOf('.') : page.length() - 1);
             for (Map.Entry<String, Integer> macroEntry : pageMacroCount.entrySet()) {
                 Map<String, Object> serializableMacro =
                     macroMap.computeIfAbsent(macroEntry.getKey(), k -> new HashMap<>());
-                serializableMacro.put(OCCURRENCES_KEY,
-                    (Integer) serializableMacro.getOrDefault(OCCURRENCES_KEY, 0) + macroEntry.getValue());
-                ((Set<String>) (serializableMacro.computeIfAbsent(PAGES_KEY, k -> new HashSet<>()))).add(page);
+                serializableMacro.put(String.format(OCCURRENCE_KEY_FORMAT, space),
+                    (Integer) serializableMacro.getOrDefault(String.format(OCCURRENCE_KEY_FORMAT, space), 0)
+                        + macroEntry.getValue());
+                ((Set<String>) (serializableMacro.computeIfAbsent(String.format("%s_pg", space),
+                    k -> new HashSet<>()))).add(page);
             }
         }
         return macroMap;

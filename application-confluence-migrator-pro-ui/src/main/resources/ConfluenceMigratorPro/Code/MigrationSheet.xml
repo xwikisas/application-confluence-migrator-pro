@@ -252,7 +252,7 @@
     &lt;div class="imported-macros"&gt;
       #set ($supportedMacros = [])
       #set ($notSupportedMacros = [])
-      #foreach ($macro in $obj.getProperty('macros').value.split("\s*,\s*"))
+      #foreach ($macro in $jsontool.fromString($obj.getProperty('macros').value))
         #if ($services.component.componentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
           #set ($discard = $supportedMacros.add($macro))
         #else

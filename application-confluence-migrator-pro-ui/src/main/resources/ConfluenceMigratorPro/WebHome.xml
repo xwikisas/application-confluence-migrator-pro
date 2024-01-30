@@ -162,6 +162,23 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 {{/html}}
 
 #displayMigrationsLiveData
+
+#set ($liveDataConfig = {
+  'meta': {
+    'propertyDescriptors': [
+      { 'id': 'name', 'displayer': 'html', 'filterable': 'false' },
+      { 'id': 'occurrences', 'filterable': 'false' },
+      { 'id': 'pages', 'filterable': 'false' },
+      { 'id': 'supported', 'filterable': 'false' }
+    ]
+  }
+})
+{{liveData 
+  id='confluenceImportedMacros'
+  source='liveTable'
+  sourceParameters="resultPage=ConfluenceMigratorPro.Code.MigratedMacroLiveTable&amp;translationPrefix=confluencepro.macros.livetable."
+  properties="name,occurrences,pages,supported"
+  sort='occurrences:desc'}}$jsontool.serialize($liveDataConfig){{/liveData}}
 #end
 {{/velocity}}</content>
   <object>
