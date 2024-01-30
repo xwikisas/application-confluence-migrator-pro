@@ -51,7 +51,13 @@ confluencepro.upload.cancel=Cancel selection
 
 confluencepro.packages.title=Step 2 - Choose an export package
 confluencepro.packages.hint=To start a migration, select an existing package or upload a new one.
-confluencepro.packages.serverPath=Alternatively, {0}select an export from the server{1}.
+confluencepro.packages.serverPath=Alternatively: {0}Select an export from the server{1}
+confluencepro.packages.prefillUsing=For parameter values, prefill using:
+confluencepro.packages.prefillUsingDefaults=the default parameter values
+confluencepro.packages.prefillUsingLast=the parameter values used during the last migration
+confluencepro.packages.prefillUsingSpecified=the parameter values used during the following migration:
+confluencepro.packages.rememberPrefillConfig=Remember this choice for next time
+
 confluencepro.migrations.title=Your migrations
 
 confluencepro.prerequisites.title=Step 1 - Prerequisites
