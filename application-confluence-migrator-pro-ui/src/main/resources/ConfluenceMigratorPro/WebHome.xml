@@ -111,7 +111,7 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 #showAttachmentsLiveData($storeDoc 'confluencePackages')
 
 {{html}}
-#if($hasEdit || $hasAdmin)
+#if ($hasEdit || $hasAdmin)
   &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
   &lt;div&gt;
   ## CSRF prevention
