@@ -22,7 +22,6 @@ package com.xwiki.confluencepro.internal;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -236,8 +235,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             }
             Map<String, Map<String, Integer>> sortedOccurrences = occurenceMap.entrySet()
                 .stream()
-                .sorted(
-                    Map.Entry.comparingByValue((Comparator.comparingInt(o -> o.getOrDefault(OCCURRENCES_KEY, 0)))))
+                .sorted((o1, o2) -> Integer.compare(o2.getValue().getOrDefault(OCCURRENCES_KEY, 0),
+                    o1.getValue().getOrDefault(OCCURRENCES_KEY, 0)))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (o1, o2) -> o2, LinkedHashMap::new));
             macroCountDoc.setContent(gson.toJson(sortedOccurrences));
             context.getWiki().saveDocument(macroCountDoc, context);

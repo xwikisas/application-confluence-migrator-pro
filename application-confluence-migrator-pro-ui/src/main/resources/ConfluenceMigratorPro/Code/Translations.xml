@@ -110,6 +110,16 @@ confluencepro.migration.popup.title=Insert the title of the migration
 confluencepro.migration.popup.placeholder=Type the migration title...
 confluencepro.migration.popup.startMigration=Start migration
 
+confluencepro.macros.title=Imported macros
+confluencepro.macros.livetable.name=Macro name
+confluencepro.macros.livetable.occurrences=Occurrences
+confluencepro.macros.livetable.pages=Present in pages
+confluencepro.macros.livetable.supported=Is supported?
+
+confluencepro.macros.pages.title=The pages where "{0}" macro is present
+confluencepro.macros.pages.noMacro=No macro selected.
+confluencepro.macros.pages.missingData=There is no data on this macro.
+
 confluencepro.job.question.title=Select the Confluence spaces that you want to be imported.
 confluencepro.job.question.additionalInfo.documentsCount=Documents:
 confluencepro.job.question.additionalInfo.attachmentsCount=Attachments:
