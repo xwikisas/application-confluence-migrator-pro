@@ -219,6 +219,29 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 {{/html}}
 
 #displayMigrationsLiveData
+
+{{html}}
+#displaySubtitle('list', 'confluencepro.macros.title', '', {})
+&lt;a href="https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation"&gt;$escapetool.xml($services.localization.render('confluencepro.macros.link'))&lt;/a&gt;
+{{/html}}
+
+#set ($liveDataConfig = {
+  'meta': {
+    'propertyDescriptors': [
+      { 'id': 'name', 'displayer': 'html', 'sortable': 'false' },
+      { 'id': 'occurrences', 'filterable': 'false', 'sortable': 'false' },
+      { 'id': 'pages', 'filterable': 'false', 'sortable': 'false' },
+      { 'id': 'supported', 'displayer': 'html', 'filterable': 'false', 'sortable': 'false' }
+    ]
+  }
+})
+{{liveData 
+  id='confluenceImportedMacros'
+  source='liveTable'
+  sourceParameters="resultPage=ConfluenceMigratorPro.Code.MigratedMacroLiveTable&amp;translationPrefix=confluencepro.macros.livetable."
+  limit="10"
+  properties="name,occurrences,pages,supported"
+  sort='occurrences:desc'}}$jsontool.serialize($liveDataConfig){{/liveData}}
 #end
 {{/velocity}}</content>
   <object>

@@ -60,6 +60,21 @@
 &lt;/h2&gt;
 #end
 #**
+ * @param $ref an entity reference.
+ * @return a string of the form space1 &gt; space2 &gt; ... &gt; spacen.
+ *#
+#macro (renderReferenceNicely $ref)
+  #set ($tmp = '')
+  #foreach ($space in $ref.spaceReferences)
+    #if ($foreach.count == 1)
+      #set ($tmp = $space.name)
+    #else
+      #set ($tmp = "$tmp &gt; $space.name")
+    #end
+  #end
+  &lt;a href="$escapetool.xml($xwiki.getURL($ref))"&gt;$escapetool.xml("$tmp")&lt;/a&gt;
+#end
+#**
  * Display a livedata of the profile pages.
  *#
 #macro (displayMigrationsLiveData)

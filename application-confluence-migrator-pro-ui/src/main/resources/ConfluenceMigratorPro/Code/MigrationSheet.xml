@@ -244,8 +244,8 @@
 
 #end
 #**
- * The view of the Migration when the context action is `view`. If the `package` of the object is populated 
- * and the `executed` flag is set to false, execute the migration for that package. Otherwise, display the 
+ * The view of the Migration when the context action is `view`. If the `package` of the object is populated
+ * and the `executed` flag is set to false, execute the migration for that package. Otherwise, display the
  * report of the execution.
  *#
 #macro(docView)
@@ -298,6 +298,44 @@
     &lt;li&gt;
   #end
   &lt;/ul&gt;
+  ## Missing macros
+  &lt;div class="imported-macros-section"&gt;
+    #displaySubtitle('list', 'confluencepro.migration.raport.macros.title', '', [])
+    &lt;div class="imported-macros"&gt;
+      #set ($supportedMacros = [])
+      #set ($notSupportedMacros = [])
+      #foreach ($macro in $jsontool.fromString($obj.getProperty('macros').value))
+        #if ($services.component.componentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
+          #set ($discard = $supportedMacros.add($macro))
+        #else
+          #set ($discard = $notSupportedMacros.add($macro))
+        #end
+      #end
+      &lt;div class="imported-macros-title"&gt;
+        &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported'))&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="imported-macros-icon supported" title="$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported.icon.title'))"&gt;
+        $services.icon.renderHTML('check')
+      &lt;/div&gt;
+      &lt;div class="imported-macros-list"&gt;
+        #foreach ($macro in $supportedMacros)
+          &lt;span&gt;$macro&lt;/span&gt;
+        #end
+      &lt;/div&gt;
+      &lt;div class="imported-macros-title"&gt;
+        &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.notSupported'))&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="imported-macros-icon not-supported" title="$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.notSupported.icon.title'))"&gt;
+        $services.icon.renderHTML('warning')
+      &lt;/div&gt;
+      &lt;div class="imported-macros-list"&gt;
+        #foreach ($macro in $notSupportedMacros)
+          &lt;span&gt;$macro&lt;/span&gt;
+        #end
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;a href="https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.link'))&lt;/a&gt;
+  &lt;/div&gt;
   ## Migrated with issues section
   #set ($json = $obj.getProperty('problems').value)
   #set ($jsonObject = $jsontool.fromString($json))
@@ -386,7 +424,7 @@
             $services.icon.renderHTML('caret-down')
           &lt;/div&gt;
         &lt;/a&gt;
-        &lt;a href="$escapetool.xml($xwiki.getURL($docRef))"&gt;$escapetool.xml("#renderReferenceNicely($docRef)")&lt;/a&gt;
+        #renderReferenceNicely($docRef)
       &lt;/div&gt;
       &lt;div id="cfmPage${foreach.count}Issues" class="cfm-problems collapse"&gt;
         &lt;ul&gt;
@@ -398,21 +436,6 @@
     &lt;/li&gt;
   #end
   &lt;/div&gt;
-#end
-#**
- * @param $ref an entity reference.
- * @return a string of the form space1 &gt; space2 &gt; ... &gt; spacen.
- *#
-#macro (renderReferenceNicely $ref)
-  #set ($tmp = '')
-  #foreach ($space in $ref.spaceReferences)
-    #if ($foreach.count == 1)
-      #set ($tmp = $space.name)
-    #else
-      #set ($tmp = "$tmp &gt; $space.name")
-    #end
-  #end
-  $tmp
 #end
 #**
  * Run the migration job if the `executed` flag is false and if there is a `package` set.
@@ -1085,10 +1108,37 @@ require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
 
 .cfm-problem-pages &gt; ul {
   list-style: none;
+}
+
+.imported-macros {
+  display: grid;
+  grid-template-areas: "a b c";
+  grid-template-columns: fit-content(30%) fit-content(1ch) auto;
+  gap: .5em .5em;
+  margin-bottom: 1em;
+}
+
+.imported-macros-title {
+  font-weight: 700;
+}
+
+.imported-macros-icon.supported {
+  color: @brand-success;
+}
+.imported-macros-icon.not-supported {
+  color: @brand-warning;
+}
+
+.imported-macros-list span::after {
+  content: ',';
+}
+
+.imported-macros-list span:last-child::after {
+  content: '';
 }</code>
     </property>
     <property>
-      <contentType>CSS</contentType>
+      <contentType>LESS</contentType>
     </property>
     <property>
       <name/>

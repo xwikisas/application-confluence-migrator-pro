@@ -1,0 +1,91 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.MigratedMacroLiveTable" locale="">
+  <web>ConfluenceMigratorPro.Code</web>
+  <name>MigratedMacroLiveTable</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>MigratedMacroLiveTable</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>
+{{velocity}}
+#if ($xcontext.action == 'get')
+  #set ($dataDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.MigratedMacrosCountJSON'))
+  #set ($discard = $response.setContentType('application/json'))
+  #set ($json = {})
+  #set ($offset = $numbertool.toNumber($request.offset).intValue())
+  ## The offset sent by the live table starts at 1.
+  #set ($offset = $offset - 1)
+  #if (!$offset || $offset &lt; 0)
+    #set ($offset = 0)
+  #end
+  #set ($limit = $numbertool.toNumber($request.limit).intValue())
+  #if (!$limit)
+    #set ($limit = 5)
+  #end
+  #set ($discard = $json.put('offset', $offset))
+  #set ($discard = $json.put('rows', []))
+  #set ($data = $jsontool.fromString($dataDoc.content))
+  #set ($it = $data.keySet().iterator())
+  #if ("$!request.name" != '')
+    #foreach ($j in [0..10000])
+      #if ($it.hasNext())
+        #if (!$it.next().contains($request.name))
+          #set ($discard = $it.remove())
+        #end
+      #else
+        #break
+      #end
+    #end
+  #end
+  #set ($i = 0)
+  #set ($iconMap = {true: 'check', false: 'warning'})
+  #foreach ($entry in $data.entrySet())
+    #if ($i &gt;= $data.size() || $i &gt;= $offset + $limit)
+      #break
+    #end
+    #if ($i &gt;= $offset)
+      #set ($macroDocsUrl = $xwiki.getURL('ConfluenceMigratorPro.Code.MigratedMacroPages', 'view', "macro=$entry.key"))
+      #set ($discard = $entry.value.put('name', "&lt;a href='$escapetool.xml($macroDocsUrl)'&gt;$escapetool.xml($entry.key)&lt;/a&gt;"))
+      #set ($discard = $entry.value.put('supported', $services.icon.renderHTML($iconMap.get($services.component.componentManager.hasComponent('org.xwiki.rendering.macro.Macro', $entry.key)))))
+      #set ($discard = $json.rows.add($entry.value))
+    #end
+    #set ($i = $i + 1)
+  #end
+  #set ($discard = $json.put('totalrows', $data.size()))
+  #set ($returnedRows = $i - $offset)
+  #set ($discard = $json.put('returnedrows', $returnedRows))
+  $jsontool.serialize($json)
+#end
+{{/velocity}}
+</content>
+</xwikidoc>
