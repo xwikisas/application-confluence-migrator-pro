@@ -37,6 +37,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.PageIdentifier;
@@ -346,7 +347,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             Arrays.stream(logEvent.getArgumentArray()).filter(a -> a instanceof PageIdentifier)
                 .map(a -> (PageIdentifier) a).findFirst();
         // Do this here so we don't have to look through the arguments for each log again.
-        if (pageIdentifier.isEmpty() || pageIdentifier.get().getPageTitle().isEmpty()) {
+        if (!pageIdentifier.isPresent() || StringUtils.isEmpty(pageIdentifier.get().getPageTitle())) {
             otherIssues.computeIfAbsent(logEvent.getLevel().toString(), k -> new ArrayList<>())
                 .add(logEvent.getFormattedMessage());
             return Optional.empty();

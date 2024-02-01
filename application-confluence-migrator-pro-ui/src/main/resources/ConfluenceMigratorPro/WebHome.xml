@@ -111,7 +111,7 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 #showAttachmentsLiveData($storeDoc 'confluencePackages')
 
 {{html}}
-#if($hasEdit || $hasAdmin)
+#if ($hasEdit || $hasAdmin)
   &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
   &lt;div&gt;
   ## CSRF prevention
@@ -135,9 +135,66 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
   'isPath': '1',
   'form_token': $services.csrf.token
 })))
-#set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;0}', "&lt;a href='$editURL'&gt;"))
-#set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;1}', '&lt;/a&gt;'))
-&lt;p&gt;$escapedMessage&lt;/p&gt;
+#set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;0}', "&lt;button class='btn btn-default'&gt;"))
+#set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;1}', '&lt;/button&gt;'))
+
+#set ($migrations = $services.query.xwql("select doc.fullName, doc.name, doc.title from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.fullName desc").execute())
+&lt;form method="post" action="$escapetool.xml($editURL)"&gt;
+  &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
+
+  #set ($prefillConfigDoc = $xwiki.getDocument("ConfluenceMigratorPro.Code.PrefillConfig"))
+  #if ($prefillConfigDoc.isNew())
+    #set ($configSource = "default")
+    #set ($specifiedMigration = "")
+  #else
+    #set ($configSource = "$!prefillConfigDoc.getValue('configSource')")
+    #set ($specifiedMigration = "$!prefillConfigDoc.getValue('specifiedMigration')")
+    #if ($configSource == '')
+      #set ($configSource = "default")
+    #end
+  #end
+
+  &lt;p&gt;$escapedMessage&lt;/p&gt;
+
+#if (!$migrations.isEmpty())
+  &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.packages.prefillUsing'))&lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;
+      &lt;input type="radio" name="config-source" value="default" id="config-source-default" autocomplete="off" #if ($configSource == "default") checked="checked" #end/&gt;
+      $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingDefaults'))
+    &lt;/label&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;
+      &lt;input type="radio" name="config-source" value="last" id="config-source-last" autocomplete="off" #if ($configSource == "last") checked="checked" #end/&gt;
+      $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingLast'))
+    &lt;/label&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;
+      &lt;input type="radio" name="config-source" value="specified" id="config-source-specified" autocomplete="off" #if ($configSource == "specified") checked="specified" #end/&gt;
+      $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingSpecified'))
+    &lt;/label&gt;
+    &lt;select name="specified-migration" id="specified-migration" autocomplete="off"&gt;
+      &lt;option value="" #if ($specifiedMigration == "") selected="selected"#end&gt;&lt;/option&gt;
+    #foreach ($migration in $migrations)
+      #set ($escapedMigrationName = $escapetool.xml($migration[0]))
+      #set ($escapedMigrationTitle = $escapetool.xml($migration[2]))
+      #if ($escapedMigrationTitle == "")
+        #set ($escapedMigrationTitle = $escapetool.xml($migration[1]))
+      #end
+      &lt;option value="$escapedMigrationName" #if ($migration[0] == $specifiedMigration) selected="selected"#end&gt;$escapedMigrationTitle&lt;/option&gt;
+    #end
+    &lt;/select&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;
+      &lt;input type="checkbox" id="save-prefill-choices" name="save-prefill-choices" checked="checked" autocomplete="off" /&gt;
+      $escapetool.xml($services.localization.render('confluencepro.packages.rememberPrefillConfig'))
+    &lt;/label&gt;
+#end
+&lt;/form&gt;
+
 &lt;div class="modal fade migrationNameModal" tabindex="-1" role="dialog"&gt;
   &lt;div class="modal-dialog modal-lg"&gt;
     &lt;div class="modal-content"&gt;

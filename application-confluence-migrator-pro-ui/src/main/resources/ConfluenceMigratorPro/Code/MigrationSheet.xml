@@ -112,6 +112,52 @@
   &lt;/dd&gt;
 #end
 #**
+ * users can specify a migration document from which to take default parameter
+ * values. This macro handles the request parameters for this feature and updates
+ * the prefilledValues object if needed.
+ *#
+#macro(handlePrefilledValues)
+  #set ($savePrefillChoice = "$request.get('save-prefill-choices')")
+  #set ($configSource = $request.get("config-source"))
+  #set ($specifiedMigration = $request.get("specified-migration"))
+  #if ($configSource == "")
+    #set ($configSource = "default")
+  #end
+  #if ($savePrefillChoice == "true" || $savePrefillChoice == "on" || $savePrefillChoice == "1")
+    #set ($prefillConfigDoc = $xwiki.getDocument("ConfluenceMigratorPro.Code.PrefillConfig"))
+    #if ($prefillConfigDoc.isNew())
+      #set ($savedConfigSource = "default")
+      #set ($savedSpecifiedMigration = "")
+    #else
+      #set ($savedConfigSource = $prefillConfigDoc.getValue("configSource"))
+      #set ($savedSpecifiedMigration = $prefillConfigDoc.getValue("specifiedMigration"))
+    #end
+    #if ($savedConfigSource != $configSource || $savedSpecifiedMigration != $specifiedMigration)
+      #set ($prefillConfigObj = $prefillConfigDoc.getObject("ConfluenceMigratorPro.Code.PrefillConfigClass", true))
+      #set ($discard = $prefillConfigObj.set("configSource", $configSource))
+      #set ($discard = $prefillConfigObj.set("specifiedMigration", $specifiedMigration))
+      #set ($discard = $prefillConfigDoc.save())
+    #end
+  #end
+  #set ($fromMigrationDoc = $objecttool.null)
+  #if ($configSource != "default")
+    #if ($configSource == "last")
+      #set ($lastMigRes = $services.query.xwql("select doc.fullName from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.date desc").setLimit(1).execute())
+      #if (!$lastMigRes.isEmpty())
+        #set ($fromMigrationDoc = $xwiki.getDocument("$lastMigRes.get(0)"))
+      #end
+    #else
+      #set ($fromMigrationDoc = $xwiki.getDocument($specifiedMigration))
+    #end
+    #if ($fromMigrationDoc != $objecttool.null &amp;&amp; !$fromMigrationDoc.isNew())
+      #set ($discard = $prefilledValues.put('input', $jsontool.fromString($fromMigrationDoc.getValue('inputProperties'))))
+      #set ($discard = $prefilledValues.put('output', $jsontool.fromString($fromMigrationDoc.getValue('outputProperties'))))
+
+      Default parameter values were prefilled from [[$fromMigrationDoc]].
+    #end
+  #end
+#end
+#**
  * The view of the Migration when it is created. The title needs to be set and, if the request contains it,
  * the package field of the object is populated.
  *#
@@ -142,7 +188,7 @@
           &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render("confluencepro.job.question.advanced.source.description"))&lt;/span&gt;
         &lt;/dt&gt;
         &lt;dd&gt;
-          &lt;input type="text" class="cfm-input-filter-property" value="" data-key="source"&gt;
+          &lt;input type="text" class="cfm-input-filter-property" value="$prefilledValues.get('input').getOrDefault('source', '')" data-key="source"&gt;
         &lt;/dd&gt;
       &lt;/dl&gt;
     #end
@@ -165,15 +211,21 @@
         #end
       #end
     &lt;/dl&gt;
-    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.title'))&lt;/h2&gt;
-    &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.description'))&lt;/p&gt;
+    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.general.title'))&lt;/h2&gt;
     &lt;dl&gt;
       &lt;dt&gt;
-        &lt;label for="onlyRights"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.title'))&lt;/label&gt;
+        &lt;label for="skipQuestions"&gt;$escapetool.xml($services.localization.render('confluencepro.job.skipquestions.question.title'))&lt;/label&gt;
+        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.skipquestions.question.hint'))&lt;/span&gt;
+      &lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;input id="skipQuestions" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('skipQuestions', 'false')" data-key="skipQuestions"/&gt;
+      &lt;/dd&gt;
+      &lt;dt&gt;
+        &lt;label for="rightOnly"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.title'))&lt;/label&gt;
         &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.hint'))&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;
-        &lt;input id="onlyRights" type="text" class="cfm-output-filter-property" value="false" data-key="rightOnly"/&gt;
+        &lt;input id="rightOnly" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('rightOnly', 'false')" data-key="rightOnly"/&gt;
       &lt;/dd&gt;
     &lt;/dl&gt;
     &lt;div class="box warningmessage"&gt;
@@ -386,7 +438,8 @@
   &lt;/div&gt;
 #end
 #**
- * Run the migration job if the `executed` is false and if there is a `package` set. Display the status and the logs of the job.
+ * Run the migration job if the `executed` flag is false and if there is a `package` set.
+ * Display the status and the logs of the job.
  *
  * @param $obj the migration object of this page.
  *#
@@ -511,6 +564,7 @@
 #set ($discard = $doc.use('ConfluenceMigratorPro.Code.MigrationClass'))
 #if ($xcontext.action == 'edit' || $xcontext.action == 'admin')
   #if ($doc.isNew())
+    #handlePrefilledValues
     #newDocView
   #else
   #end

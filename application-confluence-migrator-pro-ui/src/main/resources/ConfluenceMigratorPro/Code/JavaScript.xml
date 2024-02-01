@@ -131,12 +131,33 @@
     let jobDocumentRef = XWiki.Model.resolve('ConfluenceMigratorPro.Migrations.Migration' + Date.now(), XWiki.EntityType.DOCUMENT, XWiki.currentDocument.documentReference);
     let jobDocument = new XWiki.Document(jobDocumentRef);
     let packageName = $(this).data('package');
+    let configSource = "default";
+    let specifiedMigration = "";
+    if (document.getElementById("config-source-last")?.checked) {
+      configSource = "last";
+    } else if (document.getElementById("config-source-specified")?.checked) {
+      configSource = "specified";
+      specifiedMigration = document.getElementById("specified-migration")?.value;
+    }
     window.location.href = jobDocument.getURL('edit', $.param({
       template: 'ConfluenceMigratorPro.Code.MigrationTemplate',
       parent: 'ConfluenceMigratorPro.WebHome',
+      "config-source": configSource,
+      "specified-migration": specifiedMigration,
+      "save-prefill-choices": document.getElementById("save-prefill-choices")?.checked,
       package: packageName,
       form_token: xcontext.form_token
     }));
+  });
+
+  window.addEventListener("DOMContentLoaded", () =&gt; {
+    document.getElementById("specified-migration").addEventListener("change", function () {
+      if (this.value) {
+        document.getElementById("config-source-specified").checked = true;
+      } else if (document.getElementById("config-source-specified").checked) {
+        document.getElementById("config-source-default").checked = true;
+      }
+    });
   });
 });</code>
     </property>
