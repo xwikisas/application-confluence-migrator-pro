@@ -139,8 +139,9 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 #set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;1}', '&lt;/button&gt;'))
 
 #set ($migrations = $services.query.xwql("select doc.fullName, doc.name, doc.title from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.fullName desc").execute())
-#if (!$migrations.isEmpty())
 &lt;form method="post" action="$escapetool.xml($editURL)"&gt;
+  &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
+
   #set ($prefillConfigDoc = $xwiki.getDocument("ConfluenceMigratorPro.Code.PrefillConfig"))
   #if ($prefillConfigDoc.isNew())
     #set ($configSource = "default")
@@ -155,6 +156,7 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 
   &lt;p&gt;$escapedMessage&lt;/p&gt;
 
+#if (!$migrations.isEmpty())
   &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.packages.prefillUsing'))&lt;/p&gt;
   &lt;p&gt;
     &lt;label&gt;
@@ -190,8 +192,8 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
       &lt;input type="checkbox" id="save-prefill-choices" name="save-prefill-choices" checked="checked" autocomplete="off" /&gt;
       $escapetool.xml($services.localization.render('confluencepro.packages.rememberPrefillConfig'))
     &lt;/label&gt;
-&lt;/form&gt;
 #end
+&lt;/form&gt;
 
 &lt;div class="modal fade migrationNameModal" tabindex="-1" role="dialog"&gt;
   &lt;div class="modal-dialog modal-lg"&gt;
