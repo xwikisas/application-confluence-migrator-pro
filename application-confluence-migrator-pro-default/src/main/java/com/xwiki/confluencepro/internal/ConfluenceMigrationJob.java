@@ -27,6 +27,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
+import com.xwiki.licensing.LicenseType;
+import com.xwiki.licensing.Licensor;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
@@ -44,6 +46,7 @@ import org.xwiki.filter.type.FilterStreamType;
 import org.xwiki.job.AbstractJob;
 import org.xwiki.job.Job;
 import org.xwiki.job.event.status.JobStatus;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.refactoring.job.question.EntitySelection;
@@ -61,8 +64,7 @@ import com.xwiki.confluencepro.ConfluenceMigrationManager;
 @Component
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
 @Named(ConfluenceMigrationJob.JOBTYPE)
-public class ConfluenceMigrationJob
-    extends AbstractJob<ConfluenceMigrationJobRequest, ConfluenceMigrationJobStatus>
+public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRequest, ConfluenceMigrationJobStatus>
 {
     /**
      * The identifier for the job.
@@ -78,6 +80,12 @@ public class ConfluenceMigrationJob
     private static final String FILTER_CONVERTER_ROLEHINT = "filter.converter";
 
     private static final String NPMIG_EXECUTOR_ROLEHINT = "npmig.executor";
+
+    private static final String FALSE = "false";
+
+    private static final int TRIAL_PAGE_COUNT = 30;
+
+    private static final String MAX_PAGE_COUNT = "maxPageCount";
 
     @Inject
     @Named(CONFLUENCE_XML_ROLEHINT)
@@ -101,6 +109,9 @@ public class ConfluenceMigrationJob
 
     @Inject
     private ConfluenceMigrationManager migrationManager;
+
+    @Inject
+    private Provider<Licensor> licensorProvider;
 
     /**
      * @return the job type.
@@ -137,20 +148,24 @@ public class ConfluenceMigrationJob
             ? ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT
             : XWIKI_INSTANCE_ROLEHINT;
 
+        maybeReducePageCount(request);
+
         FilterStreamConverterJobRequest filterJobRequest = new FilterStreamConverterJobRequest(
             FilterStreamType.unserialize(CONFLUENCE_XML_ROLEHINT), inputProperties,
             FilterStreamType.unserialize(outputStreamRoleHint), outputProperties);
         boolean interactive = !isGeneralParameterEnabled("skipQuestions");
         filterJobRequest.setInteractive(interactive);
         request.setInteractive(interactive);
+        boolean shouldRunNestedPagesMigrator = !rightOnly
+            && FALSE.equals(request.getInputProperties().getOrDefault("nestedSpacesEnabled", FALSE));
+        progressManager.pushLevelProgress(shouldRunNestedPagesMigrator ? 3 : 1, this);
         logger.info("Starting Filter Job");
-        progressManager.pushLevelProgress(3, this);
         progressManager.startStep(this);
         Job filterJob = this.filterJobProvider.get();
         filterJob.initialize(filterJobRequest);
         filterJob.run();
 
-        if (!rightOnly) {
+        if (shouldRunNestedPagesMigrator) {
             SpaceQuestion spaceQuestion =
                 (SpaceQuestion) getStatus().getAskedQuestions().values()
                     .stream()
@@ -170,9 +185,41 @@ public class ConfluenceMigrationJob
         migrationManager.enablePrerequisites();
     }
 
+    private void maybeReducePageCount(ConfluenceMigrationJobRequest request)
+    {
+        int maxPageCount = -1;
+        Object maxPageCountObject = request.getInputProperties().get(MAX_PAGE_COUNT);
+        if (maxPageCountObject instanceof String) {
+            try {
+                maxPageCount = Integer.parseInt((String) maxPageCountObject);
+            } catch (NumberFormatException e) {
+                // ignore, assume the worst (-1).
+            }
+        } else if (maxPageCountObject instanceof Integer) {
+            maxPageCount = (Integer) maxPageCountObject;
+        }
+
+        if (maxPageCount > -1 && maxPageCount <= TRIAL_PAGE_COUNT) {
+            return;
+        }
+
+        // If there is no license, the user can still trial the application by importing one space and 30 of its pages.
+        String wiki = request.getStatusDocumentReference()
+            .getWikiReference().getName();
+        Licensor licensor = licensorProvider.get();
+        if (licensor == null) {
+            return;
+        }
+        DocumentReference mainRef =
+            new DocumentReference(wiki, Arrays.asList("ConfluenceMigratorPro", "Code"), "MigrationClass");
+        if (!licensor.hasLicensure(mainRef) || licensor.getLicense(mainRef).getType().equals(LicenseType.TRIAL)) {
+            request.getInputProperties().put(MAX_PAGE_COUNT, TRIAL_PAGE_COUNT);
+        }
+    }
+
     private boolean isGeneralParameterEnabled(String parameterName)
     {
-        return "true".equals(request.getOutputProperties().getOrDefault(parameterName, "false"));
+        return "true".equals(request.getOutputProperties().getOrDefault(parameterName, FALSE));
     }
 
     private Map<String, Object> getFilterOutputProperties()
