@@ -322,12 +322,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         prerequisitesManager.enablePrerequisites();
     }
 
-    private void extractDocsFromLogs(ConfluenceMigrationJobStatus jobStatus, Set<String> spaces, BaseObject object,
-        Gson gson, XWikiContext context)
-    {
-
-    }
-
     private Optional<String> getPageIdentifierArgument(LogEvent logEvent, Map<String, List<String>> otherIssues)
     {
         if (Objects.equals(logEvent.getMarker(), ConfluenceFilter.LOG_MACROS_FOUND)
