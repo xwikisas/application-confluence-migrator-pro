@@ -41,8 +41,21 @@ public interface ConfluenceMigrationManager
     /**
      * Disable the prerequisites of the migration.
      */
-    void disablePrerequisites();
+    default void disablePrerequisites()
+    {
+        disablePrerequisites(true);
+    }
 
+    /**
+     * Disable the prerequisites of the migration.
+     * @param ensureEmptySolrQueue whether to ensure the Solr queue is empty. This is needed when using the nested
+     *                             page migration.
+     * @since 1.12.0
+     */
+    default void disablePrerequisites(boolean ensureEmptySolrQueue)
+    {
+        disablePrerequisites();
+    }
     /**
      * Enable the prerequisites of the migration.
      */

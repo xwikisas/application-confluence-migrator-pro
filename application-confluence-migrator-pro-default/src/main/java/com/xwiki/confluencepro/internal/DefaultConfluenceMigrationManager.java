@@ -311,9 +311,9 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     }
 
     @Override
-    public void disablePrerequisites()
+    public void disablePrerequisites(boolean ensureEmptySolrQueue)
     {
-        prerequisitesManager.disablePrerequisites();
+        prerequisitesManager.disablePrerequisites(ensureEmptySolrQueue);
     }
 
     @Override

@@ -138,12 +138,14 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
     @Override
     protected void runInternal() throws Exception
     {
-        migrationManager.disablePrerequisites();
+        boolean rightOnly = isGeneralParameterEnabled("rightOnly");
+        boolean shouldRunNestedPagesMigrator = !rightOnly
+            && FALSE.equals(request.getInputProperties().getOrDefault("nestedSpacesEnabled", FALSE));
+        migrationManager.disablePrerequisites(shouldRunNestedPagesMigrator);
         Map<String, Object> inputProperties = getFilterInputProperties();
 
         Map<String, Object> outputProperties = getFilterOutputProperties();
 
-        boolean rightOnly = isGeneralParameterEnabled("rightOnly");
         String outputStreamRoleHint = rightOnly
             ? ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT
             : XWIKI_INSTANCE_ROLEHINT;
@@ -156,8 +158,6 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
         boolean interactive = !isGeneralParameterEnabled("skipQuestions");
         filterJobRequest.setInteractive(interactive);
         request.setInteractive(interactive);
-        boolean shouldRunNestedPagesMigrator = !rightOnly
-            && FALSE.equals(request.getInputProperties().getOrDefault("nestedSpacesEnabled", FALSE));
         progressManager.pushLevelProgress(shouldRunNestedPagesMigrator ? 3 : 1, this);
         logger.info("Starting Filter Job");
         progressManager.startStep(this);

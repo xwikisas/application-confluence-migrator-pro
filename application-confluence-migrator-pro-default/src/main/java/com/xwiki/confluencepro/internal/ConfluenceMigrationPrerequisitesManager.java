@@ -51,6 +51,8 @@ public class ConfluenceMigrationPrerequisitesManager
 
     private static final String LISTENER_NOTIFICATION_PREFILTERING = "Prefiltering Live Notification Email Listener";
 
+    private static final long EMPTY_SOLR_QUEUE_TIMEOUT = 5L * 60 * 1000000000;
+
     @Inject
     private SolrIndexer solrIndexer;
 
@@ -78,22 +80,28 @@ public class ConfluenceMigrationPrerequisitesManager
 
     /**
      * Disable/deactivate a list of prerequisites that will make the migration run smoother. Among the prerequisites, we
-     * have the following: Wait for the solr indexer queue size to be empty. The timeout period is of 5 minutes;
-     * Clear the user notification preferences; Remove the NotificationsFiltersPreferences, Live Notification Email,
-     * AutomaticNotificationsWatchMode and Prefiltering Live Notification listeners.
+     * have the following:
+     *  - Wait for the Solr indexer queue size to be empty. The timeout period is of 5 minutes;
+     *  - Clear the user notification preferences;
+     *  - Remove the following listeners:
+     *      - NotificationsFiltersPreferences,
+     *      - Live Notification Email,
+     *      - AutomaticNotificationsWatchMode,
+     *      - Prefiltering Live Notification listeners.
+     *
+     * @param ensureEmptySolrQueue whether we should wait for the Solr queue to be empty
      */
-    public void disablePrerequisites()
+    public void disablePrerequisites(boolean ensureEmptySolrQueue)
     {
-        long startTime = System.nanoTime();
-        // 5 minutes
-        long timeout = 5L * 60 * 1000000000;
-
-        logger.info("Waiting for the solr queue to be empty..");
-        while (solrIndexer.getQueueSize() > 0 || System.nanoTime() - startTime >= timeout) {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+        if (ensureEmptySolrQueue) {
+            long startTime = System.nanoTime();
+            logger.info("Waiting for the solr queue to be empty..");
+            while (solrIndexer.getQueueSize() > 0 || System.nanoTime() - startTime >= EMPTY_SOLR_QUEUE_TIMEOUT) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
 
