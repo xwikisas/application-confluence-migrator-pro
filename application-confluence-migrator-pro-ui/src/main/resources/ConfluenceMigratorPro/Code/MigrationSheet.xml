@@ -177,6 +177,7 @@
       &lt;/dd&gt;
     &lt;/dl&gt;
     #if ("$!request.package" != '')
+      #set ($discard = $prefilledValues.get('input').remove('source'))
       &lt;input class="form-control" type="hidden"
         name="ConfluenceMigratorPro.Code.MigrationClass_0_package"
         id="ConfluenceMigratorPro.Code.MigrationClass_0_package"
