@@ -347,7 +347,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             Arrays.stream(logEvent.getArgumentArray()).filter(a -> a instanceof PageIdentifier)
                 .map(a -> (PageIdentifier) a).findFirst();
         // Do this here so we don't have to look through the arguments for each log again.
-        if (!pageIdentifier.isPresent() || StringUtils.isEmpty(pageIdentifier.get().getPageTitle())) {
+        if (pageIdentifier.isEmpty() || StringUtils.isEmpty(pageIdentifier.get().getPageTitle())) {
             otherIssues.computeIfAbsent(logEvent.getLevel().toString(), k -> new ArrayList<>())
                 .add(logEvent.getFormattedMessage());
             return Optional.empty();
