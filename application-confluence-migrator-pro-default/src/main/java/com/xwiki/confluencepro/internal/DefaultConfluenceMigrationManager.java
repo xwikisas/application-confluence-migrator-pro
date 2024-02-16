@@ -181,10 +181,16 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
         List<Map<String, Object>> logList = new ArrayList<>();
 
+        long docCount = 0;
         for (LogEvent logEvent : jobStatus.getLogTail().getLogEvents(0, -1)) {
             addToJsonList(logEvent, logList);
+            if (LogLevel.INFO.equals(logEvent.getLevel()) && logEvent.getMessage().startsWith("Sending page [")) {
+                // FIXME this is ugly, we need to find another way to count imported documents
+                docCount++;
+            }
         }
         object.set("logs", gson.toJson(logList), context);
+        object.setLongValue("imported", docCount);
     }
 
     private void persistMacroMap(XWikiContext context, Map<String, Map<String, Object>> macroMap, Gson gson)

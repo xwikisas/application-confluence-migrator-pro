@@ -74,7 +74,7 @@ confluencepro.prerequisites.listener.automaticWatch=Deactivate Automatic Watch M
 confluencepro.prerequisites.listener.liveNotification=Deactivate Live Notification Email Listener (important for large spaces).
 
 confluencepro.migration.raport.imported.success=Migration complete. See your report below.
-confluencepro.migration.raport.imported.title=The imported pages from the {0} selected Confluence Space(s).
+confluencepro.migration.raport.imported.title=The {0} imported pages from the {1} selected Confluence Space(s).
 confluencepro.migration.raport.macros.title=Macros found during the migration.
 confluencepro.migration.raport.macros.supported=Supported macros
 confluencepro.migration.raport.macros.notSupported=Not supported macros

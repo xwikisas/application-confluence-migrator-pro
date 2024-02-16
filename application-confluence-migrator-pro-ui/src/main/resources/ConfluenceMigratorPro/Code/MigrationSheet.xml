@@ -281,7 +281,11 @@
   #set ($discard = $xwiki.jsfx.use('uicomponents/logging/logging.js', true))
   ## Spaces section
   #set ($spaces = $obj.getProperty('spaces').value)
-  #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$spaces.size()])
+  #set ($imported = $obj.getValue('imported'))
+  #if ($objecttool.isNull($imported))
+    #set ($imported = '')
+  #end
+  #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $spaces.size()])
   &lt;ul class="imported-spaces"&gt;
   #set ($options = {})
   #foreach ($space in $spaces)
