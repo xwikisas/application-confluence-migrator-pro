@@ -43,7 +43,7 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-    <licensing.version>1.24.4</licensing.version>
+    <licensing.version>1.25</licensing.version>
     <listeneradmin.version>1.0.2</listeneradmin.version>
     <xwiki.extension.name>Confluence Migrator Application (Pro)</xwiki.extension.name>
     <xwiki.extension.category>application</xwiki.extension.category>

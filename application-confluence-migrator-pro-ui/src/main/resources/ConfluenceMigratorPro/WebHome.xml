@@ -38,8 +38,6 @@
   <hidden>false</hidden>
   <content>{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
 
-{{include reference="Licenses.Code.VelocityMacros"/}}
-
 {{velocity output="false"}}
 #template('attachment_macros.vm')
 {{/velocity}}
@@ -47,7 +45,7 @@
 {{velocity}}
 #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
 #if (!$services.licensing.licensor.hasLicensureForEntity($mainReference))
-  {{error}}#getMissingLicenseMessage('confluencepro.extension.name'){{/error}}
+  {{missingLicenseMessage extensionName="confluencepro.extension.name"/}}
 #else
 #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
 #if ($license.type == 'TRIAL')
