@@ -91,8 +91,8 @@ confluencepro.migration.raport.reset.progress=Sending request
 confluencepro.migration.raport.problems.skipped.title={0} page(s) have encountered critical issues during the import.
 confluencepro.migration.raport.problems.done.title={0} page(s) have encountered non-critical issues during the import.
 confluencepro.migration.raport.problems.other.title={0} other issue(s) were encountered during the import.
-confluencepro.migration.raport.problems.other.error=Encountered errors
-confluencepro.migration.raport.problems.other.warn=Encountered warnings
+confluencepro.migration.raport.problems.other.error=Encountered {0} errors
+confluencepro.migration.raport.problems.other.warn=Encountered {0} warnings
 
 confluencepro.migration.title.label=Set the title of the migration
 confluencepro.migration.source.title=Set the source package of the migration

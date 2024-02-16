@@ -369,7 +369,7 @@
             $services.icon.renderHTML('caret-down')
           &lt;/div&gt;
         &lt;/a&gt;
-        $escapetool.xml($services.localization.render("confluencepro.migration.raport.problems.other.$entry.key.toLowerCase()"))
+        $escapetool.xml($services.localization.render("confluencepro.migration.raport.problems.other.$entry.key.toLowerCase()", $entry.value.size()))
       &lt;/div&gt;
       &lt;div id="cfmOtherIssues${foreach.count}" class="cfm-problems collapse"&gt;
         &lt;ul&gt;
