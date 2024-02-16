@@ -47,6 +47,7 @@
 #set ($prefilledValues = {
   'input': {
     'nestedSpacesEnabled': true,
+    'cleanup': 'ASYNC',
     'prefixedMacros': 'attachments,gallery,chart'
   },
   'output': {
