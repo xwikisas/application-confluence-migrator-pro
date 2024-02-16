@@ -389,11 +389,11 @@
   #foreach ($log in $jsonObject)
     &lt;li class="log-item log-item-$!{log.level.toLowerCase()}"&gt;
       &lt;div&gt;
-        $escapetool.xml($log.message)
+        $xwiki.formatDate($log.timeStamp) $escapetool.xml($log.message)
       &lt;/div&gt;
     #if ($log.throwable)
       &lt;div class="stacktrace"&gt;
-        $escapetool.xml($log.throwable)
+        &lt;pre&gt;$escapetool.xml($log.throwable)&lt;/pre&gt;
       &lt;/div&gt;
     #end
     &lt;/li&gt;
