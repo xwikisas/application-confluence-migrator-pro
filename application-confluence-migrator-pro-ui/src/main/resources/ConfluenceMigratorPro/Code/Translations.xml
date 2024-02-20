@@ -127,7 +127,7 @@ confluencepro.macros.pages.title=The pages where "{0}" macro is present
 confluencepro.macros.pages.noMacro=No macro selected.
 confluencepro.macros.pages.missingData=There is no data on this macro.
 
-confluencepro.job.question.title=Select the Confluence spaces that you want to be imported.
+confluencepro.job.question.title=Select the Confluence spaces you want to import.
 confluencepro.job.question.additionalInfo.documentsCount=Documents:
 confluencepro.job.question.additionalInfo.attachmentsCount=Attachments:
 confluencepro.job.question.selectAll=Select all
