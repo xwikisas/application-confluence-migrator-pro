@@ -76,14 +76,14 @@
       <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
     </imported>
     <inputProperties>
-      <contenttype>---</contenttype>
+      <contenttype>PureText</contenttype>
       <customDisplay/>
       <disabled>0</disabled>
-      <editor>---</editor>
+      <editor>PureText</editor>
       <hint/>
       <name>inputProperties</name>
       <number>9</number>
-      <picker>1</picker>
+      <picker>0</picker>
       <prettyName>inputProperties</prettyName>
       <restricted>0</restricted>
       <rows>5</rows>
@@ -94,14 +94,14 @@
       <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </inputProperties>
     <logs>
-      <contenttype>---</contenttype>
+      <contenttype>PureText</contenttype>
       <customDisplay/>
       <disabled>0</disabled>
-      <editor>---</editor>
+      <editor>PureText</editor>
       <hint/>
       <name>logs</name>
       <number>7</number>
-      <picker>1</picker>
+      <picker>0</picker>
       <prettyName>logs</prettyName>
       <restricted>0</restricted>
       <rows>5</rows>
@@ -112,14 +112,14 @@
       <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </logs>
     <macros>
-      <contenttype>---</contenttype>
+      <contenttype>PureText</contenttype>
       <customDisplay/>
       <disabled>0</disabled>
-      <editor>---</editor>
+      <editor>PureText</editor>
       <hint/>
       <name>macros</name>
       <number>11</number>
-      <picker>1</picker>
+      <picker>0</picker>
       <prettyName>macros</prettyName>
       <restricted>0</restricted>
       <rows>5</rows>
@@ -130,14 +130,14 @@
       <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </macros>
     <otherIssues>
-      <contenttype>---</contenttype>
+      <contenttype>PureText</contenttype>
       <customDisplay/>
       <disabled>0</disabled>
-      <editor>---</editor>
+      <editor>PureText</editor>
       <hint/>
       <name>otherIssues</name>
       <number>8</number>
-      <picker>1</picker>
+      <picker>0</picker>
       <prettyName>otherIssues</prettyName>
       <restricted>0</restricted>
       <rows>5</rows>
@@ -148,14 +148,14 @@
       <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </otherIssues>
     <outputProperties>
-      <contenttype>---</contenttype>
+      <contenttype>PureText</contenttype>
       <customDisplay/>
       <disabled>0</disabled>
-      <editor>---</editor>
+      <editor>PureText</editor>
       <hint/>
       <name>outputProperties</name>
       <number>10</number>
-      <picker>1</picker>
+      <picker>0</picker>
       <prettyName>outputProperties</prettyName>
       <restricted>0</restricted>
       <rows>5</rows>
@@ -180,14 +180,14 @@
       <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
     </package>
     <problems>
-      <contenttype>---</contenttype>
+      <contenttype>PureText</contenttype>
       <customDisplay/>
       <disabled>0</disabled>
-      <editor>---</editor>
+      <editor>PureText</editor>
       <hint/>
       <name>problems</name>
       <number>6</number>
-      <picker>1</picker>
+      <picker>0</picker>
       <prettyName>problems</prettyName>
       <restricted>0</restricted>
       <rows>5</rows>
@@ -198,14 +198,14 @@
       <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </problems>
     <skipped>
-      <contenttype>---</contenttype>
+      <contenttype>PureText</contenttype>
       <customDisplay/>
       <disabled>0</disabled>
-      <editor>---</editor>
+      <editor>PureText</editor>
       <hint/>
       <name>skipped</name>
       <number>7</number>
-      <picker>1</picker>
+      <picker>0</picker>
       <prettyName>skipped</prettyName>
       <restricted>0</restricted>
       <rows>5</rows>
