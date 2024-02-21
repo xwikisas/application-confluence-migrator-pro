@@ -312,7 +312,7 @@
       #set ($supportedMacros = [])
       #set ($notSupportedMacros = [])
       #foreach ($macro in $jsontool.fromString($obj.getProperty('macros').value))
-        #if ($services.component.componentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
+        #if ($services.component.getRootComponentManager().hasComponent('org.xwiki.rendering.macro.Macro', $macro))
           #set ($discard = $supportedMacros.add($macro))
         #else
           #set ($discard = $notSupportedMacros.add($macro))
