@@ -288,6 +288,13 @@
   #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $spaces.size()])
   &lt;ul class="imported-spaces"&gt;
   #set ($options = {})
+  #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
+  #set ($rootSpace = $inputProperties.get("rootSpace"))
+  #if ("$!rootSpace" == "")
+    #set ($spacePrefix = "")
+  #else
+    #set ($spacePrefix = "${rootSpace}.")
+  #end
   #foreach ($space in $spaces)
     &lt;li&gt;
       &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
@@ -296,7 +303,7 @@
         &lt;/div&gt;
         &lt;span&gt;$escapetool.xml($space)&lt;/span&gt;
       &lt;/a&gt;
-      #set ($discard = $options.put('root', "document:${xcontext.wiki}:${space}.WebHome"))
+      #set ($discard = $options.put('root', "document:${xcontext.wiki}:${spacePrefix}${space}.WebHome"))
       #set ($discard = $options.put('links', 'true'))
       #set ($discard = $options.put('compact', 'true'))
       &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;
