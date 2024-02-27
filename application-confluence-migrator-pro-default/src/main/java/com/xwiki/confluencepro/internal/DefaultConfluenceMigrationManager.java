@@ -199,6 +199,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             XWikiDocument macroCountDoc = context.getWiki().getDocument(
                 new DocumentReference(context.getWikiId(), CONFLUENCE_MIGRATOR_SPACE,
                     "MigratedMacrosCountJSON"), context);
+            macroCountDoc.setHidden(true);
             Map<String, Map<String, Integer>> occurenceMap = contentToMap(macroCountDoc, gson,
                 new TypeToken<Map<String, Map<String, Integer>>>()
                 {
@@ -206,40 +207,13 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             XWikiDocument macroDocListDoc = context.getWiki().getDocument(
                 new DocumentReference(context.getWikiId(), CONFLUENCE_MIGRATOR_SPACE,
                     "MigratedMacrosDocsJSON"), context);
+            macroDocListDoc.setHidden(true);
             Map<String, Map<String, Set<String>>> pagesMap = contentToMap(macroDocListDoc, gson,
                 new TypeToken<Map<String, Map<String, Set<String>>>>()
                 {
                 }.getType());
 
-            for (Map.Entry<String, Map<String, Object>> macroEntry : macroMap.entrySet()) {
-                String macroId = macroEntry.getKey();
-                Map<String, Object> macroSpacesData = macroEntry.getValue();
-                for (Map.Entry<String, Object> macroData : macroSpacesData.entrySet()) {
-                    String spaceKey = macroData.getKey();
-                    Map<String, Integer> macroOccurenceMap =
-                        occurenceMap.computeIfAbsent(macroId, k -> new HashMap<>());
-
-                    if (macroData.getValue() instanceof Integer) {
-
-                        int occurrences = macroOccurenceMap.getOrDefault(OCCURRENCES_KEY, 0);
-                        int oldSpaceOccurrences = macroOccurenceMap.getOrDefault(spaceKey, 0);
-                        int newSpaceOccurrences = (Integer) macroData.getValue();
-
-                        macroOccurenceMap.put(OCCURRENCES_KEY, occurrences - oldSpaceOccurrences + newSpaceOccurrences);
-                        macroOccurenceMap.put(spaceKey, newSpaceOccurrences);
-                    } else if (macroData.getValue() instanceof Set) {
-                        Set<String> pages = (Set<String>) macroData.getValue();
-
-                        int pagesCount = macroOccurenceMap.getOrDefault(PAGES_KEY, 0);
-                        int oldPagesCount = macroOccurenceMap.getOrDefault(spaceKey, 0);
-                        int newPagesCount = pages.size();
-                        macroOccurenceMap.put(PAGES_KEY, pagesCount - oldPagesCount + newPagesCount);
-                        macroOccurenceMap.put(spaceKey, newPagesCount);
-
-                        pagesMap.computeIfAbsent(macroId, k -> new HashMap<>()).put(spaceKey, pages);
-                    }
-                }
-            }
+            prepareMacroMap(macroMap, occurenceMap, pagesMap);
             Map<String, Map<String, Integer>> sortedOccurrences = occurenceMap.entrySet()
                 .stream()
                 .sorted((o1, o2) -> Integer.compare(o2.getValue().getOrDefault(OCCURRENCES_KEY, 0),
@@ -251,6 +225,40 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             context.getWiki().saveDocument(macroDocListDoc, context);
         } catch (XWikiException e) {
 
+        }
+    }
+
+    private void prepareMacroMap(Map<String, Map<String, Object>> macroMap,
+        Map<String, Map<String, Integer>> occurenceMap, Map<String, Map<String, Set<String>>> pagesMap)
+    {
+        for (Map.Entry<String, Map<String, Object>> macroEntry : macroMap.entrySet()) {
+            String macroId = macroEntry.getKey();
+            Map<String, Object> macroSpacesData = macroEntry.getValue();
+            for (Map.Entry<String, Object> macroData : macroSpacesData.entrySet()) {
+                String spaceKey = macroData.getKey();
+                Map<String, Integer> macroOccurenceMap =
+                    occurenceMap.computeIfAbsent(macroId, k -> new HashMap<>());
+
+                if (macroData.getValue() instanceof Integer) {
+
+                    int occurrences = macroOccurenceMap.getOrDefault(OCCURRENCES_KEY, 0);
+                    int oldSpaceOccurrences = macroOccurenceMap.getOrDefault(spaceKey, 0);
+                    int newSpaceOccurrences = (Integer) macroData.getValue();
+
+                    macroOccurenceMap.put(OCCURRENCES_KEY, occurrences - oldSpaceOccurrences + newSpaceOccurrences);
+                    macroOccurenceMap.put(spaceKey, newSpaceOccurrences);
+                } else if (macroData.getValue() instanceof Set) {
+                    Set<String> pages = (Set<String>) macroData.getValue();
+
+                    int pagesCount = macroOccurenceMap.getOrDefault(PAGES_KEY, 0);
+                    int oldPagesCount = macroOccurenceMap.getOrDefault(spaceKey, 0);
+                    int newPagesCount = pages.size();
+                    macroOccurenceMap.put(PAGES_KEY, pagesCount - oldPagesCount + newPagesCount);
+                    macroOccurenceMap.put(spaceKey, newPagesCount);
+
+                    pagesMap.computeIfAbsent(macroId, k -> new HashMap<>()).put(spaceKey, pages);
+                }
+            }
         }
     }
 
