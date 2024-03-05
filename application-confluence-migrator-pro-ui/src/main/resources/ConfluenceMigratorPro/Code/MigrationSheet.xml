@@ -231,6 +231,8 @@
         &lt;input id="rightOnly" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('rightOnly', 'false')" data-key="rightOnly"/&gt;
       &lt;/dd&gt;
     &lt;/dl&gt;
+    &lt;div style="display: none"&gt;
+    ## See https://github.com/xwikisas/application-confluence-migrator-pro/issues/83
     &lt;div class="box warningmessage"&gt;
       &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.warning'))&lt;/p&gt;
     &lt;/div&gt;
@@ -242,6 +244,7 @@
         #displayFormField('output', $propertyDescriptor)
       #end
     &lt;/dl&gt;
+    &lt;/div&gt;
   &lt;/div&gt;
   {{/html}}
 
