@@ -48,7 +48,7 @@
   'input': {
     'nestedSpacesEnabled': true,
     'cleanup': 'ASYNC',
-    'prefixedMacros': 'attachments,gallery,chart'
+    'prefixedMacros': 'attachments,gallery,chart,children'
   },
   'output': {
     'versionPreserved': 'true',
