@@ -91,7 +91,7 @@
         <div class="available-spaces">
           <div class="available-space hidden">
             <input disabled type="checkbox" name="qproperty_selectedDocuments[]"/>
-  	        <label></label>
+            <label></label>
             <div class="cfmProperties"></div>
           </div>
         </div>
