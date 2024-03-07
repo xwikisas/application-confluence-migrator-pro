@@ -37,11 +37,13 @@
   #set ($spaces = [])
   #set ($discard = $spaces.addAll($question.confluenceSpaces.keySet()))
   #set ($spaces = $collectiontool.sort($spaces, 'entityReference:asc'))
-  #if ("$!request.qSearch" != '')
+  #set ($search = $request.qSearch)
+  #if ("$!search" != '')
+    #set ($search = $search.toLowerCase())
     #set ($filteredSpaces = [])
     #foreach ($space in $spaces)
       #set ($spaceRef = $services.model.serialize($space.entityReference))
-      #if ($spaceRef.toLowerCase().contains("$!request.qSearch"))
+      #if ($spaceRef.toLowerCase().contains($search))
         #set ($discard = $filteredSpaces.add($space))
       #end
     #end
