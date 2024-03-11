@@ -181,6 +181,12 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
         List<Map<String, Object>> logList = new ArrayList<>();
 
+        object.set("logs", gson.toJson(logList), context);
+        object.setLongValue("imported", getDocCount(jobStatus, logList));
+    }
+
+    private long getDocCount(ConfluenceMigrationJobStatus jobStatus, List<Map<String, Object>> logList)
+    {
         long docCount = 0;
         for (LogEvent logEvent : jobStatus.getLogTail().getLogEvents(0, -1)) {
             addToJsonList(logEvent, logList);
@@ -189,8 +195,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                 docCount++;
             }
         }
-        object.set("logs", gson.toJson(logList), context);
-        object.setLongValue("imported", docCount);
+        return docCount;
     }
 
     private void persistMacroMap(XWikiContext context, Map<String, Map<String, Object>> macroMap, Gson gson)
