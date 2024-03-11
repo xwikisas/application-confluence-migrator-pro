@@ -423,7 +423,7 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
     @Override
     public FilterStreamDescriptor getDescriptor()
     {
-        return null;
+        return new ConfluenceObjectsOnlyInstanceOutputFilterStreamDescriptor();
     }
 
     @Override

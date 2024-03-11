@@ -7,4 +7,6 @@
 <suppressions>
   <suppress checks="ClassFanOutComplexity"
             files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceMigrationJob\.java$"/>
+  <suppress checks="ClassFanOutComplexity"
+            files="application-confluence-migrator-pro-default/src/main/java/com/xwiki/confluencepro/internal/ConfluenceObjectsOnlyInstanceOutputFilterStream\.java$"/>
 </suppressions>
