@@ -84,6 +84,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final ArrayList<LogEvent> EMPTY_ARRAY_LIST = new ArrayList<>();
 
+    private static final String LINKS_BROKEN = "Links to this page may be broken";
+
     @Inject
     private Provider<XWikiContext> contextProvider;
 
@@ -154,6 +156,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
             Map<String, List<String>> skipped = new TreeMap<>();
             Map<String, List<String>> problematic = new TreeMap<>();
+            Map<String, List<String>> brokenLinks = new TreeMap<>();
 
             for (Object[] documentId : documentIds) {
                 String serializedDocRef = (String) documentId[0];
@@ -164,7 +167,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                     continue;
                 }
 
-                prepareDocumentLogMappings(pageToLog, title, skipped, serializedDocRef, problematic);
+                prepareDocumentLogMappings(pageToLog, title, skipped, serializedDocRef, problematic, brokenLinks);
             }
 
             Map<String, Map<String, Object>> macroMap = createSerializableMacroMap(macroPages);
@@ -175,6 +178,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             object.setLargeStringValue("skipped", gson.toJson(skipped));
             object.setLargeStringValue("problems", gson.toJson(problematic));
             object.setLargeStringValue("otherIssues", gson.toJson(otherIssues));
+            object.setLargeStringValue("brokenLinks", gson.toJson(brokenLinks));
         } catch (QueryException e) {
             throw new RuntimeException(e);
         }
@@ -294,16 +298,17 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     }
 
     private void prepareDocumentLogMappings(Map<String, ArrayList<LogEvent>> pageToLog, String title,
-        Map<String, List<String>> skipped, String serializedDocRef, Map<String, List<String>> problematic)
+        Map<String, List<String>> skipped, String serializedDocRef, Map<String, List<String>> problematic,
+        Map<String, List<String>> brokenLinks)
     {
         pageToLog.getOrDefault(title, EMPTY_ARRAY_LIST).forEach(logEvent -> {
+            Map<String, List<String>> cat = problematic;
             if (logEvent.getLevel().equals(LogLevel.ERROR)) {
-                skipped.computeIfAbsent(serializedDocRef, k -> new ArrayList<>())
-                    .add(logEvent.getFormattedMessage());
-            } else {
-                problematic.computeIfAbsent(serializedDocRef, k -> new ArrayList<>())
-                    .add(logEvent.getFormattedMessage());
+                cat = skipped;
+            } else if (logEvent.getLevel().equals(LogLevel.WARN) && logEvent.getMessage().contains(LINKS_BROKEN)) {
+                cat = brokenLinks;
             }
+            cat.computeIfAbsent(serializedDocRef, k -> new ArrayList<>()).add(logEvent.getFormattedMessage());
         });
     }
 

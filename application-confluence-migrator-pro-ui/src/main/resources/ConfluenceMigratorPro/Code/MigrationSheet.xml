@@ -355,13 +355,27 @@
   ## Migrated with issues section
   #set ($json = $obj.getProperty('problems').value)
   #set ($jsonObject = $jsontool.fromString($json))
-  #displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.keySet().size()])
-  #displayJson($jsonObject)
+  #if (!$jsonObject.isEmpty())
+    #displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.keySet().size()])
+    #displayJson($jsonObject)
+  #end
   ## Skipped section
   #set ($json = $obj.getProperty('skipped').value)
   #set ($jsonObject = $jsontool.fromString($json))
-  #displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
-  #displayJson($jsonObject)
+  #if (!$jsonObject.isEmpty())
+    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
+    #displayJson($jsonObject)
+  #end
+  ## Broken links section
+  #set ($json = $obj.getValue('brokenLinks'))
+  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+    #set ($jsonObject = $jsontool.fromString($json))
+    #if (!$jsonObject.isEmpty())
+      #displaySubtitle('cross', 'confluencepro.migration.raport.problems.brokenLinks.title', '', [$jsonObject.keySet().size()])
+      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
+      #displayJson($jsonObject)
+    #end
+  #end
   ## Other issues section
   #set ($json = $obj.getProperty('otherIssues').value)
   #set ($jsonObject = $jsontool.fromString($json))
