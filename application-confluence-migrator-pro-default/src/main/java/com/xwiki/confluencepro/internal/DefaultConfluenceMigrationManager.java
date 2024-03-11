@@ -31,24 +31,22 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Marker;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.PageIdentifier;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
-import org.xwiki.logging.LogLevel;
 import org.xwiki.logging.event.LogEvent;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.LocalDocumentReference;
-import org.xwiki.query.Query;
-import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
 import org.xwiki.refactoring.job.question.EntitySelection;
 
@@ -122,84 +120,133 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             }
             object.set("spaces", new ArrayList<>(spaces), context);
 
-            setLogRelatedFields(jobStatus, spaces, object, context);
+            setLogRelatedFields(jobStatus, object, context);
 
             context.getWiki().saveDocument(document, "Migration executed!", context);
         } catch (XWikiException e) {
         }
     }
 
-    private void setLogRelatedFields(ConfluenceMigrationJobStatus jobStatus, Set<String> spaces, BaseObject object,
-        XWikiContext context)
+    private void replaceKey(Map<Object, List<String>> m, Object oldKey, Object newKey)
+    {
+        if (m.containsKey(oldKey)) {
+            m.put(newKey, m.remove(oldKey));
+        }
+    }
+    private void setLogRelatedFields(ConfluenceMigrationJobStatus jobStatus, BaseObject object, XWikiContext context)
     {
         // Set logs json.
         Gson gson = new Gson();
         // warning: [w1, w2..],
         // error: [e1, e2..]
-        Map<String, List<String>> otherIssues = new TreeMap<>();
-        // page1: [log1, log2..]
-        Map<String, ArrayList<LogEvent>> pageToLog = new HashMap<>();
-        // pageTitle: { macro1: n1, macro2: n2...}
-        Map<String, Object> macroPages = new HashMap<>();
-        // Filter the logs.
-        jobStatus.getLogTail().getLogEvents(0, -1).stream().forEach(
-            logEvent -> getPageIdentifierArgument(logEvent, otherIssues).ifPresent(
-                pageId -> {
-                    if (Objects.equals(logEvent.getMarker(), ConfluenceFilter.LOG_MACROS_FOUND)) {
-                        macroPages.put(pageId, logEvent.getArgumentArray()[0]);
-                    } else {
-                        pageToLog.computeIfAbsent(pageId, k -> new ArrayList<>()).add(logEvent);
-                    }
-                }));
-        try {
-            List<String[]> documentIds = executeDocumentQuery(pageToLog, macroPages, spaces);
 
-            Map<String, List<String>> skipped = new TreeMap<>();
-            Map<String, List<String>> problematic = new TreeMap<>();
-            Map<String, List<String>> brokenLinks = new TreeMap<>();
-
-            for (Object[] documentId : documentIds) {
-                String serializedDocRef = (String) documentId[0];
-                String title = (String) documentId[1];
-
-                if (macroPages.containsKey(title)) {
-                    macroPages.put(serializedDocRef, macroPages.remove(title));
-                    continue;
-                }
-
-                prepareDocumentLogMappings(pageToLog, title, skipped, serializedDocRef, problematic, brokenLinks);
-            }
-
-            Map<String, Map<String, Object>> macroMap = createSerializableMacroMap(macroPages);
-
-            persistMacroMap(context, macroMap, gson);
-
-            object.setLargeStringValue("macros", gson.toJson(macroMap.keySet()));
-            object.setLargeStringValue("skipped", gson.toJson(skipped));
-            object.setLargeStringValue("problems", gson.toJson(problematic));
-            object.setLargeStringValue("otherIssues", gson.toJson(otherIssues));
-            object.setLargeStringValue("brokenLinks", gson.toJson(brokenLinks));
-        } catch (QueryException e) {
-            throw new RuntimeException(e);
-        }
+        Map<Object, List<String>> otherIssues = new TreeMap<>();
+        Map<Object, List<String>> skipped = new TreeMap<>();
+        Map<Object, List<String>> problematic = new TreeMap<>();
+        Map<Object, List<String>> brokenLinksPages = new TreeMap<>();
+        // fullName or pageId: [log1, log2..]
 
         List<Map<String, Object>> logList = new ArrayList<>();
 
-        object.set("logs", gson.toJson(logList), context);
-        object.setLongValue("imported", getDocCount(jobStatus, logList));
-    }
+        Set<List<String>> brokenLinks = new TreeSet<>((t1, t2) -> {
+            int spaceCompare = t1.get(0).compareTo(t2.get(0));
+            if (spaceCompare == 0) {
+                return t1.get(1).compareTo(t2.get(1));
+            }
+            return spaceCompare;
+        });
+        // List of (SPACE, Page title) entries
 
-    private long getDocCount(ConfluenceMigrationJobStatus jobStatus, List<Map<String, Object>> logList)
-    {
+        Map<String, Object> macroPages = new HashMap<>();
+        // Filter the logs.
+
+        String currentDocument = null;
+        Long currentPageId = null;
         long docCount = 0;
-        for (LogEvent logEvent : jobStatus.getLogTail().getLogEvents(0, -1)) {
+        for (LogEvent logEvent : jobStatus.getLogTail()) {
             addToJsonList(logEvent, logList);
-            if (LogLevel.INFO.equals(logEvent.getLevel()) && logEvent.getMessage().startsWith("Sending page [")) {
-                // FIXME this is ugly, we need to find another way to count imported documents
-                docCount++;
+            Object[] args = logEvent.getArgumentArray();
+            Marker marker = logEvent.getMarker();
+            if (Objects.equals(marker, ConfluenceFilter.LOG_MACROS_FOUND)) {
+                macroPages.put(currentDocument, args[0]);
+                continue;
+            }
+
+            Map<Object, List<String>> cat;
+            String msg = logEvent.getMessage();
+            if (msg == null) {
+                msg = "";
+            }
+            switch (logEvent.getLevel()) {
+                case ERROR:
+                    cat = problematic;
+                    break;
+                case WARN:
+                    if (msg.contains(LINKS_BROKEN)) {
+                        cat = brokenLinksPages;
+                        if (args.length > 1 && args[1] instanceof String && args[0] instanceof String) {
+                            brokenLinks.add(List.of((String) args[1], (String) args[0]));
+                        }
+                    } else {
+                        cat = otherIssues;
+                    }
+                    break;
+                case INFO:
+                    if (marker.getName().equals("filter.instance.log.document.updated")
+                        || marker.getName().equals("filter.instance.log.document.created")
+                    ) {
+                        if (args.length > 0 && args[0] instanceof DocumentReference) {
+                            currentDocument = serializer.serialize((DocumentReference) args[0]);
+                            if (currentPageId != null) {
+                                replaceKey(otherIssues, currentPageId, currentDocument);
+                                replaceKey(skipped, currentPageId, currentDocument);
+                                replaceKey(problematic, currentPageId, currentDocument);
+                            }
+                        }
+                    } else if (msg.startsWith("Sending page [{}]")) {
+                        docCount++;
+                        currentDocument = null;
+                        currentPageId = (args.length > 0 && args[0] instanceof PageIdentifier)
+                            ? ((PageIdentifier) args[0]).getPageId()
+                            : null;
+                    }
+                    /* fall through */
+                default:
+                    cat = null;
+            }
+            if (cat != null) {
+                Object pageIdOrFullName = getPageIdOrFullName(logEvent, currentDocument, currentPageId);
+                if (pageIdOrFullName != null) {
+                    cat.computeIfAbsent(pageIdOrFullName, k -> new ArrayList<>()).add(logEvent.getFormattedMessage());
+                }
             }
         }
-        return docCount;
+
+        Map<String, Map<String, Object>> macroMap = createSerializableMacroMap(macroPages);
+        persistMacroMap(context, macroMap, gson);
+
+        object.setLargeStringValue("macros", gson.toJson(macroMap.keySet()));
+        object.setLargeStringValue("skipped", gson.toJson(skipped));
+        object.setLargeStringValue("problems", gson.toJson(problematic));
+        object.setLargeStringValue("otherIssues", gson.toJson(otherIssues));
+        object.setLargeStringValue("brokenLinksPages", gson.toJson(brokenLinksPages));
+        object.setLargeStringValue("brokenLinks", gson.toJson(brokenLinks));
+        object.set("logs", gson.toJson(logList), context);
+        object.setLongValue("imported", docCount);
+    }
+
+    private static Object getPageIdOrFullName(LogEvent logEvent, String currentFullName, Long currentPageId)
+    {
+        Object pageIdOrFullName = currentFullName;
+        if (currentFullName == null) {
+            Optional<PageIdentifier> pageIdentifier =
+                Arrays.stream(logEvent.getArgumentArray()).filter(PageIdentifier.class::isInstance)
+                    .map(a -> (PageIdentifier) a).findFirst();
+            pageIdOrFullName = pageIdentifier.isPresent()
+                ? pageIdentifier.get().getPageId()
+                : currentPageId;
+        }
+        return pageIdOrFullName;
     }
 
     private void persistMacroMap(XWikiContext context, Map<String, Map<String, Object>> macroMap, Gson gson)
@@ -281,37 +328,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return map;
     }
 
-    private List<String[]> executeDocumentQuery(Map<String, ArrayList<LogEvent>> pageToLog,
-        Map<String, Object> macroPages,
-        Set<String> spaces) throws QueryException
-    {
-        // We need to retrieve all the confluence pages that had problems when imported. We get the document
-        // reference using the title (it is unique per space) and the space.
-        Set<String> pagesParam = new HashSet<>(pageToLog.keySet());
-        pagesParam.addAll(macroPages.keySet());
-        List<String[]> documentIds = queryManager.createQuery(
-                "select doc.fullName, doc.title " + "from XWikiDocument as doc "
-                    + "where SUBSTRING(doc.fullName, 1, locate('.', doc.fullName) - 1) in (:importedSpaces) "
-                    + "and doc.title in (:pages)", Query.XWQL).bindValue("importedSpaces", spaces)
-            .bindValue(PAGES_KEY, pagesParam).execute();
-        return documentIds;
-    }
-
-    private void prepareDocumentLogMappings(Map<String, ArrayList<LogEvent>> pageToLog, String title,
-        Map<String, List<String>> skipped, String serializedDocRef, Map<String, List<String>> problematic,
-        Map<String, List<String>> brokenLinks)
-    {
-        pageToLog.getOrDefault(title, EMPTY_ARRAY_LIST).forEach(logEvent -> {
-            Map<String, List<String>> cat = problematic;
-            if (logEvent.getLevel().equals(LogLevel.ERROR)) {
-                cat = skipped;
-            } else if (logEvent.getLevel().equals(LogLevel.WARN) && logEvent.getMessage().contains(LINKS_BROKEN)) {
-                cat = brokenLinks;
-            }
-            cat.computeIfAbsent(serializedDocRef, k -> new ArrayList<>()).add(logEvent.getFormattedMessage());
-        });
-    }
-
     private Map<String, Map<String, Object>> createSerializableMacroMap(Map<String, Object> macroPages)
     {
         Map<String, Map<String, Object>> macroMap = new HashMap<>();
@@ -344,33 +360,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     public void enablePrerequisites()
     {
         prerequisitesManager.enablePrerequisites();
-    }
-
-    private Optional<String> getPageIdentifierArgument(LogEvent logEvent, Map<String, List<String>> otherIssues)
-    {
-        if (Objects.equals(logEvent.getMarker(), ConfluenceFilter.LOG_MACROS_FOUND)
-            && logEvent.getArgumentArray().length > 0)
-        {
-            return Optional.of((String) logEvent.getArgumentArray()[1]);
-        }
-        if (!logEvent.getLevel().equals(LogLevel.ERROR) && !logEvent.getLevel().equals(LogLevel.WARN)) {
-            return Optional.empty();
-        }
-        if (logEvent.getArgumentArray() == null) {
-            otherIssues.computeIfAbsent(logEvent.getLevel().toString(), k -> new ArrayList<>())
-                .add(logEvent.getFormattedMessage());
-            return Optional.empty();
-        }
-        Optional<PageIdentifier> pageIdentifier =
-            Arrays.stream(logEvent.getArgumentArray()).filter(a -> a instanceof PageIdentifier)
-                .map(a -> (PageIdentifier) a).findFirst();
-        // Do this here so we don't have to look through the arguments for each log again.
-        if (pageIdentifier.isEmpty() || StringUtils.isEmpty(pageIdentifier.get().getPageTitle())) {
-            otherIssues.computeIfAbsent(logEvent.getLevel().toString(), k -> new ArrayList<>())
-                .add(logEvent.getFormattedMessage());
-            return Optional.empty();
-        }
-        return Optional.of(pageIdentifier.get().getPageTitle());
     }
 
     private void addToJsonList(LogEvent logEvent, List<Map<String, Object>> logList)

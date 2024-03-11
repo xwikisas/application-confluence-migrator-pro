@@ -95,7 +95,9 @@ confluencepro.migration.raport.problems.done.title={0} page(s) have encountered 
 confluencepro.migration.raport.problems.other.title={0} other issue(s) were encountered during the import.
 confluencepro.migration.raport.problems.other.error=Encountered {0} errors
 confluencepro.migration.raport.problems.other.warn=Encountered {0} warnings
-
+confluencepro.migration.raport.problems.brokenLinks.list=List of pages targetted by potentially broken links
+confluencepro.migration.raport.confluencespace=Confluence space key
+confluencepro.migration.raport.pageTitle=Page title
 confluencepro.migration.title.label=Set the title of the migration
 confluencepro.migration.source.title=Set the source package of the migration
 confluencepro.migration.title.placeholder=Type the desired title...

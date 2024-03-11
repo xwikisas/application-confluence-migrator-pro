@@ -232,18 +232,18 @@
       &lt;/dd&gt;
     &lt;/dl&gt;
     &lt;div style="display: none"&gt;
-    ## See https://github.com/xwikisas/application-confluence-migrator-pro/issues/83
-    &lt;div class="box warningmessage"&gt;
-      &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.warning'))&lt;/p&gt;
-    &lt;/div&gt;
-    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.output'))&lt;/h2&gt;
-    &lt;dl&gt;
-      &lt;input type="hidden" id="cfm-output-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties" value="$escapetool.xml($jsontool.serialize($prefilledValues['output']))" /&gt;
-      #set ($descriptor = $services.filter.getOutputFilterStreamDescriptor('xwiki+instance'))
-      #foreach ($propertyDescriptor in $descriptor.properties)
-        #displayFormField('output', $propertyDescriptor)
-      #end
-    &lt;/dl&gt;
+      ## See https://github.com/xwikisas/application-confluence-migrator-pro/issues/83
+      &lt;div class="box warningmessage"&gt;
+        &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.warning'))&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.output'))&lt;/h2&gt;
+      &lt;dl&gt;
+        &lt;input type="hidden" id="cfm-output-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties" value="$escapetool.xml($jsontool.serialize($prefilledValues['output']))" /&gt;
+        #set ($descriptor = $services.filter.getOutputFilterStreamDescriptor('xwiki+instance'))
+        #foreach ($propertyDescriptor in $descriptor.properties)
+          #displayFormField('output', $propertyDescriptor)
+        #end
+      &lt;/dl&gt;
     &lt;/div&gt;
   &lt;/div&gt;
   {{/html}}
@@ -279,7 +279,7 @@
     {{/success}}
 
   #end
-  {{html wiki=true}}
+  {{html wiki=true clean=false}}
   #set ($discard = $xwiki.ssfx.use('uicomponents/logging/logging.css', true))
   #set ($discard = $xwiki.jsfx.use('uicomponents/logging/logging.js', true))
   ## Spaces section
@@ -290,29 +290,29 @@
   #end
   #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $spaces.size()])
   &lt;ul class="imported-spaces"&gt;
-  #set ($options = {})
-  #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
-  #set ($rootSpace = $inputProperties.get("rootSpace"))
-  #if ("$!rootSpace" == "")
-    #set ($spacePrefix = "")
-  #else
-    #set ($spacePrefix = "${rootSpace}")
-  #end
-  #foreach ($space in $spaces)
-    #set ($spaceDoc = "${xcontext.wiki}:${spacePrefix}${space}.WebHome")
-    &lt;li&gt;
-      &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
-        $services.icon.renderHTML('caret-down')
-      &lt;/a&gt;
-      [[$escapetool.xml($space)&gt;&gt;$spaceDoc]]
-      #set ($discard = $options.put('root', "document:${spaceDoc}"))
-      #set ($discard = $options.put('links', 'true'))
-      #set ($discard = $options.put('compact', 'true'))
-      &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;
-        #documentTree($options)
-      &lt;/div&gt;
-    &lt;li&gt;
-  #end
+    #set ($options = {})
+    #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
+    #set ($rootSpace = $inputProperties.get("rootSpace"))
+    #if ("$!rootSpace" == "")
+      #set ($spacePrefix = "")
+    #else
+      #set ($spacePrefix = "${rootSpace}")
+    #end
+    #foreach ($space in $spaces)
+      #set ($spaceDoc = "${xcontext.wiki}:${spacePrefix}${space}.WebHome")
+      &lt;li&gt;
+        &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
+          $services.icon.renderHTML('caret-down')
+        &lt;/a&gt;
+        [[$escapetool.xml($space)&gt;&gt;$spaceDoc]]
+        #set ($discard = $options.put('root', "document:${spaceDoc}"))
+        #set ($discard = $options.put('links', 'true'))
+        #set ($discard = $options.put('compact', 'true'))
+        &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;
+          #documentTree($options)
+        &lt;/div&gt;
+      &lt;li&gt;
+    #end
   &lt;/ul&gt;
   ## Missing macros
   &lt;div class="imported-macros-section"&gt;
@@ -350,64 +350,93 @@
         #end
       &lt;/div&gt;
     &lt;/div&gt;
-    [[$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.link'))&gt;&gt;https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation]]
-  &lt;/div&gt;
+
+    &lt;p&gt;[[$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.link'))&gt;&gt;https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation]]&lt;/p&gt;
+
   ## Migrated with issues section
-  #set ($json = $obj.getProperty('problems').value)
-  #set ($jsonObject = $jsontool.fromString($json))
-  #if (!$jsonObject.isEmpty())
-    #displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.keySet().size()])
-    #displayJson($jsonObject)
+  #set ($json = $obj.getValue('problems'))
+  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+    #set ($jsonObject = $jsontool.fromString($json))
+    #if (!$jsonObject.isEmpty())
+      #displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.keySet().size()])
+      #displayJson($jsonObject)
+    #end
   #end
   ## Skipped section
-  #set ($json = $obj.getProperty('skipped').value)
-  #set ($jsonObject = $jsontool.fromString($json))
-  #if (!$jsonObject.isEmpty())
-    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
-    #displayJson($jsonObject)
+  #set ($json = $obj.getValue('skipped'))
+  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+    #set ($jsonObject = $jsontool.fromString($json))
+    #if (!$jsonObject.isEmpty())
+      #displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
+      #displayJson($jsonObject)
+    #end
   #end
   ## Broken links section
-  #set ($json = $obj.getValue('brokenLinks'))
+  #set ($json = $obj.getValue('brokenLinksPages'))
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
     #set ($jsonObject = $jsontool.fromString($json))
     #if (!$jsonObject.isEmpty())
       #displaySubtitle('cross', 'confluencepro.migration.raport.problems.brokenLinks.title', '', [$jsonObject.keySet().size()])
       &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
       #displayJson($jsonObject)
+      #set ($json = $obj.getValue('brokenLinks'))
+      #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+        #set ($jsonObject = $jsontool.fromString($json))
+        #if (!$jsonObject.isEmpty())
+
+          {{expand title="$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.list')"}}
+            &lt;table&gt;
+              &lt;tr&gt;
+                &lt;th&gt;$services.localization.render('confluencepro.migration.raport.confluencespace')&lt;/th&gt;
+                &lt;th&gt;$services.localization.render('confluencepro.migration.raport.pageTitle')&lt;/th&gt;
+              &lt;/tr&gt;
+            #foreach($link in $jsonObject)
+              &lt;tr&gt;&lt;td&gt;$link[0]&lt;/td&gt;&lt;td&gt;$link[1]&lt;td&gt;&lt;/tr&gt;
+            #end
+            &lt;/table&gt;
+          {{/expand}}
+
+        #end
+      #end
     #end
   #end
   ## Other issues section
-  #set ($json = $obj.getProperty('otherIssues').value)
-  #set ($jsonObject = $jsontool.fromString($json))
-  #set ($errors = $jsonObject.get('ERROR'))
-  #set ($warns = $jsonObject.get('WARN'))
-  #set ($problems = 0)
-  #if ("$!errors" != '' &amp;&amp; $errors.size() &gt; 0)
-    #set ($problems = $problems + $errors.size())
-  #end
-  #if ("$!warns" != '' &amp;&amp; $warns.size() &gt; 0)
-    #set ($problems = $problems + $warns.size())
-  #end
-  #displaySubtitle('question', 'confluencepro.migration.raport.problems.other.title', '', [$problems])
-  &lt;div class="cfm-problem-pages"&gt;
-  #foreach ($entry in $jsonObject.entrySet())
-    &lt;li class="cfm-problem-page"&gt;
-      &lt;div class="cfm-page"&gt;
-        &lt;a role="button" data-toggle="collapse" href="#cfmOtherIssues${foreach.count}" aria-expanded="false" aria-controls="cfmOtherIssues${foreach.count}"&gt;
-          &lt;div class="cfmTitleIcon"&gt;
-            $services.icon.renderHTML('caret-down')
+  #set ($json = $obj.getValue('otherIssues'))
+  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+    #set ($jsonObject = $jsontool.fromString($json))
+    #set ($errors = $jsonObject.get('ERROR'))
+    #set ($warns = $jsonObject.get('WARN'))
+    #set ($problems = 0)
+    #if ("$!errors" != '' &amp;&amp; $errors.size() &gt; 0)
+      #set ($problems = $problems + $errors.size())
+    #end
+    #if ("$!warns" != '' &amp;&amp; $warns.size() &gt; 0)
+      #set ($problems = $problems + $warns.size())
+    #end
+    #if ($problems &gt; 0)
+      #displaySubtitle('question', 'confluencepro.migration.raport.problems.other.title', '', [$problems])
+      &lt;ul class="cfm-problem-pages"&gt;
+      #foreach ($entry in $jsonObject.entrySet())
+        &lt;li class="cfm-problem-page"&gt;
+          &lt;div class="cfm-page"&gt;
+            &lt;a role="button" data-toggle="collapse" href="#cfmOtherIssues${foreach.count}" aria-expanded="false" aria-controls="cfmOtherIssues${foreach.count}"&gt;
+              &lt;div class="cfmTitleIcon"&gt;
+                $services.icon.renderHTML('caret-down')
+              &lt;/div&gt;
+            &lt;/a&gt;
+            $escapetool.xml($services.localization.render("confluencepro.migration.raport.problems.other.$entry.key.toLowerCase()", $entry.value.size()))
           &lt;/div&gt;
-        &lt;/a&gt;
-        $escapetool.xml($services.localization.render("confluencepro.migration.raport.problems.other.$entry.key.toLowerCase()", $entry.value.size()))
-      &lt;/div&gt;
-      &lt;div id="cfmOtherIssues${foreach.count}" class="cfm-problems collapse"&gt;
-        &lt;ul&gt;
-          #foreach ($problem in $entry.value)
-            &lt;li class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/li&gt;
-          #end
-        &lt;/ul&gt;
-      &lt;/div&gt;
-    &lt;/li&gt;
+          &lt;div id="cfmOtherIssues${foreach.count}" class="cfm-problems collapse"&gt;
+            &lt;ul&gt;
+              #foreach ($problem in $entry.value)
+                &lt;li class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/li&gt;
+              #end
+            &lt;/ul&gt;
+          &lt;/div&gt;
+        &lt;/li&gt;
+      #end
+      &lt;/ul&gt;
+    #end
   #end
   &lt;/div&gt;
   ## Logs section
@@ -444,7 +473,7 @@
  * @param $jsonObject the json that needs displaying. It should have the pattern: { key1: [vals..], key2: [vals..], ..}
  *#
 #macro(displayJson $jsonObject)
-  &lt;div class="cfm-problem-pages"&gt;
+  &lt;ul class="cfm-problem-pages"&gt;
   #foreach ($entry in $jsonObject.entrySet())
     #set ($docRef = $services.model.resolveDocument($entry.key))
     &lt;li class="cfm-problem-page"&gt;
@@ -465,7 +494,7 @@
       &lt;/div&gt;
     &lt;/li&gt;
   #end
-  &lt;/div&gt;
+  &lt;/ul&gt;
 #end
 #**
  * Run the migration job if the `executed` flag is false and if there is a `package` set.
@@ -566,22 +595,22 @@
   {{html clean="false"}}
   &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.zippicker.title'))&lt;/h2&gt;
   &lt;form class="xform"&gt;
-  &lt;input type="hidden" name="form_token" value="$!escapetool.xml($services.csrf.token)" /&gt;
-  #set ($zipExtension = '.zip')
-  #set ($zipMediaType = 'application/zip')
-  #set ($parameters = {
-      'data-upload-allowed': $services.security.authorization.hasAccess('edit'),
-      'data-accept': "$zipExtension, $zipMediaType",
-      'placeholder': $services.localization.render('confluencepro.zippicker.placeholder'),
-      'name': 'package',
-      'data-document-reference': 'ConfluenceMigratorPro.WebHome'
-  })
-  #set ($discard = $parameters.put('class', "$!parameters.get('class') pick-attachment-resource"))
-  #attachmentPicker_import
-  #suggestInput($parameters)
-  &lt;button type="submit" class="btn btn-primary"&gt;
-  $escapetool.xml($services.localization.render('confluencepro.zippicker.button.submit'))
-  &lt;/button&gt;
+    &lt;input type="hidden" name="form_token" value="$!escapetool.xml($services.csrf.token)" /&gt;
+    #set ($zipExtension = '.zip')
+    #set ($zipMediaType = 'application/zip')
+    #set ($parameters = {
+        'data-upload-allowed': $services.security.authorization.hasAccess('edit'),
+        'data-accept': "$zipExtension, $zipMediaType",
+        'placeholder': $services.localization.render('confluencepro.zippicker.placeholder'),
+        'name': 'package',
+        'data-document-reference': 'ConfluenceMigratorPro.WebHome'
+    })
+    #set ($discard = $parameters.put('class', "$!parameters.get('class') pick-attachment-resource"))
+    #attachmentPicker_import
+    #suggestInput($parameters)
+    &lt;button type="submit" class="btn btn-primary"&gt;
+    $escapetool.xml($services.localization.render('confluencepro.zippicker.button.submit'))
+    &lt;/button&gt;
   &lt;/form&gt;
   {{/html}}
 
@@ -1136,7 +1165,7 @@ require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
   margin-right: 1em;
 }
 
-.cfm-problem-pages &gt; ul {
+.cfm-problem-pages {
   list-style: none;
 }
 

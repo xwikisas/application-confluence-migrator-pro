@@ -129,6 +129,24 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </macros>
+    <brokenLinkPages>
+      <contenttype>PureText</contenttype>
+      <customDisplay/>
+      <disabled>0</disabled>
+      <editor>PureText</editor>
+      <hint/>
+      <name>brokenLinks</name>
+      <number>8</number>
+      <picker>0</picker>
+      <prettyName>brokenLinks</prettyName>
+      <restricted>0</restricted>
+      <rows>5</rows>
+      <size>40</size>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+    </brokenLinkPages>
     <brokenLinks>
       <contenttype>PureText</contenttype>
       <customDisplay/>
