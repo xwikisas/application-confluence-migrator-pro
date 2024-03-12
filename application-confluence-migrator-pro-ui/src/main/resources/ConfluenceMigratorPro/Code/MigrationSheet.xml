@@ -385,15 +385,10 @@
         #if (!$jsonObject.isEmpty())
 
           {{expand title="$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.list')"}}
-            &lt;table&gt;
-              &lt;tr&gt;
-                &lt;th&gt;$services.localization.render('confluencepro.migration.raport.confluencespace')&lt;/th&gt;
-                &lt;th&gt;$services.localization.render('confluencepro.migration.raport.pageTitle')&lt;/th&gt;
-              &lt;/tr&gt;
+            |=$services.localization.render('confluencepro.migration.raport.confluencespace')|=$services.localization.render('confluencepro.migration.raport.pageTitle')
             #foreach($link in $jsonObject)
-              &lt;tr&gt;&lt;td&gt;$link[0]&lt;/td&gt;&lt;td&gt;$link[1]&lt;td&gt;&lt;/tr&gt;
+              |$services.rendering.escape($link[0], $xwiki.currentContentSyntaxId)|$services.rendering.escape($link[1], $xwiki.currentContentSyntaxId)|
             #end
-            &lt;/table&gt;
           {{/expand}}
 
         #end
