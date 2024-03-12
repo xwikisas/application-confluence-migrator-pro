@@ -192,8 +192,9 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                     }
                     break;
                 case INFO:
-                    if (marker.getName().equals("filter.instance.log.document.updated")
-                        || marker.getName().equals("filter.instance.log.document.created")
+                    String markerName = marker != null && marker.getName() != null ? marker.getName() : "";
+                    if (markerName.equals("filter.instance.log.document.updated")
+                        || markerName.equals("filter.instance.log.document.created")
                     ) {
                         if (args.length > 0 && args[0] instanceof DocumentReference) {
                             currentDocument = serializer.serialize((DocumentReference) args[0]);
