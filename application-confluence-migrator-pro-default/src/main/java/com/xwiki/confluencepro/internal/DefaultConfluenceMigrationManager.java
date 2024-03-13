@@ -80,8 +80,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     private static final LocalDocumentReference MIGRATION_OBJECT =
         new LocalDocumentReference(CONFLUENCE_MIGRATOR_SPACE, "MigrationClass");
 
-    private static final ArrayList<LogEvent> EMPTY_ARRAY_LIST = new ArrayList<>();
-
     private static final String LINKS_BROKEN = "Links to this page may be broken";
 
     @Inject
