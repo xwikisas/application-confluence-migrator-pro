@@ -127,7 +127,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         }
     }
 
-    private void replaceKey(Map<Object, List<String>> m, Object oldKey, Object newKey)
+    private void replaceKey(Map<String, List<String>> m, String oldKey, String newKey)
     {
         if (m.containsKey(oldKey)) {
             m.put(newKey, m.remove(oldKey));
@@ -140,10 +140,10 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         // warning: [w1, w2..],
         // error: [e1, e2..]
 
-        Map<Object, List<String>> otherIssues = new TreeMap<>();
-        Map<Object, List<String>> skipped = new TreeMap<>();
-        Map<Object, List<String>> problematic = new TreeMap<>();
-        Map<Object, List<String>> brokenLinksPages = new TreeMap<>();
+        Map<String, List<String>> otherIssues = new TreeMap<>();
+        Map<String, List<String>> skipped = new TreeMap<>();
+        Map<String, List<String>> problematic = new TreeMap<>();
+        Map<String, List<String>> brokenLinksPages = new TreeMap<>();
         // fullName or pageId: [log1, log2..]
 
         List<Map<String, Object>> logList = new ArrayList<>();
@@ -161,7 +161,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         // Filter the logs.
 
         String currentDocument = null;
-        Long currentPageId = null;
+        String currentPageId = null;
         long docCount = 0;
         for (LogEvent logEvent : jobStatus.getLogTail()) {
             addToJsonList(logEvent, logList);
@@ -172,7 +172,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                 continue;
             }
 
-            Map<Object, List<String>> cat;
+            Map<String, List<String>> cat;
             String msg = logEvent.getMessage();
             if (msg == null) {
                 msg = "";
@@ -207,16 +207,16 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                     } else if (msg.startsWith("Sending page [{}]")) {
                         docCount++;
                         currentDocument = null;
-                        currentPageId = (args.length > 0 && args[0] instanceof PageIdentifier)
+                        currentPageId = toString((args.length > 0 && args[0] instanceof PageIdentifier)
                             ? ((PageIdentifier) args[0]).getPageId()
-                            : null;
+                            : null);
                     }
                     /* fall through */
                 default:
                     cat = null;
             }
             if (cat != null) {
-                Object pageIdOrFullName = getPageIdOrFullName(logEvent, currentDocument, currentPageId);
+                String pageIdOrFullName = getPageIdOrFullName(logEvent, currentDocument, currentPageId);
                 if (pageIdOrFullName != null) {
                     cat.computeIfAbsent(pageIdOrFullName, k -> new ArrayList<>()).add(logEvent.getFormattedMessage());
                 }
@@ -236,15 +236,23 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         object.setLongValue("imported", docCount);
     }
 
-    private static Object getPageIdOrFullName(LogEvent logEvent, String currentFullName, Long currentPageId)
+    private static String toString(Long id)
     {
-        Object pageIdOrFullName = currentFullName;
+        if (id == null) {
+            return null;
+        }
+        return id.toString();
+    }
+
+    private static String getPageIdOrFullName(LogEvent logEvent, String currentFullName, String currentPageId)
+    {
+        String pageIdOrFullName = currentFullName;
         if (currentFullName == null) {
             Optional<PageIdentifier> pageIdentifier =
                 Arrays.stream(logEvent.getArgumentArray()).filter(PageIdentifier.class::isInstance)
                     .map(a -> (PageIdentifier) a).findFirst();
             pageIdOrFullName = pageIdentifier.isPresent()
-                ? pageIdentifier.get().getPageId()
+                ? toString(pageIdentifier.get().getPageId())
                 : currentPageId;
         }
         return pageIdOrFullName;
