@@ -311,7 +311,7 @@
         &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;
           #documentTree($options)
         &lt;/div&gt;
-      &lt;li&gt;
+      &lt;/li&gt;
     #end
   &lt;/ul&gt;
   ## Missing macros
@@ -327,32 +327,45 @@
           #set ($discard = $notSupportedMacros.add($macro))
         #end
       #end
-      &lt;div class="imported-macros-title"&gt;
-        &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported'))&lt;/span&gt;
-      &lt;/div&gt;
-      &lt;div class="imported-macros-icon supported" title="$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported.icon.title'))"&gt;
-        $services.icon.renderHTML('check')
-      &lt;/div&gt;
-      &lt;div class="imported-macros-list"&gt;
-        #foreach ($macro in $supportedMacros)
-          &lt;span&gt;$macro&lt;/span&gt;
-        #end
-      &lt;/div&gt;
-      &lt;div class="imported-macros-title"&gt;
-        &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.notSupported'))&lt;/span&gt;
-      &lt;/div&gt;
-      &lt;div class="imported-macros-icon not-supported" title="$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.notSupported.icon.title'))"&gt;
-        $services.icon.renderHTML('warning')
-      &lt;/div&gt;
-      &lt;div class="imported-macros-list"&gt;
-        #foreach ($macro in $notSupportedMacros)
-          &lt;span&gt;$macro&lt;/span&gt;
-        #end
-      &lt;/div&gt;
+      #if (!$supportedMacros.isEmpty())
+        &lt;div class="imported-macros-title"&gt;
+          &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported'))&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class="imported-macros-icon supported" title="$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported.icon.title'))"&gt;
+          $services.icon.renderHTML('check')
+        &lt;/div&gt;
+        &lt;div class="imported-macros-list"&gt;
+          #foreach ($macro in $supportedMacros)
+            &lt;span&gt;$macro&lt;/span&gt;
+          #end
+        &lt;/div&gt;
+      #end
+      #if (!$notSupportedMacros.isEmpty())
+        &lt;div class="imported-macros-title"&gt;
+          &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.notSupported'))&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class="imported-macros-icon not-supported" title="$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.notSupported.icon.title'))"&gt;
+          $services.icon.renderHTML('warning')
+        &lt;/div&gt;
+        &lt;div class="imported-macros-list"&gt;
+          #foreach ($macro in $notSupportedMacros)
+            &lt;span&gt;$macro&lt;/span&gt;
+          #end
+        &lt;/div&gt;
+      #end
     &lt;/div&gt;
+    #if ($supportedMacros.isEmpty())
 
+      {{info}}{{translation key="confluencepro.migration.raport.macros.supported.noMacros"/}}{{/info}}
+
+    #end
+    #if ($notSupportedMacros.isEmpty())
+
+      {{info}}{{translation key="confluencepro.migration.raport.macros.notSupported.noMacros"/}}{{/info}}
+
+    #end
     &lt;p&gt;[[$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.link'))&gt;&gt;https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation]]&lt;/p&gt;
-
+  &lt;/div&gt;
   ## Migrated with issues section
   #set ($json = $obj.getValue('problems'))
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
@@ -433,7 +446,6 @@
       &lt;/ul&gt;
     #end
   #end
-  &lt;/div&gt;
   ## Logs section
   #set ($json = $obj.getProperty('logs').value)
   #set ($jsonObject = $jsontool.fromString($json))
