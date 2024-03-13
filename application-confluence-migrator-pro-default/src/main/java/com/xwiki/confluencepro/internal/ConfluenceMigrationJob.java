@@ -169,7 +169,7 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
             SpaceQuestion spaceQuestion =
                 (SpaceQuestion) getStatus().getAskedQuestions().values()
                     .stream()
-                    .filter(q -> q instanceof SpaceQuestion).findFirst()
+                    .filter(SpaceQuestion.class::isInstance).findFirst()
                     .orElse(null);
             WikiReference wikiReference = this.request.getStatusDocumentReference().getWikiReference();
             if (wikiReference != null) {
