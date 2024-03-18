@@ -166,7 +166,9 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             Object[] args = logEvent.getArgumentArray();
             Marker marker = logEvent.getMarker();
             if (Objects.equals(marker, ConfluenceFilter.LOG_MACROS_FOUND)) {
-                macroPages.put(currentDocument, args[0]);
+                if (currentDocument != null) {
+                    macroPages.put(currentDocument, args[0]);
+                }
                 continue;
             }
 
