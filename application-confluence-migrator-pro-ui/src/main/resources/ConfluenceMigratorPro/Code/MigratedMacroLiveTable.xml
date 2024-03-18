@@ -76,7 +76,7 @@
     #if ($i &gt;= $offset)
       #set ($macroDocsUrl = $xwiki.getURL('ConfluenceMigratorPro.Code.MigratedMacroPages', 'view', "macro=$entry.key"))
       #set ($discard = $entry.value.put('name', "&lt;a href='$escapetool.xml($macroDocsUrl)'&gt;$escapetool.xml($entry.key)&lt;/a&gt;"))
-      #set ($discard = $entry.value.put('supported', $services.icon.renderHTML($iconMap.get($services.component.getRootComponentManager().hasComponent('org.xwiki.rendering.macro.Macro', $entry.key)))))
+      #set ($discard = $entry.value.put('supported', $services.icon.renderHTML($iconMap.get($services.component.contextComponentManager.hasComponent('org.xwiki.rendering.macro.Macro', $entry.key)))))
       #set ($discard = $json.rows.add($entry.value))
     #end
     #set ($i = $i + 1)
