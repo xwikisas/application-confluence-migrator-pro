@@ -21,12 +21,14 @@ package com.xwiki.confluencepro.internal;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.xwiki.licensing.LicenseType;
 import com.xwiki.licensing.Licensor;
 import org.xwiki.component.annotation.Component;
@@ -47,8 +49,12 @@ import org.xwiki.job.AbstractJob;
 import org.xwiki.job.Job;
 import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
+import org.xwiki.query.Query;
+import org.xwiki.query.QueryException;
+import org.xwiki.query.QueryManager;
 import org.xwiki.refactoring.job.question.EntitySelection;
 
 import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
@@ -113,6 +119,12 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
     @Inject
     private Provider<Licensor> licensorProvider;
 
+    @Inject
+    private QueryManager queryManager;
+
+    @Inject
+    private LinkMappingConverter linkMappingConverter;
+
     /**
      * @return the job type.
      */
@@ -132,11 +144,9 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
 
     /**
      * Run the job.
-     *
-     * @throws Exception if something goes wrong with the job.
      */
     @Override
-    protected void runInternal() throws Exception
+    protected void runInternal()
     {
         boolean rightOnly = isGeneralParameterEnabled("rightOnly");
         boolean shouldRunNestedPagesMigrator = !rightOnly
@@ -145,6 +155,9 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
         Map<String, Object> inputProperties = getFilterInputProperties();
 
         Map<String, Object> outputProperties = getFilterOutputProperties();
+        if (isGeneralParameterEnabled("useLinkMapping")) {
+            inputProperties.put("linkMapping", getLinkMapping());
+        }
 
         String outputStreamRoleHint = rightOnly
             ? ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT
@@ -155,7 +168,8 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
         FilterStreamConverterJobRequest filterJobRequest = new FilterStreamConverterJobRequest(
             FilterStreamType.unserialize(CONFLUENCE_XML_ROLEHINT), inputProperties,
             FilterStreamType.unserialize(outputStreamRoleHint), outputProperties);
-        boolean interactive = !isGeneralParameterEnabled("skipQuestions");
+        boolean interactive = !isGeneralParameterEnabled("skipQuestions")
+            && !isGeneralParameterEnabled("onlyLinkMapping");
         filterJobRequest.setInteractive(interactive);
         request.setInteractive(interactive);
         progressManager.pushLevelProgress(shouldRunNestedPagesMigrator ? 3 : 1, this);
@@ -279,6 +293,39 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
                 logger.info("No spaces migrated. Skipping Nested Paged Migration.");
             }
         }
+    }
+
+    private Map<String, Map<String, EntityReference>> getLinkMapping()
+    {
+        Map<String, Map<String, EntityReference>> linkMapping = new HashMap<>();
+        List<Object[]> results;
+        try {
+            Query query = queryManager.createQuery("select obj.spaceKey, obj.mapping from "
+                + "Document doc, doc.object(ConfluenceMigratorPro.Code.LinkMappingStateSpaceClass) obj", Query.XWQL);
+            results = query.execute();
+        } catch (QueryException e) {
+            logger.error("Could not get the link mapping, continuing without it", e);
+            return null;
+        }
+
+        for (Object[] result : results) {
+            String spaceKey = (String) result[0];
+            String spaceMapping = (String) result[1];
+            try {
+                Map<String, EntityReference> foundSpaceMapping =
+                    linkMappingConverter.convertSpaceLinkMapping(spaceMapping, spaceKey);
+                Map<String, EntityReference> existingSpaceMapping = linkMapping.get(spaceKey);
+                if (existingSpaceMapping == null) {
+                    linkMapping.put(spaceKey, foundSpaceMapping);
+                } else {
+                    existingSpaceMapping.putAll(foundSpaceMapping);
+                }
+            } catch (JsonProcessingException e) {
+                logger.error("Could not get the link mapping for space [{}], continuing without it", spaceKey, e);
+            }
+        }
+
+        return linkMapping;
     }
 
     private void executePlanExecutionJob(MigrationConfiguration configuration, Job planCreationJob)

@@ -8,7 +8,11 @@
   <suppress checks="ClassFanOutComplexity"
             files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceMigrationJob\.java$"/>
   <suppress checks="ClassFanOutComplexity"
+            files="src/main/java/com/xwiki/confluencepro/internal/DefaultConfluenceMigrationManager\.java$"/>
+  <suppress checks="ClassFanOutComplexity"
             files="application-confluence-migrator-pro-default/src/main/java/com/xwiki/confluencepro/internal/ConfluenceObjectsOnlyInstanceOutputFilterStream\.java$"/>
+  <suppress checks="ClassFanOutComplexity|ExecutableStatementCount"
+            files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceFilteringListener\.java$"/>
   <suppress checks="NPathComplexity|CyclomaticComplexity|JavaNCSS|ExecutableStatementCount"
             files="application-confluence-migrator-pro-default/src/main/java/com/xwiki/confluencepro/internal/DefaultConfluenceMigrationManager\.java$"/>
 </suppressions>

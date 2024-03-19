@@ -51,6 +51,8 @@
     'prefixedMacros': 'attachments,gallery,chart,children'
   },
   'output': {
+    'useLinkMapping': 'true',
+    'saveLinkMapping': 'true',
     'versionPreserved': 'true',
     'stoppedWhenSaveFail': 'false'
   }
@@ -209,7 +211,7 @@
       &lt;input type="hidden" id="cfm-input-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_inputProperties" value="$escapetool.xml($jsontool.serialize($prefilledValues['input']))" /&gt;
       #set ($descriptor = $services.filter.getInputFilterStreamDescriptor('confluence+xml'))
       #foreach ($propertyDescriptor in $descriptor.properties)
-        #if ($propertyDescriptor.id != 'source')
+        #if ($propertyDescriptor.id != 'source' &amp;&amp; $propertyDescriptor.id != 'linkMapping')
           #displayFormField('input', $propertyDescriptor)
         #end
       #end
@@ -229,6 +231,30 @@
       &lt;/dt&gt;
       &lt;dd&gt;
         &lt;input id="rightOnly" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('rightOnly', 'false')" data-key="rightOnly"/&gt;
+      &lt;/dd&gt;
+    &lt;/dl&gt;
+    &lt;h3&gt;$escapetool.xml($services.localization.render('confluencepro.job.linkmapping.title'))&lt;/h3&gt;
+    &lt;dl&gt;
+      &lt;dt&gt;
+        &lt;label for="saveLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.savelinkmapping.question.title'))&lt;/label&gt;
+        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.savelinkmapping.question.hint'))&lt;/span&gt;
+      &lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;input id="saveLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('saveLinkMapping', 'false')" data-key="saveLinkMapping"/&gt;
+      &lt;/dd&gt;
+      &lt;dt&gt;
+        &lt;label for="useLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.uselinkmapping.question.title'))&lt;/label&gt;
+        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.uselinkmapping.question.hint'))&lt;/span&gt;
+      &lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;input id="useLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('useLinkMapping', 'false')" data-key="useLinkMapping"/&gt;
+      &lt;/dd&gt;
+      &lt;dt&gt;
+        &lt;label for="onlyLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlylinkmapping.question.title'))&lt;/label&gt;
+        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlylinkmapping.question.hint'))&lt;/span&gt;
+      &lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;input id="onlyLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('onlyLinkMapping', 'false')" data-key="onlyLinkMapping"/&gt;
       &lt;/dd&gt;
     &lt;/dl&gt;
     &lt;div style="display: none"&gt;

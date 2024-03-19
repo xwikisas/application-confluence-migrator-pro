@@ -44,10 +44,10 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.PageIdentifier;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
 import org.xwiki.logging.event.LogEvent;
+import org.xwiki.logging.tail.LogTail;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.LocalDocumentReference;
-import org.xwiki.query.QueryManager;
 import org.xwiki.refactoring.job.question.EntitySelection;
 
 import com.google.common.reflect.TypeToken;
@@ -87,9 +87,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     @Inject
     private EntityReferenceSerializer<String> serializer;
-
-    @Inject
-    private QueryManager queryManager;
 
     @Inject
     private ConfluenceMigrationPrerequisitesManager prerequisitesManager;
@@ -144,7 +141,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         Map<String, List<String>> brokenLinksPages = new TreeMap<>();
         // fullName or pageId: [log1, log2..]
 
-        List<Map<String, Object>> logList = new ArrayList<>();
 
         Set<List<String>> brokenLinks = new TreeSet<>((t1, t2) -> {
             int spaceCompare = t1.get(0).compareTo(t2.get(0));
@@ -161,7 +157,9 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         String currentDocument = null;
         String currentPageId = null;
         long docCount = 0;
-        for (LogEvent logEvent : jobStatus.getLogTail()) {
+        LogTail logTail = jobStatus.getLogTail();
+        List<Map<String, Object>> logList = new ArrayList<>(logTail.size());
+        for (LogEvent logEvent : logTail) {
             addToJsonList(logEvent, logList);
             Object[] args = logEvent.getArgumentArray();
             Marker marker = logEvent.getMarker();
@@ -207,9 +205,11 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                     } else if (msg.startsWith("Sending page [{}]")) {
                         docCount++;
                         currentDocument = null;
-                        currentPageId = toString((args.length > 0 && args[0] instanceof PageIdentifier)
-                            ? ((PageIdentifier) args[0]).getPageId()
-                            : null);
+                        currentPageId = toString((args.length > 1 && args[1] instanceof Long)
+                            ? (Long) args[1]
+                            : (args.length > 0 && args[0] instanceof PageIdentifier
+                                ? ((PageIdentifier) args[0]).getPageId()
+                                : null));
                     }
                     /* fall through */
                 default:
