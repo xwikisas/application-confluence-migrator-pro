@@ -472,6 +472,9 @@
       &lt;/ul&gt;
     #end
   #end
+  {{/html}}
+
+  {{html clean=false}}
   ## Logs section
   #set ($json = $obj.getProperty('logs').value)
   #set ($jsonObject = $jsontool.fromString($json))
