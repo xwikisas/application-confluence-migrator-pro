@@ -117,7 +117,7 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         boolean anySelected = !isPropertyEnabled(jobStatusToAsk, "onlyLinkMapping")
             && handleSpaceSelection((ConfluenceFilteringEvent) event, (ConfluenceXMLPackage) data, jobStatusToAsk);
 
-        if (isPropertyEnabled(jobStatusToAsk, "useLinkMapping")) {
+        if (isPropertyEnabled(jobStatusToAsk, "saveLinkMapping")) {
             updateLinkMapping(jobStatusToAsk);
         }
 
