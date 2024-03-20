@@ -47,7 +47,7 @@
     <listeneradmin.version>1.0.2</listeneradmin.version>
     <xwiki.extension.name>Confluence Migrator Application (Pro)</xwiki.extension.name>
     <xwiki.extension.category>application</xwiki.extension.category>
-    <confluence.xml.version>9.40.0</confluence.xml.version>
+    <confluence.xml.version>9.41.0</confluence.xml.version>
     <nestedpages.migrator.version>0.10.1</nestedpages.migrator.version>
     <xwiki.enforcer.enforce-javase-dependencies.skip>true</xwiki.enforcer.enforce-javase-dependencies.skip>
   </properties>
