@@ -177,7 +177,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             }
             switch (logEvent.getLevel()) {
                 case ERROR:
-                    cat = problematic;
+                    cat = skipped;
                     break;
                 case WARN:
                     if (msg.contains(LINKS_BROKEN)) {
