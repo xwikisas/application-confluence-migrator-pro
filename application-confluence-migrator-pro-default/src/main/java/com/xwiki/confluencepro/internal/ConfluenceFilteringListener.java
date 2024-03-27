@@ -107,10 +107,10 @@ public class ConfluenceFilteringListener extends AbstractEventListener
     public void onEvent(Event event, Object source, Object data)
     {
         Job job = this.jobContext.getCurrentJob();
-        ConfluenceMigrationJobStatus jobStatusToAsk = getRootJobStatus(job);
+        ConfluenceMigrationJobStatus jobStatusToAsk = getConfluenceMigrationJobStatus(job);
 
         if (jobStatusToAsk == null) {
-            logger.error("Could not get the job status, the migration cannot continue");
+            logger.debug("Could not get the job status. Maybe the migration was not run from Confluence Migrator Pro?");
             return;
         }
 
@@ -150,20 +150,16 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         return anySelected;
     }
 
-    private ConfluenceMigrationJobStatus getRootJobStatus(Job job)
+    private ConfluenceMigrationJobStatus getConfluenceMigrationJobStatus(Job job)
     {
         JobStatus jobStatus = job.getStatus();
-        if (jobStatus == null) {
-            return null;
-        }
-        JobStatus jobParentStatus = ((AbstractJobStatus<?>) jobStatus).getParentJobStatus();
-        while (true) {
-            if (jobParentStatus == null) {
+        while (jobStatus != null) {
+            if (jobStatus instanceof ConfluenceMigrationJobStatus) {
                 return (ConfluenceMigrationJobStatus) jobStatus;
             }
-            jobStatus = jobParentStatus;
-            jobParentStatus = ((AbstractJobStatus<?>) jobParentStatus).getParentJobStatus();
+            jobStatus = ((AbstractJobStatus<?>) jobStatus).getParentJobStatus();
         }
+        return null;
     }
 
     private void updateLinkMapping(ConfluenceMigrationJobStatus jobStatusToAsk)
