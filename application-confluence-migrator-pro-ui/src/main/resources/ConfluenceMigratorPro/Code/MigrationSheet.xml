@@ -322,7 +322,7 @@
     #if ("$!rootSpace" == "")
       #set ($spacePrefix = "")
     #else
-      #set ($spacePrefix = "${rootSpace}")
+      #set ($spacePrefix = "${rootSpace}.")
     #end
     #foreach ($space in $spaces)
       #set ($spaceDoc = "${xcontext.wiki}:${spacePrefix}${space}.WebHome")
