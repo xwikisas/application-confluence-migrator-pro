@@ -170,18 +170,20 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         XWiki wiki = context.getWiki();
         SpaceReference stateRef = new SpaceReference(wiki.getDatabase(), LINK_MAPPING_STATE_REF);
         for (Map.Entry<String, Map<String, EntityReference>> mappingEntry : linkMapping.entrySet()) {
-            String spaceKey = mappingEntry.getKey();
-            logger.info("Updating the link mapping for space [{}]", spaceKey);
+            String key = mappingEntry.getKey();
+            boolean pageIds = key.endsWith(":ids");
+            String spaceKey = pageIds ? key.substring(0, key.indexOf(":")) : key;
+            logger.info("Updating the link mapping for space [{}]" + (pageIds ? " (page IDs)" : ""), spaceKey);
             try {
                 XWikiDocument spaceStateDoc = wiki.getDocument(
-                    new DocumentReference(spaceKey, stateRef), context);
+                    new DocumentReference(key, stateRef), context);
                 Map<String, EntityReference> newSpaceMapping = mappingEntry.getValue();
                 BaseObject mappingObj = spaceStateDoc.isNew()
                     ? spaceStateDoc.newXObject(LINK_MAPPING_SPACE_STATE_CLASS_REF, context)
                     : spaceStateDoc.getXObject(LINK_MAPPING_SPACE_STATE_CLASS_REF, true, context);
                 String updatedSpaceMappingStr = mappingObj.getLargeStringValue(MAPPING_OBJECT_KEY);
                 Map<String, EntityReference> updatedSpaceMapping =
-                    linkMappingConverter.convertSpaceLinkMapping(updatedSpaceMappingStr, spaceKey);
+                    linkMappingConverter.convertSpaceLinkMapping(updatedSpaceMappingStr, key);
                 boolean updated = false;
 
                 if (updatedSpaceMapping == null) {
@@ -202,7 +204,7 @@ public class ConfluenceFilteringListener extends AbstractEventListener
                 if (updated) {
                     mappingObj.setLargeStringValue(MAPPING_OBJECT_KEY,
                         linkMappingConverter.convertSpaceLinkMapping(updatedSpaceMapping, context.getWikiReference()));
-                    mappingObj.setStringValue(MAPPING_SPACEKEY_KEY, spaceKey);
+                    mappingObj.setStringValue(MAPPING_SPACEKEY_KEY, key);
                     if (spaceStateDoc.isNew()) {
                         spaceStateDoc.setHidden(true);
                     }
@@ -210,7 +212,7 @@ public class ConfluenceFilteringListener extends AbstractEventListener
                     wiki.saveDocument(spaceStateDoc, "Updated from migration " + migrationName, context);
                 }
             } catch (XWikiException | JsonProcessingException e) {
-                logger.warn("Could not update link mapping for space [{}]", spaceKey, e);
+                logger.warn("Could not update link mapping for space [{}]", key, e);
             }
         }
         logger.info("Done computing the link mapping.");
