@@ -605,16 +605,19 @@
  * @param $confluenceJob the job that will be displayed.
  *#
 #macro(displayJob $confluenceJob)
-
   #set ($jobStatusURL = $doc.getURL('ConfluenceMigratorPro.Code.JobJSON', 'get', $escapetool.url({
     'outputSyntax': 'plain',
     'docRef': $services.model.serialize($doc.documentReference)
   })))
+
   {{html}}
   #template('job_macros.vm')
   #set ($jobStatus = $confluenceJob.status)
   #set ($jobState = $jobStatus.state)
   #set ($finished = $jobState == 'FINISHED')
+  #if (!$finished &amp;&amp; "$!request.interrupt" == "1")
+    $jobStatus.cancel()
+  #end
   #set ($jobRequest = $jobStatus.request)
   #if (!$jobStatusURL)
     #set ($jobStatusURL = $doc.getURL('get', $escapetool.url({
@@ -645,6 +648,11 @@
     #end
     #if ($showLogs || $isAdvancedUser || $isSuperAdmin)
       #displayJobStatusLog($jobStatus true)
+      #if (!$finished)
+        &lt;p style="text-align:right"&gt;
+          &lt;input type="button" class="btn btn-danger" value="$services.localization.render('confluencepro.job.interrupt.button')" name="interrupt" id="cfmInterrupt"/&gt;
+        &lt;/p&gt;
+      #end
     #end
   &lt;/div&gt;
   {{/html}}
@@ -925,6 +933,22 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
   $(".job-status").on("xwiki:job:done", function () {
     window.location.reload();
   });
+  document
+    .getElementById("cfmInterrupt")
+    ?.addEventListener("click", function (e) {
+      if (confirm("Are you sure you want to interrupt this migration?")) {
+        const cancelButton = document.querySelector("button.btAnswerCancel");
+        if (cancelButton) {
+          cancelButton.click();
+        } else {
+          $.ajax("?interrupt=1", {
+            method: 'POST',
+            contentType: 'text/plain',
+            data: '0'
+          });
+        }
+      }
+    });
 });</code>
     </property>
     <property>

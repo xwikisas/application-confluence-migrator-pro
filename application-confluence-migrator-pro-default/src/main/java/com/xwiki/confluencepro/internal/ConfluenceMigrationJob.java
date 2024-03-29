@@ -46,7 +46,9 @@ import org.xwiki.filter.job.FilterStreamConverterJobRequest;
 import org.xwiki.filter.output.OutputFilterStreamFactory;
 import org.xwiki.filter.type.FilterStreamType;
 import org.xwiki.job.AbstractJob;
+import org.xwiki.job.AbstractJobStatus;
 import org.xwiki.job.Job;
+import org.xwiki.job.event.status.CancelableJobStatus;
 import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
@@ -125,6 +127,8 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
     @Inject
     private LinkMappingConverter linkMappingConverter;
 
+    private ConfluenceMigrationJobStatus jobStatus;
+
     /**
      * @return the job type.
      */
@@ -139,7 +143,8 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
     {
         Job currentJob = this.jobContext.getCurrentJob();
         JobStatus currentJobStatus = currentJob != null ? currentJob.getStatus() : null;
-        return new ConfluenceMigrationJobStatus(request, currentJobStatus, observationManager, loggerManager);
+        jobStatus = new ConfluenceMigrationJobStatus(request, currentJobStatus, observationManager, loggerManager);
+        return jobStatus;
     }
 
     /**
@@ -177,6 +182,7 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
         progressManager.startStep(this);
         Job filterJob = this.filterJobProvider.get();
         filterJob.initialize(filterJobRequest);
+        setCancelable(filterJob);
         filterJob.run();
 
         if (shouldRunNestedPagesMigrator) {
@@ -197,6 +203,15 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
 
         migrationManager.updateAndSaveMigration(getStatus());
         migrationManager.enablePrerequisites();
+    }
+
+    private void setCancelable(Job filterJob)
+    {
+        JobStatus filterJobStatus = filterJob.getStatus();
+        if (filterJobStatus instanceof AbstractJobStatus) {
+            ((AbstractJobStatus<?>) filterJobStatus).setCancelable(true);
+            this.jobStatus.setFilterJobStatus((CancelableJobStatus) filterJobStatus);
+        }
     }
 
     private void maybeReducePageCount(ConfluenceMigrationJobRequest request)

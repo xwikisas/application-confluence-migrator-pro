@@ -78,19 +78,32 @@
  * Display a livedata of the profile pages.
  *#
 #macro (displayMigrationsLiveData)
-#set ($liveDataConfig = {
-  'meta': {
-    'propertyDescriptors': [
-      { 'id': 'job_status', 'displayer': 'html', 'filterable': 'false'}
-    ]
-  }
-})
 {{liveData 
   id='confluenceMigrations'
   source='liveTable'
   sourceParameters="resultPage=ConfluenceMigratorPro.Code.LivedataJSON&amp;className=ConfluenceMigratorPro.Code.MigrationClass&amp;translationPrefix=confluencepro.migration.livetable."
-  properties="doc.title,job_status,executed,doc.date,doc.author,_actions"
-  sort='doc.date:desc'}}$jsontool.serialize($liveDataConfig){{/liveData}}
+  properties="doc.title,job_status,executed,doc.date,doc.author,actions"
+  sort='doc.date:desc'}}{
+  "meta": {
+    "propertyDescriptors": [
+      { "id": "job_status", "displayer": "html", "filterable": "false"},
+      { "id": "actions", "displayer": "actions", "sortable": false, "filterable": false }
+    ],
+    "actions": [
+      {
+        "id": "interrupt",
+        "name": "$services.localization.render('confluencepro.job.interrupt.button')",
+        "urlProperty": "doc.url",
+        "icon": "stop"
+      },
+      {"id": "rights", "allowProperty": false},
+      {"id": "rename", "allowProperty": false},
+      {"id": "copy", "allowProperty": false},
+      {"id": "delete", "allowProperty": false},
+      {"id": "edit", "allowProperty": false}
+    ]
+  }
+}{{/liveData}}
 #end
 {{/velocity}}</content>
   <object>
@@ -209,6 +222,19 @@
     if ($(e.target).prop('id') == 'confluenceUploadFile') {
       $('#confluencePackages').data('liveData').updateEntries();
     }
+  });
+
+  document.addEventListener("click", function (e) {
+    const a = e.target.closest(".action_interrupt");
+    if (!a) {
+      return;
+    }
+    if (confirm("Are you sure you want to interrupt this migration?")) {
+      location.href = a.href + "?interrupt=1";
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
   });
 });</code>
     </property>

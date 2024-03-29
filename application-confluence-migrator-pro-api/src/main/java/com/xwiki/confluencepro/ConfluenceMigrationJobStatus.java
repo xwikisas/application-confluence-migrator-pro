@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.xwiki.job.DefaultJobStatus;
+import org.xwiki.job.event.status.CancelableJobStatus;
 import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.logging.LoggerManager;
 import org.xwiki.observation.ObservationManager;
@@ -37,6 +38,8 @@ import org.xwiki.observation.ObservationManager;
 public class ConfluenceMigrationJobStatus extends DefaultJobStatus<ConfluenceMigrationJobRequest>
 {
     private final Map<List<String>, Object> askedQuestions = new HashMap<>();
+
+    private CancelableJobStatus filterJobStatus;
 
     /**
      * @param request the request provided when started the job
@@ -67,5 +70,23 @@ public class ConfluenceMigrationJobStatus extends DefaultJobStatus<ConfluenceMig
     public Map<List<String>, Object> getAskedQuestions()
     {
         return this.askedQuestions;
+    }
+
+    /**
+     * @param filterJobStatus set the filter job status so it can be canceled.
+     * @since 1.14.0
+     */
+    public void setFilterJobStatus(CancelableJobStatus filterJobStatus)
+    {
+        this.filterJobStatus = filterJobStatus;
+    }
+
+    @Override
+    public void cancel()
+    {
+        super.cancel();
+        if (this.filterJobStatus != null) {
+            this.filterJobStatus.cancel();
+        }
     }
 }
