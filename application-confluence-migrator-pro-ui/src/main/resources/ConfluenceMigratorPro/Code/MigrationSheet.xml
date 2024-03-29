@@ -289,7 +289,9 @@
   ## End of upload handling.
   #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
   #if ("$!obj.getValue('executed')" == "" || "$obj.getValue('executed')" == "0")
-    #runAndDisplayJob($obj)
+    #runAndDisplayJob($obj, true)
+  #elseif ("$obj.getValue('executed')" == "2")
+    #runAndDisplayJob($obj, false)
   #else
     #displayRaport($obj)
   #end
@@ -561,7 +563,7 @@
  *
  * @param $obj the migration object of this page.
  *#
-#macro(runAndDisplayJob $obj)
+#macro(runAndDisplayJob $obj $startMigration)
   #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
   #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
   #if (!$services.licensing.licensor.hasLicensureForEntity($mainReference) || $license.type == 'TRIAL')
@@ -572,7 +574,7 @@
   #set ($package = $obj.getProperty('package').value)
   #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
   #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
-  #if ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED')
+  #if ($startMigration &amp;&amp; ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED'))
     #if ("$!package" != '' || "$!inputProperties.source" != '')
       ## If the package is missing, then the migration will use the 'source' parameter of the input properties.
       #set ($attachmentInputStream = $NULL)
