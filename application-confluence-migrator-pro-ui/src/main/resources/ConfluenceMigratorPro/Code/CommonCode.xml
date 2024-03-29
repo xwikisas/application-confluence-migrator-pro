@@ -90,7 +90,7 @@
   source='liveTable'
   sourceParameters="resultPage=ConfluenceMigratorPro.Code.LivedataJSON&amp;className=ConfluenceMigratorPro.Code.MigrationClass&amp;translationPrefix=confluencepro.migration.livetable."
   properties="doc.title,job_status,executed,doc.date,doc.author,_actions"
-  sort='doc.name:asc'}}$jsontool.serialize($liveDataConfig){{/liveData}}
+  sort='doc.date:desc'}}$jsontool.serialize($liveDataConfig){{/liveData}}
 #end
 {{/velocity}}</content>
   <object>
