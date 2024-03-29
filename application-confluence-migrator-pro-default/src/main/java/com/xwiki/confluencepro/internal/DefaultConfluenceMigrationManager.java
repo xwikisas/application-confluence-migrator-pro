@@ -20,6 +20,7 @@
 package com.xwiki.confluencepro.internal;
 
 import java.lang.reflect.Type;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,11 +39,14 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import com.xpn.xwiki.XWiki;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
 import org.slf4j.Marker;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.PageIdentifier;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
+import org.xwiki.logging.LogLevel;
 import org.xwiki.logging.event.LogEvent;
 import org.xwiki.logging.tail.LogTail;
 import org.xwiki.model.reference.DocumentReference;
@@ -82,6 +86,12 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final String LINKS_BROKEN = "Links to this page may be broken";
 
+    private static final String LOGS = "logs";
+
+    private static final String EXECUTED = "executed";
+
+    private static final String AN_EXCEPTION_OCCURRED = "An exception occurred";
+
     @Inject
     private Provider<XWikiContext> contextProvider;
 
@@ -91,17 +101,23 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     @Inject
     private ConfluenceMigrationPrerequisitesManager prerequisitesManager;
 
+    @Inject
+    private Logger logger;
+
     @Override
     public void updateAndSaveMigration(ConfluenceMigrationJobStatus jobStatus)
     {
         XWikiContext context = contextProvider.get();
+        XWikiDocument document = null;
+        BaseObject object = null;
+        XWiki wiki = context.getWiki();
+        DocumentReference statusDocumentReference = jobStatus.getRequest().getStatusDocumentReference();
         try {
 
-            XWikiDocument document =
-                context.getWiki().getDocument(jobStatus.getRequest().getStatusDocumentReference(), context).clone();
+            document = wiki.getDocument(statusDocumentReference, context).clone();
             // Set executed to true.
-            BaseObject object = document.getXObject(MIGRATION_OBJECT);
-            object.set("executed", 1, context);
+            object = document.getXObject(MIGRATION_OBJECT);
+            object.set(EXECUTED, jobStatus.isCanceled() ? 3 : 1, context);
             SpaceQuestion spaceQuestion = (SpaceQuestion) jobStatus.getQuestion();
             // Set imported spaces.
             Set<String> spaces = new HashSet<>();
@@ -117,8 +133,21 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
             setLogRelatedFields(jobStatus, object, context);
 
-            context.getWiki().saveDocument(document, "Migration executed!", context);
-        } catch (XWikiException e) {
+            wiki.saveDocument(document, "Migration executed!", context);
+        } catch (Exception e) {
+            if (object != null) {
+                List<Map<String, Object>> logList = new ArrayList<>(1);
+                addToJsonList(LogLevel.ERROR, Instant.now().toEpochMilli(), AN_EXCEPTION_OCCURRED, e, logList);
+                object.set(LOGS, new Gson().toJson(logList), context);
+                object.set(EXECUTED, 4, context);
+                logger.error(AN_EXCEPTION_OCCURRED, e);
+                try {
+                    wiki.saveDocument(document, "Migration failed", context);
+                } catch (XWikiException err) {
+                    logger.error("Could not update the migration document [{}] with an error status",
+                        statusDocumentReference, err);
+                }
+            }
         }
     }
 
@@ -232,7 +261,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         object.setLargeStringValue("otherIssues", gson.toJson(otherIssues));
         object.setLargeStringValue("brokenLinksPages", gson.toJson(brokenLinksPages));
         object.setLargeStringValue("brokenLinks", gson.toJson(brokenLinks));
-        object.set("logs", gson.toJson(logList), context);
+        object.set(LOGS, gson.toJson(logList), context);
         object.setLongValue("imported", docCount);
     }
 
@@ -371,14 +400,19 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         prerequisitesManager.enablePrerequisites();
     }
 
-    private void addToJsonList(LogEvent logEvent, List<Map<String, Object>> logList)
+    private void addToJsonList(LogEvent e, List<Map<String, Object>> logList)
+    {
+        addToJsonList(e.getLevel(), e.getTimeStamp(), e.getFormattedMessage(), e.getThrowable(), logList);
+    }
+
+    private void addToJsonList(LogLevel l, long timeStamp, String msg, Throwable t, List<Map<String, Object>> logList)
     {
         Map<String, Object> logMap = new HashMap<>();
-        logMap.put("level", logEvent.getLevel().toString());
-        logMap.put("timeStamp", logEvent.getTimeStamp());
-        logMap.put("message", logEvent.getFormattedMessage());
-        if (logEvent.getThrowable() != null) {
-            logMap.put("throwable", ExceptionUtils.getStackFrames(logEvent.getThrowable()));
+        logMap.put("level", l.toString());
+        logMap.put("timeStamp", timeStamp);
+        logMap.put("message", msg);
+        if (t != null) {
+            logMap.put("throwable", ExceptionUtils.getStackFrames(t));
         }
         logList.add(logMap);
     }

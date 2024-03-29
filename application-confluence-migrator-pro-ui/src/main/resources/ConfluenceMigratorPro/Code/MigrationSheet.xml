@@ -284,14 +284,14 @@
   ## Handle the upload and selection of a package using the attachment picker.
   #if ("$!request.package" != '' &amp;&amp; $services.csrf.isTokenValid($request.form_token))
     #set ($discard = $doc.set('package', $request.package))
-    #set ($discard = $doc.save())
+    #set ($discard = $doc.save("Set the package field"))
   #end
   ## End of upload handling.
   #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
-  #if ($obj.getProperty('executed').value == 1)
-    #displayRaport($obj)
-  #else
+  #if ("$!obj.getValue('executed')" == "" || "$obj.getValue('executed')" == "0")
     #runAndDisplayJob($obj)
+  #else
+    #displayRaport($obj)
   #end
 #end
 #**
@@ -299,12 +299,35 @@
  *#
 #macro(displayRaport $obj)
 
-  #if ("$request.displaySuccess" == '1')
+  #if ("$obj.getValue('executed')" == '1')
+
     {{success}}
       $services.rendering.escape($services.localization.render('confluencepro.migration.raport.imported.success'), $xwiki.currentContentSyntaxId)
     {{/success}}
 
+  #elseif ("$obj.getValue('executed')" == '2')
+    #set ($confluenceJob = $services.confluenceMigration.getLastJob($doc.documentReference))
+    #if ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED')
+
+      {{error}}
+        $services.rendering.escape($services.localization.render('confluencepro.migration.raport.imported.died'), $xwiki.currentContentSyntaxId)
+      {{/error}}
+
+    #end
+  #elseif ("$obj.getValue('executed')" == '3')
+
+    {{warning}}
+      $services.rendering.escape($services.localization.render('confluencepro.migration.raport.imported.canceled'), $xwiki.currentContentSyntaxId)
+    {{/warning}}
+
+  #elseif ("$obj.getValue('executed')" == '4')
+
+    {{error}}
+      $services.rendering.escape($services.localization.render('confluencepro.migration.raport.imported.errored'), $xwiki.currentContentSyntaxId)
+    {{/error}}
+
   #end
+
   {{html wiki=true clean=false}}
   #set ($discard = $xwiki.ssfx.use('uicomponents/logging/logging.css', true))
   #set ($discard = $xwiki.jsfx.use('uicomponents/logging/logging.js', true))
@@ -563,9 +586,11 @@
         #set ($discard = $outputProperties.putIfAbsent('author', $xcontext.userReference))
       #end
       #set ($confluenceJob = $services.confluenceMigration.migrate($doc.documentReference, $attachmentInputStream, $inputProperties, $outputProperties))
+      #set ($discard = $obj.set("executed", 2))
+      #set ($discard = $doc.save("Executing the migration"))
       #displayJob($confluenceJob)
     #else
-      No package to start the migration
+      ## No package to start the migration
       #displayZipPickerForm
     #end
   #else
@@ -759,112 +784,144 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>define('confluence-job', {
-  prefix: 'confluencepro.job.',
+      <code>define("confluence-job", {
+  prefix: "confluencepro.job.",
   keys: [
-    'question.additionalInfo.documentsCount',
-    'question.additionalInfo.attachmentsCount',
-    'question.showMore.message',
-    'question.showMore.link',
-    'status.runningJob'
-  ]
+    "question.additionalInfo.documentsCount",
+    "question.additionalInfo.attachmentsCount",
+    "question.showMore.message",
+    "question.showMore.link",
+    "status.runningJob",
+  ],
 });
-require(['jquery', 'xwiki-l10n!confluence-job', 'xwiki-job-runner'], function ($, l10n, JobRunner) {
+require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
+  $,
+  l10n,
+  JobRunner,
+) {
   let checkedValues = new Set();
   // Send search request to server and update the displayed questions.
   let searchAndDisplay = function (url, qSearch, offset) {
     if (!url) {
       return;
     }
-    let template = $('.available-space.hidden');
-    $.getJSON(url + '&amp;qSearch=' + qSearch + '&amp;offset=' + offset)
-      .done(function (data) {
+    let template = $(".available-space.hidden");
+    $.getJSON(url + "&amp;qSearch=" + qSearch + "&amp;offset=" + offset).done(
+      function (data) {
         if (offset == 0) {
-          $('.available-space').each(function() {
-            if (this.className === 'available-space' &amp;&amp; !$(this).find('input').prop('checked')) {
+          $(".available-space").each(function () {
+            if (
+              this.className === "available-space" &amp;&amp;
+              !$(this).find("input").prop("checked")
+            ) {
               this.remove();
             }
           });
         }
         let createdElements = [];
-        data.results.forEach(function(space, index) {
+        data.results.forEach(function (space, index) {
           if (checkedValues.has(space.reference)) {
             return;
           }
           let element = template.clone();
-          element.toggleClass('hidden');
-          element.find('label')
-            .attr('for', 'confluence_space_' + index)
+          element.toggleClass("hidden");
+          element
+            .find("label")
+            .attr("for", "confluence_space_" + index)
             .append(document.createTextNode(space.reference));
-          element.find('input')
-              .attr('id', 'confluence_space_' + index)
-              .prop('disabled', false)
-              .val(space.reference);
+          element
+            .find("input")
+            .attr("id", "confluence_space_" + index)
+            .prop("disabled", false)
+            .val(space.reference);
           createdElements.push(element);
           for (const [key, value] of Object.entries(space.properties)) {
-            element.find('.cfmProperties').append('&lt;span&gt;' + l10n['question.additionalInfo.' + key] + ' ' + value + '&lt;/span&gt;');
+            element
+              .find(".cfmProperties")
+              .append(
+                "&lt;span&gt;" +
+                  l10n["question.additionalInfo." + key] +
+                  " " +
+                  value +
+                  "&lt;/span&gt;",
+              );
           }
         });
-        $('.ui-question').trigger("confluence:job:spaces:loaded", [createdElements]);
+        $(".ui-question").trigger("confluence:job:spaces:loaded", [
+          createdElements,
+        ]);
         createdElements.each(function (elem) {
-          $('.available-spaces').append(elem);
+          $(".available-spaces").append(elem);
         });
         let remaining = data.total - (offset + data.results.length);
         if (remaining &gt; 0) {
-          $('.cfmShowMoreGroup').removeClass('hidden');
-          $('.cfmShowMoreMessage').text(l10n.get('question.showMore.message', remaining));
-          $('.cfmShowMoreLink').text(l10n.get('question.showMore.link')).data('offset', data.total - remaining);
+          $(".cfmShowMoreGroup").removeClass("hidden");
+          $(".cfmShowMoreMessage").text(
+            l10n.get("question.showMore.message", remaining),
+          );
+          $(".cfmShowMoreLink")
+            .text(l10n.get("question.showMore.link"))
+            .data("offset", data.total - remaining);
         } else {
-          $('.cfmShowMoreGroup').addClass('hidden');
+          $(".cfmShowMoreGroup").addClass("hidden");
         }
-      });
+      },
+    );
   };
   let initQuestion = function () {
-    $('.job-loading-status').hide();
-    $(this).find('.btn-primary').on('click', function () {
-      $('.job-loading-status').show();
-      $('.job-loading-status .loading-text').text(l10n.get('status.runningJob'));
-    });
-    searchAndDisplay($('.cfmSearch input').data('url'), '', 0);
+    $(".job-loading-status").hide();
+    $(this)
+      .find(".btn-primary")
+      .on("click", function () {
+        $(".job-loading-status").show();
+        $(".job-loading-status .loading-text").text(
+          l10n.get("status.runningJob"),
+        );
+      });
+    searchAndDisplay($(".cfmSearch input").data("url"), "", 0);
   };
   // Add listener to the show more link.
-  $(document).on('click', '.cfmShowMoreLink', function (event) {
+  $(document).on("click", ".cfmShowMoreLink", function (event) {
     event.preventDefault();
-    let offset = $(this).data('offset');
+    let offset = $(this).data("offset");
     if (offset) {
-      searchAndDisplay($('.cfmSearch input').data('url'), $('.cfmSearch input').val(), offset);
+      searchAndDisplay(
+        $(".cfmSearch input").data("url"),
+        $(".cfmSearch input").val(),
+        offset,
+      );
     }
   });
   // Add listener to job question search input.
   let timeout;
-  $(document).on('input', '.cfmSearch input', function() {
+  $(document).on("input", ".cfmSearch input", function () {
     if (timeout) {
       clearTimeout(timeout);
     }
     let input = $(this);
-    timeout = setTimeout(function () { searchAndDisplay(input.data('url'), input.val(), 0); }, 1000);
+    timeout = setTimeout(function () {
+      searchAndDisplay(input.data("url"), input.val(), 0);
+    }, 1000);
   });
   // Add listener to selectall checkbox.
-  $(document).on('change', '#cfmSelectAllInput', function () {
-    $('.available-space input').prop('checked', $(this).prop('checked'))
+  $(document).on("change", "#cfmSelectAllInput", function () {
+    $(".available-space input").prop("checked", $(this).prop("checked"));
   });
-  $(document).on('change', '.available-space input', function () {
-    if (!$(this).prop('checked')) {
+  $(document).on("change", ".available-space input", function () {
+    if (!$(this).prop("checked")) {
       checkedValues.delete($(this).val());
-      $('#cfmSelectAllInput').prop('checked', false);
+      $("#cfmSelectAllInput").prop("checked", false);
     } else {
       checkedValues.add($(this).val());
     }
   });
-  $('.ui-question').each(function() {
+  $(".ui-question").each(function () {
     let uiQuestion = $(this);
     // Register for any event in the future
-    uiQuestion.on('job:question:loaded', initQuestion);
+    uiQuestion.on("job:question:loaded", initQuestion);
   });
-  $('.job-status').on('xwiki:job:done', function() {
-    const parser = new URL(window.location);
-    parser.searchParams.set('displaySuccess', 1);
-    window.location = parser.href;
+  $(".job-status").on("xwiki:job:done", function () {
+    window.location.reload();
   });
 });</code>
     </property>

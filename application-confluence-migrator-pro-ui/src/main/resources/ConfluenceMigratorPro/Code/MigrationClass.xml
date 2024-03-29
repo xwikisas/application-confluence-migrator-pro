@@ -50,16 +50,16 @@
       <customDisplay/>
       <defaultValue/>
       <disabled>0</disabled>
-      <displayFormType/>
-      <displayType/>
       <hint/>
       <name>executed</name>
       <number>6</number>
+      <numberType>integer</numberType>
       <prettyName>executed</prettyName>
+      <size>30</size>
       <unmodifiable>0</unmodifiable>
       <validationMessage/>
       <validationRegExp/>
-      <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
     </executed>
     <imported>
       <customDisplay/>
