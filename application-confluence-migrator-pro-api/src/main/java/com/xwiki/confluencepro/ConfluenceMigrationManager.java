@@ -31,7 +31,7 @@ import org.xwiki.component.annotation.Role;
 public interface ConfluenceMigrationManager
 {
     /**
-     * Update the migration identified by the request of the job. The informations will be extracted from the execution
+     * Update the migration identified by the request of the job. The information will be extracted from the execution
      * of the job.
      *
      * @param jobStatus the status of the executed job.
