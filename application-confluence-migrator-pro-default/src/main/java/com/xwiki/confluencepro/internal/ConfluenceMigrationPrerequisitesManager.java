@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.ObservationManager;
-import org.xwiki.search.solr.internal.api.SolrIndexer;
 
 import com.xwiki.confluencepro.ConfluenceMigrationPrerequisites;
 
@@ -52,9 +51,6 @@ public class ConfluenceMigrationPrerequisitesManager
     private static final String LISTENER_NOTIFICATION_PREFILTERING = "Prefiltering Live Notification Email Listener";
 
     private static final long EMPTY_SOLR_QUEUE_TIMEOUT = 5L * 60 * 1000000000;
-
-    @Inject
-    private SolrIndexer solrIndexer;
 
     @Inject
     private ConfluenceMigrationPrerequisites prerequisites;
@@ -89,22 +85,9 @@ public class ConfluenceMigrationPrerequisitesManager
      *      - AutomaticNotificationsWatchMode,
      *      - Prefiltering Live Notification listeners.
      *
-     * @param ensureEmptySolrQueue whether we should wait for the Solr queue to be empty
      */
-    public void disablePrerequisites(boolean ensureEmptySolrQueue)
+    public void disablePrerequisites()
     {
-        if (ensureEmptySolrQueue) {
-            long startTime = System.nanoTime();
-            logger.info("Waiting for the solr queue to be empty..");
-            while (solrIndexer.getQueueSize() > 0 || System.nanoTime() - startTime >= EMPTY_SOLR_QUEUE_TIMEOUT) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
         logger.info("Clearing user notifications preferences..");
         prerequisites.checkCurrentUserNotificationCleanup();
 

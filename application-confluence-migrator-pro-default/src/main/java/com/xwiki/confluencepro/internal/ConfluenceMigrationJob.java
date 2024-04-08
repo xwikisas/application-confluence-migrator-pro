@@ -34,12 +34,6 @@ import com.xwiki.licensing.Licensor;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
-import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
-import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
-import org.xwiki.contrib.nestedpagesmigrator.internal.DefaultNestedPagesMigrator;
-import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanCreatorJobStatus;
-import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanExecutorRequest;
-import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanRequest;
 import org.xwiki.filter.descriptor.FilterStreamDescriptor;
 import org.xwiki.filter.input.InputFilterStreamFactory;
 import org.xwiki.filter.job.FilterStreamConverterJobRequest;
@@ -52,19 +46,16 @@ import org.xwiki.job.event.status.CancelableJobStatus;
 import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
-import org.xwiki.model.reference.SpaceReference;
-import org.xwiki.model.reference.WikiReference;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
-import org.xwiki.refactoring.job.question.EntitySelection;
 
 import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
 import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
 import com.xwiki.confluencepro.ConfluenceMigrationManager;
 
 /**
- * The job that will migrate the confluence package into XWiki and also run the nested pages migration.
+ * The job that will migrate the confluence package into XWiki.
  *
  * @version $Id$
  * @since 1.0
@@ -79,15 +70,11 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
      */
     public static final String JOBTYPE = "confluence.migration";
 
-    private static final String NPMIG_ROLEHINT = "npmig";
-
     private static final String CONFLUENCE_XML_ROLEHINT = "confluence+xml";
 
     private static final String XWIKI_INSTANCE_ROLEHINT = "xwiki+instance";
 
     private static final String FILTER_CONVERTER_ROLEHINT = "filter.converter";
-
-    private static final String NPMIG_EXECUTOR_ROLEHINT = "npmig.executor";
 
     private static final String FALSE = "false";
 
@@ -106,14 +93,6 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
     @Inject
     @Named(FILTER_CONVERTER_ROLEHINT)
     private Provider<Job> filterJobProvider;
-
-    @Inject
-    @Named(NPMIG_ROLEHINT)
-    private Provider<Job> migrationPlanCreatorProvider;
-
-    @Inject
-    @Named(NPMIG_EXECUTOR_ROLEHINT)
-    private Provider<Job> migrationPlanExecutorProvider;
 
     @Inject
     private ConfluenceMigrationManager migrationManager;
@@ -154,9 +133,7 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
     protected void runInternal()
     {
         boolean rightOnly = isGeneralParameterEnabled("rightOnly");
-        boolean shouldRunNestedPagesMigrator = !rightOnly
-            && FALSE.equals(request.getInputProperties().getOrDefault("nestedSpacesEnabled", FALSE));
-        migrationManager.disablePrerequisites(shouldRunNestedPagesMigrator);
+        migrationManager.disablePrerequisites();
         Map<String, Object> inputProperties = getFilterInputProperties();
 
         Map<String, Object> outputProperties = getFilterOutputProperties();
@@ -177,27 +154,13 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
             && !isGeneralParameterEnabled("onlyLinkMapping");
         filterJobRequest.setInteractive(interactive);
         request.setInteractive(interactive);
-        progressManager.pushLevelProgress(shouldRunNestedPagesMigrator ? 3 : 1, this);
+        progressManager.pushLevelProgress(1, this);
         logger.info("Starting Filter Job");
         progressManager.startStep(this);
         Job filterJob = this.filterJobProvider.get();
         filterJob.initialize(filterJobRequest);
         setCancelable(filterJob);
         filterJob.run();
-
-        if (shouldRunNestedPagesMigrator) {
-            SpaceQuestion spaceQuestion =
-                (SpaceQuestion) getStatus().getAskedQuestions().values()
-                    .stream()
-                    .filter(SpaceQuestion.class::isInstance).findFirst()
-                    .orElse(null);
-            WikiReference wikiReference = this.request.getStatusDocumentReference().getWikiReference();
-            if (wikiReference != null) {
-                runNestedPagesMigrator(spaceQuestion, wikiReference);
-            } else {
-                logger.error("Could not start the nested migration job because the wiki couldn't be determined.");
-            }
-        }
 
         progressManager.popLevelProgress(this);
 
@@ -287,29 +250,6 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
         return inputProperties;
     }
 
-    private void runNestedPagesMigrator(SpaceQuestion spaceQuestion, WikiReference wikiReference)
-    {
-        MigrationConfiguration configuration = new MigrationConfiguration(wikiReference);
-        configuration.setAddAutoRedirect(false);
-
-        if (spaceQuestion != null) {
-            for (EntitySelection entitySelection : spaceQuestion.getConfluenceSpaces().keySet()) {
-                configuration.addIncludedSpace(
-                    new SpaceReference(entitySelection.getEntityReference().getName(), wikiReference));
-            }
-            if (configuration.hasIncludedSpaces()) {
-                progressManager.startStep(this);
-                // Execute plan creation job.
-                Job planCreationJob = executePlanCreationJob(configuration);
-                progressManager.startStep(this);
-                // Execute migration migration job.
-                executePlanExecutionJob(configuration, planCreationJob);
-            } else {
-                logger.info("No spaces migrated. Skipping Nested Paged Migration.");
-            }
-        }
-    }
-
     private Map<String, Map<String, EntityReference>> getLinkMapping()
     {
         Map<String, Map<String, EntityReference>> linkMapping = new HashMap<>();
@@ -341,34 +281,5 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
         }
 
         return linkMapping;
-    }
-
-    private void executePlanExecutionJob(MigrationConfiguration configuration, Job planCreationJob)
-    {
-        MigrationPlanTree planTree = ((MigrationPlanCreatorJobStatus) planCreationJob.getStatus()).getPlan();
-        MigrationPlanExecutorRequest migrationRequest = new MigrationPlanExecutorRequest();
-        migrationRequest.setId(
-            Arrays.asList(NPMIG_ROLEHINT, DefaultNestedPagesMigrator.EXECUTE_PLAN,
-                configuration.getWikiReference().getName()));
-        migrationRequest.setConfiguration(configuration);
-        migrationRequest.setPlan(planTree);
-
-        Job migrationJob = migrationPlanExecutorProvider.get();
-        migrationJob.initialize(migrationRequest);
-        migrationJob.run();
-    }
-
-    private Job executePlanCreationJob(MigrationConfiguration configuration)
-    {
-        MigrationPlanRequest migrationPlanRequest = new MigrationPlanRequest();
-        migrationPlanRequest.setId(
-            Arrays.asList(NPMIG_ROLEHINT, DefaultNestedPagesMigrator.CREATE_PLAN,
-                configuration.getWikiReference().getName()));
-        migrationPlanRequest.setConfiguration(configuration);
-
-        Job planCreationJob = migrationPlanCreatorProvider.get();
-        planCreationJob.initialize(migrationPlanRequest);
-        planCreationJob.run();
-        return planCreationJob;
     }
 }

@@ -54,11 +54,6 @@
       <version>${platform.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.xwiki.contrib</groupId>
-      <artifactId>application-nestedpagesmigrator-api</artifactId>
-      <version>${nestedpages.migrator.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-platform-notifications-filters-api</artifactId>
       <version>${platform.version}</version>
@@ -68,6 +63,11 @@
       <groupId>com.xwiki.licensing</groupId>
       <artifactId>application-licensing-licensor-api</artifactId>
       <version>${licensing.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.9.1</version>
     </dependency>
   </dependencies>
   <build>
