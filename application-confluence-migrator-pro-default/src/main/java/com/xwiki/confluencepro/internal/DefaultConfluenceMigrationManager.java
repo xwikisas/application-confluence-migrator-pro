@@ -229,6 +229,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                                 replaceKey(otherIssues, currentPageId, currentDocument);
                                 replaceKey(skipped, currentPageId, currentDocument);
                                 replaceKey(problematic, currentPageId, currentDocument);
+                                replaceKey(brokenLinksPages, currentPageId, currentDocument);
                             }
                         }
                     } else if (msg.startsWith("Sending page [{}]")) {

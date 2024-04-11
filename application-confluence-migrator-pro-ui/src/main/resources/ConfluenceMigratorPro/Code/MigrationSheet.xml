@@ -563,7 +563,9 @@
 #macro(displayJson $jsonObject)
   &lt;ul class="cfm-problem-pages"&gt;
   #foreach ($entry in $jsonObject.entrySet())
-    #set ($docRef = $services.model.resolveDocument($entry.key))
+    #if ($entry.key.contains("."))
+      #set ($docRef = $services.model.resolveDocument($entry.key))
+    #end
     &lt;li class="cfm-problem-page"&gt;
       &lt;div class="cfm-page"&gt;
         &lt;a role="button" data-toggle="collapse" href="#cfmPage${foreach.count}Issues" aria-expanded="false" aria-controls="cfmPage${foreach.count}Issues"&gt;
@@ -571,7 +573,11 @@
             $services.icon.renderHTML('caret-down')
           &lt;/div&gt;
         &lt;/a&gt;
-        #renderReferenceNicely($docRef)
+        #if ($entry.key.contains("."))
+          #renderReferenceNicely($docRef)
+        #else
+          $escapetool.xml($entry.key)
+        #end
       &lt;/div&gt;
       &lt;div id="cfmPage${foreach.count}Issues" class="cfm-problems collapse"&gt;
         &lt;ul&gt;
