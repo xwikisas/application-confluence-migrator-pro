@@ -450,10 +450,12 @@
 
           &lt;details class="cfm-details"&gt;
             &lt;summary&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.list')&lt;/summary&gt;
+
             |=$services.localization.render('confluencepro.migration.raport.confluencespace')|=$services.localization.render('confluencepro.migration.raport.pageTitle')
             #foreach($link in $jsonObject)
               |$services.rendering.escape($link[0], $xwiki.currentContentSyntaxId)|$services.rendering.escape($link[1], $xwiki.currentContentSyntaxId)|
             #end
+
           &lt;/details&gt;
 
         #end
