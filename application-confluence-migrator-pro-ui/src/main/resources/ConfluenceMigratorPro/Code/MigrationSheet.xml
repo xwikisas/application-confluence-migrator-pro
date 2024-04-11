@@ -329,7 +329,7 @@
 
   #end
 
-  {{html wiki=true clean=false}}
+  {{html clean=false}}
   #set ($discard = $xwiki.ssfx.use('uicomponents/logging/logging.css', true))
   #set ($discard = $xwiki.jsfx.use('uicomponents/logging/logging.js', true))
   ## Spaces section
@@ -339,6 +339,11 @@
     #set ($imported = '')
   #end
   #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $spaces.size()])
+
+  {{/html}}
+
+  {{html wiki=true clean=false}}
+
   &lt;ul class="imported-spaces"&gt;
     #set ($options = {})
     #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
@@ -364,6 +369,9 @@
       &lt;/li&gt;
     #end
   &lt;/ul&gt;
+  {{/html}}
+
+  {{html wiki=false clean=false}}
   ## Missing macros
   &lt;div class="imported-macros-section"&gt;
     #displaySubtitle('list', 'confluencepro.migration.raport.macros.title', '', [])
@@ -404,6 +412,10 @@
         &lt;/div&gt;
       #end
     &lt;/div&gt;
+    {{/html}}
+
+    {{html wiki=true clean=false}}
+
     #if ($supportedMacros.isEmpty())
 
       {{info}}{{translation key="confluencepro.migration.raport.macros.supported.noMacros"/}}{{/info}}
@@ -414,7 +426,13 @@
       {{info}}{{translation key="confluencepro.migration.raport.macros.notSupported.noMacros"/}}{{/info}}
 
     #end
-    &lt;p&gt;[[$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.link'))&gt;&gt;https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation]]&lt;/p&gt;
+
+    {{/html}}
+
+    {{html wiki=false clean=false}}
+    &lt;p&gt;
+      &lt;a href="https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.link'))&lt;/a&gt;
+    &lt;/p&gt;
   &lt;/div&gt;
   ## Migrated with issues section
   #set ($json = $obj.getValue('problems'))
@@ -450,11 +468,18 @@
           &lt;details class="cfm-details"&gt;
             &lt;summary&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.list')&lt;/summary&gt;
 
-            |=$services.localization.render('confluencepro.migration.raport.confluencespace')|=$services.localization.render('confluencepro.migration.raport.pageTitle')
+            &lt;table&gt;
+              &lt;tr&gt;
+                &lt;th&gt;$services.localization.render('confluencepro.migration.raport.confluencespace')&lt;/th&gt;
+                &lt;th&gt;$services.localization.render('confluencepro.migration.raport.pageTitle')&lt;/th&gt;
+              &lt;/tr&gt;
             #foreach($link in $jsonObject)
-              |$services.rendering.escape($link[0], $xwiki.currentContentSyntaxId)|$services.rendering.escape($link[1], $xwiki.currentContentSyntaxId)|
+              &lt;tr&gt;
+                &lt;td&gt;$escapetool.xml($link[0])&lt;/td&gt;
+                &lt;td&gt;$escapetool.xml($link[1])&lt;/td&gt;
+              &lt;/tr&gt;
             #end
-
+            &lt;/table&gt;
           &lt;/details&gt;
 
         #end
