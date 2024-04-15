@@ -539,11 +539,12 @@ $attachment.getContentAsString()##
 
   {{html clean=false}}
   ## Logs section
-  #set ($json = "#getJSON($obj, 'logs')")
-  #set ($jsonObject = $jsontool.fromString($json))
   #displaySubtitle('info', 'confluencepro.migration.raport.logs.title', '', [])
-  &lt;ul class="log"&gt;
-  #foreach ($log in $jsonObject)
+  #if ($objecttool.isNull($doc.getAttachment("logs.json")))
+    #set ($json = "#getJSON($obj, 'logs')")
+    #set ($jsonObject = $jsontool.fromString($json))
+    &lt;ul class="log"&gt;
+    #foreach ($log in $jsonObject)
     &lt;li class="log-item log-item-$!{log.level.toLowerCase()}"&gt;
       &lt;div&gt;$xwiki.formatDate($log.timeStamp) $escapetool.xml($log.message)&lt;/div&gt;
       #if ($log.throwable)
@@ -551,8 +552,14 @@ $attachment.getContentAsString()##
 "))&lt;/pre&gt;&lt;/div&gt;
       #end
     &lt;/li&gt;
+    #end
+    &lt;/ul&gt;
+  #else
+    &lt;div id="cfmLogs"&gt;
+      &lt;div class="loading-icon loading"&gt;&lt;/div&gt;
+      &lt;noscript&gt;$services.localization.render('confluencepro.migration.raport.pleaseenablejs')&lt;/noscript&gt;
+    &lt;/div&gt;
   #end
-  &lt;/ul&gt;
   &lt;div class="cfmButtonGroup"&gt;
     &lt;button id="cfmResetMigration" type="button" class="btn btn-default"&gt;
       $escapetool.xml($services.localization.render('confluencepro.migration.raport.reset.button'))
@@ -1020,13 +1027,40 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
           cancelButton.click();
         } else {
           $.ajax("?interrupt=1", {
-            method: 'POST',
-            contentType: 'text/plain',
-            data: '0'
+            method: "POST",
+            contentType: "text/plain",
+            data: "0",
           });
         }
       }
     });
+
+  const logs = document.getElementById("cfmLogs");
+  if (logs) {
+    const logsURL = XWiki.currentDocument.getURL("download") + "/logs.json";
+    $.get(logsURL).then(function (jsonLogs) {
+      const ul = document.createElement("ul");
+      ul.className = "log";
+      for (const log of jsonLogs) {
+        const li = document.createElement("li");
+        li.className = "log-item log-item-" + (log.level?.toLowerCase() || "");
+        const div = document.createElement("div");
+        const d = new Date(log.timeStamp);
+        const datetime = d.toLocaleDateString() + " " + d.toLocaleTimeString();
+        div.textContent = datetime + " " + log.message;
+        li.appendChild(div);
+        if (log.throwable) {
+          const divStack = document.createElement("div");
+          divStack.className = "stacktrace";
+          divStack.textContent = log.throwable.join("\n");
+          li.appendChild(divStack);
+        }
+        ul.appendChild(li);
+      }
+      logs.textContent = "";
+      logs.appendChild(ul);
+    });
+  }
 });</code>
     </property>
     <property>

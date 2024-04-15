@@ -102,6 +102,7 @@ confluencepro.migration.raport.problems.other.warn=Encountered {0} warnings
 confluencepro.migration.raport.problems.brokenLinks.list=List of pages targeted by potentially broken links
 confluencepro.migration.raport.confluencespace=Confluence space key
 confluencepro.migration.raport.pageTitle=Page title
+confluencepro.migration.raport.pleaseenablejs=Please enable JavaScript to see the logs
 confluencepro.migration.title.label=Set the title of the migration
 confluencepro.migration.source.title=Set the source package of the migration
 confluencepro.migration.title.placeholder=Type the desired title...
