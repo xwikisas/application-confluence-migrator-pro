@@ -545,14 +545,11 @@ $attachment.getContentAsString()##
   &lt;ul class="log"&gt;
   #foreach ($log in $jsonObject)
     &lt;li class="log-item log-item-$!{log.level.toLowerCase()}"&gt;
-      &lt;div&gt;
-        $xwiki.formatDate($log.timeStamp) $escapetool.xml($log.message)
-      &lt;/div&gt;
-    #if ($log.throwable)
-      &lt;div class="stacktrace"&gt;
-        &lt;pre&gt;$escapetool.xml($log.throwable)&lt;/pre&gt;
-      &lt;/div&gt;
-    #end
+      &lt;div&gt;$xwiki.formatDate($log.timeStamp) $escapetool.xml($log.message)&lt;/div&gt;
+      #if ($log.throwable)
+      &lt;div class="stacktrace"&gt;&lt;pre&gt;$escapetool.xml($stringtool.join($log.throwable, "
+"))&lt;/pre&gt;&lt;/div&gt;
+      #end
     &lt;/li&gt;
   #end
   &lt;/ul&gt;
