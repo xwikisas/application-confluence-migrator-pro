@@ -295,6 +295,17 @@
     #displayRaport($obj)
   #end
 #end
+
+#macro(getJSON $obj $name)##
+#set ($attachment = $doc.getAttachment("${name}.json"))##
+#if ($objecttool.isNull($attachment))##
+## json strings used to be stored in the MigrationClass object
+$obj.getValue($name)##
+#else##
+$attachment.getContentAsString()##
+#end##
+#end
+
 #**
  * Display a raport of the last executed job on this page.
  *#
@@ -435,7 +446,7 @@
     &lt;/p&gt;
   &lt;/div&gt;
   ## Migrated with issues section
-  #set ($json = $obj.getValue('problems'))
+  #set ($json = "#getJSON($obj, 'problems')")
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
     #set ($jsonObject = $jsontool.fromString($json))
     #if (!$jsonObject.isEmpty())
@@ -444,7 +455,7 @@
     #end
   #end
   ## Skipped section
-  #set ($json = $obj.getValue('skipped'))
+  #set ($json = "#getJSON($obj, 'skipped')")
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
     #set ($jsonObject = $jsontool.fromString($json))
     #if (!$jsonObject.isEmpty())
@@ -453,14 +464,14 @@
     #end
   #end
   ## Broken links section
-  #set ($json = $obj.getValue('brokenLinksPages'))
+  #set ($json = "#getJSON($obj, 'brokenLinksPages')")
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
     #set ($jsonObject = $jsontool.fromString($json))
     #if (!$jsonObject.isEmpty())
       #displaySubtitle('cross', 'confluencepro.migration.raport.problems.brokenLinks.title', '', [$jsonObject.keySet().size()])
       &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
       #displayJson($jsonObject)
-      #set ($json = $obj.getValue('brokenLinks'))
+      #set ($json = "#getJSON($obj, 'brokenLinks')")
       #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
         #set ($jsonObject = $jsontool.fromString($json))
         #if (!$jsonObject.isEmpty())
@@ -487,7 +498,7 @@
     #end
   #end
   ## Other issues section
-  #set ($json = $obj.getValue('otherIssues'))
+  #set ($json = "#getJSON($obj, 'otherIssues')")
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
     #set ($jsonObject = $jsontool.fromString($json))
     #set ($errors = $jsonObject.get('ERROR'))
@@ -528,7 +539,7 @@
 
   {{html clean=false}}
   ## Logs section
-  #set ($json = $obj.getProperty('logs').value)
+  #set ($json = "#getJSON($obj, 'logs')")
   #set ($jsonObject = $jsontool.fromString($json))
   #displaySubtitle('info', 'confluencepro.migration.raport.logs.title', '', [])
   &lt;ul class="log"&gt;
@@ -719,6 +730,39 @@
   {{/html}}
 
 #end
+#**
+ * Migrate properties that need to be migrated
+ *#
+#macro(migrateProps)
+  #set($jsonProperties = ['problems', 'skipped', 'brokenLinksPages', 'brokenLinks', 'otherIssues', 'logs'])
+  #set ($updated = false)
+  #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
+  #if ($objecttool.isNotNull($obj))
+    #foreach ($p in $jsonProperties)
+        #set ($json = $obj.getValue($p))
+        #if ($stringtool.isNotEmpty($json))
+            #set ($discard = $doc.addAttachment("${p}.json", $json.getBytes()))
+            #set ($discard = $obj.set($p, $objecttool.null))
+            #set ($discard = $obj.getBaseObject().removeField($p))
+            #set ($updated = true)
+        #end
+    #end
+  #end
+  #if ($updated)
+      #set($discard = $doc.save($services.localization.render("confluencepro.migration.migratepropsdocsave")))
+
+      {{success}}
+        $services.localization.render("confluencepro.migration.propertiessuccessfullymigrated")
+      {{/success}}
+
+  #else
+
+      {{info}}
+          $services.localization.render("confluencepro.migration.nopropertiestomigrate")
+      {{/info}}
+
+  #end
+#end
 {{/velocity}}
 
 {{template name="documentTree_macros.vm" /}}
@@ -732,7 +776,11 @@
   #else
   #end
 #elseif ($hasAdmin)
-  #docView
+  #if ($request.migrateprops == 1)
+    #migrateProps
+  #else
+    #docView
+  #end
 #else
   {{error}}
   {{translation key="confluencepro.norights" /}}

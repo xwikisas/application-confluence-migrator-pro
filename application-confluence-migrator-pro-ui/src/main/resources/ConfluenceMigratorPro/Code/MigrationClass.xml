@@ -93,24 +93,6 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </inputProperties>
-    <logs>
-      <contenttype>PureText</contenttype>
-      <customDisplay/>
-      <disabled>0</disabled>
-      <editor>PureText</editor>
-      <hint/>
-      <name>logs</name>
-      <number>7</number>
-      <picker>0</picker>
-      <prettyName>logs</prettyName>
-      <restricted>0</restricted>
-      <rows>5</rows>
-      <size>40</size>
-      <unmodifiable>0</unmodifiable>
-      <validationMessage/>
-      <validationRegExp/>
-      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
-    </logs>
     <macros>
       <contenttype>PureText</contenttype>
       <customDisplay/>
@@ -129,60 +111,6 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </macros>
-    <brokenLinksPages>
-      <contenttype>PureText</contenttype>
-      <customDisplay/>
-      <disabled>0</disabled>
-      <editor>PureText</editor>
-      <hint/>
-      <name>brokenLinksPages</name>
-      <number>8</number>
-      <picker>0</picker>
-      <prettyName>brokenLinksPages</prettyName>
-      <restricted>0</restricted>
-      <rows>5</rows>
-      <size>40</size>
-      <unmodifiable>0</unmodifiable>
-      <validationMessage/>
-      <validationRegExp/>
-      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
-    </brokenLinksPages>
-    <brokenLinks>
-      <contenttype>PureText</contenttype>
-      <customDisplay/>
-      <disabled>0</disabled>
-      <editor>PureText</editor>
-      <hint/>
-      <name>brokenLinks</name>
-      <number>8</number>
-      <picker>0</picker>
-      <prettyName>brokenLinks</prettyName>
-      <restricted>0</restricted>
-      <rows>5</rows>
-      <size>40</size>
-      <unmodifiable>0</unmodifiable>
-      <validationMessage/>
-      <validationRegExp/>
-      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
-    </brokenLinks>
-    <otherIssues>
-      <contenttype>PureText</contenttype>
-      <customDisplay/>
-      <disabled>0</disabled>
-      <editor>PureText</editor>
-      <hint/>
-      <name>otherIssues</name>
-      <number>8</number>
-      <picker>0</picker>
-      <prettyName>otherIssues</prettyName>
-      <restricted>0</restricted>
-      <rows>5</rows>
-      <size>40</size>
-      <unmodifiable>0</unmodifiable>
-      <validationMessage/>
-      <validationRegExp/>
-      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
-    </otherIssues>
     <outputProperties>
       <contenttype>PureText</contenttype>
       <customDisplay/>
@@ -215,42 +143,6 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
     </package>
-    <problems>
-      <contenttype>PureText</contenttype>
-      <customDisplay/>
-      <disabled>0</disabled>
-      <editor>PureText</editor>
-      <hint/>
-      <name>problems</name>
-      <number>6</number>
-      <picker>0</picker>
-      <prettyName>problems</prettyName>
-      <restricted>0</restricted>
-      <rows>5</rows>
-      <size>40</size>
-      <unmodifiable>0</unmodifiable>
-      <validationMessage/>
-      <validationRegExp/>
-      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
-    </problems>
-    <skipped>
-      <contenttype>PureText</contenttype>
-      <customDisplay/>
-      <disabled>0</disabled>
-      <editor>PureText</editor>
-      <hint/>
-      <name>skipped</name>
-      <number>7</number>
-      <picker>0</picker>
-      <prettyName>skipped</prettyName>
-      <restricted>0</restricted>
-      <rows>5</rows>
-      <size>40</size>
-      <unmodifiable>0</unmodifiable>
-      <validationMessage/>
-      <validationRegExp/>
-      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
-    </skipped>
     <spaces>
       <cache>0</cache>
       <classname/>

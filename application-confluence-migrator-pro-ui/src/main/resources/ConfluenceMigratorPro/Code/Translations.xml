@@ -107,6 +107,9 @@ confluencepro.migration.source.title=Set the source package of the migration
 confluencepro.migration.title.placeholder=Type the desired title...
 confluencepro.migration.missingLicense=As part of a trial, you can migrate one space per migration. In order to unlock the full capabilities please obtain a license.
 
+confluencepro.migration.migratepropsdocsave=Migrated JSON properties to attachments
+confluencepro.migration.propertiessuccessfullymigrated=Migrated properties to attachments.
+confluencepro.migration.nopropertiestomigrate=No properties to migrate.
 
 confluencepro.migration.livetable.doc.title=Migration
 confluencepro.migration.livetable._actions=Actions

@@ -19,6 +19,8 @@
  */
 package com.xwiki.confluencepro.internal;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -131,7 +133,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             }
             object.set("spaces", new ArrayList<>(spaces), context);
 
-            setLogRelatedFields(jobStatus, object, context);
+            setLogRelatedFields(jobStatus, object, document, context);
 
             wiki.saveDocument(document, "Migration executed!", context);
         } catch (Exception e) {
@@ -157,7 +159,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             m.put(newKey, m.remove(oldKey));
         }
     }
-    private void setLogRelatedFields(ConfluenceMigrationJobStatus jobStatus, BaseObject object, XWikiContext context)
+    private void setLogRelatedFields(ConfluenceMigrationJobStatus jobStatus, BaseObject object, XWikiDocument document,
+        XWikiContext context) throws IOException, XWikiException
     {
         // Set logs json.
         Gson gson = new Gson();
@@ -257,13 +260,19 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         persistMacroMap(context, macroMap, gson);
 
         object.setLargeStringValue("macros", gson.toJson(macroMap.keySet()));
-        object.setLargeStringValue("skipped", gson.toJson(skipped));
-        object.setLargeStringValue("problems", gson.toJson(problematic));
-        object.setLargeStringValue("otherIssues", gson.toJson(otherIssues));
-        object.setLargeStringValue("brokenLinksPages", gson.toJson(brokenLinksPages));
-        object.setLargeStringValue("brokenLinks", gson.toJson(brokenLinks));
-        object.set(LOGS, gson.toJson(logList), context);
+        addAttachment("skipped.json", skipped, document, context, gson);
+        addAttachment("problems.json", problematic, document, context, gson);
+        addAttachment("otherIssues.json", otherIssues, document, context, gson);
+        addAttachment("brokenLinksPages.json", brokenLinksPages, document, context, gson);
+        addAttachment("brokenLinks.json", brokenLinks, document, context, gson);
+        addAttachment("logs.json", logList, document, context, gson);
         object.setLongValue("imported", docCount);
+    }
+
+    private void addAttachment(String name, Object obj, XWikiDocument document, XWikiContext context, Gson gson)
+        throws IOException
+    {
+        document.setAttachment(name, new ByteArrayInputStream(gson.toJson(obj).getBytes()), context);
     }
 
     private static String toString(Long id)
