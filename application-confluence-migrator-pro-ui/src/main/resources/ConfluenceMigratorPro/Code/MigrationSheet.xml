@@ -289,7 +289,7 @@
   #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
   #if ("$!obj.getValue('executed')" == "" || "$obj.getValue('executed')" == "0")
     #runAndDisplayJob($obj, true)
-  #elseif ("$obj.getValue('executed')" == "2")
+  #elseif ("$obj.getValue('executed')" == "2" &amp;&amp; $objecttool.isNotNull($services.confluenceMigration.getLastJob($doc.documentReference)))
     #runAndDisplayJob($obj, false)
   #else
     #displayRaport($obj)

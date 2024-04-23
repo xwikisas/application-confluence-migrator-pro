@@ -121,6 +121,7 @@ confluencepro.migration.livetable.doc.date=Creation date
 confluencepro.migration.livetable.doc.author=Creator
 confluencepro.migration.livetable.state.running=Running
 confluencepro.migration.livetable.state.canceled=Canceled
+confluencepro.migration.livetable.state.died=Died
 confluencepro.migration.livetable.state.errored=Errored
 confluencepro.migration.livetable.state.none=Not started
 confluencepro.migration.livetable.state.waiting=Waiting

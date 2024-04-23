@@ -51,9 +51,9 @@
     &lt;/div&gt;
   #end
   #foreach($row in $map.get('rows'))
+    #set ($rowDocRef = $services.model.resolveDocument($row.get('doc_fullName')))
+    #set ($jobState = $services.confluenceMigration.getLastJob($rowDocRef).status.state)
     #if ($row.get('executed_value') == '0')
-      #set ($rowDocRef = $services.model.resolveDocument($row.get('doc_fullName')))
-      #set ($jobState = $services.confluenceMigration.getLastJob($rowDocRef).status.state)
       #if ("$!jobState" == '' || $jobState == 'NONE')
         #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('cross'), $services.localization.render('confluencepro.migration.livetable.state.none'))"))
       #elseif ($jobState == 'WAITING')
@@ -67,8 +67,12 @@
     #elseif ($row.get('executed_value') == '1')
       #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('check'), $services.localization.render('confluencepro.migration.livetable.state.done'))"))
     #elseif ($row.get('executed_value') == '2')
+      #if ($objecttool.isNull($jobState))
+        #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('cross'), $services.localization.render('confluencepro.migration.livetable.state.died'))"))
+      #else
         #set ($icon = "&lt;div class='loading'&gt;&lt;/div&gt;")
         #set ($discard = $row.put('job_status', "#migrationStatus($icon, $services.localization.render('confluencepro.migration.livetable.state.running'))"))
+      #end
     #elseif ($row.get('executed_value') == '3')
       #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('stop'), $services.localization.render('confluencepro.migration.livetable.state.canceled'))"))
     #elseif ($row.get('executed_value') == '4')
