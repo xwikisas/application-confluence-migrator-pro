@@ -54,7 +54,6 @@ import org.xwiki.logging.tail.LogTail;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.LocalDocumentReference;
-import org.xwiki.refactoring.job.question.EntitySelection;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
@@ -115,26 +114,11 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         XWiki wiki = context.getWiki();
         DocumentReference statusDocumentReference = jobStatus.getRequest().getStatusDocumentReference();
         try {
-
             document = wiki.getDocument(statusDocumentReference, context).clone();
-            // Set executed to true.
             object = document.getXObject(MIGRATION_OBJECT);
             object.set(EXECUTED, jobStatus.isCanceled() ? 3 : 1, context);
-            SpaceQuestion spaceQuestion = (SpaceQuestion) jobStatus.getQuestion();
-            // Set imported spaces.
-            Set<String> spaces = new HashSet<>();
-            if (spaceQuestion != null) {
-                extractSpaces(spaceQuestion, spaces);
-            }
-            for (Object question : jobStatus.getAskedQuestions().values()) {
-                if (question instanceof SpaceQuestion) {
-                    extractSpaces((SpaceQuestion) question, spaces);
-                }
-            }
-            object.set("spaces", new ArrayList<>(spaces), context);
-
+            object.setStringListValue("spaces", new ArrayList<>(jobStatus.getSpaces()));
             setLogRelatedFields(jobStatus, object, document, context);
-
             wiki.saveDocument(document, "Migration executed!", context);
         } catch (Exception e) {
             if (object != null) {
@@ -425,14 +409,5 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             logMap.put("throwable", ExceptionUtils.getStackFrames(t));
         }
         logList.add(logMap);
-    }
-
-    private void extractSpaces(SpaceQuestion spaceQuestion, Set<String> spaces)
-    {
-        for (EntitySelection entitySelection : spaceQuestion.getConfluenceSpaces().keySet()) {
-            if (entitySelection.isSelected()) {
-                spaces.add(serializer.serialize(entitySelection.getEntityReference()));
-            }
-        }
     }
 }

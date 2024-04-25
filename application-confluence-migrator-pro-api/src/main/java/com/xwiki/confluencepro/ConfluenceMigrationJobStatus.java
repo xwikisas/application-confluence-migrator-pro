@@ -19,6 +19,8 @@
  */
 package com.xwiki.confluencepro;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,8 @@ public class ConfluenceMigrationJobStatus extends DefaultJobStatus<ConfluenceMig
     private final Map<List<String>, Object> askedQuestions = new HashMap<>();
 
     private CancelableJobStatus filterJobStatus;
+
+    private Collection<String> spaces = Collections.emptyList();
 
     /**
      * @param request the request provided when started the job
@@ -79,6 +83,26 @@ public class ConfluenceMigrationJobStatus extends DefaultJobStatus<ConfluenceMig
     public void setFilterJobStatus(CancelableJobStatus filterJobStatus)
     {
         this.filterJobStatus = filterJobStatus;
+    }
+
+    /**
+     * Set the list of spaces that are migrated.
+     * @param spaces the Confluence keys of the migrated spaces
+     * @since 1.19.0
+     */
+    public void setSpaces(Collection<String> spaces)
+    {
+        this.spaces = spaces;
+    }
+
+    /**
+     * @return the list of spaces that are migrated.
+     * @since 1.19.0
+     */
+
+    public Collection<String> getSpaces()
+    {
+        return spaces;
     }
 
     @Override

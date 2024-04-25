@@ -19,7 +19,9 @@
  */
 package com.xwiki.confluencepro.internal;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -135,6 +137,9 @@ public class ConfluenceFilteringListener extends AbstractEventListener
     private static boolean handleSpaceSelection(ConfluenceFilteringEvent event, ConfluenceXMLPackage confluencePackage,
         ConfluenceMigrationJobStatus jobStatusToAsk)
     {
+        Collection<String> spaces = new HashSet<>(confluencePackage.getSpacesByKey().keySet());
+        jobStatusToAsk.setSpaces(spaces);
+
         SpaceQuestion question =
             new ConfluenceQuestionManager().createAndAskQuestion(event, confluencePackage, jobStatusToAsk);
 
@@ -143,8 +148,10 @@ public class ConfluenceFilteringListener extends AbstractEventListener
             if (entitySelection.isSelected()) {
                 anySelected = true;
             } else {
-                Long spaceId = confluencePackage.getSpacesByKey().get(entitySelection.getEntityReference().getName());
+                String spaceKey = entitySelection.getEntityReference().getName();
+                Long spaceId = confluencePackage.getSpacesByKey().get(spaceKey);
                 event.disableSpace(spaceId);
+                spaces.remove(spaceKey);
             }
         }
         return anySelected;

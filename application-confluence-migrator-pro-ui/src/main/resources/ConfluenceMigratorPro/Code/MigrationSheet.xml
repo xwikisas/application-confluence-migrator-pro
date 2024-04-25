@@ -346,10 +346,14 @@ $attachment.getContentAsString()##
   ## Spaces section
   #set ($spaces = $obj.getProperty('spaces').value)
   #set ($imported = $obj.getValue('imported'))
-  #if ($objecttool.isNull($imported))
+  #if ($objecttool.isNull($imported) || $imported == 0)
     #set ($imported = '')
   #end
-  #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $spaces.size()])
+  #set ($spaceCount = $spaces.size())
+  #if ($spaceCount == 0)
+    #set ($spaceCount = "")
+  #end
+  #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $spaceCount])
 
   {{/html}}
 
