@@ -249,9 +249,12 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
                 inputProperties.put(entry.getKey(), entry.getValue());
             }
         }
-        String source = (String) inputProperties.getOrDefault(SOURCE, "");
-        if (source.startsWith("/")) {
-            inputProperties.put(SOURCE, "file://" + source);
+        Object sourceObject = inputProperties.getOrDefault(SOURCE, "");
+        if (sourceObject instanceof String) {
+            String source = (String) sourceObject;
+            if (source.startsWith("/")) {
+                inputProperties.put(SOURCE, "file://" + source);
+            }
         }
         return inputProperties;
     }
