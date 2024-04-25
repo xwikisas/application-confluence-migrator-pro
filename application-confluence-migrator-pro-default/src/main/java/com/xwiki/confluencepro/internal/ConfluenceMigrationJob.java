@@ -82,6 +82,8 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
 
     private static final String MAX_PAGE_COUNT = "maxPageCount";
 
+    private static final String SOURCE = "source";
+
     @Inject
     @Named(CONFLUENCE_XML_ROLEHINT)
     private InputFilterStreamFactory inputFilterStreamFactory;
@@ -240,12 +242,16 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
             .collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getDefaultValue()), HashMap::putAll);
 
         if (getRequest().getConfluencePackage() != null) {
-            inputProperties.put("source", getRequest().getConfluencePackage());
+            inputProperties.put(SOURCE, getRequest().getConfluencePackage());
         }
         for (Map.Entry<String, Object> entry : request.getInputProperties().entrySet()) {
             if (entry.getValue() != null && !entry.getValue().toString().isEmpty()) {
                 inputProperties.put(entry.getKey(), entry.getValue());
             }
+        }
+        String source = (String) inputProperties.getOrDefault(SOURCE, "");
+        if (source.startsWith("/")) {
+            inputProperties.put(SOURCE, "file://" + source);
         }
         return inputProperties;
     }
