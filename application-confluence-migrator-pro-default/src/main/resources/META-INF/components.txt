@@ -7,3 +7,4 @@ com.xwiki.confluencepro.internal.DefaultConfluenceMigrationPrerequisites
 com.xwiki.confluencepro.internal.DocumentFilterOverrideListener
 com.xwiki.confluencepro.internal.LinkMappingConverter
 com.xwiki.confluencepro.internal.converters.LivesearchMacroConverter
+com.xwiki.confluencepro.internal.converters.PagetreesearchMacroConverter
