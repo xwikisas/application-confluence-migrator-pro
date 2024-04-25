@@ -140,6 +140,12 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         Collection<String> spaces = new HashSet<>(confluencePackage.getSpacesByKey().keySet());
         jobStatusToAsk.setSpaces(spaces);
 
+        if (confluencePackage.getSpacesByKey().size() == 1) {
+            // Skip the questions if there's only one space
+            return true;
+        }
+
+
         SpaceQuestion question =
             new ConfluenceQuestionManager().createAndAskQuestion(event, confluencePackage, jobStatusToAsk);
 
