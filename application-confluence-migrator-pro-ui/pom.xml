@@ -45,6 +45,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.xwiki.confluencepro</groupId>
+      <artifactId>application-confluence-migrator-pro-converters</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.xwiki.contrib.listeneradmin</groupId>
       <artifactId>application-listener-admin-ui</artifactId>
       <version>${listeneradmin.version}</version>

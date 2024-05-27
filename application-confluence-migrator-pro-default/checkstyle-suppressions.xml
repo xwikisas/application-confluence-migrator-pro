@@ -15,6 +15,4 @@
             files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceFilteringListener\.java$"/>
   <suppress checks="NPathComplexity|CyclomaticComplexity|JavaNCSS|ExecutableStatementCount"
             files="src/main/java/com/xwiki/confluencepro/internal/DefaultConfluenceMigrationManager\.java$"/>
-  <suppress checks="NPathComplexity|CyclomaticComplexity"
-            files="src/main/java/com/xwiki/confluencepro/internal/converters/LivesearchMacroConverter\.java$"/>
 </suppressions>

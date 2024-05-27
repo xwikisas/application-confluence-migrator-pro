@@ -52,9 +52,10 @@
   </properties>
   <modules>
     <module>application-confluence-migrator-pro-api</module>
+    <module>application-confluence-migrator-pro-converters</module>
+    <module>application-confluence-migrator-pro-default</module>
     <module>application-confluence-migrator-pro-ui</module>
     <module>application-confluence-migrator-pro-xip</module>
-    <module>application-confluence-migrator-pro-default</module>
   </modules>
   <build>
     <extensions>

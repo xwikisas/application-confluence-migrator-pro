@@ -1,0 +1,2 @@
+com.xwiki.confluencepro.converters.internal.LivesearchMacroConverter
+com.xwiki.confluencepro.converters.internal.PagetreesearchMacroConverter
