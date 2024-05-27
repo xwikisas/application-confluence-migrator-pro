@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-generic>
+  <object class="Space" package="com.atlassian.confluence.spaces">
+    <id name="id">100</id>
+    <property name="name"><![CDATA[TestSpace]]></property>
+    <property name="key"><![CDATA[TestSpace]]></property>
+  </object>
+
+  <object class="Page" package="com.atlassian.confluence.pages">
+    <id name="id">10</id>
+    <property name="space" class="Space" package="com.atlassian.confluence.spaces">
+      <id name="id">100</id>
+    </property>
+    <property name="title"><![CDATA[Multiple Excerpt Includes]]></property>
+    <collection name="bodyContents">
+      <element class="BodyContent" package="com.atlassian.confluence.core">
+        <id name="id">1</id>
+      </element>
+    </collection>
+  </object>
+
+  <object class="Page" package="com.atlassian.confluence.pages">
+    <id name="id">12</id>
+    <property name="space" class="Space" package="com.atlassian.confluence.spaces">
+      <id name="id">100</id>
+    </property>
+    <property name="title"><![CDATA[Multiple excerpts]]></property>
+    <collection name="bodyContents">
+      <element class="BodyContent" package="com.atlassian.confluence.core">
+        <id name="id">2</id>
+      </element>
+    </collection>
+  </object>
+
+
+  <object class="BodyContent"
+    package="com.atlassian.confluence.core">
+    <id name="id">1</id>
+    <property name="body"><![CDATA[<ac:structured-macro ac:name="multiexcerpt-fast-include-block-macro" ac:schema-version="1" data-layout="default" ac:local-id="ab142e27-93b4-46c9-a660-6f3720ad9894" ac:macro-id="84452465-f36f-49f5-abd9-cdef462a6c56"><ac:parameter ac:name="macro_uuid">975fbd35-9183-4bc0-9c5f-914ee5ca1c2e</ac:parameter><ac:parameter ac:name="name">exerpt1</ac:parameter><ac:parameter ac:name="templateData">eJyLrlbKVrJSKkssykxMyklV0lEqA3LDEnNKU5VqYwGSJAmF</ac:parameter><ac:parameter ac:name="page"><ac:link><ri:page ri:content-title="Multiple excerpts" ri:version-at-save="4" /></ac:link></ac:parameter><ac:parameter ac:name="addpanel">false</ac:parameter></ac:structured-macro><p><ac:structured-macro ac:name="multiexcerpt-include-macro" ac:schema-version="1" ac:local-id="40e3c61a-87cf-455c-b23b-ad9b857d35a6" ac:macro-id="8c2b052c-3c26-488f-a199-e37b7c6af405"><ac:parameter ac:name="macro_uuid">dc46996c-8572-420e-b799-b59454d73ef1</ac:parameter><ac:parameter ac:name="name">exerpt2</ac:parameter><ac:parameter ac:name="templateData">eJyLrlbKVrJSKk5Nzs9LKUssykxMyklV0lEqAwoGgwUVwqCiQEZOaapSbSwA0BARww==</ac:parameter><ac:parameter ac:name="page"><ac:link><ri:page ri:content-title="Multiple excerpts" ri:version-at-save="4" /></ac:link></ac:parameter><ac:parameter ac:name="addpanel">false</ac:parameter></ac:structured-macro></p><p><ac:structured-macro ac:name="multiexcerpt-fast-include-inline-macro" ac:schema-version="1" ac:local-id="34c5bf47-de5c-4036-a8a0-a353d180f59a" ac:macro-id="b664f38e-40e7-43ba-ba0f-a8d0e2d696dc"><ac:parameter ac:name="macro_uuid">c8464100-ccbc-4755-ad55-3d6aab0dd8cd</ac:parameter><ac:parameter ac:name="name">exerpt1</ac:parameter><ac:parameter ac:name="templateData">eJyLrlbKVrJSKkssykxMyklV0lEqA3Iz85JzSlNSFTLzcjLzUpVqYwH7Xw0L</ac:parameter><ac:parameter ac:name="page"><ac:link><ri:page ri:content-title="Multiple excerpts" ri:version-at-save="4" /></ac:link></ac:parameter><ac:parameter ac:name="addpanel">false</ac:parameter></ac:structured-macro></p><p />]]></property>
+    <property name="bodyType">2</property>
+    <property name="content" class="Page" package="com.atlassian.confluence.pages">
+      <id name="id">10</id>
+    </property>
+  </object>
+
+  <object class="BodyContent"
+    package="com.atlassian.confluence.core">
+    <id name="id">2</id>
+    <property name="body"><![CDATA[<ac:structured-macro ac:name="multiexcerpt-fast-block-macro" ac:schema-version="1" data-layout="default" ac:local-id="627981a3-aaa2-4491-a85c-8057ec68db7e" ac:macro-id="20186b40-1392-4b40-a187-d4565bae9583"><ac:parameter ac:name="hidden">false</ac:parameter><ac:parameter ac:name="name">exerpt1</ac:parameter><ac:parameter ac:name="fallback">false</ac:parameter><ac:rich-text-body><p>Hello {{variable}} (this is multiexcerpt advanced block)</p></ac:rich-text-body></ac:structured-macro><ac:structured-macro ac:name="multiexcerpt-macro" ac:schema-version="1" data-layout="default" ac:local-id="3e87cf83-e379-4c18-8777-28914cda7b74" ac:macro-id="0c1a277b-534c-4f39-8bd3-cabc8a887b73"><ac:parameter ac:name="hidden">false</ac:parameter><ac:parameter ac:name="name">exerpt2</ac:parameter><ac:parameter ac:name="fallback">false</ac:parameter><ac:rich-text-body><p>Hello {{secondvariable}} (this is multiexcrpt, simple)</p></ac:rich-text-body></ac:structured-macro><ac:structured-macro ac:name="multiexcerpt-fast-inline-macro" ac:schema-version="1" data-layout="default" ac:local-id="4d0217e6-1b5d-44d1-8af4-28360a5d85e0" ac:macro-id="e04d0910-570a-4fc3-b485-54cb278a471b"><ac:parameter ac:name="hidden">false</ac:parameter><ac:parameter ac:name="name">exceprt3</ac:parameter><ac:parameter ac:name="fallback">false</ac:parameter><ac:rich-text-body><p>Hello {{inline}}</p></ac:rich-text-body></ac:structured-macro><p />]]></property>
+    <property name="bodyType">2</property>
+    <property name="content" class="Page" package="com.atlassian.confluence.pages">
+      <id name="id">12</id>
+    </property>
+  </object>
+
+</hibernate-generic>
