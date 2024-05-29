@@ -45,7 +45,6 @@
   <properties>
     <licensing.version>1.25</licensing.version>
     <listeneradmin.version>1.0.2</listeneradmin.version>
-    <xwiki.extension.name>Confluence Migrator Application (Pro)</xwiki.extension.name>
     <xwiki.extension.category>application</xwiki.extension.category>
     <confluence.xml.version>9.47.0</confluence.xml.version>
     <xwiki.enforcer.enforce-javase-dependencies.skip>true</xwiki.enforcer.enforce-javase-dependencies.skip>
