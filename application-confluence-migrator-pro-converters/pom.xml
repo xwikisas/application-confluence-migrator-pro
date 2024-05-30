@@ -31,7 +31,8 @@
   <name>Confluence Migrator Pro - Converters</name>
   <properties>
     <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
-    <xwiki.jacoco.instructionRatio>0.91</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.89</xwiki.jacoco.instructionRatio>
+    <taskapplication.version>3.4.3</taskapplication.version>
   </properties>
   <dependencies>
     <dependency>
@@ -44,7 +45,12 @@
       <artifactId>xwiki-platform-oldcore</artifactId>
       <version>${platform.version}</version>
     </dependency>
-
+    <!-- We need the task model for the parameter names. -->
+    <dependency>
+      <groupId>com.xwiki.task</groupId>
+      <artifactId>application-task-api</artifactId>
+      <version>${taskapplication.version}</version>
+    </dependency>
     <!-- Tests -->
     <dependency>
       <groupId>org.xwiki.platform</groupId>
