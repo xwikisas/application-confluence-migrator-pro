@@ -47,7 +47,7 @@
 #set ($prefilledValues = {
   'input': {
     'cleanup': 'ASYNC',
-    'prefixedMacros': 'attachments,gallery,chart,children'
+    'unprefixedMacros': 'panel,excerpt,expand,contributors,content-report-table,recently-updated'
   },
   'output': {
     'useLinkMapping': 'true',
