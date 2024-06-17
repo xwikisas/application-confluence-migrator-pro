@@ -145,7 +145,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     }
 
     private void setLogRelatedFields(ConfluenceMigrationJobStatus jobStatus, BaseObject object, XWikiDocument document,
-        XWikiContext context) throws IOException, XWikiException
+        XWikiContext context) throws IOException
     {
         // Set logs json.
         Gson gson = new Gson();
