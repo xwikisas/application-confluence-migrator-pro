@@ -1,5 +1,6 @@
 com.xwiki.confluencepro.converters.internal.DateMacroConverter
 com.xwiki.confluencepro.converters.internal.LivesearchMacroConverter
+com.xwiki.confluencepro.converters.internal.MSStreamConverter
 com.xwiki.confluencepro.converters.internal.MultiExcerptMacroConverter
 com.xwiki.confluencepro.converters.internal.MultiExcerptIncludeMacroConverter
 com.xwiki.confluencepro.converters.internal.PagetreesearchMacroConverter
