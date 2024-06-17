@@ -6,3 +6,4 @@ com.xwiki.confluencepro.converters.internal.MultiExcerptIncludeMacroConverter
 com.xwiki.confluencepro.converters.internal.PagetreesearchMacroConverter
 com.xwiki.confluencepro.converters.internal.TaskMacroConverter
 com.xwiki.confluencepro.converters.internal.TaskListMacroConverter
+com.xwiki.confluencepro.converters.internal.ViewFileConverter
