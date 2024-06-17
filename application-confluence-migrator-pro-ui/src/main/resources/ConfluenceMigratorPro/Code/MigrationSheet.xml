@@ -107,13 +107,14 @@
         #set ($propertyDescriptorInputValue = $fieldValue)
       #end
     #else
-      #set ($propertyDescriptorInputValue = $prefilledValues.get($type).get($propertyDescriptorId))
+      #set ($propertyDescriptorInputValue = $prefilledValues[$type].get($propertyDescriptorId))
     #end
     &lt;input type="text" class="cfm-${type}-filter-property"
       value="$!escapetool.xml($propertyDescriptorInputValue)"
       data-key="$!escapetool.xml($propertyDescriptorId)" /&gt;
   &lt;/dd&gt;
 #end
+
 #**
  * users can specify a migration document from which to take default parameter
  * values. This macro handles the request parameters for this feature and updates
@@ -160,6 +161,7 @@
     #end
   #end
 #end
+
 #**
  * The view of the Migration when it is created. The title needs to be set and, if the request contains it,
  * the package field of the object is populated.
@@ -179,7 +181,7 @@
       &lt;/dd&gt;
     &lt;/dl&gt;
     #if ("$!request.package" != '')
-      #set ($discard = $prefilledValues.get('input').remove('source'))
+      #set ($discard = $prefilledValues['input'].remove('source'))
       &lt;input class="form-control" type="hidden"
         name="ConfluenceMigratorPro.Code.MigrationClass_0_package"
         id="ConfluenceMigratorPro.Code.MigrationClass_0_package"
@@ -192,7 +194,7 @@
           &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render("confluencepro.job.question.advanced.source.description"))&lt;/span&gt;
         &lt;/dt&gt;
         &lt;dd&gt;
-          &lt;input type="text" class="cfm-input-filter-property" value="$prefilledValues.get('input').getOrDefault('source', '')" data-key="source"&gt;
+          &lt;input type="text" class="cfm-input-filter-property" value="$prefilledValues['input'].getOrDefault('source', '')" data-key="source"&gt;
         &lt;/dd&gt;
       &lt;/dl&gt;
     #end
@@ -222,14 +224,14 @@
         &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.skipquestions.question.hint'))&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;
-        &lt;input id="skipQuestions" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('skipQuestions', 'false')" data-key="skipQuestions"/&gt;
+        &lt;input id="skipQuestions" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('skipQuestions', 'false')" data-key="skipQuestions"/&gt;
       &lt;/dd&gt;
       &lt;dt&gt;
         &lt;label for="rightOnly"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.title'))&lt;/label&gt;
         &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.hint'))&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;
-        &lt;input id="rightOnly" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('rightOnly', 'false')" data-key="rightOnly"/&gt;
+        &lt;input id="rightOnly" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('rightOnly', 'false')" data-key="rightOnly"/&gt;
       &lt;/dd&gt;
     &lt;/dl&gt;
     &lt;h3&gt;$escapetool.xml($services.localization.render('confluencepro.job.linkmapping.title'))&lt;/h3&gt;
@@ -239,21 +241,21 @@
         &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.savelinkmapping.question.hint'))&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;
-        &lt;input id="saveLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('saveLinkMapping', 'false')" data-key="saveLinkMapping"/&gt;
+        &lt;input id="saveLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('saveLinkMapping', 'false')" data-key="saveLinkMapping"/&gt;
       &lt;/dd&gt;
       &lt;dt&gt;
         &lt;label for="useLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.uselinkmapping.question.title'))&lt;/label&gt;
         &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.uselinkmapping.question.hint'))&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;
-        &lt;input id="useLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('useLinkMapping', 'false')" data-key="useLinkMapping"/&gt;
+        &lt;input id="useLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('useLinkMapping', 'false')" data-key="useLinkMapping"/&gt;
       &lt;/dd&gt;
       &lt;dt&gt;
         &lt;label for="onlyLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlylinkmapping.question.title'))&lt;/label&gt;
         &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlylinkmapping.question.hint'))&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;
-        &lt;input id="onlyLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues.get('output').getOrDefault('onlyLinkMapping', 'false')" data-key="onlyLinkMapping"/&gt;
+        &lt;input id="onlyLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('onlyLinkMapping', 'false')" data-key="onlyLinkMapping"/&gt;
       &lt;/dd&gt;
     &lt;/dl&gt;
     &lt;div style="display: none"&gt;
@@ -274,6 +276,7 @@
   {{/html}}
 
 #end
+
 #**
  * The view of the Migration when the context action is `view`. If the `package` of the object is populated
  * and the `executed` flag is set to false, execute the migration for that package. Otherwise, display the
@@ -575,6 +578,7 @@ $attachment.getContentAsString()##
   {{/html}}
 
 #end
+
 #**
  * Display the properties of a json in a structured way.
  * @param $jsonObject the json that needs displaying. It should have the pattern: { key1: [vals..], key2: [vals..], ..}
@@ -609,6 +613,7 @@ $attachment.getContentAsString()##
   #end
   &lt;/ul&gt;
 #end
+
 #**
  * Run the migration job if the `executed` flag is false and if there is a `package` set.
  * Display the status and the logs of the job.
@@ -651,6 +656,7 @@ $attachment.getContentAsString()##
     #displayJob($confluenceJob)
   #end
 #end
+
 #**
  * Display the job.
  *
@@ -710,6 +716,7 @@ $attachment.getContentAsString()##
   {{/html}}
 
 #end
+
 #**
  * Display a form with a zip picker and a submit button.
  *#
@@ -738,6 +745,7 @@ $attachment.getContentAsString()##
   {{/html}}
 
 #end
+
 #**
  * Migrate properties that need to be migrated
  *#

@@ -143,6 +143,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             m.put(newKey, m.remove(oldKey));
         }
     }
+
     private void setLogRelatedFields(ConfluenceMigrationJobStatus jobStatus, BaseObject object, XWikiDocument document,
         XWikiContext context) throws IOException, XWikiException
     {
