@@ -44,18 +44,8 @@
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobDoneEventEmitter'))
-#set ($prefilledValues = {
-  'input': {
-    'cleanup': 'ASYNC',
-    'unprefixedMacros': 'panel,excerpt,expand,contributors,content-report-table,recently-updated'
-  },
-  'output': {
-    'useLinkMapping': 'true',
-    'saveLinkMapping': 'true',
-    'versionPreserved': 'true',
-    'stoppedWhenSaveFail': 'false'
-  }
-})
+#set ($prefilledValues = $services.confluenceMigration.getMutablePrefilledConfiguration())
+
 ## Start of macro ##
 #**
  * Display a form field given a descriptor. The method uses the outside param $prefilledValues.
@@ -154,8 +144,8 @@
       #set ($fromMigrationDoc = $xwiki.getDocument($specifiedMigration))
     #end
     #if ($fromMigrationDoc != $objecttool.null &amp;&amp; !$fromMigrationDoc.isNew())
-      #set ($discard = $prefilledValues.put('input', $jsontool.fromString($fromMigrationDoc.getValue('inputProperties'))))
-      #set ($discard = $prefilledValues.put('output', $jsontool.fromString($fromMigrationDoc.getValue('outputProperties'))))
+      #set ($discard = $prefilledValues['input'].putAll($jsontool.fromString($fromMigrationDoc.getValue('inputProperties'))))
+      #set ($discard = $prefilledValues['output'].putAll($jsontool.fromString($fromMigrationDoc.getValue('outputProperties'))))
 
       Default parameter values were prefilled from [[$fromMigrationDoc]].
     #end

@@ -64,6 +64,9 @@ import com.xpn.xwiki.objects.BaseObject;
 import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
 import com.xwiki.confluencepro.ConfluenceMigrationManager;
 
+import static com.xwiki.confluencepro.script.ConfluenceMigrationScriptService.PREFILLED_INPUT_PARAMETERS;
+import static com.xwiki.confluencepro.script.ConfluenceMigrationScriptService.PREFILLED_OUTPUT_PARAMETERS;
+
 /**
  * The default implementation of {@link ConfluenceMigrationManager}.
  *
@@ -119,6 +122,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             object.set(EXECUTED, jobStatus.isCanceled() ? 3 : 1, context);
             object.setStringListValue("spaces", new ArrayList<>(jobStatus.getSpaces()));
             setLogRelatedFields(jobStatus, object, document, context);
+            updateMigrationProperties(object);
             wiki.saveDocument(document, "Migration executed!", context);
         } catch (Exception e) {
             if (object != null) {
@@ -134,6 +138,30 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                         statusDocumentReference, err);
                 }
             }
+        }
+    }
+
+    private void updateMigrationProperties(BaseObject object)
+    {
+        Gson gson = new Gson();
+        removeDefaultProperties(object, "outputProperties", PREFILLED_OUTPUT_PARAMETERS, gson);
+        removeDefaultProperties(object, "inputProperties", PREFILLED_INPUT_PARAMETERS, gson);
+    }
+
+    private void removeDefaultProperties(BaseObject object, String field, Map<String, String> defaults, Gson gson)
+    {
+        boolean update = false;
+        Map<String, String> props = gson.fromJson(object.getLargeStringValue(field), Map.class);
+        for (Map.Entry<String, String> def : defaults.entrySet()) {
+            String key = def.getKey();
+            String v = props.get(key);
+            if (v != null && v.equals(def.getValue())) {
+                props.remove(key);
+                update = true;
+            }
+        }
+        if (update) {
+            object.setLargeStringValue(field, gson.toJson(props));
         }
     }
 

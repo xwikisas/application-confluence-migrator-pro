@@ -59,6 +59,29 @@ public class ConfluenceMigrationScriptService implements ScriptService
      */
     public static final String ROLEHINT = "confluenceMigration";
 
+    /**
+     * Default input filter stream migration parameter values.
+     * @since 1.19.0
+     */
+    public static final Map<String, String> PREFILLED_INPUT_PARAMETERS = Map.of(
+        "cleanup", "ASYNC",
+        "unprefixedMacros", "panel,excerpt,expand,contributors,content-report-table,recently-updated"
+    );
+
+    private static final String TRUE = "true";
+    private static final String FALSE = "false";
+
+    /**
+     * Default output filter stream migration parameter values.
+     * @since 1.19.0
+     */
+    public static final Map<String, String> PREFILLED_OUTPUT_PARAMETERS = Map.of(
+        "useLinkMapping", TRUE,
+        "saveLinkMapping", TRUE,
+        "versionPreserved", TRUE,
+        "stoppedWhenSaveFail", FALSE
+    );
+
     @Inject
     private ContextualAuthorizationManager authorization;
 
@@ -218,5 +241,19 @@ public class ConfluenceMigrationScriptService implements ScriptService
     public String checkCurrentUserNotificationCleanup()
     {
         return prerequisites.checkCurrentUserNotificationCleanup();
+    }
+
+    /**
+     * @return a mutable copy of the prefilled parameters.
+     *
+     * @since 1.21.0
+     */
+    public Map<String, Map<String, String>> getMutablePrefilledConfiguration()
+    {
+
+        Map<String, Map<String, String>> prefilledValues = new HashMap<>(2);
+        prefilledValues.put("input", new HashMap<>(PREFILLED_INPUT_PARAMETERS));
+        prefilledValues.put("output", new HashMap<>(PREFILLED_OUTPUT_PARAMETERS));
+        return prefilledValues;
     }
 }
