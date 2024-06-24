@@ -88,6 +88,7 @@ confluencepro.migration.raport.macros.supported.noMacros=There were no supported
 confluencepro.migration.raport.macros.link=See the list of all confluence macros and their XWiki counterpart.
 confluencepro.migration.raport.logs.title=The logs of the migration.
 confluencepro.migration.raport.viewall.button=View all migrations
+confluencepro.migration.raport.viewtext=View in text format
 confluencepro.migration.raport.reset.button=Restart the migration
 confluencepro.migration.raport.reset.confirm=Are you sure you want to restart the migration?
 confluencepro.migration.raport.reset.fail=Failed to restart the migration

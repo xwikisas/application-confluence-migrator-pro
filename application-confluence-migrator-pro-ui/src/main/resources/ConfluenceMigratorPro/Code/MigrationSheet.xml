@@ -561,9 +561,8 @@ $attachment.getContentAsString()##
     &lt;button id="cfmResetMigration" type="button" class="btn btn-default"&gt;
       $escapetool.xml($services.localization.render('confluencepro.migration.raport.reset.button'))
     &lt;/button&gt;
-    &lt;button class="btn btn-link"&gt;
-      &lt;a href="$xwiki.getURL($doc.documentReference.parent)"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.viewall.button'))&lt;/a&gt;
-    &lt;/button&gt;
+    &amp;nbsp;&lt;a href="$xwiki.getURL($doc.documentReference.parent)"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.viewall.button'))&lt;/a&gt;
+    &amp;nbsp;&lt;a href="?text=1"&gt;$services.localization.render('confluencepro.migration.raport.viewtext')&lt;/a&gt;
   &lt;/div&gt;
   {{/html}}
 
@@ -769,6 +768,98 @@ $attachment.getContentAsString()##
 
   #end
 #end
+
+#macro(textReport)
+  #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
+  $response.setContentType("text/plain; charset=utf-8")*
+
+  #if ("$obj.getValue('executed')" == '0')
+    #set ($status = $services.localization.render('confluencepro.migration.livetable.state.none'))
+  #elseif ("$obj.getValue('executed')" == '1')
+    #set ($status = $services.localization.render('confluencepro.migration.livetable.state.done'))
+  #elseif ("$obj.getValue('executed')" == '2')
+    #set ($confluenceJob = $services.confluenceMigration.getLastJob($doc.documentReference))
+    #if ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED')
+      #set ($status = $services.localization.render('confluencepro.migration.livetable.state.died'))
+    #else
+      #set ($status = $services.localization.render('confluencepro.migration.livetable.state.running'))
+    #end
+  #elseif ("$obj.getValue('executed')" == '3')
+    #set ($status = $services.localization.render('confluencepro.migration.livetable.state.canceled'))
+  #elseif ("$obj.getValue('executed')" == '4')
+    #set ($status = $services.localization.render('confluencepro.migration.livetable.state.errored'))
+  #else
+    #set ($status = $obj.getValue('executed'))
+  #end
+  $response.writer.write("Status: $status$escapetool.N")
+
+  #if ($obj.getValue('imported'))
+    $response.writer.write("Number of imported pages: $obj.getValue('imported')$escapetool.N")
+  #end
+
+  #if ($obj.getValue('spaces'))
+    $response.writer.write("Imported spaces: $obj.getValue('spaces')$escapetool.N")
+  #end
+
+  #set ($inputProps = $jsontool.fromString($obj.getValue('inputProperties')))
+  #if ($objecttool.isNotNull($inputProps))
+    $response.writer.write("Input properties:$escapetool.N")
+    #foreach ($inputProp in $inputProps.entrySet())
+      $response.writer.write(" - $inputProp.key: $inputProp.value$escapetool.N")
+    #end
+  #end
+
+  #set ($outputProps = $jsontool.fromString($obj.getValue('outputProperties')))
+  #if ($objecttool.isNotNull($outputProps))
+    $response.writer.write("Output properties:$escapetool.N")
+    #foreach ($inputProp in $outputProps.entrySet())
+      $response.writer.write(" - $inputProp.key: $inputProp.value$escapetool.N")
+    #end
+  #end
+  #set ($supportedMacros = [])
+  #set ($notSupportedMacros = [])
+  #foreach ($macro in $jsontool.fromString($obj.getProperty('macros').value))
+    #if ($services.component.contextComponentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
+      #set ($discard = $supportedMacros.add($macro))
+    #else
+      #set ($discard = $notSupportedMacros.add($macro))
+    #end
+  #end
+  $response.writer.write("Supported macros: $supportedMacros$escapetool.N")
+  $response.writer.write("Unsupported macros: $notSupportedMacros$escapetool.N")
+
+  #set ($json = "#getJSON($obj, 'brokenLinksPages')")
+  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+    $response.writer.write("Pages with broken links:$escapetool.N")
+    #foreach ($page in $jsontool.fromString($json).keySet())
+      $response.writer.write(" - $page$escapetool.N")
+    #end
+  #end
+
+  #set ($json = "#getJSON($obj, 'brokenLinks')")
+  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+    $response.writer.write("Broken links:$escapetool.N")
+    #foreach ($page in $jsontool.fromString($json))
+      $response.writer.write(" - spaceKey: $page[0], title: $page[1]$escapetool.N")
+    #end
+  #end
+  #foreach ($entry in ['problems', 'skipped', 'otherIssues', 'logs'])
+    #set ($json = "#getJSON($obj, $entry)")
+    #if ($objecttool.isNotNull($json) &amp;&amp; $json.length() &gt; 2)
+      $response.writer.write("$escapetool.N")
+      #if ($entry == "otherIssues")
+        $response.writer.write("other issues:$escapetool.N")
+      #elseif ($entry == "logs")
+        $response.writer.write("all logs:$escapetool.N")
+      #else
+        $response.writer.write("$entry:$escapetool.N")
+      #end
+      #set ($json = $json.substring(1, $json.length() - 1))
+      $response.writer.write($json.replace(',{"timeStamp":', ',' + $escapetool.N + '{"timeStamp":'))
+    #end
+  #end
+  $xcontext.setFinished(true)
+#end
 {{/velocity}}
 
 {{template name="documentTree_macros.vm" /}}
@@ -784,6 +875,8 @@ $attachment.getContentAsString()##
 #elseif ($hasAdmin)
   #if ($request.migrateprops == 1)
     #migrateProps
+  #elseif ($request.text == 1 )
+    #textReport
   #else
     #docView
   #end
