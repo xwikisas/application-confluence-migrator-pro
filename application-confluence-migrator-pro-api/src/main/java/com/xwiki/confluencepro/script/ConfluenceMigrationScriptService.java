@@ -65,7 +65,7 @@ public class ConfluenceMigrationScriptService implements ScriptService
      */
     public static final Map<String, String> PREFILLED_INPUT_PARAMETERS = Map.of(
         "cleanup", "ASYNC",
-        "unprefixedMacros", "info,toc,code,"
+        "unprefixedMacros", "info,toc,code,html,"
             + "panel,excerpt,expand,contributors,content-report-table,recently-updated"
     );
 
