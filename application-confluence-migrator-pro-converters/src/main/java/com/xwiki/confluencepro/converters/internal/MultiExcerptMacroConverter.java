@@ -51,7 +51,7 @@ public class MultiExcerptMacroConverter extends AbstractMacroConverter implement
     private static final String NAME = "name";
 
     @Override
-    protected String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
+    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
         return "excerpt";

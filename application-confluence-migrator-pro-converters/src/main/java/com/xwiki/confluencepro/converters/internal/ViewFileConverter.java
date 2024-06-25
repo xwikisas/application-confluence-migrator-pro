@@ -39,7 +39,7 @@ public class ViewFileConverter extends AbstractMacroConverter
     static final String VIEW_FILE = "view-file";
 
     @Override
-    protected String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
+    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
         return VIEW_FILE;

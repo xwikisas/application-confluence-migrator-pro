@@ -48,7 +48,7 @@ public class PagetreesearchMacroConverter extends AbstractMacroConverter
     private ConfluenceConverter converter;
 
     @Override
-    protected String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
+    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
         return "locationSearch";
