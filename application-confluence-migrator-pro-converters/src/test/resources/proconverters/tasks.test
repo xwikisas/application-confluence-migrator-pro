@@ -1,0 +1,93 @@
+.#------------------------------------------------------------------------------
+.expect|filter+xml
+.# Content conversions
+.#------------------------------------------------------------------------------
+<wikiSpace name="MySpace">
+  <wikiDocument name="WebHome">
+    <wikiDocumentLocale>
+      <p>
+        <parameters>
+          <entry>
+            <string>creation_author</string>
+            <string>XWiki.47826731</string>
+          </entry>
+          <entry>
+            <string>creation_date</string>
+            <date>2012-08-21 15:37:47.0 UTC</date>
+          </entry>
+          <entry>
+            <string>lastrevision</string>
+            <string>1</string>
+          </entry>
+        </parameters>
+      </p>
+      <wikiDocumentRevision revision="1">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.47826731</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2016-10-11 14:47:37.0 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>My Space</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>I will add some tasks
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_4" status="Done"}}
+Do this pls! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} {{date value="2023-03-13" format="yyyy-MM-dd"/}}
+{{/task}}
+
+{{task reference="/Tasks/Task_7" status="InProgress"}}
+Do this as well {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date value="2023-11-23" format="yyyy-MM-dd"/}}
+{{/task}}
+)))
+
+Some more tasks here
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_5" status="Done"}}
+DO this as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} 
+{{/task}}
+
+{{task reference="/Tasks/Task_6" status="InProgress"}}
+And this!!! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
+{{/task}}
+)))
+
+Some more editing!!!</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+      </wikiDocumentRevision>
+    </wikiDocumentLocale>
+  </wikiDocument>
+</wikiSpace>
+.#------------------------------------------------------------------------------
+.input|confluence+xml
+.configuration.source=tasks
+.#------------------------------------------------------------------------------
