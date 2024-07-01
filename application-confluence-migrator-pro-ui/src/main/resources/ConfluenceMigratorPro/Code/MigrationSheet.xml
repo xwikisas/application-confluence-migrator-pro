@@ -1019,6 +1019,12 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
             .find("label")
             .attr("for", "confluence_space_" + index)
             .append(document.createTextNode(space.reference));
+          if (space.properties.name) {
+            let spaceTitle = document.createElement("span");
+            spaceTitle.append(document.createTextNode(' - ' + space.properties.name));
+            element.find("label").append(spaceTitle);
+            delete space.properties.name;
+          }
           element
             .find("input")
             .attr("id", "confluence_space_" + index)

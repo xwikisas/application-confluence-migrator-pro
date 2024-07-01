@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceXMLPackage;
 import org.xwiki.job.event.status.CancelableJobStatus;
 import org.xwiki.job.event.status.JobStatus;
@@ -36,8 +37,8 @@ import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
 /**
  * Handles the creation and sending the question to the job status.
  *
- * @since 1.0
  * @version $Id$
+ * @since 1.0
  */
 public class ConfluenceQuestionManager
 {
@@ -63,10 +64,19 @@ public class ConfluenceQuestionManager
                 .reduce(Integer::sum).orElse(0);
 
             additionalInfo.put("attachmentsCount", Integer.toString(attachmentsNumber));
+
+            try {
+                additionalInfo.put(ConfluenceXMLPackage.KEY_SPACE_NAME,
+                    confluencePackage.getSpaceProperties(space.getValue())
+                        .getString(ConfluenceXMLPackage.KEY_SPACE_NAME, ""));
+            } catch (ConfigurationException ignored) {
+                // Shouldn't happen.
+            }
             confluenceSpaces.put(new EntitySelection(spaceRef), additionalInfo);
         }
         return createAndAskQuestion(event, confluenceSpaces, jobStatusToAsk);
     }
+
     private SpaceQuestion createAndAskQuestion(CancelableEvent event,
         Map<EntitySelection, Map<String, String>> confluenceSpaces, JobStatus jobStatusToAsk)
     {
@@ -95,7 +105,6 @@ public class ConfluenceQuestionManager
         }
         return question;
     }
-
 }
 
 
