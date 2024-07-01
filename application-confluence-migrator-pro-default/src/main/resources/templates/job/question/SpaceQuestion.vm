@@ -43,7 +43,8 @@
     #set ($filteredSpaces = [])
     #foreach ($space in $spaces)
       #set ($spaceRef = $services.model.serialize($space.entityReference))
-      #if ($spaceRef.toLowerCase().contains($search))
+      #if ($spaceRef.toLowerCase().contains($search)
+            || $spacesMap.get($space).getOrDefault('name', '').toLowerCase().contains($search))
         #set ($discard = $filteredSpaces.add($space))
       #end
     #end
