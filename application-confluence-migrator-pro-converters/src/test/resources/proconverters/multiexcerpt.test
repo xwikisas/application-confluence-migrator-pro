@@ -20,7 +20,7 @@
 
 {{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" name="exerpt1" templateData="eJyLrlbKVrJSKkssykxMyklV0lEqA3Iz85JzSlNSFTLzcjLzUpVqYwH7Xw0L" inline="true"/}}
 
-</string>
+{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" name="exerpt1"/}}</string>
             </entry>
             <entry>
               <string>syntax</string>

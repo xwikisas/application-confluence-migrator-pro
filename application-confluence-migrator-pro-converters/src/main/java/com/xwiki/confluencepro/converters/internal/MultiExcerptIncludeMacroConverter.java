@@ -33,6 +33,7 @@ import java.util.Map;
  * @since 1.20.0
  */
 @Component (hints = {
+    "multiexcerpt-include",
     "multiexcerpt-include-macro",
     "multiexcerpt-fast-include-block-macro",
     "multiexcerpt-fast-include-inline-macro"
@@ -60,11 +61,20 @@ public class MultiExcerptIncludeMacroConverter extends AbstractMacroConverter im
         Map<String, String> p = new HashMap<>(4);
 
         String reference = confluenceParameters.get("page");
+        if (reference == null) {
+            reference = confluenceParameters.get("PageWithExcerpt");
+        }
+
         reference = (reference == null || reference.isEmpty()) ? "WebHome" : reference;
 
         p.put("0", reference);
 
-        p.put(NAME, confluenceParameters.get(NAME));
+        String name = confluenceParameters.get(NAME);
+        if (name == null) {
+            name = confluenceParameters.get("MultiExcerptName");
+        }
+
+        p.put(NAME, name);
 
         InlineSupport supportsInlineMode = supportsInlineMode(confluenceId, confluenceParameters, content);
         if (InlineSupport.YES.equals(supportsInlineMode)) {
