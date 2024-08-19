@@ -204,9 +204,13 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
         if (licensor == null) {
             return;
         }
-        DocumentReference mainRef =
-            new DocumentReference(wiki, Arrays.asList("ConfluenceMigratorPro", "Code"), "MigrationClass");
-        if (!licensor.hasLicensure(mainRef) || licensor.getLicense(mainRef).getType().equals(LicenseType.TRIAL)) {
+
+        DocumentReference mainRef = new DocumentReference(wiki, Arrays.asList(
+            "ConfluenceMigratorPro", "Code"), "MigrationClass");
+
+        if (!licensor.hasLicensure(mainRef) || licensor.getLicense(mainRef) == null
+            || licensor.getLicense(mainRef).getType().equals(LicenseType.TRIAL)
+        ) {
             request.getInputProperties().put(MAX_PAGE_COUNT, TRIAL_PAGE_COUNT);
         }
     }
