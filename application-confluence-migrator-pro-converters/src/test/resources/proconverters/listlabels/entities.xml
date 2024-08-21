@@ -61,7 +61,7 @@
     </ac:parameter>
     <ac:parameter ac:name="excludedLabels">aaa,aaaa,aaaabbbbbbbb</ac:parameter>
 </ac:structured-macro>
-<p /><ac:structured-macro ac:name="listlabels" ac:schema-version="1" data-layout="default"
+<ac:structured-macro ac:name="listlabels" ac:schema-version="1" data-layout="default"
     ac:local-id="8c03087b-f303-4e87-bd18-9ca4aa2f29a8"
     ac:macro-id="1564f3a93beb45c164c5a92ba803c16e4d090591d9f9dbc5070bfd0c9ae91985">
     <ac:parameter ac:name="spaceKey">
@@ -69,14 +69,14 @@
     </ac:parameter>
     <ac:parameter ac:name="excludedLabels">aaa</ac:parameter>
 </ac:structured-macro>
-<p /><ac:structured-macro ac:name="listlabels" ac:schema-version="1" data-layout="default"
+<ac:structured-macro ac:name="listlabels" ac:schema-version="1" data-layout="default"
     ac:local-id="f1d82429-571b-458e-98f6-c7e773545582"
     ac:macro-id="8648cbae3c657ba81e4d19b7615535f09eb688b42b4c601977a945ee78083d7f">
     <ac:parameter ac:name="spaceKey">
         <ri:space ri:space-key="FOS" />
     </ac:parameter>
 </ac:structured-macro>
-<p /><ac:structured-macro ac:name="listlabels" ac:schema-version="1" data-layout="default"
+<ac:structured-macro ac:name="listlabels" ac:schema-version="1" data-layout="default"
     ac:local-id="8c03087b-f303-4e87-bd18-9ca4aa2f29a8"
     ac:macro-id="1564f3a93beb45c164c5a92ba803c16e4d090591d9f9dbc5070bfd0c9ae91985">
 </ac:structured-macro>]]></property>

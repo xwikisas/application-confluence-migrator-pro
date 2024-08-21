@@ -46,15 +46,9 @@
 
 {{tagList spaces="MySpace " excludedTags="aaa,aaaa,aaaabbbbbbbb"/}}
 
-
-
 {{tagList spaces="MySpace " excludedTags="aaa"/}}
 
-
-
 {{tagList spaces="FOS"/}}
-
-
 
 {{tagList/}}</string>
             </entry>
