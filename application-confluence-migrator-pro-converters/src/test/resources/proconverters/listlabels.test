@@ -42,15 +42,19 @@
             </entry>
             <entry>
               <string>content</string>
-              <string>{{tagList spaces="TEOS " excludedTags="aa,aaa,aaaaa"/}}
+              <string>{{tagList spaces="TEOS" excludedTags="aa,aaa,aaaaa"/}}
 
-{{tagList spaces="MySpace " excludedTags="aaa,aaaa,aaaabbbbbbbb"/}}
+{{tagList spaces="MySpace" excludedTags="aaa"/}}
 
-{{tagList spaces="MySpace " excludedTags="aaa"/}}
+
 
 {{tagList spaces="FOS"/}}
 
-{{tagList/}}</string>
+
+
+{{tagList/}}
+
+</string>
             </entry>
             <entry>
               <string>syntax</string>
