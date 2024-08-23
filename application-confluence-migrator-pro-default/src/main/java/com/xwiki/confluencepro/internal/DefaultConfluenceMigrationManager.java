@@ -435,7 +435,16 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         logMap.put("timeStamp", timeStamp);
         logMap.put("message", msg);
         if (t != null) {
-            logMap.put("throwable", ExceptionUtils.getStackFrames(t));
+            try {
+                logMap.put("throwable", ExceptionUtils.getStackFrames(t));
+            } catch (Exception e) {
+                try {
+                    logMap.put("unableToGetThrowableReason", ExceptionUtils.getStackFrames(e));
+                } catch (Exception ee) {
+                    logMap.put("failedToGetThrowableReason",
+                        "Unable to get both the exception stack and the reason of the error: " + ee.getMessage());
+                }
+            }
         }
         logList.add(logMap);
     }
