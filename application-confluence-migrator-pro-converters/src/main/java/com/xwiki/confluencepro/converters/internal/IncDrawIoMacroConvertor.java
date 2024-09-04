@@ -65,7 +65,7 @@ public class IncDrawIoMacroConvertor extends AbstractMacroConverter
         // First we make sure that we log the entries that embed diagrams from other sources.
         if (confluenceParameters.containsKey("service") || confluenceParameters.containsKey("diagramUrl")) {
             logger.warn("The inc-drawio was used with unsupported parameters.");
-            return Collections.emptyMap();
+            return confluenceParameters;
         }
         long pageId = Long.parseLong(confluenceParameters.get("pageId"));
         // The reference will always start with "Document " and we want to remove that and keep only the actual
