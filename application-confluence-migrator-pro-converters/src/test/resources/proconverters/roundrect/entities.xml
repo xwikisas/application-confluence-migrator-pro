@@ -47,18 +47,21 @@
   <object class="BodyContent" package="com.atlassian.confluence.core">
     <id name="id">156868656</id>
     <property name="body"><![CDATA[<ac:structured-macro ac:name="roundrect" ac:schema-version="1"
-        ac:macro-id="fd057482-c253-44d0-bc60-d7a0708e9eb3">
-        <ac:parameter ac:name="bgcolor">#F0F0F1</ac:parameter>
-        <ac:rich-text-body>
-          <p>This topic provides information about the concepts of notification channels and alerts.
-            It also provides instructions for creating, editing, and deleting a notification
-            channel.</p>
-            <ac:structured-macro ac:name="listlabels" ac:schema-version="1" data-layout="default" ac:local-id="fb4f80fe-62cf-43f5-b286-393fee63d897" ac:macro-id="27cba2ce9807c8f54c3aad6830ba1ed37cdb8704be31ecb25de65bdd26b81e2c"><ac:parameter ac:name="spaceKey"><ri:space ri:space-key="TEOS" /></ac:parameter><ac:parameter ac:name="excludedLabels">aa,aaa,aaaaa</ac:parameter></ac:structured-macro><ac:structured-macro ac:name="listlabels" ac:schema-version="1" data-layout="default" ac:local-id="386bf8df-7ff8-4597-bb31-7264b0ead2b1" ac:macro-id="df747c1a40ac056884f81b235922099c0665f09a2c9ffaed57e81a7c0ce2e0bf"><ac:parameter ac:name="spaceKey"><ri:space ri:space-key="currentSpace()" /></ac:parameter><ac:parameter ac:name="excludedLabels">aaa</ac:parameter></ac:structured-macro>
-<p /><ac:structured-macro ac:name="listlabels" ac:schema-version="1" data-layout="default" ac:local-id="8c03087b-f303-4e87-bd18-9ca4aa2f29a8" ac:macro-id="13ac92d7853f2dccd0a75f6e51bb137166eb52b59f6daa0bac338fce4b9e6f6a"><ac:parameter ac:name="spaceKey"><ri:space ri:space-key="FOS" /></ac:parameter><ac:parameter ac:name="excludedLabels" /></ac:structured-macro>
-<p /><ac:structured-macro ac:name="listlabels" ac:schema-version="1" data-layout="default" ac:local-id="ef1f000b-ed15-4c8c-acb2-68e15272eafa" ac:macro-id="208e060d013dc03408b519133eb5a80cee6387e86b5e5455fdbb9ebb2347228c" />
-<p />
-        </ac:rich-text-body>
-      </ac:structured-macro>]]></property>
+    ac:macro-id="9f8c3c4b-cba4-4836-9927-ef439d04a416">
+    <ac:parameter ac:name="titlebgcolor">#480021</ac:parameter>
+    <ac:parameter ac:name="bgcolor">#f80000</ac:parameter>
+    <ac:parameter ac:name="footer">this is a footer</ac:parameter>
+    <ac:parameter ac:name="width">200</ac:parameter>
+    <ac:parameter ac:name="title">Test round rect</ac:parameter>
+    <ac:parameter ac:name="class">someClass</ac:parameter>
+    <ac:parameter ac:name="footerbgcolor">#202430</ac:parameter>
+    <ac:parameter ac:name="height">300</ac:parameter>
+    <ac:rich-text-body>
+      <p>This topic provides information about the concepts of notification channels and alerts.
+      It also provides instructions for creating, editing, and deleting a notification channel. <br />
+      </p>
+    </ac:rich-text-body>
+</ac:structured-macro>]]></property>
     <property name="content" class="Page" package="com.atlassian.confluence.pages"><id name="id">45809845</id></property>
     <property name="bodyType">2</property>
   </object>
