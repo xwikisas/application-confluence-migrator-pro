@@ -10,3 +10,4 @@ com.xwiki.confluencepro.converters.internal.ProfileMacroConverter
 com.xwiki.confluencepro.converters.internal.ViewFileConverter
 com.xwiki.confluencepro.converters.internal.UserListerMacroConverter
 com.xwiki.confluencepro.converters.internal.ListLabelsMacroConverter
+com.xwiki.confluencepro.converters.internal.IncDrawIoMacroConvertor
