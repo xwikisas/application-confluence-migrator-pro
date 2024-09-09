@@ -11,3 +11,4 @@ com.xwiki.confluencepro.converters.internal.ViewFileConverter
 com.xwiki.confluencepro.converters.internal.UserListerMacroConverter
 com.xwiki.confluencepro.converters.internal.ListLabelsMacroConverter
 com.xwiki.confluencepro.converters.internal.RoundRectMacroConvertor
+com.xwiki.confluencepro.converters.internal.IncDrawIoMacroConvertor
