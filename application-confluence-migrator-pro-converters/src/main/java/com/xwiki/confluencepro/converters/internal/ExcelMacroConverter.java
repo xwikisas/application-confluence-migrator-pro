@@ -35,7 +35,7 @@ import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverte
  * Converts the basic feature of the excel macro into the office macro.
  *
  * @version $Id$
- * @since 9.52.0
+ * @since 1.23.2
  */
 @Singleton
 @Component
