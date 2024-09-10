@@ -21,7 +21,6 @@ package com.xwiki.confluencepro.converters.internal;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -29,45 +28,55 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.model.reference.EntityReference;
 
 /**
- * Converts the basic feature of the excel macro into the office macro.
+ * Converts the inc-drawio macros.
  *
  * @version $Id$
- * @since 1.24.1
+ * @since 1.20.2
  */
-@Singleton
 @Component
-@Named("excel")
-public class ExcelMacroConverter extends AbstractMacroConverter
+@Singleton
+@Named("inc-drawio")
+public class IncDrawIoMacroConvertor extends AbstractMacroConverter
 {
-    private static final String FILENAME = "att--filename";
-
     @Inject
     private Logger logger;
+
+    @Inject
+    private ConfluenceConverter converter;
 
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
-        return "office";
+        return "confluence_drawio";
     }
 
     @Override
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
         String content)
     {
+
+        // First we make sure that we log the entries that embed diagrams from other sources.
+        if (confluenceParameters.containsKey("service") || confluenceParameters.containsKey("diagramUrl")) {
+            logger.warn("The inc-drawio was used with unsupported parameters.");
+            return confluenceParameters;
+        }
+        long pageId = Long.parseLong(confluenceParameters.get("pageId"));
+        // The reference will always start with "Document " and we want to remove that and keep only the actual
+        // reference to the page
+        EntityReference reference = converter.convertDocumentReference(pageId, false);
         Map<String, String> xwikiParameters = new HashMap<>();
-        Set<String> keySet = confluenceParameters.keySet();
-        if (keySet.contains(FILENAME)) {
-            xwikiParameters.put("reference", confluenceParameters.get(FILENAME));
+        if (reference != null) {
+            String ref = reference.toString().substring(reference.toString().indexOf(" ") + 1);
+            xwikiParameters.put("originalDocumentRef", ref);
         }
-        keySet.remove(FILENAME);
-        for (String key : keySet) {
-            xwikiParameters.put("confluence_" + key, confluenceParameters.get(key));
-            logger.warn(String.format("Parameter %s is not supported and was converted into confluence_%s.", key, key));
-        }
+
+        xwikiParameters.put("diagramName", confluenceParameters.get("diagramDisplayName"));
         return xwikiParameters;
     }
 }
