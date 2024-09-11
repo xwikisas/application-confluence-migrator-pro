@@ -71,7 +71,7 @@ public class ConfluenceMigrationScriptService implements ScriptService
         "storeConfluenceDetailsEnabled", TRUE,
         "unprefixedMacros", "info,toc,code,html,"
             + "panel,excerpt,expand,contributors,content-report-table,recently-updated,"
-            + "excerpt-include,status,profile-picture,tasks-report-macro"
+            + "excerpt-include,status,profile-picture,tasks-report-macro,date"
     );
 
     /**
