@@ -51,7 +51,7 @@ public class ExcelMacroConverter extends AbstractMacroConverter
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
-        return "office";
+        return "view-file";
     }
 
     @Override
@@ -59,9 +59,10 @@ public class ExcelMacroConverter extends AbstractMacroConverter
         String content)
     {
         Map<String, String> xwikiParameters = new HashMap<>();
+        xwikiParameters.put("display", "full");
         Set<String> keySet = confluenceParameters.keySet();
         if (keySet.contains(FILENAME)) {
-            xwikiParameters.put("reference", confluenceParameters.get(FILENAME));
+            xwikiParameters.put(FILENAME, confluenceParameters.get(FILENAME));
         }
         keySet.remove(FILENAME);
         for (String key : keySet) {

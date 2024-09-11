@@ -42,7 +42,7 @@
             </entry>
             <entry>
               <string>content</string>
-              <string>{{office reference="tests-example.xls" confluence_exportFileDelimiter="%2C"/}}</string>
+              <string>{{view-file att--filename="tests-example.xls" display="full" confluence_exportFileDelimiter="%2C"/}}</string>
             </entry>
             <entry>
               <string>syntax</string>
