@@ -12,3 +12,4 @@ com.xwiki.confluencepro.converters.internal.UserListerMacroConverter
 com.xwiki.confluencepro.converters.internal.ListLabelsMacroConverter
 com.xwiki.confluencepro.converters.internal.RoundRectMacroConvertor
 com.xwiki.confluencepro.converters.internal.IncDrawIoMacroConvertor
+com.xwiki.confluencepro.converters.internal.NavmapMacroConverter
