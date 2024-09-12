@@ -38,6 +38,8 @@ import org.xwiki.test.annotation.AllComponents;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.mockito.MockitoComponentManager;
 
+import com.xwiki.date.DateMacroConfiguration;
+
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -59,6 +61,9 @@ import static org.mockito.Mockito.when;
     {
         Environment environment = componentManager.registerMockComponent(Environment.class);
         when(environment.getTemporaryDirectory()).thenReturn(XWikiTempDirUtil.createTemporaryDirectory());
+
+        DateMacroConfiguration dateConfig = componentManager.registerMockComponent(DateMacroConfiguration.class);
+        when(dateConfig.getStorageDateFormat()).thenReturn("yyyy/MM/dd HH:mm");
 
         EntityNameValidationManager validationManager =
             componentManager.registerMockComponent(EntityNameValidationManager.class);
