@@ -43,7 +43,7 @@ import com.xwiki.date.DateMacroConfiguration;
  * Some description.
  *
  * @version $Id$
- * @since 1.24.3
+ * @since 1.24.2
  */
 @Component
 @Singleton
