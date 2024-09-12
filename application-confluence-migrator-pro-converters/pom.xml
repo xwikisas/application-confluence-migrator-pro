@@ -32,7 +32,7 @@
   <properties>
     <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
     <xwiki.jacoco.instructionRatio>0.67</xwiki.jacoco.instructionRatio>
-    <taskapplication.version>3.4.3</taskapplication.version>
+    <taskapplication.version>3.5.1</taskapplication.version>
   </properties>
   <dependencies>
     <dependency>
@@ -49,6 +49,12 @@
     <dependency>
       <groupId>com.xwiki.task</groupId>
       <artifactId>application-task-api</artifactId>
+      <version>${taskapplication.version}</version>
+    </dependency>
+    <!-- We need the date configuration for the tasks-report-macro converter. -->
+    <dependency>
+      <groupId>com.xwiki.date</groupId>
+      <artifactId>macro-date-api</artifactId>
       <version>${taskapplication.version}</version>
     </dependency>
     <!-- Tests -->
