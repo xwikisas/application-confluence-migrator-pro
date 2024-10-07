@@ -49,7 +49,10 @@ public abstract class AbstractShowIfHideIfMacroConverter extends AbstractMacroCo
     {
         if (confluenceParameterName.equals(GROUP_ID_PARAM)) {
             return Arrays.stream(confluenceParameterValue.split(GROUP_ID_SEPARATOR))
-                .map(i -> converter.convertGroupReference(i).orElse(i)).collect(Collectors.joining(GROUP_ID_SEPARATOR));
+                .map(i -> {
+                    String groupRef = converter.convertGroupId(i);
+                    return groupRef == null ? i : groupRef;
+                }).collect(Collectors.joining(GROUP_ID_SEPARATOR));
         }
         return super.toXWikiParameterValue(confluenceParameterName, confluenceParameterValue, confluenceId, parameters,
             confluenceContent);
