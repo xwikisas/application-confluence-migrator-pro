@@ -40,7 +40,6 @@
 
 {{velocity output="false"}}
 #set ($discard = $xwiki.jsfx.use('uicomponents/job/job.js', true))
-#set ($discard = $xwiki.jsx.use('Confluence.Code.JobRequestFix'))
 {{/velocity}}
 
 {{velocity}}
