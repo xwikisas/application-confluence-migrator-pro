@@ -64,7 +64,7 @@
             &lt;/div&gt;
           #else
             &lt;div class="box errormessage"&gt;
-              Error has been found during the conversion !
+              Errors have been found during the conversion!
             &lt;/div&gt;
           #end
         #end
