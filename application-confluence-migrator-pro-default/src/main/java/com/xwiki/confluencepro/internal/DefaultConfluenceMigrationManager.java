@@ -35,6 +35,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -48,6 +50,9 @@ import org.slf4j.Marker;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.PageIdentifier;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
+import org.xwiki.job.Job;
+import org.xwiki.job.JobContext;
+import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.logging.LogLevel;
 import org.xwiki.logging.event.LogEvent;
 import org.xwiki.logging.tail.LogTail;
@@ -96,6 +101,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final String AN_EXCEPTION_OCCURRED = "An exception occurred";
 
+    private static final long WAIT_JOB_MILLIS = 30000;
+
     @Inject
     private Provider<XWikiContext> contextProvider;
 
@@ -107,6 +114,13 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     @Inject
     private Logger logger;
+
+    @Inject
+    protected JobContext jobContext;
+
+    private final ConcurrentLinkedDeque<Job> waitingJobs = new ConcurrentLinkedDeque<>();
+
+    private final AtomicReference<Job> runningJob = new AtomicReference<>();
 
     @Override
     public void updateAndSaveMigration(ConfluenceMigrationJobStatus jobStatus)
@@ -421,6 +435,52 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     public void enablePrerequisites()
     {
         prerequisitesManager.enablePrerequisites();
+    }
+
+    @Override
+    public void waitForOtherMigrationsToFinish() throws InterruptedException
+    {
+        Job currentJob = this.jobContext.getCurrentJob();
+        synchronized (this.runningJob) {
+            Job r = runningJob.get();
+            if (r == null) {
+                runningJob.set(currentJob);
+                return;
+            }
+            waitingJobs.offer(currentJob);
+        }
+
+        logger.info("Waiting for other running migrations to finish…");
+
+        while (true) {
+            final Job jobToWait;
+            synchronized (this.runningJob) {
+                Job r = runningJob.get();
+                Job nextJob = waitingJobs.peek();
+                if (nextJob == null || nextJob == currentJob) {
+                    if (nextJob == null) {
+                        logger.warn("While waiting for other migrations to finish, we found a null migration job "
+                            + "in the queue. This is unexpected. Going on anyway.");
+                    }
+
+                    if (r == null || r.getStatus().getState() == JobStatus.State.FINISHED) {
+                        waitingJobs.poll();
+                        runningJob.set(currentJob);
+                        return;
+                    }
+
+                    jobToWait = r;
+                } else if (nextJob.getStatus().getState() == JobStatus.State.FINISHED) {
+                    // Maybe the job crashed or was killed
+                    waitingJobs.poll();
+                    continue;
+                } else {
+                    jobToWait = nextJob;
+                }
+            }
+
+            jobToWait.join();
+        }
     }
 
     private void addToJsonList(LogEvent e, List<Map<String, Object>> logList)

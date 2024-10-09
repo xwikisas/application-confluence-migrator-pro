@@ -132,7 +132,7 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
      * Run the job.
      */
     @Override
-    protected void runInternal()
+    protected void runInternal() throws InterruptedException
     {
         boolean rightOnly = isGeneralParameterEnabled("rightOnly");
         migrationManager.disablePrerequisites();
@@ -157,6 +157,7 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
         filterJobRequest.setInteractive(interactive);
         request.setInteractive(interactive);
         progressManager.pushLevelProgress(1, this);
+        migrationManager.waitForOtherMigrationsToFinish();
         logger.info("Starting Filter Job");
         progressManager.startStep(this);
         Job filterJob = this.filterJobProvider.get();
