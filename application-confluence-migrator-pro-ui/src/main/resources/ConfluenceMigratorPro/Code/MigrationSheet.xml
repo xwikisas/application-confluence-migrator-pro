@@ -44,119 +44,16 @@
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobDoneEventEmitter'))
-#set ($prefilledValues = $services.confluenceMigration.getMutablePrefilledConfiguration())
 
 ## Start of macro ##
-#**
- * Display a form field given a descriptor. The method uses the outside param $prefilledValues.
- *
- * @param $type 'input' or 'output'.
- * @param propertyDescriptor the descriptor from which to extract data and display an input.
- *#
-#macro (displayFormField $type $propertyDescriptor)
-  #set ($propertyDescriptorId = $propertyDescriptor.id)
-  #if ($type == 'input')
-    #set ($propertyDescriptorInputId = "qproperty_inputProperties[]")
-  #else
-    #set ($propertyDescriptorInputId = "qproperty_outputProperties[]")
-  #end
-  #set ($propertyDescriptorLabel = $escapetool.xml($services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}")))
-  #if ("$!propertyDescriptorLabel" == "confluencepro.job.question.advanced.$propertyDescriptorId")
-    #set ($propertyDescriptorLabel = $propertyDescriptor.name)
-  #end
-  #set ($propertyDescriptorAbout = $escapetool.xml($services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.description")))
-  #if ("$!propertyDescriptorAbout" == "confluencepro.job.question.advanced.${propertyDescriptorId}.description")
-    #set ($propertyDescriptorAbout = $propertyDescriptor.description)
-  #end
-  #set ($propertyDescriptorSupportedFormats = $escapetool.xml($services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.supportedformats")))
-  &lt;dt&gt;
-    &lt;label for="$!escapetool.xml($propertyDescriptorId)"&gt;$propertyDescriptorLabel&lt;/label&gt;
-    #if ("$!propertyDescriptorAbout" != '')
-      &lt;span class="xHint"&gt;$propertyDescriptorAbout&lt;/span&gt;
-    #end
-    #if ("$!propertyDescriptorSupportedFormats" != "confluencepro.job.question.advanced.${propertyDescriptorId}.supportedformats")
-      &lt;span class="xHint"&gt;&lt;tt&gt;$propertyDescriptorSupportedFormats&lt;/tt&gt;&lt;/span&gt;
-    #end
-  &lt;/dt&gt;
-  &lt;dd&gt;
-    #if ("$!prefilledValues.get($type).get($propertyDescriptorId)" == '')
-      #set ($fieldValue = '')
-      #foreach ($typeDefaultEntry in $filterDefaults.get($type).entrySet())
-        #if ($typeDefaultEntry.key == $propertyDescriptorId)
-          #set ($fieldValue = $typeDefaultEntry.value)
-        #end
-      #end
-      #set ($propertyDescriptorInputValue = '')
-      #if (($propertyDescriptor.defaultValue || "$!propertyDescriptor.defaultValue" != '') &amp;&amp;
-        ($propertyDescriptor.type.getName() == 'boolean' || $propertyDescriptor.type.getName() == 'int' || $propertyDescriptor.type.getName() == 'java.lang.String'))
-        #set ($propertyDescriptorInputValue = $propertyDescriptor.defaultValue)
-      #end
-      #if ($request.get($propertyDescriptorInputId))
-        #set ($propertyDescriptorInputValue = $request.get($propertyDescriptorInputId))
-      #elseif ("$!fieldValue" != '')
-        #set ($propertyDescriptorInputValue = $fieldValue)
-      #end
-    #else
-      #set ($propertyDescriptorInputValue = $prefilledValues[$type].get($propertyDescriptorId))
-    #end
-    &lt;input type="text" class="cfm-${type}-filter-property"
-      value="$!escapetool.xml($propertyDescriptorInputValue)"
-      data-key="$!escapetool.xml($propertyDescriptorId)" /&gt;
-  &lt;/dd&gt;
-#end
-
-#**
- * users can specify a migration document from which to take default parameter
- * values. This macro handles the request parameters for this feature and updates
- * the prefilledValues object if needed.
- *#
-#macro(handlePrefilledValues)
-  #set ($savePrefillChoice = "$request.get('save-prefill-choices')")
-  #set ($configSource = $request.get("config-source"))
-  #set ($specifiedMigration = $request.get("specified-migration"))
-  #if ($configSource == "")
-    #set ($configSource = "default")
-  #end
-  #if ($savePrefillChoice == "true" || $savePrefillChoice == "on" || $savePrefillChoice == "1")
-    #set ($prefillConfigDoc = $xwiki.getDocument("ConfluenceMigratorPro.Code.PrefillConfig"))
-    #if ($prefillConfigDoc.isNew())
-      #set ($savedConfigSource = "default")
-      #set ($savedSpecifiedMigration = "")
-    #else
-      #set ($savedConfigSource = $prefillConfigDoc.getValue("configSource"))
-      #set ($savedSpecifiedMigration = $prefillConfigDoc.getValue("specifiedMigration"))
-    #end
-    #if ($savedConfigSource != $configSource || $savedSpecifiedMigration != $specifiedMigration)
-      #set ($prefillConfigObj = $prefillConfigDoc.getObject("ConfluenceMigratorPro.Code.PrefillConfigClass", true))
-      #set ($discard = $prefillConfigObj.set("configSource", $configSource))
-      #set ($discard = $prefillConfigObj.set("specifiedMigration", $specifiedMigration))
-      #set ($discard = $prefillConfigDoc.save())
-    #end
-  #end
-  #set ($fromMigrationDoc = $objecttool.null)
-  #if ($configSource != "default")
-    #if ($configSource == "last")
-      #set ($lastMigRes = $services.query.xwql("select doc.fullName from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.date desc").setLimit(1).execute())
-      #if (!$lastMigRes.isEmpty())
-        #set ($fromMigrationDoc = $xwiki.getDocument("$lastMigRes.get(0)"))
-      #end
-    #else
-      #set ($fromMigrationDoc = $xwiki.getDocument($specifiedMigration))
-    #end
-    #if ($fromMigrationDoc != $objecttool.null &amp;&amp; !$fromMigrationDoc.isNew())
-      #set ($discard = $prefilledValues['input'].putAll($jsontool.fromString($fromMigrationDoc.getValue('inputProperties'))))
-      #set ($discard = $prefilledValues['output'].putAll($jsontool.fromString($fromMigrationDoc.getValue('outputProperties'))))
-
-      Default parameter values were prefilled from [[$fromMigrationDoc]].
-    #end
-  #end
-#end
 
 #**
  * The view of the Migration when it is created. The title needs to be set and, if the request contains it,
  * the package field of the object is populated.
  *#
 #macro(newDocView)
+
+  #handlePrefilledValues
 
   {{html clean="false"}}
   &lt;label for="xwikidoctitleinput"&gt;
@@ -197,71 +94,7 @@
     $escapetool.xml($services.localization.render('confluencepro.job.question.advanced.link'))
   &lt;/a&gt;
   &lt;div class="xform collapse confluence-migrator-collapse" id="advancedInputFields"&gt;
-    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.input'))&lt;/h2&gt;
-    &lt;dl&gt;
-      &lt;input type="hidden" id="cfm-input-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_inputProperties" value="$escapetool.xml($jsontool.serialize($prefilledValues['input']))" /&gt;
-      #set ($descriptor = $services.filter.getInputFilterStreamDescriptor('confluence+xml'))
-      #foreach ($propertyDescriptor in $descriptor.properties)
-        #if ($propertyDescriptor.id != 'source' &amp;&amp; $propertyDescriptor.id != 'linkMapping')
-          #displayFormField('input', $propertyDescriptor)
-        #end
-      #end
-    &lt;/dl&gt;
-    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.general.title'))&lt;/h2&gt;
-    &lt;dl&gt;
-      &lt;dt&gt;
-        &lt;label for="skipQuestions"&gt;$escapetool.xml($services.localization.render('confluencepro.job.skipquestions.question.title'))&lt;/label&gt;
-        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.skipquestions.question.hint'))&lt;/span&gt;
-      &lt;/dt&gt;
-      &lt;dd&gt;
-        &lt;input id="skipQuestions" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('skipQuestions', 'false')" data-key="skipQuestions"/&gt;
-      &lt;/dd&gt;
-      &lt;dt&gt;
-        &lt;label for="rightOnly"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.title'))&lt;/label&gt;
-        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.hint'))&lt;/span&gt;
-      &lt;/dt&gt;
-      &lt;dd&gt;
-        &lt;input id="rightOnly" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('rightOnly', 'false')" data-key="rightOnly"/&gt;
-      &lt;/dd&gt;
-    &lt;/dl&gt;
-    &lt;h3&gt;$escapetool.xml($services.localization.render('confluencepro.job.linkmapping.title'))&lt;/h3&gt;
-    &lt;dl&gt;
-      &lt;dt&gt;
-        &lt;label for="saveLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.savelinkmapping.question.title'))&lt;/label&gt;
-        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.savelinkmapping.question.hint'))&lt;/span&gt;
-      &lt;/dt&gt;
-      &lt;dd&gt;
-        &lt;input id="saveLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('saveLinkMapping', 'false')" data-key="saveLinkMapping"/&gt;
-      &lt;/dd&gt;
-      &lt;dt&gt;
-        &lt;label for="useLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.uselinkmapping.question.title'))&lt;/label&gt;
-        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.uselinkmapping.question.hint'))&lt;/span&gt;
-      &lt;/dt&gt;
-      &lt;dd&gt;
-        &lt;input id="useLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('useLinkMapping', 'false')" data-key="useLinkMapping"/&gt;
-      &lt;/dd&gt;
-      &lt;dt&gt;
-        &lt;label for="onlyLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlylinkmapping.question.title'))&lt;/label&gt;
-        &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlylinkmapping.question.hint'))&lt;/span&gt;
-      &lt;/dt&gt;
-      &lt;dd&gt;
-        &lt;input id="onlyLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('onlyLinkMapping', 'false')" data-key="onlyLinkMapping"/&gt;
-      &lt;/dd&gt;
-    &lt;/dl&gt;
-    &lt;div style="display: none"&gt;
-      ## See https://github.com/xwikisas/application-confluence-migrator-pro/issues/83
-      &lt;div class="box warningmessage"&gt;
-        &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.warning'))&lt;/p&gt;
-      &lt;/div&gt;
-      &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.output'))&lt;/h2&gt;
-      &lt;dl&gt;
-        &lt;input type="hidden" id="cfm-output-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties" value="$escapetool.xml($jsontool.serialize($prefilledValues['output']))" /&gt;
-        #set ($descriptor = $services.filter.getOutputFilterStreamDescriptor('xwiki+instance'))
-        #foreach ($propertyDescriptor in $descriptor.properties)
-          #displayFormField('output', $propertyDescriptor)
-        #end
-      &lt;/dl&gt;
-    &lt;/div&gt;
+    #displayMigrationParameterFormFields
   &lt;/div&gt;
   {{/html}}
 
@@ -281,9 +114,11 @@
   ## End of upload handling.
   #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
   #if ("$!obj.getValue('executed')" == "" || "$obj.getValue('executed')" == "0")
-    #runAndDisplayJob($obj, true)
+    #runMigrationJob($doc, true)
+    #displayJob($obj)
   #elseif ("$obj.getValue('executed')" == "2" &amp;&amp; $objecttool.isNotNull($services.confluenceMigration.getLastJob($doc.documentReference)))
-    #runAndDisplayJob($obj, false)
+    #runMigrationJob($doc, false)
+    #displayJob($obj)
   #else
     #displayRaport($obj)
   #end
@@ -604,106 +439,70 @@ $attachment.getContentAsString()##
 #end
 
 #**
- * Run the migration job if the `executed` flag is false and if there is a `package` set.
- * Display the status and the logs of the job.
- *
- * @param $obj the migration object of this page.
- *#
-#macro(runAndDisplayJob $obj $startMigration)
-  #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
-  #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
-  #if (!$services.licensing.licensor.hasLicensureForEntity($mainReference) || $license.type == 'TRIAL')
-    #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.TrialScript'))
-    {{warning}}$services.localization.render('confluencepro.migration.missingLicense'){{/warning}}
-  #end
-  #set ($confluenceJob = $services.confluenceMigration.getLastJob($doc.documentReference))
-  #set ($package = $obj.getProperty('package').value)
-  #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
-  #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
-  #if ($startMigration &amp;&amp; ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED'))
-    #if ("$!package" != '' || "$!inputProperties.source" != '')
-      ## If the package is missing, then the migration will use the 'source' parameter of the input properties.
-      #set ($attachmentInputStream = $NULL)
-      #if ("$!package" != '')
-        #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
-        #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
-        #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
-        #set ($attachmentInputStream = $attachDoc.getAttachment($attachRef.name).getContentInputStream())
-      #end
-      #if ("$!outputProperties.get('authorPreserved')" == 'false')
-        #set ($discard = $outputProperties.putIfAbsent('author', $xcontext.userReference))
-      #end
-      #set ($confluenceJob = $services.confluenceMigration.migrate($doc.documentReference, $attachmentInputStream, $inputProperties, $outputProperties))
-      #set ($discard = $obj.set("executed", 2))
-      #set ($discard = $doc.save("Executing the migration"))
-      #displayJob($confluenceJob)
-    #else
-      ## No package to start the migration
-      #displayZipPickerForm
-    #end
-  #else
-    #displayJob($confluenceJob)
-  #end
-#end
-
-#**
  * Display the job.
  *
  * @param $confluenceJob the job that will be displayed.
  *#
-#macro(displayJob $confluenceJob)
-  #set ($jobStatusURL = $doc.getURL('ConfluenceMigratorPro.Code.JobJSON', 'get', $escapetool.url({
-    'outputSyntax': 'plain',
-    'docRef': $services.model.serialize($doc.documentReference)
-  })))
+#macro(displayJob $obj)
+  #set ($package = $obj.getProperty('package').value)
+  #if ("$!package" == '' &amp;&amp; "$!inputProperties.source" == '')
+    #displayZipPickerForm
+  #else
+    #set ($confluenceJob = $services.confluenceMigration.getLastJob($doc.documentReference))
 
-  {{html}}
-  #template('job_macros.vm')
-  #set ($jobStatus = $confluenceJob.status)
-  #set ($jobState = $jobStatus.state)
-  #set ($finished = $jobState == 'FINISHED')
-  #if (!$finished &amp;&amp; "$!request.interrupt" == "1")
-    $jobStatus.cancel()
-  #end
-  #set ($jobRequest = $jobStatus.request)
-  #if (!$jobStatusURL)
-    #set ($jobStatusURL = $doc.getURL('get', $escapetool.url({
-      'xpage': 'job_status_json',
+    #set ($jobStatusURL = $doc.getURL('ConfluenceMigratorPro.Code.JobJSON', 'get', $escapetool.url({
       'outputSyntax': 'plain',
-      'jobId': $jobRequest.id,
-      'translationPrefix': $translationPrefix
+      'docRef': $services.model.serialize($doc.documentReference)
     })))
-  #end
-  &lt;div class="xcontent job-status" data-url="$escapetool.xml($jobStatusURL)"&gt;
-    &lt;div class="job-loading-status"&gt;
-      &lt;div class="loading-icon loading"&gt;&lt;/div&gt;
-      &lt;span class="loading-text"&gt;$escapetool.xml($services.localization.render('confluencepro.job.status.readingPackage'))&lt;/span&gt;
-    &lt;/div&gt;
-    #set($titleKey = "${translationPrefix}.label")
-    #if ($services.localization.get($titleKey))
-      &lt;h2&gt;$escapetool.xml($services.localization.render($titleKey))&lt;/h2&gt;
-      #set($titleHintKey = "${translationPrefix}.hint")
-      #if ($services.localization.get($titleHintKey))
-        &lt;p class="text-muted small"&gt;$escapetool.xml($services.localization.render($titleHintKey))&lt;/p&gt;
-      #end
-    #end
-    #if (!$finished)
-      #displayJobProgressBar($jobStatus)
-      #displayJobQuestion($jobStatus)
-    #else
-      #jobFinishedMessage($status, $translationPrefix)
-    #end
-    #if ($showLogs || $isAdvancedUser || $isSuperAdmin)
-      #displayJobStatusLog($jobStatus true)
-      #if (!$finished)
-        &lt;p style="text-align:right"&gt;
-          &lt;input type="button" class="btn btn-danger" value="$services.localization.render('confluencepro.job.interrupt.button')" name="interrupt" id="cfmInterrupt"/&gt;
-        &lt;/p&gt;
-      #end
-    #end
-  &lt;/div&gt;
-  {{/html}}
 
+    {{html}}
+    #template('job_macros.vm')
+    #set ($jobStatus = $confluenceJob.status)
+    #set ($jobState = $jobStatus.state)
+    #set ($finished = $jobState == 'FINISHED')
+    #if (!$finished &amp;&amp; "$!request.interrupt" == "1")
+      $jobStatus.cancel()
+    #end
+    #set ($jobRequest = $jobStatus.request)
+    #if (!$jobStatusURL)
+      #set ($jobStatusURL = $doc.getURL('get', $escapetool.url({
+        'xpage': 'job_status_json',
+        'outputSyntax': 'plain',
+        'jobId': $jobRequest.id,
+        'translationPrefix': $translationPrefix
+      })))
+    #end
+    &lt;div class="xcontent job-status" data-url="$escapetool.xml($jobStatusURL)"&gt;
+      &lt;div class="job-loading-status"&gt;
+        &lt;div class="loading-icon loading"&gt;&lt;/div&gt;
+        &lt;span class="loading-text"&gt;$escapetool.xml($services.localization.render('confluencepro.job.status.readingPackage'))&lt;/span&gt;
+      &lt;/div&gt;
+      #set($titleKey = "${translationPrefix}.label")
+      #if ($services.localization.get($titleKey))
+        &lt;h2&gt;$escapetool.xml($services.localization.render($titleKey))&lt;/h2&gt;
+        #set($titleHintKey = "${translationPrefix}.hint")
+        #if ($services.localization.get($titleHintKey))
+          &lt;p class="text-muted small"&gt;$escapetool.xml($services.localization.render($titleHintKey))&lt;/p&gt;
+        #end
+      #end
+      #if (!$finished)
+        #displayJobProgressBar($jobStatus)
+        #displayJobQuestion($jobStatus)
+      #else
+        #jobFinishedMessage($status, $translationPrefix)
+      #end
+      #if ($showLogs || $isAdvancedUser || $isSuperAdmin)
+        #displayJobStatusLog($jobStatus true)
+        #if (!$finished)
+          &lt;p style="text-align:right"&gt;
+            &lt;input type="button" class="btn btn-danger" value="$services.localization.render('confluencepro.job.interrupt.button')" name="interrupt" id="cfmInterrupt"/&gt;
+          &lt;/p&gt;
+        #end
+      #end
+    &lt;/div&gt;
+    {{/html}}
+
+  #end
 #end
 
 #**
@@ -868,7 +667,6 @@ $attachment.getContentAsString()##
 #set ($discard = $doc.use('ConfluenceMigratorPro.Code.MigrationClass'))
 #if ($xcontext.action == 'edit' || $xcontext.action == 'admin')
   #if ($doc.isNew())
-    #handlePrefilledValues
     #newDocView
   #else
   #end

@@ -116,7 +116,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     private Logger logger;
 
     @Inject
-    protected JobContext jobContext;
+    private JobContext jobContext;
 
     private final ConcurrentLinkedDeque<Job> waitingJobs = new ConcurrentLinkedDeque<>();
 

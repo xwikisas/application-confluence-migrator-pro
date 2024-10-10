@@ -105,6 +105,265 @@
   }
 }{{/liveData}}
 #end
+#**
+ * users can specify a migration document from which to take default parameter
+ * values. This macro handles the request parameters for this feature and updates
+ * the prefilledValues object if needed.
+ * Note: outputs XWiki syntax.
+ *#
+#macro(handlePrefilledValues)
+  #set ($prefilledValues = $services.confluenceMigration.getMutablePrefilledConfiguration())
+  #set ($savePrefillChoice = "$request.get('save-prefill-choices')")
+  #set ($configSource = $request.get("config-source"))
+  #set ($specifiedMigration = $request.get("specified-migration"))
+  #if ($configSource == "")
+    #set ($configSource = "default")
+  #end
+  #if ($savePrefillChoice == "true" || $savePrefillChoice == "on" || $savePrefillChoice == "1")
+    #set ($prefillConfigDoc = $xwiki.getDocument("ConfluenceMigratorPro.Code.PrefillConfig"))
+    #if ($prefillConfigDoc.isNew())
+      #set ($savedConfigSource = "default")
+      #set ($savedSpecifiedMigration = "")
+    #else
+      #set ($savedConfigSource = $prefillConfigDoc.getValue("configSource"))
+      #set ($savedSpecifiedMigration = $prefillConfigDoc.getValue("specifiedMigration"))
+    #end
+    #if ($savedConfigSource != $configSource || $savedSpecifiedMigration != $specifiedMigration)
+      #set ($prefillConfigObj = $prefillConfigDoc.getObject("ConfluenceMigratorPro.Code.PrefillConfigClass", true))
+      #set ($discard = $prefillConfigObj.set("configSource", $configSource))
+      #set ($discard = $prefillConfigObj.set("specifiedMigration", $specifiedMigration))
+      #set ($discard = $prefillConfigDoc.save())
+    #end
+  #end
+  #set ($fromMigrationDoc = $objecttool.null)
+  #if ($configSource != "default")
+    #if ($configSource == "last")
+      #set ($lastMigRes = $services.query.xwql("select doc.fullName from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.date desc").setLimit(1).execute())
+      #if (!$lastMigRes.isEmpty())
+        #set ($fromMigrationDoc = $xwiki.getDocument("$lastMigRes.get(0)"))
+      #end
+    #else
+      #set ($fromMigrationDoc = $xwiki.getDocument($specifiedMigration))
+    #end
+    #if ($fromMigrationDoc != $objecttool.null &amp;&amp; !$fromMigrationDoc.isNew())
+      #set ($discard = $prefilledValues['input'].putAll($jsontool.fromString($fromMigrationDoc.getValue('inputProperties'))))
+      #set ($discard = $prefilledValues['output'].putAll($jsontool.fromString($fromMigrationDoc.getValue('outputProperties'))))
+
+      Default parameter values were prefilled from [[$fromMigrationDoc]].
+    #end
+  #end
+#end
+/**
+ * Display the migration parameter fields.
+ * Requires calling handlePrefilledValues before.
+ */
+#macro(displayMigrationParameterFormFields)
+  &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.input'))&lt;/h2&gt;
+  &lt;dl&gt;
+    &lt;input type="hidden" id="cfm-input-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_inputProperties" value="$escapetool.xml($jsontool.serialize($prefilledValues['input']))" /&gt;
+    #set ($descriptor = $services.filter.getInputFilterStreamDescriptor('confluence+xml'))
+    #foreach ($propertyDescriptor in $descriptor.properties)
+      #if ($propertyDescriptor.id != 'source' &amp;&amp; $propertyDescriptor.id != 'linkMapping')
+        #displayFormField('input', $propertyDescriptor)
+      #end
+    #end
+  &lt;/dl&gt;
+  &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.general.title'))&lt;/h2&gt;
+  &lt;dl&gt;
+    &lt;dt&gt;
+      &lt;label for="skipQuestions"&gt;$escapetool.xml($services.localization.render('confluencepro.job.skipquestions.question.title'))&lt;/label&gt;
+      &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.skipquestions.question.hint'))&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input id="skipQuestions" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('skipQuestions', 'false')" data-key="skipQuestions"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="rightOnly"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.title'))&lt;/label&gt;
+      &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.question.hint'))&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input id="rightOnly" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('rightOnly', 'false')" data-key="rightOnly"/&gt;
+    &lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;h3&gt;$escapetool.xml($services.localization.render('confluencepro.job.linkmapping.title'))&lt;/h3&gt;
+  &lt;dl&gt;
+    &lt;dt&gt;
+      &lt;label for="saveLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.savelinkmapping.question.title'))&lt;/label&gt;
+      &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.savelinkmapping.question.hint'))&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input id="saveLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('saveLinkMapping', 'false')" data-key="saveLinkMapping"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="useLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.uselinkmapping.question.title'))&lt;/label&gt;
+      &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.uselinkmapping.question.hint'))&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input id="useLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('useLinkMapping', 'false')" data-key="useLinkMapping"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="onlyLinkMapping"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlylinkmapping.question.title'))&lt;/label&gt;
+      &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlylinkmapping.question.hint'))&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input id="onlyLinkMapping" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('onlyLinkMapping', 'false')" data-key="onlyLinkMapping"/&gt;
+    &lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;div style="display: none"&gt;
+    ## See https://github.com/xwikisas/application-confluence-migrator-pro/issues/83
+    &lt;div class="box warningmessage"&gt;
+      &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.warning'))&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.output'))&lt;/h2&gt;
+    &lt;dl&gt;
+      &lt;input type="hidden" id="cfm-output-properties" name="ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties" value="$escapetool.xml($jsontool.serialize($prefilledValues['output']))" /&gt;
+      #set ($descriptor = $services.filter.getOutputFilterStreamDescriptor('xwiki+instance'))
+      #foreach ($propertyDescriptor in $descriptor.properties)
+        #displayFormField('output', $propertyDescriptor)
+      #end
+    &lt;/dl&gt;
+  &lt;/div&gt;
+#end
+#**
+ * Display a form field given a descriptor. The method uses the outside param $prefilledValues.
+ *
+ * @param $type 'input' or 'output'.
+ * @param propertyDescriptor the descriptor from which to extract data and display an input.
+ *#
+#macro (displayFormField $type $propertyDescriptor)
+  #set ($propertyDescriptorId = $propertyDescriptor.id)
+  #if ($type == 'input')
+    #set ($propertyDescriptorInputId = "qproperty_inputProperties[]")
+  #else
+    #set ($propertyDescriptorInputId = "qproperty_outputProperties[]")
+  #end
+  #set ($propertyDescriptorLabel = $escapetool.xml($services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}")))
+  #if ("$!propertyDescriptorLabel" == "confluencepro.job.question.advanced.$propertyDescriptorId")
+    #set ($propertyDescriptorLabel = $propertyDescriptor.name)
+  #end
+  #set ($propertyDescriptorAbout = $escapetool.xml($services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.description")))
+  #if ("$!propertyDescriptorAbout" == "confluencepro.job.question.advanced.${propertyDescriptorId}.description")
+    #set ($propertyDescriptorAbout = $propertyDescriptor.description)
+  #end
+  #set ($propertyDescriptorSupportedFormats = $escapetool.xml($services.localization.render("confluencepro.job.question.advanced.${propertyDescriptorId}.supportedformats")))
+  &lt;dt&gt;
+    &lt;label for="$!escapetool.xml($propertyDescriptorId)"&gt;$propertyDescriptorLabel&lt;/label&gt;
+    #if ("$!propertyDescriptorAbout" != '')
+      &lt;span class="xHint"&gt;$propertyDescriptorAbout&lt;/span&gt;
+    #end
+    #if ("$!propertyDescriptorSupportedFormats" != "confluencepro.job.question.advanced.${propertyDescriptorId}.supportedformats")
+      &lt;span class="xHint"&gt;&lt;tt&gt;$propertyDescriptorSupportedFormats&lt;/tt&gt;&lt;/span&gt;
+    #end
+  &lt;/dt&gt;
+  &lt;dd&gt;
+    #if ("$!prefilledValues.get($type).get($propertyDescriptorId)" == '')
+      #set ($propertyDescriptorInputValue = '')
+      #if (($propertyDescriptor.defaultValue || "$!propertyDescriptor.defaultValue" != '') &amp;&amp;
+        ($propertyDescriptor.type.getName() == 'boolean' || $propertyDescriptor.type.getName() == 'int' || $propertyDescriptor.type.getName() == 'java.lang.String'))
+        #set ($propertyDescriptorInputValue = $propertyDescriptor.defaultValue)
+      #end
+      #if ($request.get($propertyDescriptorInputId))
+        #set ($propertyDescriptorInputValue = $request.get($propertyDescriptorInputId))
+      #end
+    #else
+      #set ($propertyDescriptorInputValue = $prefilledValues[$type].get($propertyDescriptorId))
+    #end
+    &lt;input type="text" class="cfm-${type}-filter-property"
+      value="$!escapetool.xml($propertyDescriptorInputValue)"
+      data-key="$!escapetool.xml($propertyDescriptorId)" /&gt;
+  &lt;/dd&gt;
+#end
+#**
+ * Display form fields to choose a migration from which to prefill parameters.
+ *#
+#macro (displayPrefillForm)
+  #set ($migrations = $services.query.xwql("select doc.fullName, doc.name, doc.title from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.fullName desc").execute())
+  #if (!$migrations.isEmpty())
+    #set ($prefillConfigDoc = $xwiki.getDocument("ConfluenceMigratorPro.Code.PrefillConfig"))
+    #if ($prefillConfigDoc.isNew())
+      #set ($configSource = "default")
+      #set ($specifiedMigration = "")
+    #else
+      #set ($configSource = "$!prefillConfigDoc.getValue('configSource')")
+      #set ($specifiedMigration = "$!prefillConfigDoc.getValue('specifiedMigration')")
+      #if ($configSource == '')
+        #set ($configSource = "default")
+      #end
+    #end
+    &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.packages.prefillUsing'))&lt;/p&gt;
+    &lt;p&gt;
+      &lt;label&gt;
+        &lt;input type="radio" name="config-source" value="default" id="config-source-default" autocomplete="off" #if ($configSource == "default") checked="checked" #end/&gt;
+        $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingDefaults'))
+      &lt;/label&gt;
+    &lt;/p&gt;
+    &lt;p&gt;
+      &lt;label&gt;
+        &lt;input type="radio" name="config-source" value="last" id="config-source-last" autocomplete="off" #if ($configSource == "last") checked="checked" #end/&gt;
+        $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingLast'))
+      &lt;/label&gt;
+    &lt;/p&gt;
+    &lt;p&gt;
+      &lt;label&gt;
+        &lt;input type="radio" name="config-source" value="specified" id="config-source-specified" autocomplete="off" #if ($configSource == "specified") checked="specified" #end/&gt;
+        $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingSpecified'))
+      &lt;/label&gt;
+      &lt;select name="specified-migration" id="specified-migration" autocomplete="off"&gt;
+        &lt;option value="" #if ($specifiedMigration == "") selected="selected"#end&gt;&lt;/option&gt;
+      #foreach ($migration in $migrations)
+        #set ($escapedMigrationName = $escapetool.xml($migration[0]))
+        #set ($escapedMigrationTitle = $escapetool.xml($migration[2]))
+        #if ($escapedMigrationTitle == "")
+          #set ($escapedMigrationTitle = $escapetool.xml($migration[1]))
+        #end
+        &lt;option value="$escapedMigrationName" #if ($migration[0] == $specifiedMigration) selected="selected"#end&gt;$escapedMigrationTitle&lt;/option&gt;
+      #end
+      &lt;/select&gt;
+    &lt;/p&gt;
+    &lt;p&gt;
+      &lt;label&gt;
+        &lt;input type="checkbox" id="save-prefill-choices" name="save-prefill-choices" checked="checked" autocomplete="off" /&gt;
+        $escapetool.xml($services.localization.render('confluencepro.packages.rememberPrefillConfig'))
+      &lt;/label&gt;
+  #end
+#end
+#**
+ * Run the migration job if the `executed` flag is false and if there is a `package` set.
+ * Display the status and the logs of the job.
+ *
+ * @param $obj the migration object of this page.
+ *#
+#macro(runMigrationJob $migrationDoc $startMigration)
+  #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
+  #set ($obj = $migrationDoc.getObject($mainReference, false))
+  #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
+  #if (!$services.licensing.licensor.hasLicensureForEntity($mainReference) || $license.type == 'TRIAL')
+    #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.TrialScript'))
+    {{warning}}$services.localization.render('confluencepro.migration.missingLicense'){{/warning}}
+  #end
+  #set ($confluenceJob = $services.confluenceMigration.getLastJob($migrationDoc.documentReference))
+  #set ($package = $obj.getProperty('package').value)
+  #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
+  #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
+  #if ($startMigration &amp;&amp; ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED'))
+    #if ("$!package" != '' || "$!inputProperties.source" != '')
+      ## If the package is missing, then the migration will use the 'source' parameter of the input properties.
+      #set ($attachmentInputStream = $NULL)
+      #if ("$!package" != '')
+        #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
+        #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
+        #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
+        #set ($attachmentInputStream = $attachDoc.getAttachment($attachRef.name).getContentInputStream())
+      #end
+      #if ("$!outputProperties.get('authorPreserved')" == 'false')
+        #set ($discard = $outputProperties.putIfAbsent('author', $xcontext.userReference))
+      #end
+      #set ($confluenceJob = $services.confluenceMigration.migrate($migrationDoc.documentReference, $attachmentInputStream, $inputProperties, $outputProperties))
+      #set ($discard = $obj.set("executed", 2))
+      #set ($discard = $migrationDoc.save("Executing the migration"))
+    #end
+  #end
+#end
 {{/velocity}}</content>
   <object>
     <name>ConfluenceMigratorPro.Code.CommonCode</name>
