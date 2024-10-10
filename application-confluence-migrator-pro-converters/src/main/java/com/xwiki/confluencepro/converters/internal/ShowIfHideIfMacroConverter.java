@@ -24,7 +24,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
+import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
 
@@ -34,7 +36,9 @@ import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverte
  * @version $Id$
  * @since 1.23.2
  */
-public abstract class AbstractShowIfHideIfMacroConverter extends AbstractMacroConverter
+@Component(hints = {"hide-if", "show-if"})
+@Singleton
+public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
 {
     private static final String GROUP_ID_PARAM = "groupIds";
 

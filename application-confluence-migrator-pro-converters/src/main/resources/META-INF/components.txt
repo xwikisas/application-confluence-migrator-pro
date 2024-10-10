@@ -1,5 +1,4 @@
 com.xwiki.confluencepro.converters.internal.DateMacroConverter
-com.xwiki.confluencepro.converters.internal.HideIfMacroConverter
 com.xwiki.confluencepro.converters.internal.LivesearchMacroConverter
 com.xwiki.confluencepro.converters.internal.MSStreamConverter
 com.xwiki.confluencepro.converters.internal.MultiExcerptMacroConverter
@@ -9,7 +8,7 @@ com.xwiki.confluencepro.converters.internal.TaskMacroConverter
 com.xwiki.confluencepro.converters.internal.TaskListMacroConverter
 com.xwiki.confluencepro.converters.internal.TasksReportMacroConverter
 com.xwiki.confluencepro.converters.internal.ProfileMacroConverter
-com.xwiki.confluencepro.converters.internal.ShowIfMacroConverter
+com.xwiki.confluencepro.converters.internal.ShowIfHideIfMacroConverter
 com.xwiki.confluencepro.converters.internal.ViewFileConverter
 com.xwiki.confluencepro.converters.internal.UserListerMacroConverter
 com.xwiki.confluencepro.converters.internal.ListLabelsMacroConverter
