@@ -34,7 +34,7 @@ import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverte
  * Converter used for hide-if and show-if macro.
  *
  * @version $Id$
- * @since 1.24.6
+ * @since 1.26.0
  */
 @Component(hints = {"hide-if", "show-if"})
 @Singleton
