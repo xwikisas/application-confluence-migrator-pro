@@ -85,4 +85,5 @@ Hello ~{~{inline}}
 .#------------------------------------------------------------------------------
 .input|confluence+xml
 .configuration.source=multiexcerpt
+.configuration.storeConfluenceDetailsEnabled=false
 .#------------------------------------------------------------------------------

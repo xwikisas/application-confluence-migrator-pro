@@ -90,4 +90,5 @@ Some more editing!!!</string>
 .#------------------------------------------------------------------------------
 .input|confluence+xml
 .configuration.source=tasks
+.configuration.storeConfluenceDetailsEnabled=false
 .#------------------------------------------------------------------------------

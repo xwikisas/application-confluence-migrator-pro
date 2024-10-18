@@ -76,4 +76,5 @@
 .#------------------------------------------------------------------------------
 .input|confluence+xml
 .configuration.source=listlabels
+.configuration.storeConfluenceDetailsEnabled=false
 .#------------------------------------------------------------------------------

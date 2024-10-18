@@ -68,4 +68,5 @@
 .#------------------------------------------------------------------------------
 .input|confluence+xml
 .configuration.source=userlister
+.configuration.storeConfluenceDetailsEnabled=false
 .#------------------------------------------------------------------------------

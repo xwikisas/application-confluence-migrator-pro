@@ -63,4 +63,5 @@
 .#------------------------------------------------------------------------------
 .input|confluence+xml
 .configuration.source=msstream
+.configuration.storeConfluenceDetailsEnabled=false
 .#------------------------------------------------------------------------------

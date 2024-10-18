@@ -67,4 +67,5 @@
 .#------------------------------------------------------------------------------
 .input|confluence+xml
 .configuration.source=incdrawio
+.configuration.storeConfluenceDetailsEnabled=false
 .#------------------------------------------------------------------------------

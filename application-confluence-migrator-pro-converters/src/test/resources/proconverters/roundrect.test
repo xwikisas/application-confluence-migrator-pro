@@ -66,4 +66,5 @@ This topic provides information about the concepts of notification channels and 
 .#------------------------------------------------------------------------------
 .input|confluence+xml
 .configuration.source=roundrect
+.configuration.storeConfluenceDetailsEnabled=false
 .#------------------------------------------------------------------------------

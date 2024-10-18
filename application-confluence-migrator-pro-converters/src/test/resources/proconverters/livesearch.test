@@ -111,4 +111,5 @@ livesearch, labels
 .#------------------------------------------------------------------------------
 .input|confluence+xml
 .configuration.source=livesearch
+.configuration.storeConfluenceDetailsEnabled=false
 .#------------------------------------------------------------------------------
