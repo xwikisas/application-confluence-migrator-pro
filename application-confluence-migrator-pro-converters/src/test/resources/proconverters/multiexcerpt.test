@@ -81,6 +81,72 @@ Hello ~{~{inline}}
       </wikiDocumentLocale>
     </wikiDocument>
   </wikiSpace>
+  <wikiSpace name="Old Multiple Excerpt Include">
+    <wikiDocument name="WebHome">
+      <wikiDocumentLocale>
+        <wikiDocumentRevision revision="20">
+          <p>
+            <parameters>
+              <entry>
+                <string>title</string>
+                <string>Old Multiple Excerpt Include</string>
+              </entry>
+              <entry>
+                <string>content</string>
+                <string>{{excerpt-include 0="MyPage" name="oldname"}}{{/excerpt-include}}</string>
+              </entry>
+              <entry>
+                <string>syntax</string>
+                <org.xwiki.rendering.syntax.Syntax>
+                  <type>
+                    <name>XWiki</name>
+                    <id>xwiki</id>
+                    <variants class="empty-list"/>
+                  </type>
+                  <version>2.1</version>
+                </org.xwiki.rendering.syntax.Syntax>
+              </entry>
+            </parameters>
+          </p>
+        </wikiDocumentRevision>
+      </wikiDocumentLocale>
+    </wikiDocument>
+  </wikiSpace>
+  <wikiSpace name="Old Multiple Excerpt">
+    <wikiDocument name="WebHome">
+      <wikiDocumentLocale>
+        <wikiDocumentRevision revision="22">
+          <p>
+            <parameters>
+              <entry>
+                <string>title</string>
+                <string>Old Multiple Excerpt</string>
+              </entry>
+              <entry>
+                <string>content</string>
+                <string>{{excerpt name="oldname"}}
+
+HELLO
+
+{{/excerpt}}</string>
+              </entry>
+              <entry>
+                <string>syntax</string>
+                <org.xwiki.rendering.syntax.Syntax>
+                  <type>
+                    <name>XWiki</name>
+                    <id>xwiki</id>
+                    <variants class="empty-list"/>
+                  </type>
+                  <version>2.1</version>
+                </org.xwiki.rendering.syntax.Syntax>
+              </entry>
+            </parameters>
+          </p>
+        </wikiDocumentRevision>
+      </wikiDocumentLocale>
+    </wikiDocument>
+  </wikiSpace>
 </wikiSpace>
 .#------------------------------------------------------------------------------
 .input|confluence+xml

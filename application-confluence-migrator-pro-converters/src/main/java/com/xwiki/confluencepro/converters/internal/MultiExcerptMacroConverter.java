@@ -33,6 +33,7 @@ import java.util.Map;
  * @since 1.20.0
  */
 @Component (hints = {
+    "multi-excerpt",
     "multiexcerpt-fast-block-macro",
     "multiexcerpt-fast-inline-macro",
     "multiexcerpt-macro",

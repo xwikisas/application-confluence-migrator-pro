@@ -33,6 +33,7 @@ import java.util.Map;
  * @since 1.20.0
  */
 @Component (hints = {
+    "multi-excerpt-include",
     "multiexcerpt-include",
     "multiexcerpt-include-macro",
     "multiexcerpt-fast-include-block-macro",
@@ -61,8 +62,13 @@ public class MultiExcerptIncludeMacroConverter extends AbstractMacroConverter im
         Map<String, String> p = new HashMap<>(4);
 
         String reference = confluenceParameters.get("page");
+
         if (reference == null) {
             reference = confluenceParameters.get("PageWithExcerpt");
+        }
+
+        if (reference == null) {
+            reference = confluenceParameters.get("pageTitle");
         }
 
         reference = (reference == null || reference.isEmpty()) ? "WebHome" : reference;
