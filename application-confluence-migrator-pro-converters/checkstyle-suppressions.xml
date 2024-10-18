@@ -7,4 +7,6 @@
 <suppressions>
   <suppress checks="NPathComplexity|CyclomaticComplexity"
             files="src/main/java/com/xwiki/confluencepro/converters/internal/LivesearchMacroConverter\.java$"/>
+  <suppress checks="NPathComplexity"
+            files="src/main/java/com/xwiki/confluencepro/converters/internal/MultiExcerptIncludeMacroConverter\.java$"/>
 </suppressions>
