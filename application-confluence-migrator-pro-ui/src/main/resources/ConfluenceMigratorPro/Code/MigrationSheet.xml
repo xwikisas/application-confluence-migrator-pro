@@ -193,20 +193,32 @@ $attachment.getContentAsString()##
   &lt;ul class="imported-spaces"&gt;
     #set ($options = {})
     #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
-    #set ($rootSpace = $inputProperties.get("rootSpace"))
-    #if ("$!rootSpace" == "")
-      #set ($spacePrefix = "")
+    #set ($rootSpaceStr = $inputProperties.get("root"))
+    #if ("$!rootSpaceStr" == "")
+      ## Gracefully handle the deprecated property
+      #set ($rootSpaceStr = $inputProperties.get("rootSpace"))
+    #end
+    #if ("$!rootSpaceStr" == "")
+      #set ($rootSpace = $services.model.createWikiReference($xcontext.getDatabase()))
+    #elseif ($rootSpaceStr.startsWith("wiki:"))
+      #set ($rootSpace = $services.model.createWikiReference($rootSpaceStr.substring(5)))
+    #elseif ($rootSpaceStr.startsWith("space:"))
+      #set ($rootSpace = $services.model.resolveSpace($rootSpaceStr.substring(6)))
     #else
-      #set ($spacePrefix = "${rootSpace}.")
+      #if ($rootSpaceStr.endsWith(".WebHome"))
+        #set ($rootSpaceStr = $rootSpaceStr.substring(0, $rootSpaceStr.length() - 8))
+      #end
+      #set ($rootSpace = $services.model.resolveSpace($rootSpaceStr))
     #end
     #foreach ($space in $spaces)
-      #set ($spaceDoc = "${xcontext.wiki}:${spacePrefix}${space}.WebHome")
+      #set ($spaceRef = $services.model.createSpaceReference($space, $rootSpace))
+      #set ($spaceHomeRef = $services.model.serialize($services.model.createDocumentReference("WebHome", $spaceRef)))
       &lt;li&gt;
         &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
           $services.icon.renderHTML('caret-down')
         &lt;/a&gt;
-        [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$services.rendering.escape($spaceDoc, $xwiki.currentContentSyntaxId)]]
-        #set ($discard = $options.put('root', "document:${spaceDoc}"))
+        [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$spaceHomeRef]]
+        #set ($discard = $options.put('root', "document:$spaceHomeRef"))
         #set ($discard = $options.put('links', 'true'))
         #set ($discard = $options.put('compact', 'true'))
         &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;
