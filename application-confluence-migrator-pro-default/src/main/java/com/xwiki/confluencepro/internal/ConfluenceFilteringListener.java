@@ -130,8 +130,8 @@ public class ConfluenceFilteringListener extends AbstractEventListener
 
     private static boolean isPropertyEnabled(ConfluenceMigrationJobStatus jobStatusToAsk, String propertyName)
     {
-        String useLinkMapping = (String) jobStatusToAsk.getRequest().getOutputProperties().get(propertyName);
-        return "true".equals(useLinkMapping) || "1".equals(useLinkMapping);
+        String v = (String) jobStatusToAsk.getRequest().getOutputProperties().get(propertyName);
+        return "true".equals(v) || "1".equals(v);
     }
 
     private static boolean handleSpaceSelection(ConfluenceFilteringEvent event, ConfluenceXMLPackage confluencePackage,
