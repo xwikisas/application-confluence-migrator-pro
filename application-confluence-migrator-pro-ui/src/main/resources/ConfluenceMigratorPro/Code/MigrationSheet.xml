@@ -180,8 +180,11 @@ $attachment.getContentAsString()##
   #set ($spaceCount = $spaces.size())
   #if ($spaceCount == 0)
     #set ($spaceCount = "")
+  #elseif ($spaceCount == 1)
+    #displaySubtitle('check', 'confluencepro.migration.raport.imported.onespace.title', '', [$imported])
+  #else
+    #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $spaceCount])
   #end
-  #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $spaceCount])
 
   {{/html}}
 

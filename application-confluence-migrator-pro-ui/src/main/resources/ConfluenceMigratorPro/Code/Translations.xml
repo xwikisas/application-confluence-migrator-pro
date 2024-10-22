@@ -78,6 +78,7 @@ confluencepro.migration.raport.imported.died=This migration died. This can happe
 confluencepro.migration.raport.imported.errored=A serious error prevented the migration from finishing. Please see the logs for details.
 confluencepro.migration.raport.imported.canceled=This migration was canceled.
 confluencepro.migration.raport.imported.title=The {0} imported pages from the {1} selected Confluence space(s).
+confluencepro.migration.raport.imported.onespace.title=The {0} imported pages.
 confluencepro.migration.raport.macros.title=Macros found during the migration.
 confluencepro.migration.raport.macros.supported=Supported macros
 confluencepro.migration.raport.macros.notSupported=Unsupported macros
