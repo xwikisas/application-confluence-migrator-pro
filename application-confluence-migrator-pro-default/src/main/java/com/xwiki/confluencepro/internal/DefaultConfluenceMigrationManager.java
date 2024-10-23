@@ -44,6 +44,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import com.xpn.xwiki.XWiki;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
@@ -137,6 +138,9 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             object.setStringListValue("spaces", new ArrayList<>(jobStatus.getSpaces()));
             setLogRelatedFields(jobStatus, object, document, context);
             updateMigrationProperties(object);
+            if (StringUtils.isEmpty(document.getTitle())) {
+                document.setTitle(statusDocumentReference.getName());
+            }
             wiki.saveDocument(document, "Migration executed!", context);
         } catch (Exception e) {
             if (object != null) {

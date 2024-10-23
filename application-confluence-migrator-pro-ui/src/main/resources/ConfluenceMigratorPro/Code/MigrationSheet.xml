@@ -63,7 +63,7 @@
     ## &lt;input type="hidden" name="form_token" value="$!escapetool.xml($services.csrf.token)" /&gt;
     &lt;dl id="titleinput" class="form-group"&gt;
       &lt;dd&gt;
-        &lt;input type="text" id="xwikidoctitleinput" name="title" value="" class=""
+        &lt;input type="text" id="xwikidoctitleinput" name="title" value="$doc.name" class=""
           placeholder="$!escapetool.xml($services.localization.render('confluencepro.migration.title.placeholder'))"&gt;
       &lt;/dd&gt;
     &lt;/dl&gt;
