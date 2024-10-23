@@ -1,4 +1,6 @@
+com.xwiki.confluencepro.converters.internal.CardMacroConverter
 com.xwiki.confluencepro.converters.internal.DateMacroConverter
+com.xwiki.confluencepro.converters.internal.DeckMacroConverter
 com.xwiki.confluencepro.converters.internal.LivesearchMacroConverter
 com.xwiki.confluencepro.converters.internal.MSStreamConverter
 com.xwiki.confluencepro.converters.internal.MultiExcerptMacroConverter
