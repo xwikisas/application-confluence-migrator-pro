@@ -399,8 +399,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private Map contentToMap(XWikiDocument doc, Gson gson, Type type)
     {
-        Map map =
-            gson.fromJson(doc.getContent(), type);
+        Map map = gson.fromJson(doc.getContent(), type);
         if (map == null) {
             map = new HashMap<>();
         }
@@ -412,7 +411,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         Map<String, Map<String, Object>> macroMap = new HashMap<>();
 
         for (Map.Entry<String, Object> macroPage : macroPages.entrySet()) {
-
             Map<String, Integer> pageMacroCount = (Map<String, Integer>) macroPage.getValue();
             String page = macroPage.getKey();
             String space = page.substring(0, page.indexOf('.') > 0 ? page.indexOf('.') : page.length() - 1);
