@@ -41,7 +41,9 @@ import org.xwiki.filter.output.OutputFilterStreamFactory;
 import org.xwiki.filter.type.FilterStreamType;
 import org.xwiki.job.AbstractJob;
 import org.xwiki.job.AbstractJobStatus;
+import org.xwiki.job.GroupedJob;
 import org.xwiki.job.Job;
+import org.xwiki.job.JobGroupPath;
 import org.xwiki.job.event.status.CancelableJobStatus;
 import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.model.reference.DocumentReference;
@@ -63,7 +65,8 @@ import com.xwiki.confluencepro.ConfluenceMigrationManager;
 @Component
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
 @Named(ConfluenceMigrationJob.JOBTYPE)
-public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRequest, ConfluenceMigrationJobStatus>
+public class ConfluenceMigrationJob
+    extends AbstractJob<ConfluenceMigrationJobRequest, ConfluenceMigrationJobStatus> implements GroupedJob
 {
     /**
      * The identifier for the job.
@@ -83,6 +86,8 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
     private static final String MAX_PAGE_COUNT = "maxPageCount";
 
     private static final String SOURCE = "source";
+
+    private static final JobGroupPath GROUP = new JobGroupPath(Arrays.asList("confluencemigratorpro", "migration"));
 
     @Inject
     @Named(CONFLUENCE_XML_ROLEHINT)
@@ -157,7 +162,6 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
         filterJobRequest.setInteractive(interactive);
         request.setInteractive(interactive);
         progressManager.pushLevelProgress(1, this);
-        migrationManager.waitForOtherMigrationsToFinish();
         logger.info("Starting Filter Job");
         progressManager.startStep(this);
         Job filterJob = this.filterJobProvider.get();
@@ -295,5 +299,11 @@ public class ConfluenceMigrationJob extends AbstractJob<ConfluenceMigrationJobRe
         }
 
         return linkMapping;
+    }
+
+    @Override
+    public JobGroupPath getGroupPath()
+    {
+        return GROUP;
     }
 }

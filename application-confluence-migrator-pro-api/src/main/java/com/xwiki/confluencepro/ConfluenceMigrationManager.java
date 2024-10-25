@@ -47,13 +47,4 @@ public interface ConfluenceMigrationManager
      * Enable the prerequisites of the migration.
      */
     void enablePrerequisites();
-
-    /**
-     * Wait for other migrations to finish.
-     * Waits using some blocking but not CPU-intensive way to wait, and return when no other migration jobs are running.
-     */
-    default void waitForOtherMigrationsToFinish() throws InterruptedException
-    {
-        // ignore
-    }
 }

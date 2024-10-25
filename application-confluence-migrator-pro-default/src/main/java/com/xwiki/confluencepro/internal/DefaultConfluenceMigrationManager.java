@@ -57,7 +57,6 @@ import org.xwiki.contrib.confluence.filter.PageIdentifier;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
 import org.xwiki.job.Job;
 import org.xwiki.job.JobContext;
-import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.logging.LogLevel;
 import org.xwiki.logging.event.LogEvent;
 import org.xwiki.logging.tail.LogTail;
@@ -483,52 +482,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     public void enablePrerequisites()
     {
         prerequisitesManager.enablePrerequisites();
-    }
-
-    @Override
-    public void waitForOtherMigrationsToFinish() throws InterruptedException
-    {
-        Job currentJob = this.jobContext.getCurrentJob();
-        synchronized (this.runningJob) {
-            Job r = runningJob.get();
-            if (r == null) {
-                runningJob.set(currentJob);
-                return;
-            }
-            waitingJobs.offer(currentJob);
-        }
-
-        logger.info("Waiting for other running migrations to finish…");
-
-        while (true) {
-            final Job jobToWait;
-            synchronized (this.runningJob) {
-                Job r = runningJob.get();
-                Job nextJob = waitingJobs.peek();
-                if (nextJob == null || nextJob == currentJob) {
-                    if (nextJob == null) {
-                        logger.warn("While waiting for other migrations to finish, we found a null migration job "
-                            + "in the queue. This is unexpected. Going on anyway.");
-                    }
-
-                    if (r == null || r.getStatus().getState() == JobStatus.State.FINISHED) {
-                        waitingJobs.poll();
-                        runningJob.set(currentJob);
-                        return;
-                    }
-
-                    jobToWait = r;
-                } else if (nextJob.getStatus().getState() == JobStatus.State.FINISHED) {
-                    // Maybe the job crashed or was killed
-                    waitingJobs.poll();
-                    continue;
-                } else {
-                    jobToWait = nextJob;
-                }
-            }
-
-            jobToWait.join();
-        }
     }
 
     private void addToJsonList(LogEvent e, List<Map<String, Object>> logList)
