@@ -43,8 +43,17 @@
   {{warning}}{{translation key="confluencepro.macros.pages.noMacro" /}}{{/warning}}
 #else
   #set ($dataDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.MigratedMacrosDocsJSON'))
-  #set ($data = $jsontool.fromString($dataDoc.content))
-  #set ($macroPages = $data.get($request.macro))
+  #set ($dataStr = $dataDoc.content)
+  #if ("$!dataStr" == "")
+    ## Old Confluence migrator versions saved the data in the content.
+    ## New versions save it as attachment for performance reasons
+    ## FIXME duplicate code
+    #set ($dataStr = $dataDoc.getAttachment("data.json").getContentAsString())
+  #end
+  #if ("$!dataStr" == "")
+    #set ($dataStr = "{}")
+  #end
+  #set ($data = $jsontool.fromString($dataStr))
   #if (!$data.containsKey($request.macro))
     {{warning}}{{translation key="confluencepro.macros.pages.missingData" /}}{{/warning}}
   #else
@@ -60,6 +69,5 @@
     {{/html}}
   #end
 #end
-{{/velocity}}
-</content>
+{{/velocity}}</content>
 </xwikidoc>

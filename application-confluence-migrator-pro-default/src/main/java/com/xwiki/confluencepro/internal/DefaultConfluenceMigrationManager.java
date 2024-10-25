@@ -19,9 +19,8 @@
  */
 package com.xwiki.confluencepro.internal;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +42,12 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xpn.xwiki.XWiki;
+import com.xpn.xwiki.doc.XWikiAttachment;
+import com.xpn.xwiki.doc.XWikiAttachmentContent;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -61,8 +65,6 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.LocalDocumentReference;
 
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -89,8 +91,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final List<String> CONFLUENCE_MIGRATOR_SPACE = Arrays.asList("ConfluenceMigratorPro", "Code");
 
-    private static final String OCCURRENCE_KEY_FORMAT = "%s_oc";
-
     private static final LocalDocumentReference MIGRATION_OBJECT =
         new LocalDocumentReference(CONFLUENCE_MIGRATOR_SPACE, "MigrationClass");
 
@@ -102,7 +102,14 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final String AN_EXCEPTION_OCCURRED = "An exception occurred";
 
-    private static final long WAIT_JOB_MILLIS = 30000;
+    private static final String DATA_JSON = "data.json";
+
+    private static final TypeReference<Map<String, String>> STRING_MAP_TYPE_REF =
+        new TypeReference<Map<String, String>>() { };
+    private static final TypeReference<Map<String, Map<String, Integer>>> COUNT_MAP_TYPE_REF =
+        new TypeReference<Map<String, Map<String, Integer>>>() { };
+    private static final TypeReference<Map<String, Map<String, Set<?>>>> DOCS_MAP_TYPE_REF =
+        new TypeReference<Map<String, Map<String, Set<?>>>>() { };
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -131,24 +138,32 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         BaseObject object = null;
         XWiki wiki = context.getWiki();
         DocumentReference statusDocumentReference = jobStatus.getRequest().getStatusDocumentReference();
+        Map<String, Map<String, Object>> macroMap = null;
         try {
             document = wiki.getDocument(statusDocumentReference, context).clone();
             object = document.getXObject(MIGRATION_OBJECT);
             object.set(EXECUTED, jobStatus.isCanceled() ? 3 : 1, context);
             object.setStringListValue("spaces", new ArrayList<>(jobStatus.getSpaces()));
-            setLogRelatedFields(jobStatus, object, document, context);
+            macroMap = analyseLogs(jobStatus, object, document);
             updateMigrationProperties(object);
             if (StringUtils.isEmpty(document.getTitle())) {
                 document.setTitle(statusDocumentReference.getName());
             }
             wiki.saveDocument(document, "Migration executed!", context);
+            logger.info("Migration finished and saved");
         } catch (Exception e) {
             if (object != null) {
                 List<Map<String, Object>> logList = new ArrayList<>(1);
                 addToJsonList(LogLevel.ERROR, Instant.now().toEpochMilli(), AN_EXCEPTION_OCCURRED, e, logList);
-                object.set(LOGS, new Gson().toJson(logList), context);
                 object.set(EXECUTED, 4, context);
                 logger.error(AN_EXCEPTION_OCCURRED, e);
+
+                try {
+                    object.set(LOGS, new ObjectMapper().writeValueAsString(logList), context);
+                } catch (JsonProcessingException ex) {
+                    logger.error("Failed to save the logs", ex);
+                }
+
                 try {
                     wiki.saveDocument(document, "Migration failed", context);
                 } catch (XWikiException err) {
@@ -157,19 +172,27 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                 }
             }
         }
+        if (macroMap != null) {
+            persistMacroMap(macroMap);
+        }
     }
 
     private void updateMigrationProperties(BaseObject object)
     {
-        Gson gson = new Gson();
-        removeDefaultProperties(object, "outputProperties", PREFILLED_OUTPUT_PARAMETERS, gson);
-        removeDefaultProperties(object, "inputProperties", PREFILLED_INPUT_PARAMETERS, gson);
+        try {
+            removeDefaultProperties(object, "outputProperties", PREFILLED_OUTPUT_PARAMETERS);
+            removeDefaultProperties(object, "inputProperties", PREFILLED_INPUT_PARAMETERS);
+        } catch (JsonProcessingException e) {
+            logger.error("Could not save the input and output properties of the migration", e);
+        }
     }
 
-    private void removeDefaultProperties(BaseObject object, String field, Map<String, String> defaults, Gson gson)
+    private void removeDefaultProperties(BaseObject object, String field, Map<String, String> defaults)
+        throws JsonProcessingException
     {
         boolean update = false;
-        Map<String, String> props = gson.fromJson(object.getLargeStringValue(field), Map.class);
+        String value = object.getLargeStringValue(field);
+        Map<String, String> props = new ObjectMapper().readValue(value, STRING_MAP_TYPE_REF);
         for (Map.Entry<String, String> def : defaults.entrySet()) {
             String key = def.getKey();
             String v = props.get(key);
@@ -179,7 +202,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             }
         }
         if (update) {
-            object.setLargeStringValue(field, gson.toJson(props));
+            object.setLargeStringValue(field, new ObjectMapper().writeValueAsString(props));
         }
     }
 
@@ -190,20 +213,13 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         }
     }
 
-    private void setLogRelatedFields(ConfluenceMigrationJobStatus jobStatus, BaseObject object, XWikiDocument document,
-        XWikiContext context) throws IOException
+    Map<String, Map<String, Object>> analyseLogs(ConfluenceMigrationJobStatus jobStatus, BaseObject object,
+        XWikiDocument document) throws IOException
     {
-        // Set logs json.
-        Gson gson = new Gson();
-        // warning: [w1, w2..],
-        // error: [e1, e2..]
-
         Map<String, List<String>> otherIssues = new TreeMap<>();
         Map<String, List<String>> skipped = new TreeMap<>();
         Map<String, List<String>> problematic = new TreeMap<>();
         Map<String, List<String>> brokenLinksPages = new TreeMap<>();
-        // fullName or pageId: [log1, log2..]
-
 
         Set<List<String>> brokenLinks = new TreeSet<>((t1, t2) -> {
             int spaceCompare = t1.get(0).compareTo(t2.get(0));
@@ -212,10 +228,11 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             }
             return spaceCompare;
         });
-        // List of (SPACE, Page title) entries
 
-        Map<String, Object> macroPages = new HashMap<>();
-        // Filter the logs.
+        // Object is actually a PageIdentifier, but because of
+        // https://github.com/xwikisas/application-confluence-migrator-pro/issues/107
+        // it's unsafe to use PageIdentifier as a type.
+        Map<String, Map<String, Integer>> macroPages = new HashMap<>();
 
         String currentDocument = null;
         String currentPageId = null;
@@ -227,8 +244,9 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             Object[] args = logEvent.getArgumentArray();
             Marker marker = logEvent.getMarker();
             if (Objects.equals(marker, ConfluenceFilter.LOG_MACROS_FOUND)) {
-                if (currentDocument != null) {
-                    macroPages.put(currentDocument, args[0]);
+                if (currentDocument != null && args[0] instanceof  Map) {
+                    Map<String, Integer> macrosIds = (Map<String, Integer>) args[0];
+                    macroPages.put(currentDocument, macrosIds);
                 }
                 continue;
             }
@@ -288,22 +306,29 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         }
 
         Map<String, Map<String, Object>> macroMap = createSerializableMacroMap(macroPages);
-        persistMacroMap(context, macroMap, gson);
 
-        object.setLargeStringValue("macros", gson.toJson(macroMap.keySet()));
-        addAttachment("skipped.json", skipped, document, context, gson);
-        addAttachment("problems.json", problematic, document, context, gson);
-        addAttachment("otherIssues.json", otherIssues, document, context, gson);
-        addAttachment("brokenLinksPages.json", brokenLinksPages, document, context, gson);
-        addAttachment("brokenLinks.json", brokenLinks, document, context, gson);
-        addAttachment("logs.json", logList, document, context, gson);
+        object.setLargeStringValue("macros", new ObjectMapper().writeValueAsString(macroMap.keySet()));
+        addAttachment("skipped.json", skipped, document);
+        addAttachment("problems.json", problematic, document);
+        addAttachment("otherIssues.json", otherIssues, document);
+        addAttachment("brokenLinksPages.json", brokenLinksPages, document);
+        addAttachment("brokenLinks.json", brokenLinks, document);
+        addAttachment("logs.json", logList, document);
         object.setLongValue("imported", docCount);
+        return macroMap;
     }
 
-    private void addAttachment(String name, Object obj, XWikiDocument document, XWikiContext context, Gson gson)
-        throws IOException
+    private void addAttachment(String name, Object obj, XWikiDocument document)
     {
-        document.setAttachment(name, new ByteArrayInputStream(gson.toJson(obj).getBytes()), context);
+        XWikiAttachment a = new XWikiAttachment(document, name);
+        XWikiAttachmentContent content = new XWikiAttachmentContent(a);
+        try {
+            new ObjectMapper().writeValue(content.getContentOutputStream(), obj);
+        } catch (IOException e) {
+            logger.error("Could not save [{}]", name, e);
+        }
+        a.setAttachment_content(content);
+        document.setAttachment(a);
     }
 
     private static String toString(Long id)
@@ -328,43 +353,48 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return pageIdOrFullName;
     }
 
-    private void persistMacroMap(XWikiContext context, Map<String, Map<String, Object>> macroMap, Gson gson)
+    private void persistMacroMap(Map<String, Map<String, Object>> macroMap)
     {
+        XWikiContext context = contextProvider.get();
+        DocumentReference migratedMacrosCountJSONDocRef = new DocumentReference(
+            context.getWikiId(), CONFLUENCE_MIGRATOR_SPACE, "MigratedMacrosCountJSON");
+        DocumentReference migratedMacrosDocsJSONDocRef = new DocumentReference(
+            context.getWikiId(), CONFLUENCE_MIGRATOR_SPACE, "MigratedMacrosDocsJSON");
+        logger.info("Saving the macro usage statistics in [{}] and [{}]",
+            migratedMacrosCountJSONDocRef, migratedMacrosDocsJSONDocRef);
         try {
-            XWikiDocument macroCountDoc = context.getWiki().getDocument(
-                new DocumentReference(context.getWikiId(), CONFLUENCE_MIGRATOR_SPACE,
-                    "MigratedMacrosCountJSON"), context);
-            macroCountDoc.setHidden(true);
-            Map<String, Map<String, Integer>> occurenceMap = contentToMap(macroCountDoc, gson,
-                new TypeToken<Map<String, Map<String, Integer>>>()
-                {
-                }.getType());
-            XWikiDocument macroDocListDoc = context.getWiki().getDocument(
-                new DocumentReference(context.getWikiId(), CONFLUENCE_MIGRATOR_SPACE,
-                    "MigratedMacrosDocsJSON"), context);
-            macroDocListDoc.setHidden(true);
-            Map<String, Map<String, Set<String>>> pagesMap = contentToMap(macroDocListDoc, gson,
-                new TypeToken<Map<String, Map<String, Set<String>>>>()
-                {
-                }.getType());
+            XWikiDocument macroCountDoc = context.getWiki().getDocument(migratedMacrosCountJSONDocRef, context);
+            Map<String, Map<String, Integer>> countMap = contentToMap(macroCountDoc, COUNT_MAP_TYPE_REF);
+            XWikiDocument macroDocsDoc = context.getWiki().getDocument(migratedMacrosDocsJSONDocRef, context);
+            Map<String, Map<String, Set<?>>> docsMap = contentToMap(macroDocsDoc, DOCS_MAP_TYPE_REF);
 
-            prepareMacroMap(macroMap, occurenceMap, pagesMap);
-            Map<String, Map<String, Integer>> sortedOccurrences = occurenceMap.entrySet()
+            prepareMacroMap(macroMap, countMap, docsMap);
+            Map<String, Map<String, Integer>> sortedCounts = countMap.entrySet()
                 .stream()
                 .sorted((o1, o2) -> Integer.compare(o2.getValue().getOrDefault(OCCURRENCES_KEY, 0),
                     o1.getValue().getOrDefault(OCCURRENCES_KEY, 0)))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (o1, o2) -> o2, LinkedHashMap::new));
-            macroCountDoc.setContent(gson.toJson(sortedOccurrences));
-            context.getWiki().saveDocument(macroCountDoc, context);
-            macroDocListDoc.setContent(gson.toJson(pagesMap));
-            context.getWiki().saveDocument(macroDocListDoc, context);
-        } catch (XWikiException e) {
-
+            saveMacroData(macroCountDoc, sortedCounts);
+            saveMacroData(macroDocsDoc, docsMap);
+        } catch (XWikiException | IOException e) {
+            logger.error("Failed to save the macro usage statistics", e);
         }
     }
 
+    private <T> void saveMacroData(XWikiDocument d, T data) throws XWikiException, IOException
+    {
+        XWikiAttachment attachment = new XWikiAttachment(d, DATA_JSON);
+        XWikiAttachmentContent content = new XWikiAttachmentContent(attachment);
+        new ObjectMapper().writeValue(content.getContentOutputStream(), data);
+        attachment.setAttachment_content(content);
+        d.setAttachment(attachment);
+        d.setHidden(true);
+        XWikiContext context = contextProvider.get();
+        context.getWiki().saveDocument(d, context);
+    }
+
     private void prepareMacroMap(Map<String, Map<String, Object>> macroMap,
-        Map<String, Map<String, Integer>> occurenceMap, Map<String, Map<String, Set<String>>> pagesMap)
+        Map<String, Map<String, Integer>> occurenceMap, Map<String, Map<String, Set<?>>> pagesMap)
     {
         for (Map.Entry<String, Map<String, Object>> macroEntry : macroMap.entrySet()) {
             String macroId = macroEntry.getKey();
@@ -375,7 +405,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                     occurenceMap.computeIfAbsent(macroId, k -> new HashMap<>());
 
                 if (macroData.getValue() instanceof Integer) {
-
                     int occurrences = macroOccurenceMap.getOrDefault(OCCURRENCES_KEY, 0);
                     int oldSpaceOccurrences = macroOccurenceMap.getOrDefault(spaceKey, 0);
                     int newSpaceOccurrences = (Integer) macroData.getValue();
@@ -383,7 +412,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                     macroOccurenceMap.put(OCCURRENCES_KEY, occurrences - oldSpaceOccurrences + newSpaceOccurrences);
                     macroOccurenceMap.put(spaceKey, newSpaceOccurrences);
                 } else if (macroData.getValue() instanceof Set) {
-                    Set<String> pages = (Set<String>) macroData.getValue();
+                    Set<?> pages = (Set<?>) macroData.getValue();
 
                     int pagesCount = macroOccurenceMap.getOrDefault(PAGES_KEY, 0);
                     int oldPagesCount = macroOccurenceMap.getOrDefault(spaceKey, 0);
@@ -397,31 +426,48 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         }
     }
 
-    private Map contentToMap(XWikiDocument doc, Gson gson, Type type)
+    private <T> Map<String, T> contentToMap(XWikiDocument doc, TypeReference<Map<String, T>> typeRef)
     {
-        Map map = gson.fromJson(doc.getContent(), type);
-        if (map == null) {
-            map = new HashMap<>();
+        try {
+            String dataStr = doc.getContent();
+            if (!dataStr.isEmpty()) {
+                // Old versions of the Confluence migrator saved the data in the document content, which causes
+                // performance issues. We migrate the content to an attachment.
+                doc.setContent("");
+                return new ObjectMapper().readValue(dataStr, typeRef);
+            }
+
+            XWikiAttachment dataAttachment = doc.getAttachment(DATA_JSON);
+            if (dataAttachment != null) {
+                InputStream data = dataAttachment.getAttachmentContent(contextProvider.get()).getContentInputStream();
+                return new ObjectMapper().readValue(data, typeRef);
+            }
+        } catch (XWikiException | IOException e) {
+            logger.warn("Failed to read existing macro usage statistics from [{}]", doc, e);
         }
-        return map;
+
+        return new HashMap<>();
     }
 
-    private Map<String, Map<String, Object>> createSerializableMacroMap(Map<String, Object> macroPages)
+    private Map<String, Map<String, Object>> createSerializableMacroMap(Map<String, Map<String, Integer>> macroPages)
     {
         Map<String, Map<String, Object>> macroMap = new HashMap<>();
 
-        for (Map.Entry<String, Object> macroPage : macroPages.entrySet()) {
-            Map<String, Integer> pageMacroCount = (Map<String, Integer>) macroPage.getValue();
+        for (Map.Entry<String, Map<String, Integer>> macroPage : macroPages.entrySet()) {
+            Map<String, Integer> pageMacroCount = macroPage.getValue();
             String page = macroPage.getKey();
-            String space = page.substring(0, page.indexOf('.') > 0 ? page.indexOf('.') : page.length() - 1);
+            String space = page.substring(0, page.indexOf('.') > -1 ? page.indexOf('.') : page.length() - 1);
             for (Map.Entry<String, Integer> macroEntry : pageMacroCount.entrySet()) {
                 Map<String, Object> serializableMacro =
                     macroMap.computeIfAbsent(macroEntry.getKey(), k -> new HashMap<>());
-                serializableMacro.put(String.format(OCCURRENCE_KEY_FORMAT, space),
-                    (Integer) serializableMacro.getOrDefault(String.format(OCCURRENCE_KEY_FORMAT, space), 0)
-                        + macroEntry.getValue());
-                ((Set<String>) (serializableMacro.computeIfAbsent(String.format("%s_pg", space),
-                    k -> new HashSet<>()))).add(page);
+                String keyCount = String.format("%s_oc", space);
+                serializableMacro.put(keyCount,
+                    (Integer) serializableMacro.getOrDefault(keyCount, 0) + macroEntry.getValue());
+                String keyPages = String.format("%s_pg", space);
+                Object pagesObj = serializableMacro.computeIfAbsent(keyPages, k -> new HashSet<>());
+                if (pagesObj instanceof Set) {
+                    ((Set<Object>) pagesObj).add(page);
+                }
             }
         }
         return macroMap;

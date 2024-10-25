@@ -36,11 +36,9 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>
-{{velocity}}
+  <content>{{velocity}}
 #if ($xcontext.action == 'get')
   #set ($dataDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.MigratedMacrosCountJSON'))
-  #set ($discard = $response.setContentType('application/json'))
   #set ($json = {})
   #set ($offset = $numbertool.toNumber($request.offset).intValue())
   ## The offset sent by the live table starts at 1.
@@ -54,7 +52,17 @@
   #end
   #set ($discard = $json.put('offset', $offset))
   #set ($discard = $json.put('rows', []))
-  #set ($data = $jsontool.fromString($dataDoc.content))
+  #set ($dataStr = $dataDoc.content)
+  #if ("$!dataStr" == "")
+    ## Old Confluence migrator versions saved the data in the content.
+    ## New versions save it as attachment for performance reasons
+    ## FIXME duplicate code
+    #set ($dataStr = $dataDoc.getAttachment("data.json").getContentAsString())
+  #end
+  #if ("$!dataStr" == "")
+    #set ($dataStr = "{}")
+  #end
+  #set ($data = $jsontool.fromString($dataStr))
   #set ($it = $data.keySet().iterator())
   #if ("$!request.name" != '')
     #foreach ($j in [0..10000])
@@ -84,8 +92,7 @@
   #set ($discard = $json.put('totalrows', $data.size()))
   #set ($returnedRows = $i - $offset)
   #set ($discard = $json.put('returnedrows', $returnedRows))
-  $jsontool.serialize($json)
+  #jsonResponse($json)
 #end
-{{/velocity}}
-</content>
+{{/velocity}}</content>
 </xwikidoc>
