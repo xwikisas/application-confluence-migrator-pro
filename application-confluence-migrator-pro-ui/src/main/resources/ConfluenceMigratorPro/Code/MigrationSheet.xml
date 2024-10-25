@@ -134,11 +134,37 @@ $attachment.getContentAsString()##
 #end##
 #end
 
+#macro(computeRootSpace)
+    #set ($rootSpaceStr = $inputProperties.get("root"))
+    #if ("$!rootSpaceStr" == "")
+      ## Gracefully handle the deprecated property
+      #set ($rootSpaceStr = $inputProperties.get("rootSpace"))
+    #end
+    #if ("$!rootSpaceStr" == "")
+      #set ($rootSpace = $services.model.createWikiReference($xcontext.getDatabase()))
+    #elseif ($rootSpaceStr.startsWith("wiki:"))
+      #set ($rootSpace = $services.model.createWikiReference($rootSpaceStr.substring(5)))
+    #elseif ($rootSpaceStr.startsWith("space:"))
+      #set ($rootSpace = $services.model.resolveSpace($rootSpaceStr.substring(6)))
+    #else
+      #if ($rootSpaceStr.endsWith(".WebHome"))
+        #set ($rootSpaceStr = $rootSpaceStr.substring(0, $rootSpaceStr.length() - 8))
+      #end
+      #set ($rootSpace = $services.model.resolveSpace($rootSpaceStr))
+    #end
+    #set ($migrationWiki = $rootSpace.getRoot())
+    ##FIXME: should we pass a space instead of the used wiki?
+    #if ("$migrationWiki.type" == "WIKI")
+      #set ($componentManager = $services.component.getComponentManager("wiki:${migrationWiki.name}"))
+    #else
+      #set ($componentManager = $services.component.getComponentManager("wiki:xwiki"))
+    #end
+#end
+
 #**
  * Display a raport of the last executed job on this page.
  *#
 #macro(displayRaport $obj)
-
   #if ("$obj.getValue('executed')" == '1')
 
     {{success}}
@@ -193,23 +219,7 @@ $attachment.getContentAsString()##
   &lt;ul class="imported-spaces"&gt;
     #set ($options = {})
     #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
-    #set ($rootSpaceStr = $inputProperties.get("root"))
-    #if ("$!rootSpaceStr" == "")
-      ## Gracefully handle the deprecated property
-      #set ($rootSpaceStr = $inputProperties.get("rootSpace"))
-    #end
-    #if ("$!rootSpaceStr" == "")
-      #set ($rootSpace = $services.model.createWikiReference($xcontext.getDatabase()))
-    #elseif ($rootSpaceStr.startsWith("wiki:"))
-      #set ($rootSpace = $services.model.createWikiReference($rootSpaceStr.substring(5)))
-    #elseif ($rootSpaceStr.startsWith("space:"))
-      #set ($rootSpace = $services.model.resolveSpace($rootSpaceStr.substring(6)))
-    #else
-      #if ($rootSpaceStr.endsWith(".WebHome"))
-        #set ($rootSpaceStr = $rootSpaceStr.substring(0, $rootSpaceStr.length() - 8))
-      #end
-      #set ($rootSpace = $services.model.resolveSpace($rootSpaceStr))
-    #end
+    #computeRootSpace
     #foreach ($space in $spaces)
       #set ($spaceRef = $services.model.createSpaceReference($space, $rootSpace))
       #set ($spaceHomeRef = $services.model.serialize($services.model.createDocumentReference("WebHome", $spaceRef)))
@@ -237,7 +247,7 @@ $attachment.getContentAsString()##
       #set ($supportedMacros = [])
       #set ($notSupportedMacros = [])
       #foreach ($macro in $jsontool.fromString($obj.getProperty('macros').value))
-        #if ($services.component.contextComponentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
+        #if ($componentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
           #set ($discard = $supportedMacros.add($macro))
         #else
           #set ($discard = $notSupportedMacros.add($macro))
@@ -584,6 +594,7 @@ $attachment.getContentAsString()##
 #end
 
 #macro(textReport)
+  #computeRootSpace
   #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
   $response.setContentType("text/plain; charset=utf-8")*
 
@@ -633,7 +644,7 @@ $attachment.getContentAsString()##
   #set ($supportedMacros = [])
   #set ($notSupportedMacros = [])
   #foreach ($macro in $jsontool.fromString($obj.getProperty('macros').value))
-    #if ($services.component.contextComponentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
+    #if ($componentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
       #set ($discard = $supportedMacros.add($macro))
     #else
       #set ($discard = $notSupportedMacros.add($macro))
