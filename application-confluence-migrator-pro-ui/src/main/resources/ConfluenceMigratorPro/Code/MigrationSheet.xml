@@ -227,7 +227,7 @@ $attachment.getContentAsString()##
         &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
           $services.icon.renderHTML('caret-down')
         &lt;/a&gt;
-        [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$spaceHomeRef]]
+        [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$services.rendering.escape($spaceHomeRef, $xwiki.currentContentSyntaxId)]]
         #set ($discard = $options.put('root', "document:$spaceHomeRef"))
         #set ($discard = $options.put('links', 'true'))
         #set ($discard = $options.put('compact', 'true'))
