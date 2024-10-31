@@ -354,6 +354,28 @@ $attachment.getContentAsString()##
       #end
     #end
   #end
+  #set ($json = "#getJSON($obj, 'missingUsersGroups')")
+  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+    #set ($jsonObject = $jsontool.fromString($json))
+    #if (!$jsonObject.isEmpty() &amp;&amp; (!$jsonObject.users.isEmpty() || !$jsonObject.groups.isEmpty()))
+      #displaySubtitle('warning', 'confluencepro.migration.raport.problems.missingUsersGroups.title', '', [$jsonObject.keySet().size()])
+      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.info')&lt;/p&gt;
+      #if (!$jsonObject.groups.isEmpty())
+        &lt;dl&gt;
+          &lt;dt&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.groups')&lt;/dt&gt;
+          &lt;dd&gt;#foreach ($group in $jsonObject.groups)#if(!$foreach.first), #end$escapetool.xml($group)#end
+          &lt;/dd&gt;
+        &lt;/ul&gt;
+      #end
+      #if (!$jsonObject.users.isEmpty())
+        &lt;dl&gt;
+          &lt;dt&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.users')&lt;/dt&gt;
+          &lt;dd&gt;#foreach ($user in $jsonObject.users)#if(!$foreach.first), #end$escapetool.xml($user)#end
+          &lt;/dd&gt;
+        &lt;/ul&gt;
+      #end
+    #end
+  #end
   ## Other issues section
   #set ($json = "#getJSON($obj, 'otherIssues')")
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())

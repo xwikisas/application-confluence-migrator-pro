@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -34,11 +36,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -55,12 +56,12 @@ import org.slf4j.Marker;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.PageIdentifier;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
-import org.xwiki.job.Job;
-import org.xwiki.job.JobContext;
 import org.xwiki.logging.LogLevel;
 import org.xwiki.logging.event.LogEvent;
-import org.xwiki.logging.tail.LogTail;
+import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
+import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.LocalDocumentReference;
 
@@ -70,9 +71,12 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
 import com.xwiki.confluencepro.ConfluenceMigrationManager;
+import org.xwiki.query.QueryException;
+import org.xwiki.query.QueryManager;
 
 import static com.xwiki.confluencepro.script.ConfluenceMigrationScriptService.PREFILLED_INPUT_PARAMETERS;
 import static com.xwiki.confluencepro.script.ConfluenceMigrationScriptService.PREFILLED_OUTPUT_PARAMETERS;
+import static org.xwiki.query.Query.HQL;
 
 /**
  * The default implementation of {@link ConfluenceMigrationManager}.
@@ -109,6 +113,13 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         new TypeReference<Map<String, Map<String, Integer>>>() { };
     private static final TypeReference<Map<String, Map<String, Set<?>>>> DOCS_MAP_TYPE_REF =
         new TypeReference<Map<String, Map<String, Set<?>>>>() { };
+    private static final Comparator<List<String>> BROKEN_LINKS_COMPARATOR = (t1, t2) -> {
+        int spaceCompare = t1.get(0).compareTo(t2.get(0));
+        if (spaceCompare == 0) {
+            return t1.get(1).compareTo(t2.get(1));
+        }
+        return spaceCompare;
+    };
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -117,17 +128,20 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     private EntityReferenceSerializer<String> serializer;
 
     @Inject
+    @Named("local")
+    private EntityReferenceSerializer<String> localSerializer;
+
+    @Inject
     private ConfluenceMigrationPrerequisitesManager prerequisitesManager;
 
     @Inject
     private Logger logger;
 
     @Inject
-    private JobContext jobContext;
+    private QueryManager queryManager;
 
-    private final ConcurrentLinkedDeque<Job> waitingJobs = new ConcurrentLinkedDeque<>();
-
-    private final AtomicReference<Job> runningJob = new AtomicReference<>();
+    @Inject
+    private EntityReferenceResolver<String> referenceResolver;
 
     @Override
     public void updateAndSaveMigration(ConfluenceMigrationJobStatus jobStatus)
@@ -143,8 +157,11 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             object = document.getXObject(MIGRATION_OBJECT);
             object.set(EXECUTED, jobStatus.isCanceled() ? 3 : 1, context);
             object.setStringListValue("spaces", new ArrayList<>(jobStatus.getSpaces()));
-            macroMap = analyseLogs(jobStatus, object, document);
-            updateMigrationProperties(object);
+            String root = updateMigrationPropertiesAndGetRoot(object);
+            Map<String, Map<String, Integer>> macroPages = analyseLogs(jobStatus, object, document, root);
+            macroMap = createSerializableMacroMap(macroPages);
+            object.setLargeStringValue("macros", new ObjectMapper().writeValueAsString(macroMap.keySet()));
+
             if (StringUtils.isEmpty(document.getTitle())) {
                 document.setTitle(statusDocumentReference.getName());
             }
@@ -176,17 +193,19 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         }
     }
 
-    private void updateMigrationProperties(BaseObject object)
+    private String updateMigrationPropertiesAndGetRoot(BaseObject object)
     {
         try {
             removeDefaultProperties(object, "outputProperties", PREFILLED_OUTPUT_PARAMETERS);
-            removeDefaultProperties(object, "inputProperties", PREFILLED_INPUT_PARAMETERS);
+            return removeDefaultProperties(object, "inputProperties", PREFILLED_INPUT_PARAMETERS).get("root");
         } catch (JsonProcessingException e) {
             logger.error("Could not save the input and output properties of the migration", e);
         }
+
+        return null;
     }
 
-    private void removeDefaultProperties(BaseObject object, String field, Map<String, String> defaults)
+    private Map<String, String> removeDefaultProperties(BaseObject object, String field, Map<String, String> defaults)
         throws JsonProcessingException
     {
         boolean update = false;
@@ -203,118 +222,254 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         if (update) {
             object.setLargeStringValue(field, new ObjectMapper().writeValueAsString(props));
         }
+        return props;
     }
 
-    private void replaceKey(Map<String, List<String>> m, String oldKey, String newKey)
+    private void replaceKey(Map<String, List<String>> m, CurrentPage currentPage)
     {
+        String oldKey = currentPage.id;
+        String newKey = currentPage.ref;
         if (m.containsKey(oldKey)) {
             m.put(newKey, m.remove(oldKey));
         }
     }
+    
+    private static final class CurrentPage
+    {
+        private String id;
+        private String ref;
+    }
 
-    Map<String, Map<String, Object>> analyseLogs(ConfluenceMigrationJobStatus jobStatus, BaseObject object,
-        XWikiDocument document) throws IOException
+    Map<String, Map<String, Integer>> analyseLogs(ConfluenceMigrationJobStatus jobStatus, BaseObject object,
+        XWikiDocument document, String root)
     {
         Map<String, List<String>> otherIssues = new TreeMap<>();
         Map<String, List<String>> skipped = new TreeMap<>();
         Map<String, List<String>> problematic = new TreeMap<>();
         Map<String, List<String>> brokenLinksPages = new TreeMap<>();
-
-        Set<List<String>> brokenLinks = new TreeSet<>((t1, t2) -> {
-            int spaceCompare = t1.get(0).compareTo(t2.get(0));
-            if (spaceCompare == 0) {
-                return t1.get(1).compareTo(t2.get(1));
-            }
-            return spaceCompare;
-        });
-
-        // Object is actually a PageIdentifier, but because of
-        // https://github.com/xwikisas/application-confluence-migrator-pro/issues/107
-        // it's unsafe to use PageIdentifier as a type.
+        Set<List<String>> brokenLinks = new TreeSet<>(BROKEN_LINKS_COMPARATOR);
         Map<String, Map<String, Integer>> macroPages = new HashMap<>();
 
-        String currentDocument = null;
-        String currentPageId = null;
+        CurrentPage currentPage = new CurrentPage();
         long docCount = 0;
-        LogTail logTail = jobStatus.getLogTail();
-        List<Map<String, Object>> logList = new ArrayList<>(logTail.size());
-        for (LogEvent logEvent : logTail) {
-            addToJsonList(logEvent, logList);
-            Object[] args = logEvent.getArgumentArray();
-            Marker marker = logEvent.getMarker();
-            if (Objects.equals(marker, ConfluenceFilter.LOG_MACROS_FOUND)) {
-                if (currentDocument != null && args[0] instanceof  Map) {
-                    Map<String, Integer> macrosIds = (Map<String, Integer>) args[0];
-                    macroPages.put(currentDocument, macrosIds);
-                }
-                continue;
-            }
+        List<Map<String, Object>> logList = new ArrayList<>(jobStatus.getLogTail().size());
+        Collection<String> docs = new HashSet<>();
+        for (LogEvent event : jobStatus.getLogTail()) {
+            addToJsonList(event, logList);
 
-            Map<String, List<String>> cat;
-            String msg = logEvent.getMessage();
-            if (msg == null) {
-                msg = "";
-            }
-            switch (logEvent.getLevel()) {
+            switch (event.getLevel()) {
                 case ERROR:
-                    cat = skipped;
+                    addEventToCat(event, skipped, currentPage);
                     break;
                 case WARN:
-                    if (msg.contains(LINKS_BROKEN)) {
-                        cat = brokenLinksPages;
-                        if (args.length > 1 && args[1] instanceof String && args[0] instanceof String) {
-                            brokenLinks.add(List.of((String) args[1], (String) args[0]));
-                        }
-                    } else {
-                        cat = otherIssues;
-                    }
+                    updateWarnings(event, brokenLinksPages, brokenLinks, otherIssues, currentPage);
                     break;
                 case INFO:
-                    String markerName = marker != null && marker.getName() != null ? marker.getName() : "";
-                    if (markerName.equals("filter.instance.log.document.updated")
-                        || markerName.equals("filter.instance.log.document.created")
-                    ) {
-                        if (args.length > 0 && args[0] instanceof DocumentReference) {
-                            currentDocument = serializer.serialize((DocumentReference) args[0]);
-                            if (currentPageId != null) {
-                                replaceKey(otherIssues, currentPageId, currentDocument);
-                                replaceKey(skipped, currentPageId, currentDocument);
-                                replaceKey(problematic, currentPageId, currentDocument);
-                                replaceKey(brokenLinksPages, currentPageId, currentDocument);
-                            }
-                        }
-                    } else if (msg.startsWith("Sending page [{}]")) {
+                    Object[] args = event.getArgumentArray();
+                    if (Objects.equals(event.getMarker(), ConfluenceFilter.LOG_MACROS_FOUND)) {
+                        addMacros(currentPage.ref, args, macroPages);
+                    } else if (isADocumentOutputFilterEvent(event.getMarker())) {
+                        updateCurrentDocument(currentPage, otherIssues, skipped, problematic,
+                            brokenLinksPages, docs, args);
+                    } else if (notNull(event.getMessage()).startsWith("Sending page [{}]")) {
                         docCount++;
-                        currentDocument = null;
-                        currentPageId = toString((args.length > 1 && args[1] instanceof Long)
-                            ? (Long) args[1]
-                            : (args.length > 0 && args[0] instanceof PageIdentifier
-                                ? ((PageIdentifier) args[0]).getPageId()
-                                : null));
+                        currentPage.ref = null;
+                        currentPage.id = getCurrentPageId(args);
                     }
-                    /* fall through */
+
+                    break;
                 default:
-                    cat = null;
-            }
-            if (cat != null) {
-                String pageIdOrFullName = getPageIdOrFullName(logEvent, currentDocument, currentPageId);
-                if (pageIdOrFullName != null) {
-                    cat.computeIfAbsent(pageIdOrFullName, k -> new ArrayList<>()).add(logEvent.getFormattedMessage());
-                }
+                    // ignore
             }
         }
 
-        Map<String, Map<String, Object>> macroMap = createSerializableMacroMap(macroPages);
-
-        object.setLargeStringValue("macros", new ObjectMapper().writeValueAsString(macroMap.keySet()));
         addAttachment("skipped.json", skipped, document);
         addAttachment("problems.json", problematic, document);
         addAttachment("otherIssues.json", otherIssues, document);
         addAttachment("brokenLinksPages.json", brokenLinksPages, document);
         addAttachment("brokenLinks.json", brokenLinks, document);
+        addAttachment("missingUsersGroups.json", getPermissionIssues(root, docs), document);
         addAttachment("logs.json", logList, document);
         object.setLongValue("imported", docCount);
-        return macroMap;
+        return macroPages;
+    }
+
+    private static void addMacros(String currentDocument, Object[] args, Map<String, Map<String, Integer>> macroPages)
+    {
+        if (currentDocument != null && args[0] instanceof  Map) {
+            Map<String, Integer> macrosIds = (Map<String, Integer>) args[0];
+            macroPages.put(currentDocument, macrosIds);
+        }
+    }
+
+    private static boolean isADocumentOutputFilterEvent(Marker marker)
+    {
+        String markerName = marker != null && marker.getName() != null ? marker.getName() : "";
+        return markerName.equals("filter.instance.log.document.updated")
+            || markerName.equals("filter.instance.log.document.created");
+    }
+
+    private static String getCurrentPageId(Object[] args)
+    {
+        if ((args.length > 1 && args[1] instanceof Long)) {
+            return toString((Long) args[1]);
+        }
+
+        if (args.length > 0 && args[0] instanceof PageIdentifier) {
+            return toString(((PageIdentifier) args[0]).getPageId());
+        }
+
+        return null;
+    }
+
+    private static String notNull(String s)
+    {
+        if (s == null) {
+            return "";
+        }
+        return s;
+    }
+
+    private static void addEventToCat(LogEvent logEvent, Map<String, List<String>> cat, CurrentPage currentPage)
+    {
+        if (cat != null) {
+            String pageIdOrFullName = getPageIdOrFullName(logEvent, currentPage);
+            if (pageIdOrFullName != null) {
+                cat.computeIfAbsent(pageIdOrFullName, k -> new ArrayList<>()).add(logEvent.getFormattedMessage());
+            }
+        }
+    }
+
+    private void updateCurrentDocument(CurrentPage currentPage,
+        Map<String, List<String>> otherIssues, Map<String, List<String>> skipped, Map<String, List<String>> problematic,
+        Map<String, List<String>> brokenLinksPages, Collection<String> docs, Object[] args)
+    {
+        if (args.length == 0 || !(args[0] instanceof DocumentReference)) {
+            return;
+        }
+        
+        DocumentReference docRef = (DocumentReference) args[0];
+        currentPage.ref = serializer.serialize(docRef);
+        docs.add(localSerializer.serialize(docRef));
+        if (currentPage.id != null) {
+            replaceKey(otherIssues, currentPage);
+            replaceKey(skipped, currentPage);
+            replaceKey(problematic, currentPage);
+            replaceKey(brokenLinksPages, currentPage);
+        }
+    }
+
+    private static void updateWarnings(LogEvent event, Map<String, List<String>> brokenLinksPages,
+        Set<List<String>> brokenLinks, Map<String, List<String>> otherIssues, CurrentPage currentPage)
+    {
+        String msg = event.getMessage();
+        Object[] args = event.getArgumentArray();
+        Map<String, List<String>> cat;
+        if (msg.contains(LINKS_BROKEN)) {
+            cat = brokenLinksPages;
+            if (args.length > 1 && args[1] instanceof String && args[0] instanceof String) {
+                brokenLinks.add(List.of((String) args[1], (String) args[0]));
+            }
+        } else {
+            cat = otherIssues;
+        }
+        addEventToCat(event, cat, currentPage);
+    }
+
+    private Map<String, List<String>> getPermissionIssues(String root, Collection<String> docs)
+    {
+        String wiki = getWiki(root);
+
+        Map<String, List<String>> permissionIssues = new HashMap<>(2);
+        putMissingSubjects(wiki, docs, permissionIssues, "groups");
+        putMissingSubjects(wiki, docs, permissionIssues, "users");
+        return permissionIssues;
+    }
+
+    private String getWiki(String root)
+    {
+        if (StringUtils.isNotEmpty(root)) {
+            EntityReference rootRef = referenceResolver.resolve(root, EntityType.SPACE).getRoot();
+            if (rootRef.getType() == EntityType.WIKI) {
+                return rootRef.getName();
+            }
+        }
+
+        return contextProvider.get().getWikiId();
+    }
+
+    private void putMissingSubjects(String wiki, Collection<String> docs, Map<String, List<String>> res, String field)
+    {
+        try {
+            res.put(field, new ArrayList<>(getMissingSubjects(field, wiki, docs)));
+        } catch (QueryException e) {
+            logger.error("Could not evaluate missing [{}] in permissions", field, e);
+        }
+    }
+
+    private Set<String> getMissingSubjects(String field, String wiki, Collection<String> docs) throws QueryException
+    {
+        // Takes the list of document references pointing to users or groups and only keep those not existing in the
+        // wiki.
+        Set<String> subjects = getSubjects(field, wiki, docs);
+        if (!subjects.isEmpty()) {
+            // We assume the users and groups are in the current wiki.
+            List<String> foundSubjects = queryManager.createQuery(
+                String.format(
+                    "select o.name from BaseObject o where o.name in (:refs) and o.className = 'XWiki.XWiki%s'",
+                    StringUtils.capitalize(field)),
+                HQL)
+                .bindValue("refs", subjects)
+                .execute();
+            subjects.removeIf(foundSubjects::contains);
+        }
+        return subjects;
+    }
+
+    private Set<String> getSubjects(String field, String wiki, Collection<String> docs) throws QueryException
+    {
+        // Computes the list of right object 'users' and 'groups' containing a comma or for which there aren't any
+        // corresponding users or groups.
+        Set<String> subjects = new TreeSet<>();
+        addSubjects(subjects, wiki, docs, field, "XWiki.XWikiRights");
+        addSubjects(subjects, wiki, docs, field, "XWiki.XWikiGlobalRights");
+        return subjects;
+    }
+
+    private void addSubjects(Set<String> subjects, String wiki, Collection<String> docs, String field,
+        String rightObjectName) throws QueryException
+    {
+        // Select the users (or groups) in right objects without a corresponding XWikiUsers (or XWikiGroups) object.
+        // This will also select users and groups fields that contains commas (which should not really happen with
+        // current versions of confluence-xml at the time of writing, it does not do such clever things as grouping
+        // right objects for different users or groups yet)
+        // We handle those fields with comma later with a split and then a second query.
+        // I wanted to write this in XWQL but https://jira.xwiki.org/browse/XWIKI-22621 prevents this here.
+
+        // If documents were imported in the current wiki where we assume the users and groups to be, we can optimize
+        // and already filter out known users and groups. Otherwise, we'd need a join with a separate database, which
+        // is not possible.
+        String optimizedFilter = contextProvider.get().getWikiId().equals(wiki)
+            ? "p.value not in (select o.name from BaseObject o where o.className = 'XWiki.XWiki%3$s') and "
+            : "";
+
+        String queryString = String.format(
+            "select distinct p.value from BaseObject obj, LargeStringProperty p where "
+                + "obj.name in (:docs) and "
+                + "p.value <> '' and "
+                + "%4$s"
+                + "obj.className = '%1$s' and "
+                + "p.id.id = obj.id and "
+                + "p.id.name = '%2$s'", rightObjectName, field, StringUtils.capitalize(field), optimizedFilter);
+
+        Collection<String> entries = queryManager.createQuery(queryString, HQL)
+            .setWiki(wiki)
+            .bindValue("docs", docs)
+            .execute();
+
+        for (String subjectsWithCommas : entries) {
+            subjects.addAll(List.of(subjectsWithCommas.split("\\s*,\\s*")));
+        }
     }
 
     private void addAttachment(String name, Object obj, XWikiDocument document)
@@ -338,18 +493,17 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return id.toString();
     }
 
-    private static String getPageIdOrFullName(LogEvent logEvent, String currentFullName, String currentPageId)
+    private static String getPageIdOrFullName(LogEvent logEvent, CurrentPage currentPage)
     {
-        String pageIdOrFullName = currentFullName;
-        if (currentFullName == null) {
+        if (currentPage.ref == null) {
             Optional<PageIdentifier> pageIdentifier =
                 Arrays.stream(logEvent.getArgumentArray()).filter(PageIdentifier.class::isInstance)
                     .map(a -> (PageIdentifier) a).findFirst();
-            pageIdOrFullName = pageIdentifier.isPresent()
+            return pageIdentifier.isPresent()
                 ? toString(pageIdentifier.get().getPageId())
-                : currentPageId;
+                : currentPage.id;
         }
-        return pageIdOrFullName;
+        return currentPage.ref;
     }
 
     private void persistMacroMap(Map<String, Map<String, Object>> macroMap)
