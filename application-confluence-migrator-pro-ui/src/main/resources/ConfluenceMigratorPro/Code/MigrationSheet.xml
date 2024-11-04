@@ -114,8 +114,17 @@
   ## End of upload handling.
   #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
   #if ("$!obj.getValue('executed')" == "" || "$obj.getValue('executed')" == "0")
-    #runMigrationJob($doc, true)
-    #displayJob($obj)
+    #if ($request.run || !($doc.name.contains("__LM__") || $doc.name.contains("__CONTENT__")))
+      #runMigrationJob($doc, true)
+      #displayJob($obj)
+    #else
+      ## FIXME The following form cannot be post because the migrator refreshes the page at the end of the migration.
+      {{html}}
+        &lt;form method="get"&gt;
+          &lt;button type="submit" class="btn btn-primary" name="run" value="1"&gt;Run&lt;/button&gt;
+        &lt;/form&gt;
+      {{/html}}
+    #end
   #elseif ("$obj.getValue('executed')" == "2" &amp;&amp; $objecttool.isNotNull($services.confluenceMigration.getLastJob($doc.documentReference)))
     #runMigrationJob($doc, false)
     #displayJob($obj)

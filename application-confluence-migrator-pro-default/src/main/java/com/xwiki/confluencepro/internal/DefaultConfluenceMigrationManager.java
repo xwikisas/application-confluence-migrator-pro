@@ -389,9 +389,22 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     private String getWiki(String root)
     {
         if (StringUtils.isNotEmpty(root)) {
-            EntityReference rootRef = referenceResolver.resolve(root, EntityType.SPACE).getRoot();
-            if (rootRef.getType() == EntityType.WIKI) {
-                return rootRef.getName();
+            if (root.startsWith("wiki:")) {
+                return root.substring(5);
+            }
+
+            String r = root;
+            if (r.startsWith("space:")) {
+                r = r.substring(6);
+            } else if (r.startsWith("document:")) {
+                r = r.substring(9);
+            }
+
+            if (!r.isEmpty()) {
+                EntityReference rootRef = referenceResolver.resolve(r, EntityType.SPACE).getRoot();
+                if (rootRef.getType() == EntityType.WIKI) {
+                    return rootRef.getName();
+                }
             }
         }
 

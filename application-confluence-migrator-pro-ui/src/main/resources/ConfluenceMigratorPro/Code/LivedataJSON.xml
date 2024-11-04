@@ -53,6 +53,10 @@
   #foreach($row in $map.get('rows'))
     #set ($rowDocRef = $services.model.resolveDocument($row.get('doc_fullName')))
     #set ($jobState = $services.confluenceMigration.getLastJob($rowDocRef).status.state)
+    #if ("$!row.get('executed_value')" == '')
+      #set ($discard = $row.put('executed_value', "0"))
+      #set ($discard = $row.put('executed', "-"))
+    #end
     #if ($row.get('executed_value') == '0')
       #if ("$!jobState" == '' || $jobState == 'NONE')
         #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('cross'), $services.localization.render('confluencepro.migration.livetable.state.none'))"))
