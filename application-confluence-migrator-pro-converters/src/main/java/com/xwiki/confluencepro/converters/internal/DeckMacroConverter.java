@@ -44,5 +44,15 @@ public class DeckMacroConverter extends AbstractMacroConverter
     {
         return "tab-group";
     }
+
+    @Override
+    protected String toXWikiParameterName(String confluenceParameterName, String id,
+        Map<String, String> confluenceParameters, String confluenceContent)
+    {
+        if ("class".equals(confluenceParameterName)) {
+            return "cssClass";
+        }
+        return super.toXWikiParameterName(confluenceParameterName, id, confluenceParameters, confluenceContent);
+    }
 }
 

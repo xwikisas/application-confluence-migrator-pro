@@ -44,4 +44,16 @@ public class CardMacroConverter extends AbstractMacroConverter
     {
         return "tab";
     }
+
+    @Override
+    protected String toXWikiParameterName(String confluenceParameterName, String id,
+        Map<String, String> confluenceParameters, String confluenceContent)
+    {
+        if ("style".equals(confluenceParameterName)) {
+            return "cssStyle";
+        } else if ("class".equals(confluenceParameterName)) {
+            return "cssClass";
+        }
+        return super.toXWikiParameterName(confluenceParameterName, id, confluenceParameters, confluenceContent);
+    }
 }
