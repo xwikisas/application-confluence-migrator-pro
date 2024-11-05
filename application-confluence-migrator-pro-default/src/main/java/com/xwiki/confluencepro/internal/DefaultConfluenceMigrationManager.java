@@ -52,6 +52,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
+import org.xwiki.bridge.event.DocumentUpdatedEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
 import org.xwiki.logging.LogLevel;
@@ -240,6 +241,21 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         private String ref;
     }
 
+    private boolean ignoredIssue(LogEvent event)
+    {
+        if ("Failed to send event [{}] to listener [{}]".equals(event.getMessage())) {
+            // Let's ignore useless but scary warnings that clutter reports
+            // See https://github.com/xwikisas/application-confluence-migrator-pro/issues/88
+            // See https://github.com/xwikisas/application-confluence-migrator-pro/issues/214
+            Object[] args = event.getArgumentArray();
+            return args.length == 2
+                && args[0] instanceof DocumentUpdatedEvent
+                && args[1] instanceof String
+                && ((String) args[1]).startsWith("com.xpn.xwiki.internal.event.AttachmentEventGeneratorListener@");
+        }
+        return false;
+    }
+
     Map<String, Map<String, Integer>> analyseLogs(ConfluenceMigrationJobStatus jobStatus, BaseObject object,
         XWikiDocument document, String root)
     {
@@ -259,7 +275,9 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
             switch (event.getLevel()) {
                 case ERROR:
-                    addEventToCat(event, skipped, currentPage);
+                    if (!ignoredIssue(event)) {
+                        addEventToCat(event, skipped, currentPage);
+                    }
                     break;
                 case WARN:
                     updateWarnings(event, brokenLinksPages, brokenLinks, otherIssues, currentPage);
