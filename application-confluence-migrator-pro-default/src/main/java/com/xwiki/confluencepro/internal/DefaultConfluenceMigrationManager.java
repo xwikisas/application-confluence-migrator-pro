@@ -32,7 +32,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -54,7 +53,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.PageIdentifier;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
 import org.xwiki.logging.LogLevel;
 import org.xwiki.logging.event.LogEvent;
@@ -120,6 +118,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         }
         return spaceCompare;
     };
+
+    private static final String PAGE_ID = "pageId";
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -315,8 +315,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             return toString((Long) args[1]);
         }
 
-        if (args.length > 0 && args[0] instanceof PageIdentifier) {
-            return toString(((PageIdentifier) args[0]).getPageId());
+        if (args.length > 0 && args[0] instanceof Map) {
+            return toString((Long) ((Map<?, ?>) args[0]).get(PAGE_ID));
         }
 
         return null;
@@ -509,13 +509,15 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     private static String getPageIdOrFullName(LogEvent logEvent, CurrentPage currentPage)
     {
         if (currentPage.ref == null) {
-            Optional<PageIdentifier> pageIdentifier =
-                Arrays.stream(logEvent.getArgumentArray()).filter(PageIdentifier.class::isInstance)
-                    .map(a -> (PageIdentifier) a).findFirst();
-            return pageIdentifier.isPresent()
-                ? toString(pageIdentifier.get().getPageId())
-                : currentPage.id;
+            for (Object arg : logEvent.getArgumentArray()) {
+                if (arg instanceof Map) {
+                    return (String) ((Map<?, ?>) arg).get(PAGE_ID);
+                }
+            }
+
+            return currentPage.id;
         }
+
         return currentPage.ref;
     }
 
