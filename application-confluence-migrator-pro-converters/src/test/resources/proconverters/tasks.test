@@ -47,11 +47,11 @@
 (% class="task-list" %)
 (((
 {{task reference="/Tasks/Task_4" status="Done"}}
-Do this pls! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} {{date value="2023-03-13" format="yyyy-MM-dd"/}}
+Do this pls! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} {{date format="yyyy-MM-dd" value="2023-03-13"/}}
 {{/task}}
 
 {{task reference="/Tasks/Task_7" status="InProgress"}}
-Do this as well {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date value="2023-11-23" format="yyyy-MM-dd"/}}
+Do this as well {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date format="yyyy-MM-dd" value="2023-11-23"/}}
 {{/task}}
 )))
 
@@ -60,11 +60,11 @@ Some more tasks here
 (% class="task-list" %)
 (((
 {{task reference="/Tasks/Task_5" status="Done"}}
-DO this as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} 
+DO this as well! {{date format="yyyy-MM-dd" value="2023-03-16"/}}{{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} 
 {{/task}}
 
 {{task reference="/Tasks/Task_6" status="InProgress"}}
-And this!!! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
+And this!!! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date format="yyyy-MM-dd" value="2023-03-20"/}}
 {{/task}}
 )))
 

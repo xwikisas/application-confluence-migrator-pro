@@ -20,6 +20,7 @@
 package com.xwiki.confluencepro.converters.internal;
 
 import java.util.Map;
+import java.util.HashMap;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -43,9 +44,10 @@ public class DateMacroConverter extends AbstractMacroConverter
     public void toXWiki(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline, Listener listener)
     {
-        confluenceParameters.put("format", "yyyy-MM-dd");
+        Map<String, String> parameters = new HashMap<>(confluenceParameters);
+        parameters.put("format", "yyyy-MM-dd");
 
-        super.toXWiki("date", confluenceParameters, confluenceContent, inline, listener);
+        super.toXWiki("date", parameters, confluenceContent, inline, listener);
     }
 
     @Override
