@@ -207,7 +207,6 @@ public class ConfluenceFilteringListener extends AbstractEventListener
                         String docTitle = newEntry.getKey();
                         EntityReference docRef = newEntry.getValue();
                         if (!Objects.equals(docRef, updatedSpaceMapping.get(docTitle))) {
-                            // FIXME we are assuming that the documents are created in the current wiki.
                             updatedSpaceMapping.put(docTitle, docRef);
                             updated = true;
                         }
@@ -215,8 +214,12 @@ public class ConfluenceFilteringListener extends AbstractEventListener
                 }
 
                 if (updated) {
+                    // FIXME we should use the actual target wiki, from the input filter stream root parameter.
+                    // In practice it should change nothing because Confluence-XML outputs references containing the
+                    // wiki when migrating to another wiki but it would be more robust and clear.
+                    WikiReference targetWiki = context.getWikiReference();
                     mappingObj.setLargeStringValue(MAPPING_OBJECT_KEY,
-                        linkMappingConverter.convertSpaceLinkMapping(updatedSpaceMapping, context.getWikiReference()));
+                        linkMappingConverter.convertSpaceLinkMapping(updatedSpaceMapping, targetWiki));
                     mappingObj.setStringValue(MAPPING_SPACEKEY_KEY, key);
                     if (spaceStateDoc.isNew()) {
                         spaceStateDoc.setHidden(true);
