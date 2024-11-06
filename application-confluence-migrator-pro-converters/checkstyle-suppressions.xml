@@ -9,4 +9,6 @@
             files="src/main/java/com/xwiki/confluencepro/converters/internal/LivesearchMacroConverter\.java$"/>
   <suppress checks="NPathComplexity"
             files="src/main/java/com/xwiki/confluencepro/converters/internal/MultiExcerptIncludeMacroConverter\.java$"/>
+  <suppress checks="ReturnCount"
+    files="src/main/java/com/xwiki/confluencepro/converters/internal/ShowIfHideIfMacroConverter\.java$"/>
 </suppressions>

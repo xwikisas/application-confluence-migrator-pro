@@ -36,13 +36,20 @@ import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverte
  * @version $Id$
  * @since 1.26.0
  */
-@Component(hints = {"hide-if", "show-if"})
+@Component(hints = { "hide-if", "show-if" })
 @Singleton
 public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
 {
+
     private static final String GROUP_ID_PARAM = "groupIds";
 
     private static final String GROUP_ID_SEPARATOR = ",";
+
+    private static final String GROUP_PARAM = "group";
+
+    private static final String SPECIAL_USERNAME_PARAM = "specialUsername";
+
+    private static final String SPECIAL_PARAM = "special";
 
     @Inject
     private ConfluenceConverter converter;
@@ -57,6 +64,15 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
                     String groupRef = converter.convertGroupId(i);
                     return groupRef == null ? i : groupRef;
                 }).collect(Collectors.joining(GROUP_ID_SEPARATOR));
+        } else if (GROUP_PARAM.equals(confluenceParameterName)) {
+            return Arrays.stream(confluenceParameterValue.split(GROUP_ID_SEPARATOR))
+                .map(i -> {
+                    String groupRef = converter.toGroupReference(i);
+                    return groupRef == null ? i : groupRef;
+                }).collect(Collectors.joining(GROUP_ID_SEPARATOR));
+        } else if (SPECIAL_PARAM.equals(confluenceParameterName)) {
+            // Convert something like @authenticated to AUTHENTICATED
+            return confluenceParameterValue.replace("@", "").toUpperCase();
         }
         return super.toXWikiParameterValue(confluenceParameterName, confluenceParameterValue, confluenceId, parameters,
             confluenceContent);
@@ -66,11 +82,17 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
     protected String toXWikiParameterName(String confluenceParameterName, String id,
         Map<String, String> confluenceParameters, String confluenceContent)
     {
-        if (confluenceParameterName.equals(GROUP_ID_PARAM)) {
+        if ("match".equals(confluenceParameterName)) {
+            return "matchUsing";
+        } else if ("user".equals(confluenceParameterName)) {
+            return "users";
+        } else if (GROUP_ID_PARAM.equals(confluenceParameterName) || GROUP_PARAM.equals(confluenceParameterName)) {
             return "groups";
-        }
-        if (confluenceParameterName.equals("specialUsername")) {
+        } else if (SPECIAL_USERNAME_PARAM.equals(confluenceParameterName)
+            || SPECIAL_PARAM.equals(confluenceParameterName)) {
             return "authenticationType";
+        } else if ("type".equals(confluenceParameterName)) {
+            return "contentType";
         }
         return super.toXWikiParameterName(confluenceParameterName, id, confluenceParameters, confluenceContent);
     }
