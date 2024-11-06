@@ -265,6 +265,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         Map<String, List<String>> brokenLinksPages = new TreeMap<>();
         Set<List<String>> brokenLinks = new TreeSet<>(BROKEN_LINKS_COMPARATOR);
         Map<String, Map<String, Integer>> macroPages = new HashMap<>();
+        Map<String, Map<String, List<String>>> collisions = new HashMap<>();
 
         CurrentPage currentPage = new CurrentPage();
         long docCount = 0;
@@ -275,9 +276,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
             switch (event.getLevel()) {
                 case ERROR:
-                    if (!ignoredIssue(event)) {
-                        addEventToCat(event, skipped, currentPage);
-                    }
+                    updateErrors(event, skipped, collisions, currentPage);
                     break;
                 case WARN:
                     updateWarnings(event, brokenLinksPages, brokenLinks, otherIssues, currentPage);
@@ -307,9 +306,36 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         addAttachment("brokenLinksPages.json", brokenLinksPages, document);
         addAttachment("brokenLinks.json", brokenLinks, document);
         addAttachment("missingUsersGroups.json", getPermissionIssues(root, docs), document);
+        addAttachment("collisions.json", collisions, document);
         addAttachment("logs.json", logList, document);
         object.setLongValue("imported", docCount);
         return macroPages;
+    }
+
+    private void updateErrors(LogEvent event, Map<String, List<String>> skipped,
+        Map<String, Map<String, List<String>>> collisions, CurrentPage currentPage)
+    {
+        Object[] args = event.getArgumentArray();
+        if (isACollisionError(event, args)) {
+            String collidingReference = (String) args[0];
+            String spaceKey = (String) args[1];
+            List<String> pages = (List<String>) args[2];
+            Map<String, List<String>> spaceEntry = collisions.computeIfAbsent(spaceKey, k -> new HashMap<>());
+            spaceEntry.put(collidingReference, pages);
+        } else if (!ignoredIssue(event)) {
+            addEventToCat(event, skipped, currentPage);
+        }
+    }
+
+    private static boolean isACollisionError(LogEvent event, Object[] args)
+    {
+        if (Objects.equals(event.getMarker(), ConfluenceFilteringListener.COLLISION_MARKER)) {
+            return args.length == 3
+                && args[0] instanceof String
+                && args[1] instanceof String
+                && args[2] instanceof List;
+        }
+        return false;
     }
 
     private static void addMacros(String currentDocument, Object[] args, Map<String, Map<String, Integer>> macroPages)

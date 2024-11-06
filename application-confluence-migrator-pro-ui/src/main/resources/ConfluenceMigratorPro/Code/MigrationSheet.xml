@@ -386,6 +386,44 @@ $attachment.getContentAsString()##
       #end
     #end
   #end
+  ## Collision section
+  #set ($json = "#getJSON($obj, 'collisions')")
+  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+    #set ($hasCollisions = false)
+    #set ($jsonObject = $jsontool.fromString($json))
+    #foreach ($spaceEntry in $jsonObject.entrySet())
+      #if (!$spaceEntry.getValue().isEmpty())
+        #set ($hasCollisions = true)
+      #end
+    #end
+    #if ($hasCollisions)
+      #displaySubtitle('warning', 'confluencepro.migration.raport.problems.collisions.title', '', [])
+      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.collisions.info')&lt;/p&gt;
+      &lt;table&gt;
+        &lt;tr&gt;
+          &lt;th&gt;space&lt;/th&gt;
+          &lt;th&gt;reference&lt;/th&gt;
+          &lt;th&gt;Confluence page titles&lt;/th&gt;
+        &lt;/tr&gt;
+        #foreach ($spaceEntry in $jsonObject.entrySet())
+          #set ($spaceKey = $spaceEntry.getKey())
+          #foreach ($collision in $spaceEntry.getValue().entrySet())
+            &lt;tr&gt;
+              &lt;td&gt;$escapetool.xml($spaceKey)&lt;/td&gt;
+              &lt;td&gt;$escapetool.xml($collision.getKey())&lt;/td&gt;
+              &lt;td&gt;
+                #foreach($pageTitle in $collision.getValue())
+                  $escapetool.xml($pageTitle)
+                  #if (!$foreach.last)&lt;br /&gt;#end
+                #end
+              &lt;/td&gt;
+            &lt;/tr&gt;
+          #end
+        #end
+      &lt;/table&gt;
+    #end
+  #end
+
   ## Other issues section
   #set ($json = "#getJSON($obj, 'otherIssues')")
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())

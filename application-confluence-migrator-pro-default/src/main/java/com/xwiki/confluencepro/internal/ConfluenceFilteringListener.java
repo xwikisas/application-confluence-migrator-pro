@@ -19,12 +19,15 @@
  */
 package com.xwiki.confluencepro.internal;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,6 +43,8 @@ import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.event.ConfluenceFilteringEvent;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceXMLPackage;
@@ -51,8 +56,10 @@ import org.xwiki.job.event.status.JobStatus;
 import org.slf4j.Logger;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
+import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.LocalDocumentReference;
 import org.xwiki.model.reference.SpaceReference;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.CancelableEvent;
 import org.xwiki.observation.event.Event;
@@ -69,6 +76,8 @@ import org.xwiki.refactoring.job.question.EntitySelection;
 @Singleton
 public class ConfluenceFilteringListener extends AbstractEventListener
 {
+    static final Marker COLLISION_MARKER = MarkerFactory.getMarker("collidingReferences");
+
     private static final String MAPPING_OBJECT_KEY = "mapping";
 
     private static final String MAPPING_SPACEKEY_KEY = "spaceKey";
@@ -95,6 +104,9 @@ public class ConfluenceFilteringListener extends AbstractEventListener
 
     @Inject
     private LinkMappingConverter linkMappingConverter;
+
+    @Inject
+    private EntityReferenceSerializer<String> serializer;
 
     /**
      * Default constructor.
@@ -191,46 +203,88 @@ public class ConfluenceFilteringListener extends AbstractEventListener
             try {
                 XWikiDocument spaceStateDoc = wiki.getDocument(new DocumentReference(key, stateRef), context);
                 Map<String, EntityReference> newSpaceMapping = mappingEntry.getValue();
+                if (!pageIds) {
+                    checkCollisions(key, newSpaceMapping);
+                }
                 BaseObject mappingObj = spaceStateDoc.isNew()
                     ? spaceStateDoc.newXObject(LINK_MAPPING_SPACE_STATE_CLASS_REF, context)
                     : spaceStateDoc.getXObject(LINK_MAPPING_SPACE_STATE_CLASS_REF, true, context);
                 String updatedSpaceMappingStr = mappingObj.getLargeStringValue(MAPPING_OBJECT_KEY);
                 Map<String, EntityReference> updatedSpaceMapping =
                     linkMappingConverter.convertSpaceLinkMapping(updatedSpaceMappingStr, key);
-                boolean updated = false;
+
+                boolean updated;
 
                 if (updatedSpaceMapping == null) {
                     updated = true;
                     updatedSpaceMapping = newSpaceMapping;
                 } else {
-                    for (Map.Entry<String, EntityReference> newEntry : newSpaceMapping.entrySet()) {
-                        String docTitle = newEntry.getKey();
-                        EntityReference docRef = newEntry.getValue();
-                        if (!Objects.equals(docRef, updatedSpaceMapping.get(docTitle))) {
-                            updatedSpaceMapping.put(docTitle, docRef);
-                            updated = true;
-                        }
-                    }
+                    updated = computeDifferences(newSpaceMapping, updatedSpaceMapping);
                 }
 
                 if (updated) {
-                    // FIXME we should use the actual target wiki, from the input filter stream root parameter.
-                    // In practice it should change nothing because Confluence-XML outputs references containing the
-                    // wiki when migrating to another wiki but it would be more robust and clear.
-                    WikiReference targetWiki = context.getWikiReference();
-                    mappingObj.setLargeStringValue(MAPPING_OBJECT_KEY,
-                        linkMappingConverter.convertSpaceLinkMapping(updatedSpaceMapping, targetWiki));
-                    mappingObj.setStringValue(MAPPING_SPACEKEY_KEY, key);
-                    if (spaceStateDoc.isNew()) {
-                        spaceStateDoc.setHidden(true);
-                    }
-                    String migrationName = jobStatusToAsk.getRequest().getStatusDocumentReference().getName();
-                    wiki.saveDocument(spaceStateDoc, "Updated from migration " + migrationName, context);
+                    saveLinkMapping(jobStatusToAsk, context, mappingObj, updatedSpaceMapping, key, spaceStateDoc, wiki);
                 }
             } catch (XWikiException | JsonProcessingException e) {
                 logger.warn("Could not update link mapping for space [{}]", key, e);
             }
         }
         logger.info("Done computing the link mapping.");
+    }
+
+    private static boolean computeDifferences(Map<String, EntityReference> newSpaceMapping,
+        Map<String, EntityReference> updatedSpaceMapping)
+    {
+        boolean updated = false;
+        for (Map.Entry<String, EntityReference> newEntry : newSpaceMapping.entrySet()) {
+            String docTitle = newEntry.getKey();
+            EntityReference docRef = newEntry.getValue();
+            if (!Objects.equals(docRef, updatedSpaceMapping.get(docTitle))) {
+                updatedSpaceMapping.put(docTitle, docRef);
+                updated = true;
+            }
+        }
+        return updated;
+    }
+
+    private void saveLinkMapping(ConfluenceMigrationJobStatus jobStatusToAsk, XWikiContext context,
+        BaseObject mappingObj, Map<String, EntityReference> updatedSpaceMapping, String key,
+        XWikiDocument spaceStateDoc, XWiki wiki) throws JsonProcessingException, XWikiException
+    {
+        // FIXME we should use the actual target wiki, from the input filter stream root parameter.
+        // In practice it should change nothing because Confluence-XML outputs references containing the
+        // wiki when migrating to another wiki but it would be more robust and clear.
+        WikiReference targetWiki = context.getWikiReference();
+        mappingObj.setLargeStringValue(MAPPING_OBJECT_KEY,
+            linkMappingConverter.convertSpaceLinkMapping(updatedSpaceMapping, targetWiki));
+        mappingObj.setStringValue(MAPPING_SPACEKEY_KEY, key);
+        if (spaceStateDoc.isNew()) {
+            spaceStateDoc.setHidden(true);
+        }
+        String migrationName = jobStatusToAsk.getRequest().getStatusDocumentReference().getName();
+        wiki.saveDocument(spaceStateDoc, "Updated from migration " + migrationName, context);
+    }
+
+    private void checkCollisions(String spaceKey, Map<String, EntityReference> spaceMapping)
+    {
+        Map<String, List<String>> reverseMapping = new HashMap<>(spaceMapping.size());
+        Set<String> collidingReferences = new HashSet<>();
+        for (Map.Entry<String, EntityReference> entry : spaceMapping.entrySet()) {
+            String page = entry.getKey();
+            String serialized = serializer.serialize(entry.getValue());
+            List<String> list = reverseMapping.get(serialized);
+            if (list == null) {
+                list = new ArrayList<>(1);
+                reverseMapping.put(serialized, list);
+            } else {
+                collidingReferences.add(serialized);
+            }
+            list.add(page);
+        }
+
+        for (String collidingReference : collidingReferences) {
+            logger.error(COLLISION_MARKER, "Reference [{}] collides in space [{}] for pages [{}]",
+                collidingReference, spaceKey, reverseMapping.get(collidingReference));
+        }
     }
 }
