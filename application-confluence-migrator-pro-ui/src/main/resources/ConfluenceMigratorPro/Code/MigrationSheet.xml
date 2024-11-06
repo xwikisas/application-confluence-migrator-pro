@@ -464,6 +464,10 @@ $attachment.getContentAsString()##
  * @param $jsonObject the json that needs displaying. It should have the pattern: { key1: [vals..], key2: [vals..], ..}
  *#
 #macro(displayJson $jsonObject)
+  &lt;p&gt;
+    &lt;button class="cfm-unfold-all btn" type="button"&gt;Unfold all&lt;/button&gt;
+    &lt;button class="cfm-fold-all btn"   type="button"&gt;Fold all&lt;/button&gt;
+  &lt;/p&gt;
   &lt;ul class="cfm-problem-pages"&gt;
   #foreach ($entry in $jsonObject.entrySet())
     #if ($entry.key.contains("."))
@@ -974,8 +978,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
   $(".job-status").on("xwiki:job:done", function () {
     window.location.reload();
   });
-  document
-    .getElementById("cfmInterrupt")
+  document.getElementById("cfmInterrupt")
     ?.addEventListener("click", function (e) {
       if (confirm("Are you sure you want to interrupt this migration?")) {
         const cancelButton = document.querySelector("button.btAnswerCancel");
@@ -990,6 +993,24 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
         }
       }
     });
+
+  $(".cfm-unfold-all").on("click", function (e) {
+    const ul = e?.target?.parentNode?.nextElementSibling;
+    if (ul) {
+      for (const a of ul.querySelectorAll('a[aria-expanded="false"]')) {
+        a.click();
+      }
+    }
+  });
+
+  $(".cfm-fold-all").on("click", function (e) {
+    const ul = e?.target?.parentNode?.nextElementSibling;
+    if (ul) {
+      for (const a of ul.querySelectorAll('a[aria-expanded="true"]')) {
+        a.click();
+      }
+    }
+  });
 
   const logs = document.getElementById("cfmLogs");
   if (logs) {
