@@ -529,7 +529,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         if (currentPage.ref == null) {
             for (Object arg : logEvent.getArgumentArray()) {
                 if (arg instanceof Map) {
-                    return (String) ((Map<?, ?>) arg).get(PAGE_ID);
+                    return ((Map<?, ?>) arg).get(PAGE_ID).toString();
                 }
             }
 
