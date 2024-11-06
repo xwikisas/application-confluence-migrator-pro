@@ -73,6 +73,8 @@
     #elseif ($row.get('executed_value') == '2')
       #if ($objecttool.isNull($jobState))
         #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('cross'), $services.localization.render('confluencepro.migration.livetable.state.died'))"))
+      #elseif ($jobState == 'NONE')
+        #set ($discard = $row.put('job_status', "#migrationStatus($services.icon.renderHTML('warning'), $services.localization.render('confluencepro.migration.livetable.state.waiting'))"))
       #else
         #set ($icon = "&lt;div class='loading'&gt;&lt;/div&gt;")
         #set ($discard = $row.put('job_status', "#migrationStatus($icon, $services.localization.render('confluencepro.migration.livetable.state.running'))"))
