@@ -187,9 +187,9 @@ public class ConfluenceFilteringListener extends AbstractEventListener
             boolean pageIds = key.endsWith(":ids");
             String spaceKey = pageIds ? key.substring(0, key.indexOf(":")) : key;
             logger.info("Updating the link mapping for space [{}]" + (pageIds ? " (page IDs)" : ""), spaceKey);
+
             try {
-                XWikiDocument spaceStateDoc = wiki.getDocument(
-                    new DocumentReference(key, stateRef), context);
+                XWikiDocument spaceStateDoc = wiki.getDocument(new DocumentReference(key, stateRef), context);
                 Map<String, EntityReference> newSpaceMapping = mappingEntry.getValue();
                 BaseObject mappingObj = spaceStateDoc.isNew()
                     ? spaceStateDoc.newXObject(LINK_MAPPING_SPACE_STATE_CLASS_REF, context)

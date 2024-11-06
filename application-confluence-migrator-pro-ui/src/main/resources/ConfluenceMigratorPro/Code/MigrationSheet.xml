@@ -363,11 +363,12 @@ $attachment.getContentAsString()##
       #end
     #end
   #end
+  ## Missing users and groups section
   #set ($json = "#getJSON($obj, 'missingUsersGroups')")
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
     #set ($jsonObject = $jsontool.fromString($json))
     #if (!$jsonObject.isEmpty() &amp;&amp; (!$jsonObject.users.isEmpty() || !$jsonObject.groups.isEmpty()))
-      #displaySubtitle('warning', 'confluencepro.migration.raport.problems.missingUsersGroups.title', '', [$jsonObject.keySet().size()])
+      #displaySubtitle('warning', 'confluencepro.migration.raport.problems.missingUsersGroups.title', '', [])
       &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.info')&lt;/p&gt;
       #if (!$jsonObject.groups.isEmpty())
         &lt;dl&gt;

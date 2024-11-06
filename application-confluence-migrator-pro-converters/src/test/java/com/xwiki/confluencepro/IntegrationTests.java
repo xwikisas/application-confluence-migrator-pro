@@ -54,7 +54,7 @@ import static org.mockito.Mockito.when;
 @FilterTestSuite.Scope(value = "proconverters"/*, pattern = "images.test"*/)
 @ComponentTest
 @AllComponents
- public class IntegrationTests
+public class IntegrationTests
 {
     @FilterTestSuite.Initialized
     public void initialized(MockitoComponentManager componentManager) throws Exception
