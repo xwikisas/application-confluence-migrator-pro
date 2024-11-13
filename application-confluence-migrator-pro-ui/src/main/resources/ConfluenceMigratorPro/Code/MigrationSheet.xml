@@ -549,11 +549,6 @@ $attachment.getContentAsString()##
   #else
     #set ($confluenceJob = $services.confluenceMigration.getLastJob($doc.documentReference))
 
-    #set ($jobStatusURL = $doc.getURL('ConfluenceMigratorPro.Code.JobJSON', 'get', $escapetool.url({
-      'outputSyntax': 'plain',
-      'docRef': $services.model.serialize($doc.documentReference)
-    })))
-
     {{html}}
     #template('job_macros.vm')
     #set ($jobStatus = $confluenceJob.status)
@@ -563,7 +558,6 @@ $attachment.getContentAsString()##
       $jobStatus.cancel()
     #end
     #set ($jobRequest = $jobStatus.request)
-    #if (!$jobStatusURL)
       #set ($jobStatusURL = $doc.getURL('get', $escapetool.url({
         'xpage': 'job_status_json',
         'outputSyntax': 'plain',
