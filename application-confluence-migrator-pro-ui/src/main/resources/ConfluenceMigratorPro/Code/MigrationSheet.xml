@@ -565,8 +565,16 @@ $attachment.getContentAsString()##
       $jobStatus.cancel()
     #end
     #set ($jobRequest = $jobStatus.request)
+    #if ($request.fulljoblogs)
       #set ($jobStatusURL = $doc.getURL('get', $escapetool.url({
         'xpage': 'job_status_json',
+        'outputSyntax': 'plain',
+        'jobId': $jobRequest.id,
+        'translationPrefix': $translationPrefix
+      })))
+    #else
+      #set ($jobStatusURL = $xwiki.getDocument('ConfluenceMigratorPro.Code.CustomJobStatusJSON').getURL('get', $escapetool.url({
+        'xpage': 'get',
         'outputSyntax': 'plain',
         'jobId': $jobRequest.id,
         'translationPrefix': $translationPrefix
@@ -592,8 +600,16 @@ $attachment.getContentAsString()##
         #jobFinishedMessage($status, $translationPrefix)
       #end
       #if ($showLogs || $isAdvancedUser || $isSuperAdmin)
-        #displayJobStatusLog($jobStatus true)
+        #set ($collapseLogs = !$request.fulljoblogs)
+        #displayJobStatusLog($jobStatus, $collapseLogs)
         #if (!$finished)
+          #if (!$request.fulljoblogs)
+          &lt;form method="get"&gt;
+            &lt;div class="box note" id="partial-logs-note"&gt;
+              &lt;p&gt;For performance and stability reasons, logs are only shown partially and lines might be missing. &lt;button id="display-full-job-logs" class="btn btn-secondary" value="1" name="fulljoblogs"&gt;$services.localization.render('confluencepro.migration.raport.displayFullLog')&lt;/button&gt;&lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/form&gt;
+          #end
           &lt;p style="text-align:right"&gt;
             &lt;input type="button" class="btn btn-danger" value="$services.localization.render('confluencepro.job.interrupt.button')" name="interrupt" id="cfmInterrupt"/&gt;
           &lt;/p&gt;
@@ -1021,7 +1037,13 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
     uiQuestion.on("job:question:loaded", initQuestion);
   });
   $(".job-status").on("xwiki:job:done", function () {
-    window.location.reload();
+    const interro = location.href.indexOf('?');
+    if (interro === -1) {
+      location.reload();
+    } else {
+      // We don't want parameters like fulljoblogs to stay
+      location.href = location.href.substring(0, interro);
+    }
   });
   document.getElementById("cfmInterrupt")
     ?.addEventListener("click", function (e) {
@@ -1514,6 +1536,14 @@ require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
 
 details.cfm-details summary {
   display: list-item;
+}
+
+.xcontent.job-status:has(&gt; dl.xform &gt; dt &gt; .collapsed) #partial-logs-note {
+  display: none;
+}
+
+.log-item:has(&gt;.fake-log-items) {
+  display: none;
 }</code>
     </property>
     <property>
