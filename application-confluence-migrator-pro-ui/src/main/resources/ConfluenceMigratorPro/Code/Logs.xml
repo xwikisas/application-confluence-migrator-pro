@@ -1,0 +1,136 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.Logs" locale="">
+  <web>ConfluenceMigratorPro.Code</web>
+  <name>Logs</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>Logs</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{groovy}}
+import org.slf4j.Marker;
+import org.xwiki.job.JobStatusStore;
+import org.xwiki.job.event.status.JobStatus;
+import org.xwiki.logging.event.LogEvent;
+import groovy.json.JsonOutput;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.xwiki.logging.tail.LogTail;
+
+void printEvent(OutputStream os, LogEvent logEvent) {
+    os.print('{"timeStamp":');
+    os.print(JsonOutput.toJson(logEvent.getTimeStamp()));
+    Marker marker = logEvent.getMarker();
+    if (marker) {
+        os.print(',"marker":');
+        os.print(JsonOutput.toJson(marker.getName()));
+    }
+    os.print(',"level":');
+    os.print(JsonOutput.toJson(logEvent.getLevel()));
+    os.print(',"message":');
+    os.print(JsonOutput.toJson(logEvent.getMessage()));
+    Object[] a = logEvent.getArgumentArray();
+    if (a) {
+        os.print(',"args":');
+        boolean started = false;
+        os.print('[');
+        for (Object v in a) {
+            if (started) {
+                os.print(',')
+            } else {
+                started = true;
+            }
+            try {
+                if (v == null) {
+                    os.print("null");
+                } else {
+                    os.print(JsonOutput.toJson(v.toString()));
+                }
+            } catch (Exception ignored) {
+                os.print(JsonOutput.toJson("&lt;???&gt;"));
+            }
+        }
+        os.print(']');
+    }
+    Throwable t = logEvent.getThrowable();
+    if (t) {
+        try {
+            String[] s = ExceptionUtils.getStackFrames(t)
+            os.print(',"throwable":');
+            os.print(JsonOutput.toJson(s));
+        } catch (Exception e) {
+            try {
+                String[] s = ExceptionUtils.getStackFrames(e)
+                os.print(',"unableToGetThrowableReason":');
+                os.print(JsonOutput.toJson(s));
+            } catch (Exception ee) {
+                os.print(',"unableToGetThrowableReason":');
+                os.print(JsonOutput.toJson("Unable to get both the exception stack and the reason of the error: " + ee.getMessage()));
+            }
+        }
+    }
+    os.print("}\n");
+}
+
+void printLogs(OutputStream os, String name) {
+    JobStatusStore store = services.component.getInstance(JobStatusStore.class);
+    JobStatus logStatus = store.getJobStatus(List.of("confluence", "migration", "xwiki",
+            "ConfluenceMigratorPro", "Migrations", name));
+    LogTail logTail = logStatus.getLogTail();
+    for (LogEvent logEvent : logTail) {
+        printEvent(os, logEvent);
+    }
+}
+
+OutputStream os = response.getOutputStream();
+boolean setContentType = true;
+
+String name = xcontext.get('migrationName');
+if (name) {
+  setContentType = false;
+} else {
+  xcontext.setFinished(true);
+  name = request.name;
+}
+
+if (name) {
+    if (setContentType) {
+      response.setContentType("text/jsonl");
+    }
+    printLogs(os, name);
+} else {
+    if (setContentType) {
+      response.setContentType("text/plain");
+    }
+    os.println("Please provide a name parameter");
+}
+{{/groovy}}</content>
+</xwikidoc>

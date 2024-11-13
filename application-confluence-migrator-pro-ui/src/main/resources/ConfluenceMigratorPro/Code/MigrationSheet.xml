@@ -466,7 +466,7 @@ $attachment.getContentAsString()##
 
   {{html clean=false}}
   #displaySubtitle('info', 'confluencepro.migration.raport.logs.title', '', [])
-  #if ($objecttool.isNull($doc.getAttachment("logs.json")))
+  #if ($stringtool.isNotEmpty($obj.getValue("logs")))
     #if ($request.fulllogs)
       #set ($json = "#getJSON($obj, 'logs')")
       #set ($jsonObject = $jsontool.fromString($json))
@@ -669,9 +669,11 @@ $attachment.getContentAsString()##
 #end
 
 #macro(textReport)
+  $xcontext.setFinished(true)
   #computeRootSpace
+  #set ($os = $response.getOutputStream())
   #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
-  $response.setContentType("text/plain; charset=utf-8")*
+  $response.setContentType("text/plain; charset=utf-8")
 
   #if ("$obj.getValue('executed')" == '0')
     #set ($status = $services.localization.render('confluencepro.migration.livetable.state.none'))
@@ -691,29 +693,29 @@ $attachment.getContentAsString()##
   #else
     #set ($status = $obj.getValue('executed'))
   #end
-  $response.writer.write("Status: $status$escapetool.N")
+  $os.print("Status: $status$escapetool.N")
 
   #if ($obj.getValue('imported'))
-    $response.writer.write("Number of imported pages: $obj.getValue('imported')$escapetool.N")
+    $os.print("Number of imported pages: $obj.getValue('imported')$escapetool.N")
   #end
 
   #if ($obj.getValue('spaces'))
-    $response.writer.write("Imported spaces: $obj.getValue('spaces')$escapetool.N")
+    $os.print("Imported spaces: $obj.getValue('spaces')$escapetool.N")
   #end
 
   #set ($inputProps = $jsontool.fromString($obj.getValue('inputProperties')))
   #if ($objecttool.isNotNull($inputProps))
-    $response.writer.write("Input properties:$escapetool.N")
+    $os.print("Input properties:$escapetool.N")
     #foreach ($inputProp in $inputProps.entrySet())
-      $response.writer.write(" - $inputProp.key: $inputProp.value$escapetool.N")
+      $os.print(" - $inputProp.key: $inputProp.value$escapetool.N")
     #end
   #end
 
   #set ($outputProps = $jsontool.fromString($obj.getValue('outputProperties')))
   #if ($objecttool.isNotNull($outputProps))
-    $response.writer.write("Output properties:$escapetool.N")
+    $os.print("Output properties:$escapetool.N")
     #foreach ($inputProp in $outputProps.entrySet())
-      $response.writer.write(" - $inputProp.key: $inputProp.value$escapetool.N")
+      $os.print(" - $inputProp.key: $inputProp.value$escapetool.N")
     #end
   #end
   #set ($supportedMacros = [])
@@ -725,40 +727,43 @@ $attachment.getContentAsString()##
       #set ($discard = $notSupportedMacros.add($macro))
     #end
   #end
-  $response.writer.write("Supported macros: $supportedMacros$escapetool.N")
-  $response.writer.write("Unsupported macros: $notSupportedMacros$escapetool.N")
+  $os.print("Supported macros: $supportedMacros$escapetool.N")
+  $os.print("Unsupported macros: $notSupportedMacros$escapetool.N")
 
   #set ($json = "#getJSON($obj, 'brokenLinksPages')")
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
-    $response.writer.write("Pages with broken links:$escapetool.N")
+    $os.print("Pages with broken links:$escapetool.N")
     #foreach ($page in $jsontool.fromString($json).keySet())
-      $response.writer.write(" - $page$escapetool.N")
+      $os.print(" - $page$escapetool.N")
     #end
   #end
 
   #set ($json = "#getJSON($obj, 'brokenLinks')")
   #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
-    $response.writer.write("Broken links:$escapetool.N")
+    $os.print("Broken links:$escapetool.N")
     #foreach ($page in $jsontool.fromString($json))
-      $response.writer.write(" - spaceKey: $page[0], title: $page[1]$escapetool.N")
+      $os.print(" - spaceKey: $page[0], title: $page[1]$escapetool.N")
     #end
   #end
-  #foreach ($entry in ['problems', 'skipped', 'otherIssues', 'logs'])
+  #foreach ($entry in ['problems', 'skipped', 'otherIssues'])
     #set ($json = "#getJSON($obj, $entry)")
     #if ($objecttool.isNotNull($json) &amp;&amp; $json.length() &gt; 2)
-      $response.writer.write("$escapetool.N")
+      $os.print("$escapetool.N")
       #if ($entry == "otherIssues")
-        $response.writer.write("other issues:$escapetool.N")
+        $os.print("other issues:$escapetool.N")
       #elseif ($entry == "logs")
-        $response.writer.write("all logs:$escapetool.N")
+        $os.print("all logs:$escapetool.N")
       #else
-        $response.writer.write("$entry:$escapetool.N")
+        $os.print("$entry:$escapetool.N")
       #end
       #set ($json = $json.substring(1, $json.length() - 1))
-      $response.writer.write($json.replace(',{"timeStamp":', ',' + $escapetool.N + '{"timeStamp":'))
+      $os.print($json.replace(',{"timeStamp":', ',' + $escapetool.N + '{"timeStamp":'))
     #end
   #end
-  $xcontext.setFinished(true)
+  $xcontext.put("migrationName", $doc.documentReference.name)
+  $os.println("${escapetool.N}${escapetool.N}Full logs:")
+
+  {{include reference="ConfluenceMigratorPro.Code.Logs" context="current" /}}
 #end
 {{/velocity}}
 
@@ -774,7 +779,7 @@ $attachment.getContentAsString()##
 #elseif ($hasAdmin)
   #if ($request.migrateprops == 1)
     #migrateProps
-  #elseif ($request.text == 1 )
+  #elseif ($request.text == 1)
     #textReport
   #else
     #docView
@@ -1052,6 +1057,39 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
     }
   });
 
+  function format(message, args) {
+    const m = message.split("{}");
+    let res = m[0];
+    for (let i = 1; i &lt; m.length; i++) {
+      res += args[i - 1] + m[i];
+    }
+    return res;
+  }
+
+  function parse(l, method) {
+    if (method === "attachment") {
+      return l;
+    }
+
+    if (!l.trim()) {
+      return null;
+    }
+    try {
+      return JSON.parse(l);
+    } catch (e) {
+      console.log("Could not parse the following JSON line:", l, e);
+      return null;
+    }
+  }
+
+  function lines(jsonLogs, method) {
+    if (method === "attachment") {
+      return jsonLogs;
+    }
+
+    return jsonLogs.split("\n");
+  }
+
   const logs = document.getElementById("cfmLogs");
   if (logs) {
     const fullLogsBtn = document.getElementById("cfm-full-logs");
@@ -1066,17 +1104,35 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
   }
 
   function getLogs() {
-    const logsURL = XWiki.currentDocument.getURL("download") + "/logs.json";
+    // if method === "attachment", the logs were saved as an attachments (old
+    // migrations, we don't do it like this anymore), and we shall use it
+    // instead of the log tail because PageIdentifier objects in these logs are
+    // not parsed correctly
+    const method = logs.dataset.logMethod;
+
+    const logsURL = method === "attachment"
+      ? XWiki.currentDocument.getURL("download") + "/logs.json"
+      : new XWiki.Document(new XWiki.DocumentReference(
+            XWiki.currentWiki,
+            ["ConfluenceMigratorPro", "Code"],
+            "Logs"
+        )).getURL("get") + "?action=alllogs&amp;name=" + encodeURIComponent(XWiki.currentDocument.page);
+
     $.get(logsURL).then(function (jsonLogs) {
       const ul = document.createElement("ul");
       ul.className = "log";
-      for (const log of jsonLogs) {
+      for (const l of lines(jsonLogs, method)) {
+        const log = parse(l, method);
+        if (!log) {
+          continue;
+        }
         const li = document.createElement("li");
         li.className = "log-item log-item-" + (log.level?.toLowerCase() || "");
         const div = document.createElement("div");
         const d = new Date(log.timeStamp);
         const datetime = d.toLocaleDateString() + " " + d.toLocaleTimeString();
-        div.textContent = datetime + " " + log.message;
+        const msg = log.args ? format(log.message, log.args) : log.message;
+        div.textContent = datetime + " " + msg;
         li.appendChild(div);
         if (log.throwable) {
           const divStack = document.createElement("div");

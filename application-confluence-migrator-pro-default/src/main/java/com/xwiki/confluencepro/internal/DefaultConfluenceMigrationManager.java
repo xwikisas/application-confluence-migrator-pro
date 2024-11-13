@@ -21,7 +21,6 @@ package com.xwiki.confluencepro.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -98,8 +97,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final String LINKS_BROKEN = "Links to this page may be broken";
 
-    private static final String LOGS = "logs";
-
     private static final String EXECUTED = "executed";
 
     private static final String AN_EXCEPTION_OCCURRED = "An exception occurred";
@@ -170,17 +167,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             logger.info("Migration finished and saved");
         } catch (Exception e) {
             if (object != null) {
-                List<Map<String, Object>> logList = new ArrayList<>(1);
-                addToJsonList(LogLevel.ERROR, Instant.now().toEpochMilli(), AN_EXCEPTION_OCCURRED, e, logList);
                 object.set(EXECUTED, 4, context);
                 logger.error(AN_EXCEPTION_OCCURRED, e);
-
-                try {
-                    object.set(LOGS, new ObjectMapper().writeValueAsString(logList), context);
-                } catch (JsonProcessingException ex) {
-                    logger.error("Failed to save the logs", ex);
-                }
-
                 try {
                     wiki.saveDocument(document, "Migration failed", context);
                 } catch (XWikiException err) {
@@ -269,11 +257,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
         CurrentPage currentPage = new CurrentPage();
         long docCount = 0;
-        List<Map<String, Object>> logList = new ArrayList<>(jobStatus.getLogTail().size());
         Collection<String> docs = new HashSet<>();
         for (LogEvent event : jobStatus.getLogTail()) {
-            addToJsonList(event, logList);
-
             switch (event.getLevel()) {
                 case ERROR:
                     updateErrors(event, skipped, collisions, currentPage);
@@ -307,7 +292,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         addAttachment("brokenLinks.json", brokenLinks, document);
         addAttachment("missingUsersGroups.json", getPermissionIssues(root, docs), document);
         addAttachment("collisions.json", collisions, document);
-        addAttachment("logs.json", logList, document);
         object.setLongValue("imported", docCount);
         return macroPages;
     }
@@ -695,11 +679,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     public void enablePrerequisites()
     {
         prerequisitesManager.enablePrerequisites();
-    }
-
-    private void addToJsonList(LogEvent e, List<Map<String, Object>> logList)
-    {
-        addToJsonList(e.getLevel(), e.getTimeStamp(), e.getFormattedMessage(), e.getThrowable(), logList);
     }
 
     private void addToJsonList(LogLevel l, long timeStamp, String msg, Throwable t, List<Map<String, Object>> logList)
