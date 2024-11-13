@@ -465,25 +465,32 @@ $attachment.getContentAsString()##
   {{/html}}
 
   {{html clean=false}}
-  ## Logs section
   #displaySubtitle('info', 'confluencepro.migration.raport.logs.title', '', [])
   #if ($objecttool.isNull($doc.getAttachment("logs.json")))
-    #set ($json = "#getJSON($obj, 'logs')")
-    #set ($jsonObject = $jsontool.fromString($json))
-    &lt;ul class="log"&gt;
-    #foreach ($log in $jsonObject)
-    &lt;li class="log-item log-item-$!{log.level.toLowerCase()}"&gt;
-      &lt;div&gt;$xwiki.formatDate($log.timeStamp) $escapetool.xml($log.message)&lt;/div&gt;
-      #if ($log.throwable)
-      &lt;div class="stacktrace"&gt;&lt;pre&gt;$escapetool.xml($stringtool.join($log.throwable, "
-"))&lt;/pre&gt;&lt;/div&gt;
+    #if ($request.fulllogs)
+      #set ($json = "#getJSON($obj, 'logs')")
+      #set ($jsonObject = $jsontool.fromString($json))
+      &lt;ul class="log"&gt;
+      #foreach ($log in $jsonObject)
+      &lt;li class="log-item log-item-$!{log.level.toLowerCase()}"&gt;
+        &lt;div&gt;$xwiki.formatDate($log.timeStamp) $escapetool.xml($log.message)&lt;/div&gt;
+        #if ($log.throwable)
+        &lt;div class="stacktrace"&gt;&lt;pre&gt;$escapetool.xml($stringtool.join($log.throwable, "
+  "))&lt;/pre&gt;&lt;/div&gt;
+        #end
+      &lt;/li&gt;
       #end
-    &lt;/li&gt;
+      &lt;/ul&gt;
+    #else
+      &lt;p&gt;&lt;a class="btn btn-primary" href="?fulllogs=1"&gt;$services.localization.render('confluencepro.migration.raport.displayFullLog')&lt;/a&gt;&lt;/p&gt;
     #end
-    &lt;/ul&gt;
   #else
-    &lt;div id="cfmLogs"&gt;
-      &lt;div class="loading-icon loading"&gt;&lt;/div&gt;
+    &lt;div id="cfmLogs" data-log-method="#if ($objecttool.isNull($doc.getAttachment))service#else{attachment}#end"&gt;
+      #if ($request.fulllogs)
+        &lt;div class="loading-icon loading"&gt;&lt;/div&gt;
+      #else
+        &lt;p&gt;&lt;a id="cfm-full-logs" class="btn btn-primary" href="?fulllogs=1"&gt;$services.localization.render('confluencepro.migration.raport.displayFullLog')&lt;/a&gt;&lt;/p&gt;
+      #end
       &lt;noscript&gt;$services.localization.render('confluencepro.migration.raport.pleaseenablejs')&lt;/noscript&gt;
     &lt;/div&gt;
   #end
@@ -1047,6 +1054,18 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
 
   const logs = document.getElementById("cfmLogs");
   if (logs) {
+    const fullLogsBtn = document.getElementById("cfm-full-logs");
+    if (fullLogsBtn) {
+      fullLogsBtn.onclick = function (e) {
+        getLogs();
+        e.preventDefault();
+      }
+    } else {
+      getLogs();
+    }
+  }
+
+  function getLogs() {
     const logsURL = XWiki.currentDocument.getURL("download") + "/logs.json";
     $.get(logsURL).then(function (jsonLogs) {
       const ul = document.createElement("ul");
