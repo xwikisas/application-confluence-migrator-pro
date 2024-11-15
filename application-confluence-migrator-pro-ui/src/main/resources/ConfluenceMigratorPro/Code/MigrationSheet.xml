@@ -231,7 +231,8 @@ $attachment.getContentAsString()##
     #computeRootSpace
     #foreach ($space in $spaces)
       #set ($spaceRef = $services.model.createSpaceReference($space, $rootSpace))
-      #set ($spaceHomeRef = $services.model.serialize($services.model.createDocumentReference("WebHome", $spaceRef)))
+      #set ($spaceHomeEntityReference = $services.modelvalidation.transformEntityReference($services.model.createDocumentReference("WebHome", $spaceRef)))
+      #set ($spaceHomeRef = $services.model.serialize($spaceHomeEntityReference))
       &lt;li&gt;
         &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
           $services.icon.renderHTML('caret-down')
