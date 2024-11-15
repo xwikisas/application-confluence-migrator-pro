@@ -495,12 +495,10 @@ $attachment.getContentAsString()##
       &lt;noscript&gt;$services.localization.render('confluencepro.migration.raport.pleaseenablejs')&lt;/noscript&gt;
     &lt;/div&gt;
   #end
-  &lt;div class="cfmButtonGroup"&gt;
-    &lt;button id="cfmResetMigration" type="button" class="btn btn-default"&gt;
-      $escapetool.xml($services.localization.render('confluencepro.migration.raport.reset.button'))
-    &lt;/button&gt;
-    &amp;nbsp;&lt;a href="$xwiki.getURL($doc.documentReference.parent)"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.viewall.button'))&lt;/a&gt;
-    &amp;nbsp;&lt;a href="?text=1"&gt;$services.localization.render('confluencepro.migration.raport.viewtext')&lt;/a&gt;
+    &lt;p&gt;
+      &lt;a href="$xwiki.getURL($doc.documentReference.parent)"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.viewall.button'))&lt;/a&gt;
+      &lt;a href="?text=1"&gt;$services.localization.render('confluencepro.migration.raport.viewtext')&lt;/a&gt;
+    &lt;/p&gt;
   &lt;/div&gt;
   {{/html}}
 
@@ -1269,16 +1267,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
       <cache>long</cache>
     </property>
     <property>
-      <code>define('confluence-sheet', {
-  prefix: 'confluencepro.migration.raport.reset.',
-  keys: [
-    'confirm',
-    'fail',
-    'success',
-    'progress'
-  ]
-});
-require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
+      <code>require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
   function handleFilterPropertyChange() {
     const input = document.getElementById(
       this.classList.contains('cfm-input-filter-property')
@@ -1302,28 +1291,6 @@ require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
 
   $('.cfm-input-filter-property').on('change', handleFilterPropertyChange);
   $('.cfm-output-filter-property').on('change', handleFilterPropertyChange);
-
-  $(document).on('click', '#cfmResetMigration', function() {
-    var notification = new XWiki.widgets.Notification(l10n.progress, 'inprogress');
-    if (!confirm(l10n.confirm)) {
-      notification.hide();
-      return;
-    }
-    let migrationClass = 'ConfluenceMigratorPro.Code.MigrationClass';
-    let restURL = XWiki.currentDocument.getRestURL() + '/objects/' + migrationClass + '/0/properties/executed';
-    $.ajax(restURL, {
-      method: 'PUT',
-      contentType: 'text/plain',
-      data: '0'
-    }).then(() =&gt; {
-      notification.replace(new XWiki.widgets.Notification(l10n.success, 'done'));
-      setTimeout(function() {
-        location.reload();
-      }, 1000);
-    }).catch(() =&gt; {
-      notification.replace(new XWiki.widgets.Notification(l10n.fail, 'error'));
-    });
-  })
 });</code>
     </property>
     <property>
