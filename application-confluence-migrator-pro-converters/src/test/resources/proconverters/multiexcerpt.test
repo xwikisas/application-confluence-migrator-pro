@@ -14,13 +14,13 @@
             </entry>
             <entry>
               <string>content</string>
-              <string>{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" name="exerpt1" templateData="eJyLrlbKVrJSKkssykxMyklV0lEqA3LDEnNKU5VqYwGSJAmF" inline="false"/}}
+              <string>{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" inline="false" name="exerpt1" nopanel="true" templateData="eJyLrlbKVrJSKkssykxMyklV0lEqA3LDEnNKU5VqYwGSJAmF"/}}
 
-{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" name="exerpt2" templateData="eJyLrlbKVrJSKk5Nzs9LKUssykxMyklV0lEqAwoGgwUVwqCiQEZOaapSbSwA0BARww=="/}}
+{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" name="exerpt2" nopanel="true" templateData="eJyLrlbKVrJSKk5Nzs9LKUssykxMyklV0lEqAwoGgwUVwqCiQEZOaapSbSwA0BARww=="/}}
 
-{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" name="exerpt1" templateData="eJyLrlbKVrJSKkssykxMyklV0lEqA3Iz85JzSlNSFTLzcjLzUpVqYwH7Xw0L" inline="true"/}}
+{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" inline="true" name="exerpt1" templateData="eJyLrlbKVrJSKkssykxMyklV0lEqA3Iz85JzSlNSFTLzcjLzUpVqYwH7Xw0L"/}}
 
-{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" name="exerpt1"/}}</string>
+{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" name="exerpt1" nopanel="true"/}}</string>
             </entry>
             <entry>
               <string>syntax</string>
@@ -93,7 +93,7 @@ Hello ~{~{inline}}
               </entry>
               <entry>
                 <string>content</string>
-                <string>{{excerpt-include 0="MyPage" name="oldname"}}{{/excerpt-include}}</string>
+                <string>{{excerpt-include 0="MyPage" name="oldname" nopanel="true"}}{{/excerpt-include}}</string>
               </entry>
               <entry>
                 <string>syntax</string>

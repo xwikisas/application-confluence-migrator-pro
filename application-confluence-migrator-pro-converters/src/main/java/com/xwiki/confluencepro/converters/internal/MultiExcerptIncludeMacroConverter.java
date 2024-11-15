@@ -24,8 +24,8 @@ import org.xwiki.contrib.confluence.filter.MacroConverter;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
 
 import javax.inject.Singleton;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Converter for all known MultiExcerpt include macros.
@@ -46,6 +46,7 @@ public class MultiExcerptIncludeMacroConverter extends AbstractMacroConverter im
     private static final String BLOCK = "block";
     private static final String TEMPLATE_DATA = "templateData";
     private static final String NAME = "name";
+    private static final String TRUE = "true";
 
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -59,7 +60,7 @@ public class MultiExcerptIncludeMacroConverter extends AbstractMacroConverter im
         String content)
     {
 
-        Map<String, String> p = new HashMap<>(4);
+        Map<String, String> p = new TreeMap<>();
 
         String reference = confluenceParameters.get("page");
 
@@ -82,18 +83,21 @@ public class MultiExcerptIncludeMacroConverter extends AbstractMacroConverter im
 
         p.put(NAME, name);
 
-        InlineSupport supportsInlineMode = supportsInlineMode(confluenceId, confluenceParameters, content);
-        if (InlineSupport.YES.equals(supportsInlineMode)) {
-            p.put(INLINE, "true");
-        } else if (InlineSupport.NO.equals(supportsInlineMode)) {
-            p.put(INLINE, "false");
-        }
-
         String templateData = confluenceParameters.get(TEMPLATE_DATA);
         if (templateData != null && !templateData.isEmpty()) {
             // as of writing this, templateData is not supported, but we don't want to lose this information.
             // it contains information to replace placeholders by actual values
             p.put(TEMPLATE_DATA, templateData);
+        }
+
+        InlineSupport supportsInlineMode = supportsInlineMode(confluenceId, confluenceParameters, content);
+        if (InlineSupport.YES.equals(supportsInlineMode)) {
+            p.put(INLINE, TRUE);
+        } else {
+            if (InlineSupport.NO.equals(supportsInlineMode)) {
+                p.put(INLINE, "false");
+            }
+            p.put("nopanel", TRUE);
         }
 
         return p;
