@@ -48,13 +48,11 @@ import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiAttachmentContent;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 import org.xwiki.bridge.event.DocumentUpdatedEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
-import org.xwiki.logging.LogLevel;
 import org.xwiki.logging.event.LogEvent;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
@@ -679,26 +677,5 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     public void enablePrerequisites()
     {
         prerequisitesManager.enablePrerequisites();
-    }
-
-    private void addToJsonList(LogLevel l, long timeStamp, String msg, Throwable t, List<Map<String, Object>> logList)
-    {
-        Map<String, Object> logMap = new HashMap<>();
-        logMap.put("level", l.toString());
-        logMap.put("timeStamp", timeStamp);
-        logMap.put("message", msg);
-        if (t != null) {
-            try {
-                logMap.put("throwable", ExceptionUtils.getStackFrames(t));
-            } catch (Exception e) {
-                try {
-                    logMap.put("unableToGetThrowableReason", ExceptionUtils.getStackFrames(e));
-                } catch (Exception ee) {
-                    logMap.put("failedToGetThrowableReason",
-                        "Unable to get both the exception stack and the reason of the error: " + ee.getMessage());
-                }
-            }
-        }
-        logList.add(logMap);
     }
 }
