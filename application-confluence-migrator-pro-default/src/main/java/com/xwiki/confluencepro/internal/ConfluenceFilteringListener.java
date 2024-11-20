@@ -52,6 +52,7 @@ import org.xwiki.contrib.confluence.filter.input.LinkMapper;
 import org.xwiki.job.AbstractJobStatus;
 import org.xwiki.job.Job;
 import org.xwiki.job.JobContext;
+import org.xwiki.job.Request;
 import org.xwiki.job.event.status.JobStatus;
 import org.slf4j.Logger;
 import org.xwiki.model.reference.DocumentReference;
@@ -121,23 +122,45 @@ public class ConfluenceFilteringListener extends AbstractEventListener
     public void onEvent(Event event, Object source, Object data)
     {
         Job job = this.jobContext.getCurrentJob();
-        ConfluenceMigrationJobStatus jobStatusToAsk = getConfluenceMigrationJobStatus(job);
+        ConfluenceMigrationJobStatus status = getConfluenceMigrationJobStatus(job);
 
-        if (jobStatusToAsk == null) {
+        if (status == null) {
             logger.debug("Could not get the job status. Maybe the migration was not run from Confluence Migrator Pro?");
             return;
         }
 
-        boolean anySelected = !isPropertyEnabled(jobStatusToAsk, "onlyLinkMapping")
-            && handleSpaceSelection((ConfluenceFilteringEvent) event, (ConfluenceXMLPackage) data, jobStatusToAsk);
+        ConfluenceXMLPackage confluencePackage = (ConfluenceXMLPackage) data;
 
-        if (!jobStatusToAsk.isCanceled() && isPropertyEnabled(jobStatusToAsk, "saveLinkMapping")) {
-            updateLinkMapping(jobStatusToAsk);
+        Collection<String> spaces = new HashSet<>(confluencePackage.getSpacesByKey().keySet());
+        status.setSpaces(spaces);
+
+        if (shouldAskQuestions(status, job, spaces)) {
+            askSpacesQuestion((ConfluenceFilteringEvent) event, confluencePackage, status, spaces);
         }
 
-        if (!anySelected || jobStatusToAsk.isCanceled()) {
+        if (status.isCanceled()) {
             ((CancelableEvent) event).cancel();
+        } else if (isPropertyEnabled(status, "saveLinkMapping")) {
+            updateLinkMapping(status);
         }
+    }
+
+    private static boolean shouldAskQuestions(ConfluenceMigrationJobStatus status, Job job, Collection<String> spaces)
+    {
+        if (spaces.size() < 2) {
+            return false;
+        }
+
+        if (isPropertyEnabled(status, "skipQuestions") || isPropertyEnabled(status, "onlyLinkMapping"))
+        {
+            return false;
+        }
+
+        Request request = job.getRequest();
+        if (request == null) {
+            return true;
+        }
+        return request.isInteractive();
     }
 
     private static boolean isPropertyEnabled(ConfluenceMigrationJobStatus jobStatusToAsk, String propertyName)
@@ -146,33 +169,20 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         return "true".equals(v) || "1".equals(v);
     }
 
-    private static boolean handleSpaceSelection(ConfluenceFilteringEvent event, ConfluenceXMLPackage confluencePackage,
-        ConfluenceMigrationJobStatus jobStatusToAsk)
+    private static void askSpacesQuestion(ConfluenceFilteringEvent event, ConfluenceXMLPackage confluencePackage,
+        ConfluenceMigrationJobStatus jobStatusToAsk, Collection<String> spaces)
     {
-        Collection<String> spaces = new HashSet<>(confluencePackage.getSpacesByKey().keySet());
-        jobStatusToAsk.setSpaces(spaces);
-
-        if (confluencePackage.getSpacesByKey().size() == 1) {
-            // Skip the questions if there's only one space
-            return true;
-        }
-
-
         SpaceQuestion question =
             new ConfluenceQuestionManager().createAndAskQuestion(event, confluencePackage, jobStatusToAsk);
 
-        boolean anySelected = false;
         for (EntitySelection entitySelection : question.getConfluenceSpaces().keySet()) {
-            if (entitySelection.isSelected()) {
-                anySelected = true;
-            } else {
+            if (!entitySelection.isSelected()) {
                 String spaceKey = entitySelection.getEntityReference().getName();
                 Long spaceId = confluencePackage.getSpacesByKey().get(spaceKey);
                 event.disableSpace(spaceId);
                 spaces.remove(spaceKey);
             }
         }
-        return anySelected;
     }
 
     private ConfluenceMigrationJobStatus getConfluenceMigrationJobStatus(Job job)
