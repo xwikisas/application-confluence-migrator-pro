@@ -26,41 +26,31 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.xpn.xwiki.XWiki;
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.objects.BaseObject;
 import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
+import com.xwiki.pro.internal.resolvers.LinkMappingStore;
+import org.hibernate.Session;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.event.ConfluenceFilteringEvent;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceXMLPackage;
 import org.xwiki.contrib.confluence.filter.input.LinkMapper;
+import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceLinkMappingReceiver;
 import org.xwiki.job.AbstractJobStatus;
 import org.xwiki.job.Job;
 import org.xwiki.job.JobContext;
 import org.xwiki.job.Request;
 import org.xwiki.job.event.status.JobStatus;
 import org.slf4j.Logger;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
-import org.xwiki.model.reference.LocalDocumentReference;
-import org.xwiki.model.reference.SpaceReference;
-import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.CancelableEvent;
 import org.xwiki.observation.event.Event;
@@ -79,17 +69,7 @@ public class ConfluenceFilteringListener extends AbstractEventListener
 {
     static final Marker COLLISION_MARKER = MarkerFactory.getMarker("collidingReferences");
 
-    private static final String MAPPING_OBJECT_KEY = "mapping";
-
-    private static final String MAPPING_SPACEKEY_KEY = "spaceKey";
-
-    private static final List<String> CODE_REF = List.of("ConfluenceMigratorPro", "Code");
-
-    private static final List<String> LINK_MAPPING_STATE_REF =
-        Stream.concat(CODE_REF.stream(), Stream.of("LinkMappingState")).collect(Collectors.toList());
-
-    private static final LocalDocumentReference LINK_MAPPING_SPACE_STATE_CLASS_REF = new LocalDocumentReference(
-        CODE_REF, "LinkMappingStateSpaceClass");
+    static final String ONLY_LINK_MAPPING = "onlyLinkMapping";
 
     @Inject
     private JobContext jobContext;
@@ -101,10 +81,7 @@ public class ConfluenceFilteringListener extends AbstractEventListener
     private Logger logger;
 
     @Inject
-    private Provider<XWikiContext> contextProvider;
-
-    @Inject
-    private LinkMappingConverter linkMappingConverter;
+    private LinkMappingStore linkMappingStore;
 
     @Inject
     private EntityReferenceSerializer<String> serializer;
@@ -140,8 +117,21 @@ public class ConfluenceFilteringListener extends AbstractEventListener
 
         if (status.isCanceled()) {
             ((CancelableEvent) event).cancel();
+        } else if (isPropertyEnabled(status, ONLY_LINK_MAPPING)) {
+            // This is a link mapping only phase, let's store the link mapping and cancel the import
+            updateLinkMapping();
+            ((CancelableEvent) event).cancel();
+        } else if (isInputPropertyEnabled(status, "storeConfluenceDetailsEnabled")) {
+            // This is the happy path / normal situation.
+            // The data on the imported spaces should be in the wiki. Except if someone has imported a partial space and
+            // also disabled storeConfluenceDetailsEnabled on the previous import, which is not supported nor likely.
+            // We clean up the link mapping which may have been imported in a link-mapping only phase, we don't want
+            // this data hanging around for nothing.
+            linkMappingStore.removeSpaces(status.getSpaces());
         } else if (isPropertyEnabled(status, "saveLinkMapping")) {
-            updateLinkMapping(status);
+            // We are asked to save the link mapping and storeConfluenceDetailsEnabled is disabled, let's store the
+            // link mapping
+            updateLinkMapping();
         }
     }
 
@@ -151,7 +141,7 @@ public class ConfluenceFilteringListener extends AbstractEventListener
             return false;
         }
 
-        if (isPropertyEnabled(status, "skipQuestions") || isPropertyEnabled(status, "onlyLinkMapping"))
+        if (isPropertyEnabled(status, "skipQuestions") || isPropertyEnabled(status, ONLY_LINK_MAPPING))
         {
             return false;
         }
@@ -166,6 +156,17 @@ public class ConfluenceFilteringListener extends AbstractEventListener
     private static boolean isPropertyEnabled(ConfluenceMigrationJobStatus jobStatusToAsk, String propertyName)
     {
         String v = (String) jobStatusToAsk.getRequest().getOutputProperties().get(propertyName);
+        return isTrue(v);
+    }
+
+    private static boolean isInputPropertyEnabled(ConfluenceMigrationJobStatus jobStatusToAsk, String propertyName)
+    {
+        String v = (String) jobStatusToAsk.getRequest().getInputProperties().get(propertyName);
+        return isTrue(v);
+    }
+
+    static boolean isTrue(String v)
+    {
         return "true".equals(v) || "1".equals(v);
     }
 
@@ -197,104 +198,78 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         return null;
     }
 
-    private void updateLinkMapping(ConfluenceMigrationJobStatus jobStatusToAsk)
+    private void updateLinkMapping()
     {
         logger.info("Computing the link mapping…");
-        Map<String, Map<String, EntityReference>> linkMapping = linkMapper.getLinkMapping();
-        XWikiContext context = contextProvider.get();
-        XWiki wiki = context.getWiki();
-        SpaceReference stateRef = new SpaceReference(wiki.getDatabase(), LINK_MAPPING_STATE_REF);
-        for (Map.Entry<String, Map<String, EntityReference>> mappingEntry : linkMapping.entrySet()) {
-            String key = mappingEntry.getKey();
-            boolean pageIds = key.endsWith(":ids");
-            String spaceKey = pageIds ? key.substring(0, key.indexOf(":")) : key;
-            logger.info("Updating the link mapping for space [{}]" + (pageIds ? " (page IDs)" : ""), spaceKey);
+        AtomicReference<String> currentSpace = new AtomicReference<>();
 
-            try {
-                XWikiDocument spaceStateDoc = wiki.getDocument(new DocumentReference(key, stateRef), context);
-                Map<String, EntityReference> newSpaceMapping = mappingEntry.getValue();
-                if (!pageIds) {
-                    checkCollisions(key, newSpaceMapping);
-                }
-                BaseObject mappingObj = spaceStateDoc.isNew()
-                    ? spaceStateDoc.newXObject(LINK_MAPPING_SPACE_STATE_CLASS_REF, context)
-                    : spaceStateDoc.getXObject(LINK_MAPPING_SPACE_STATE_CLASS_REF, true, context);
-                String updatedSpaceMappingStr = mappingObj.getLargeStringValue(MAPPING_OBJECT_KEY);
-                Map<String, EntityReference> updatedSpaceMapping =
-                    linkMappingConverter.convertSpaceLinkMapping(updatedSpaceMappingStr, key);
-
-                boolean updated;
-
-                if (updatedSpaceMapping == null) {
-                    updated = true;
-                    updatedSpaceMapping = newSpaceMapping;
-                } else {
-                    updated = computeDifferences(newSpaceMapping, updatedSpaceMapping);
-                }
-
-                if (updated) {
-                    saveLinkMapping(jobStatusToAsk, context, mappingObj, updatedSpaceMapping, key, spaceStateDoc, wiki);
-                }
-            } catch (XWikiException | JsonProcessingException e) {
-                logger.warn("Could not update link mapping for space [{}]", key, e);
-            }
-        }
-        logger.info("Done computing the link mapping.");
-    }
-
-    private static boolean computeDifferences(Map<String, EntityReference> newSpaceMapping,
-        Map<String, EntityReference> updatedSpaceMapping)
-    {
-        boolean updated = false;
-        for (Map.Entry<String, EntityReference> newEntry : newSpaceMapping.entrySet()) {
-            String docTitle = newEntry.getKey();
-            EntityReference docRef = newEntry.getValue();
-            if (!Objects.equals(docRef, updatedSpaceMapping.get(docTitle))) {
-                updatedSpaceMapping.put(docTitle, docRef);
-                updated = true;
-            }
-        }
-        return updated;
-    }
-
-    private void saveLinkMapping(ConfluenceMigrationJobStatus jobStatusToAsk, XWikiContext context,
-        BaseObject mappingObj, Map<String, EntityReference> updatedSpaceMapping, String key,
-        XWikiDocument spaceStateDoc, XWiki wiki) throws JsonProcessingException, XWikiException
-    {
-        // FIXME we should use the actual target wiki, from the input filter stream root parameter.
-        // In practice it should change nothing because Confluence-XML outputs references containing the
-        // wiki when migrating to another wiki but it would be more robust and clear.
-        WikiReference targetWiki = context.getWikiReference();
-        mappingObj.setLargeStringValue(MAPPING_OBJECT_KEY,
-            linkMappingConverter.convertSpaceLinkMapping(updatedSpaceMapping, targetWiki));
-        mappingObj.setStringValue(MAPPING_SPACEKEY_KEY, key);
-        if (spaceStateDoc.isNew()) {
-            spaceStateDoc.setHidden(true);
-        }
-        String migrationName = jobStatusToAsk.getRequest().getStatusDocumentReference().getName();
-        wiki.saveDocument(spaceStateDoc, "Updated from migration " + migrationName, context);
-    }
-
-    private void checkCollisions(String spaceKey, Map<String, EntityReference> spaceMapping)
-    {
-        Map<String, List<String>> reverseMapping = new HashMap<>(spaceMapping.size());
+        Map<String, List<String>> reverseMapping = new HashMap<>();
         Set<String> collidingReferences = new HashSet<>();
-        for (Map.Entry<String, EntityReference> entry : spaceMapping.entrySet()) {
-            String page = entry.getKey();
-            String serialized = serializer.serialize(entry.getValue());
+        Map<String, String> spaceByRef = new HashMap<>();
+
+        Session session = linkMappingStore.beginTransaction();
+        if (session != null) {
+            ConfluenceLinkMappingReceiver mapper = new MyConfluenceLinkMappingReceiver(currentSpace, session,
+                reverseMapping, collidingReferences, spaceByRef);
+            linkMapper.getLinkMapping(mapper);
+            for (String collidingReference : collidingReferences) {
+                String spaceKey = spaceByRef.get(collidingReference);
+                List<String> pageTitles = reverseMapping.get(collidingReference);
+                logger.error(COLLISION_MARKER, "Reference [{}] collides in space [{}] for pages [{}]",
+                    collidingReference, spaceKey, pageTitles);
+            }
+            linkMappingStore.endTransaction(true);
+        }
+    }
+
+    private final class MyConfluenceLinkMappingReceiver implements ConfluenceLinkMappingReceiver
+    {
+        private final AtomicReference<String> currentSpace;
+        private final Session session;
+        private final Map<String, List<String>> reverseMapping;
+        private final Set<String> collidingReferences;
+        private final Map<String, String> spaceByRef;
+
+        private MyConfluenceLinkMappingReceiver(AtomicReference<String> currentSpace, Session session,
+            Map<String, List<String>> reverseMapping, Set<String> collidingReferences,
+            Map<String, String> spaceByRef)
+        {
+            this.currentSpace = currentSpace;
+            this.session = session;
+            this.reverseMapping = reverseMapping;
+            this.collidingReferences = collidingReferences;
+            this.spaceByRef = spaceByRef;
+        }
+
+        @Override
+        public void addPage(String spaceKey, long pageId, EntityReference reference)
+        {
+            if (!spaceKey.equals(currentSpace.get())) {
+                currentSpace.set(spaceKey);
+            }
+            String serialized = serializer.serialize(reference);
+            linkMappingStore.add(session, pageId, serialized);
+        }
+
+        @Override
+        public void addPage(String spaceKey, String pageTitle, EntityReference reference)
+        {
+            if (!spaceKey.equals(currentSpace.get())) {
+                currentSpace.set(spaceKey);
+            }
+            String serialized = serializer.serialize(reference);
+            linkMappingStore.add(session, spaceKey, pageTitle, serialized);
+
+            // for collision checking
             List<String> list = reverseMapping.get(serialized);
             if (list == null) {
                 list = new ArrayList<>(1);
                 reverseMapping.put(serialized, list);
             } else {
                 collidingReferences.add(serialized);
+                spaceByRef.put(serialized, spaceKey);
             }
-            list.add(page);
-        }
-
-        for (String collidingReference : collidingReferences) {
-            logger.error(COLLISION_MARKER, "Reference [{}] collides in space [{}] for pages [{}]",
-                collidingReference, spaceKey, reverseMapping.get(collidingReference));
+            list.add(pageTitle);
         }
     }
 }

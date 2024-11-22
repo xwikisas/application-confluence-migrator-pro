@@ -49,5 +49,11 @@
       <artifactId>xwiki-rendering-api</artifactId>
       <version>${rendering.version}</version>
     </dependency>
+    <!-- This makes sure the Confluence Migrator Pro Link Mapping is used when confluence-xml tries to resolve pages -->
+    <dependency>
+      <groupId>com.xwiki.confluencepro</groupId>
+      <artifactId>application-confluence-migrator-pro-resolvers</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 </project>

@@ -5,8 +5,6 @@
         "http://www.puppycrawl.com/dtds/suppressions_1_0.dtd">
 
 <suppressions>
-  <suppress checks="ClassFanOutComplexity"
-            files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceMigrationJob\.java$"/>
   <suppress checks="ClassFanOutComplexity|ExecutableStatementCount"
             files="src/main/java/com/xwiki/confluencepro/internal/DefaultConfluenceMigrationManager\.java$"/>
   <suppress checks="ClassFanOutComplexity"

@@ -240,9 +240,21 @@
 
   #end
 
+  #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
+  #if ("$!outputProperties.get('onlyLinkMapping')" == "true")
+
+    {{info}}
+    Link-mapping only migration (spaces: $obj.get('spaces')).
+    {{/info}}
+
+  #else
+    #displayMigrationInfo
+  #end
+  #displayFullLogSection
+#end
+#macro(displayMigrationInfo)
+
   {{html clean=false}}
-  #set ($discard = $xwiki.ssfx.use('uicomponents/logging/logging.css', true))
-  #set ($discard = $xwiki.jsfx.use('uicomponents/logging/logging.js', true))
   ## Spaces section
   #set ($spaces = $obj.getProperty('spaces').value)
   #set ($imported = $obj.getValue('imported'))
@@ -506,13 +518,17 @@
       #end
   {{/info}}
   #end
+#end
+
+#macro(displayFullLogSection)
+  #set ($discard = $xwiki.ssfx.use('uicomponents/logging/logging.css', true))
+  #set ($discard = $xwiki.jsfx.use('uicomponents/logging/logging.js', true))
 
   {{html clean=false}}
   #displaySubtitle('info', 'confluencepro.migration.raport.logs.title', '', [])
   #if ($stringtool.isNotEmpty($obj.getValue("logs")))
     #if ($request.fulllogs)
-      #set ($json = "#getJSON($obj, 'logs')")
-      #set ($jsonObject = $jsontool.fromString($json))
+      #getJSON($obj, 'logs')
       &lt;ul class="log"&gt;
       #foreach ($log in $jsonObject)
       &lt;li class="log-item log-item-$!{log.level.toLowerCase()}"&gt;

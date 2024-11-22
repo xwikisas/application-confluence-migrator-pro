@@ -21,14 +21,12 @@ package com.xwiki.confluencepro.internal;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.xwiki.licensing.LicenseType;
 import com.xwiki.licensing.Licensor;
 import org.xwiki.component.annotation.Component;
@@ -47,9 +45,6 @@ import org.xwiki.job.JobGroupPath;
 import org.xwiki.job.event.status.CancelableJobStatus;
 import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
-import org.xwiki.query.Query;
-import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
 
 import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
@@ -110,9 +105,6 @@ public class ConfluenceMigrationJob
     @Inject
     private QueryManager queryManager;
 
-    @Inject
-    private LinkMappingConverter linkMappingConverter;
-
     private ConfluenceMigrationJobStatus jobStatus;
 
     /**
@@ -144,9 +136,6 @@ public class ConfluenceMigrationJob
         Map<String, Object> inputProperties = getFilterInputProperties();
 
         Map<String, Object> outputProperties = getFilterOutputProperties();
-        if (isGeneralParameterEnabled("useLinkMapping")) {
-            inputProperties.put("linkMapping", getLinkMapping());
-        }
 
         String outputStreamRoleHint = rightOnly
             ? ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT
@@ -266,39 +255,6 @@ public class ConfluenceMigrationJob
             }
         }
         return inputProperties;
-    }
-
-    private Map<String, Map<String, EntityReference>> getLinkMapping()
-    {
-        Map<String, Map<String, EntityReference>> linkMapping = new HashMap<>();
-        List<Object[]> results;
-        try {
-            Query query = queryManager.createQuery("select obj.spaceKey, obj.mapping from "
-                + "Document doc, doc.object(ConfluenceMigratorPro.Code.LinkMappingStateSpaceClass) obj", Query.XWQL);
-            results = query.execute();
-        } catch (QueryException e) {
-            logger.error("Could not get the link mapping, continuing without it", e);
-            return null;
-        }
-
-        for (Object[] result : results) {
-            String spaceKey = (String) result[0];
-            String spaceMapping = (String) result[1];
-            try {
-                Map<String, EntityReference> foundSpaceMapping =
-                    linkMappingConverter.convertSpaceLinkMapping(spaceMapping, spaceKey);
-                Map<String, EntityReference> existingSpaceMapping = linkMapping.get(spaceKey);
-                if (existingSpaceMapping == null) {
-                    linkMapping.put(spaceKey, foundSpaceMapping);
-                } else {
-                    existingSpaceMapping.putAll(foundSpaceMapping);
-                }
-            } catch (JsonProcessingException e) {
-                logger.error("Could not get the link mapping for space [{}], continuing without it", spaceKey, e);
-            }
-        }
-
-        return linkMapping;
     }
 
     @Override

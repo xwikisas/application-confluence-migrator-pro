@@ -1,0 +1,2 @@
+com.xwiki.pro.internal.resolvers.LinkMappingStore
+com.xwiki.pro.internal.resolvers.ProLinkMappingConfluenceResolver

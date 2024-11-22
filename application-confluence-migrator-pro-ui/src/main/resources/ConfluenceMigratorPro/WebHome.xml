@@ -191,6 +191,46 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
   limit="10"
   properties="name,occurrences,pages,supported"
   sort='occurrences:desc'}}$jsontool.serialize($liveDataConfig){{/liveData}}
+
+{{html}}
+#displaySubtitle('cube', 'Link Mapping State', '', {})
+{{/html}}
+
+When using the "Only link mapping" parameter, or when disabling the "Store Confluence details" parameter, Confluence Migrator Pro stores link mapping data in order to produce correct links when importing pages linking to pages from spaces that have not been migrated yet.
+#set ($linkMappingStore = $services.component.getInstance("com.xwiki.pro.internal.resolvers.LinkMappingStore"))
+#set ($confirmtext = "I know what I am doing")
+#if ($request.emptylm)
+  #if ($request.emptylm == $confirmtext)
+     #set ($discard = $linkMappingStore.empty())
+
+     {{info}}
+     The link mapping state has been emptied.
+     {{/info}}
+
+  #else
+
+    {{error}}
+    To empty the link mapping, please confirm by typing "$confirmtext".
+    {{/error}}
+
+  #end
+#end
+#set ($linkMappingCount = $linkMappingStore.getEntryCount())
+
+There are **$linkMappingCount** link mapping entries.
+
+#if ($linkMappingCount &gt; 0)
+
+{{html}}
+&lt;form method="post"&gt;
+  &lt;p&gt;
+    &lt;button class="btn btn-danger"&gt;Empty Link Mapping&lt;/button&gt;&lt;label&gt;
+    &amp;nbsp;Confirm by typing "$confirmtext": &lt;input type="text" name="emptylm" autocomplete="off"/&gt;&lt;/label&gt;
+  &lt;/p&gt;
+&lt;/form&gt;
+{{/html}}
+#end
+
 #end
 {{/velocity}}</content>
   <object>
