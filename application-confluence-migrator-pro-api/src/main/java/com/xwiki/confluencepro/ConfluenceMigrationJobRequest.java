@@ -58,12 +58,7 @@ public class ConfluenceMigrationJobRequest extends AbstractRequest
     {
         this.statusDocumentReference = statusDocumentReference;
         this.confluencePackage = confluencePackage;
-        List<String> jobId = new ArrayList<>();
-        jobId.add("confluence");
-        jobId.add("migration");
-        for (EntityReference er : statusDocumentReference.getReversedReferenceChain()) {
-            jobId.add(er.getName());
-        }
+        List<String> jobId = getJobId(statusDocumentReference);
         setId(jobId);
         if (inputProperties == null) {
             this.inputProperties = new HashMap<>();
@@ -75,6 +70,21 @@ public class ConfluenceMigrationJobRequest extends AbstractRequest
         } else {
             this.outputProperties = outputProperties;
         }
+    }
+
+    /**
+     * @return the job id of a migration document
+     * @param statusDocumentReference the migration document for which to get the job id
+     */
+    public static List<String> getJobId(DocumentReference statusDocumentReference)
+    {
+        List<String> jobId = new ArrayList<>();
+        jobId.add("confluence");
+        jobId.add("migration");
+        for (EntityReference er : statusDocumentReference.getReversedReferenceChain()) {
+            jobId.add(er.getName());
+        }
+        return jobId;
     }
 
     /**

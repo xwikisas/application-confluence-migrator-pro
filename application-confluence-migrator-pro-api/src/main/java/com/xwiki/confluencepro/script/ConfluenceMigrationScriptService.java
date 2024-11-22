@@ -100,8 +100,6 @@ public class ConfluenceMigrationScriptService implements ScriptService
     @Inject
     private ContextStoreManager contextStoreManager;
 
-    private final Map<DocumentReference, Job> lastJobMap = new HashMap<>();
-
     /**
      * @param documentReference the reference of the document that performs the migration.
      * @param confluencePackage the input stream for the package that will be used for the migration.
@@ -115,20 +113,17 @@ public class ConfluenceMigrationScriptService implements ScriptService
         if (!authorization.hasAccess(Right.ADMIN)) {
             return null;
         }
-        Job lastJob = lastJobMap.get(documentReference);
+        Job lastJob = getLastJob(documentReference);
         if (lastJob != null && lastJob.getStatus().getState().equals(JobStatus.State.RUNNING)) {
             return lastJob;
         }
         ConfluenceMigrationJobRequest jobRequest =
             new ConfluenceMigrationJobRequest(confluencePackage, documentReference, inputProperties, outputProperties);
-        jobRequest.setInteractive(true);
         try {
             Map<String, Serializable> migrationContext =
                 this.contextStoreManager.save(Collections.singletonList("wiki"));
             jobRequest.setContext(migrationContext);
-            lastJob = jobExecutor.execute("confluence.migration", jobRequest);
-            lastJobMap.put(documentReference, lastJob);
-            return lastJob;
+            return jobExecutor.execute("confluence.migration", jobRequest);
         } catch (Exception e) {
             logger.error("Failed to execute the migration job for [{}].", documentReference, e);
         }
@@ -141,7 +136,7 @@ public class ConfluenceMigrationScriptService implements ScriptService
      */
     public Job getLastJob(DocumentReference documentReference)
     {
-        return lastJobMap.get(documentReference);
+        return jobExecutor.getJob(ConfluenceMigrationJobRequest.getJobId(documentReference));
     }
 
     /**
