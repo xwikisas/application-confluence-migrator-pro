@@ -499,7 +499,6 @@ $attachment.getContentAsString()##
       &lt;a href="$xwiki.getURL($doc.documentReference.parent)"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.viewall.button'))&lt;/a&gt;
       &lt;a href="?text=1"&gt;$services.localization.render('confluencepro.migration.raport.viewtext')&lt;/a&gt;
     &lt;/p&gt;
-  &lt;/div&gt;
   {{/html}}
 
 #end
