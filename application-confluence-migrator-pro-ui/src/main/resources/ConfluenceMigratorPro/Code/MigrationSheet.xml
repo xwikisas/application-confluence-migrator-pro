@@ -1267,7 +1267,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery', 'xwiki-l10n!confluence-sheet'], function ($, l10n) {
+      <code>require(['jquery'], function ($) {
   function handleFilterPropertyChange() {
     const input = document.getElementById(
       this.classList.contains('cfm-input-filter-property')
