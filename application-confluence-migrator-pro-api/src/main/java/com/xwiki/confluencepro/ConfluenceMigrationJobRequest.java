@@ -24,10 +24,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.xwiki.job.AbstractRequest;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
+
+import static com.xwiki.confluencepro.script.ConfluenceMigrationScriptService.PREFILLED_INPUT_PARAMETERS;
+import static com.xwiki.confluencepro.script.ConfluenceMigrationScriptService.PREFILLED_OUTPUT_PARAMETERS;
 
 /**
  * The request used to configure the confluence migration job.
@@ -60,15 +64,17 @@ public class ConfluenceMigrationJobRequest extends AbstractRequest
         this.confluencePackage = confluencePackage;
         List<String> jobId = getJobId(statusDocumentReference);
         setId(jobId);
-        if (inputProperties == null) {
-            this.inputProperties = new HashMap<>();
-        } else {
-            this.inputProperties = inputProperties;
-        }
-        if (outputProperties == null) {
-            this.outputProperties = new HashMap<>();
-        } else {
-            this.outputProperties = outputProperties;
+        this.inputProperties = Objects.requireNonNullElseGet(inputProperties, HashMap::new);
+        this.outputProperties = Objects.requireNonNullElseGet(outputProperties, HashMap::new);
+        mergeWithDefaultProperties(this.inputProperties, PREFILLED_INPUT_PARAMETERS);
+        mergeWithDefaultProperties(this.outputProperties, PREFILLED_OUTPUT_PARAMETERS);
+    }
+
+    private void mergeWithDefaultProperties(Map<String, Object> inputProperties, Map<String, String> defaults)
+    {
+        for (Map.Entry<String, String> d : defaults.entrySet()) {
+            String key = d.getKey();
+            inputProperties.computeIfAbsent(key, k -> d.getValue());
         }
     }
 
