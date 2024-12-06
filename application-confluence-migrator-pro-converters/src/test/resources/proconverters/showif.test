@@ -1,0 +1,78 @@
+.#------------------------------------------------------------------------------
+.expect|filter+xml
+.# Content conversions
+.#------------------------------------------------------------------------------
+<wikiSpace name="MySpace">
+  <wikiDocument name="WebHome">
+    <wikiDocumentLocale>
+      <p>
+        <parameters>
+          <entry>
+            <string>creation_author</string>
+            <string>XWiki.47826731</string>
+          </entry>
+          <entry>
+            <string>creation_date</string>
+            <date>2012-08-21 15:37:47.0 UTC</date>
+          </entry>
+          <entry>
+            <string>lastrevision</string>
+            <string>1</string>
+          </entry>
+        </parameters>
+      </p>
+      <wikiDocumentRevision revision="1">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.47826731</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2016-10-11 14:47:37.0 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>My Space</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>{{show-if groups="a39e82d8-1c93-4395-9358-dc67f2ffa3ef" users="XWiki.toto_hello@example_com" authenticationType="authenticated" matchUsing="all"}}
+Hello
+{{/show-if}}
+
+{{show-if displayType="printable" matchUsing="all" tags="x" endDateTime="2024-12-19T00:00:00" contentType="page" authenticationType="AUTHENTICATED" startDateTime="2024-12-10T00:00:00" spacePermission="@self" scope="test export show-hide if > ancestors" action="view" header="ab:salut" users="XWiki.totouser" groups="XWiki.myGroup"}}
+show if content
+{{/show-if}}
+
+{{hide-if startDateTime="2024-12-18T00:00:00" authenticationType="AUTHENTICATED" displayType="printable" matchUsing="all" endDateTime="2024-12-05T00:00:00" groups="XWiki.otherGroup"}}
+hide if content
+{{/hide-if}}</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+      </wikiDocumentRevision>
+    </wikiDocumentLocale>
+  </wikiDocument>
+</wikiSpace>
+.#------------------------------------------------------------------------------
+.input|confluence+xml
+.configuration.source=showif
+.configuration.storeConfluenceDetailsEnabled=false
+.#------------------------------------------------------------------------------

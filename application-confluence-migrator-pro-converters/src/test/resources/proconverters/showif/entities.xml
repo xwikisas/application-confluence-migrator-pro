@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-generic datetime="2023-10-02 11:40:11">
+  <object class="ConfluenceUserImpl" package="com.atlassian.confluence.user">
+    <id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
+    <property name="name"><![CDATA[47826731]]></property>
+    <property name="lowerName"><![CDATA[47826731]]></property>
+    <property name="email"/>
+  </object>
+  <object class="Page" package="com.atlassian.confluence.spaces">
+    <id name="id">45809845</id>
+    <property name="hibernateVersion">5</property>
+    <property name="title">My Space Home</property>
+    <property name="lowerTitle">my space home</property>
+    <collection name="bodyContents" class="java.util.Collection"><element class="BodyContent" package="com.atlassian.confluence.core"><id name="id">156868656</id>
+    </element>
+    </collection>
+    <property name="version">1</property>
+    <property name="creator" class="ConfluenceUserImpl" package="com.atlassian.confluence.user"><id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
+    </property>
+    <property name="creationDate">2012-08-21 15:37:47.000</property>
+    <property name="lastModifier" class="ConfluenceUserImpl" package="com.atlassian.confluence.user"><id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
+    </property>
+    <property name="lastModificationDate">2016-10-11 14:47:37.000</property>
+    <property name="versionComment"><![CDATA[]]></property>
+    <property name="contentStatus"><![CDATA[current]]></property>
+    <collection name="labellings" class="java.util.Collection"></collection>
+    <property name="space" class="Space" package="com.atlassian.confluence.spaces"><id name="id">46268417</id>
+    </property>
+    <collection name="attachments" class="java.util.Collection(com.atlassian.confluence.core.ContentEntityObject.attachments)"><element class="Attachment" package="com.atlassian.confluence.pages"><id name="id">134204920</id></element></collection>
+  </object>
+  <object class="ConfluenceUserImpl" package="com.atlassian.confluence.user">
+    <id name="key"><![CDATA[712020:e451a504-745a-4815-a951-59bd0acdde40]]></id>
+    <property name="name"><![CDATA[toto.hello@example.com]]></property>
+    <property name="lowerName"><![CDATA[toto.hello@example.com]]></property>
+    <property name="atlassianAccountId"><![CDATA[712020:e451a504-745a-4815-a951-59bd0acdde40]]></property>
+  </object>
+  <object class="ConfluenceUserImpl" package="com.atlassian.confluence.user">
+    <id name="key"><![CDATA[8a16a5919364db51019371b0c9e20002]]></id>
+    <property name="name"><![CDATA[totouser]]></property>
+    <property name="lowerName"><![CDATA[totouser]]></property>
+    <property name="email"><![CDATA[totouser@example.com]]></property>
+  </object>
+  <object class="Space" package="com.atlassian.confluence.spaces">
+    <id name="id">46268417</id>
+    <property name="name"><![CDATA[My Space]]></property>
+    <property name="key"><![CDATA[MySpace]]></property>
+    <property name="lowerKey"><![CDATA[myspace]]></property>
+    <property name="homePage" class="Page" package="com.atlassian.confluence.pages"><id name="id">45809845</id></property>
+    <collection name="permissions" class="java.util.Collection"></collection>
+    <property name="creator" class="ConfluenceUserImpl" package="com.atlassian.confluence.user"><id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
+    </property>
+    <property name="creationDate">2012-08-21 15:37:47.000</property>
+    <property name="lastModifier" class="ConfluenceUserImpl" package="com.atlassian.confluence.user"><id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
+    </property>
+    <property name="lastModificationDate">2016-10-11 14:47:37.000</property>
+    <property name="spaceType">global</property>
+    <property name="spaceStatus" enum-class="SpaceStatus" package="com.atlassian.confluence.spaces">CURRENT</property>
+  </object>
+  <object class="BodyContent" package="com.atlassian.confluence.core">
+    <id name="id">156868656</id>
+    <property name="body"><![CDATA[
+<ac:structured-macro ac:name="show-if" ac:schema-version="1" data-layout="default" ac:local-id="c22fdf00-0fcb-48b9-b275-acb396e982fd" ac:macro-id="b4544dd7-4cb5-43ed-a171-892489b22a4d">
+  <ac:parameter ac:name="groupIds">a39e82d8-1c93-4395-9358-dc67f2ffa3ef</ac:parameter>
+  <ac:parameter ac:name="users"><ri:user ri:userkey="712020:e451a504-745a-4815-a951-59bd0acdde40" /></ac:parameter>
+  <ac:parameter ac:name="specialUsername">authenticated</ac:parameter>
+  <ac:parameter ac:name="matchUsing">all</ac:parameter>
+  <ac:rich-text-body>
+  <p>Hello</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<ac:structured-macro ac:name="show-if" ac:schema-version="1" ac:macro-id="203ea288-7fe4-4636-afcd-c0ace451c0c7">
+  <ac:parameter ac:name="display">pdf</ac:parameter>
+  <ac:parameter ac:name="match">all</ac:parameter>
+  <ac:parameter ac:name="label">x</ac:parameter>
+  <ac:parameter ac:name="endDateTime">2024-12-19T00:00:00</ac:parameter>
+  <ac:parameter ac:name="type">page</ac:parameter>
+  <ac:parameter ac:name="special">@authenticated</ac:parameter>
+  <ac:parameter ac:name="startDateTime">2024-12-10T00:00:00</ac:parameter>
+  <ac:parameter ac:name="spacePermission">@self</ac:parameter>
+  <ac:parameter ac:name="scope">test export show-hide if &gt; ancestors</ac:parameter>
+  <ac:parameter ac:name="action">view</ac:parameter><ac:parameter ac:name="header">ab:salut</ac:parameter>
+  <ac:parameter ac:name="user"><ri:user ri:userkey="8a16a5919364db51019371b0c9e20002" /></ac:parameter>
+  <ac:parameter ac:name="group">myGroup</ac:parameter><ac:rich-text-body>
+  <p>show if content</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<ac:structured-macro ac:name="hide-if" ac:schema-version="1" ac:macro-id="bb59ff6b-4aad-49ec-9a0e-668e57464b14">
+  <ac:parameter ac:name="startDateTime">2024-12-18T00:00:00</ac:parameter>
+  <ac:parameter ac:name="user"><ri:user ri:username="@authenticated"/></ac:parameter>
+  <ac:parameter ac:name="display">word</ac:parameter>
+  <ac:parameter ac:name="match">all</ac:parameter>
+  <ac:parameter ac:name="endDateTime">2024-12-05T00:00:00</ac:parameter>
+  <ac:parameter ac:name="group">otherGroup</ac:parameter>
+  <ac:rich-text-body><p>hide if content</p></ac:rich-text-body>
+</ac:structured-macro>
+]]></property>
+    <property name="content" class="Page" package="com.atlassian.confluence.pages"><id name="id">45809845</id></property>
+    <property name="bodyType">2</property>
+  </object>
+</hibernate-generic>
