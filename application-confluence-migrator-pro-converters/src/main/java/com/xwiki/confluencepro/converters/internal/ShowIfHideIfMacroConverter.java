@@ -84,7 +84,7 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
                         // Note that to make this working correctly, in confluence-xml a custom code avoid to make any
                         // transformation when we have this specific parameter.
                         // This part of code is available here:
-                        // https://github.com/xwiki-contrib/confluence/blob/3f5141825efbbbe706a26f9601a1a5e793b2c420/confluence-syntax-xhtml/src/main/java/org/xwiki/contrib/confluence/parser/xhtml/internal/wikimodel/UserTagHandler.java#L113
+                        // https://github.com/xwiki-contrib/confluence/blob/5b12c59dd56253d559496d20b0f4d0d8ffac31ae/confluence-syntax-xhtml/src/main/java/org/xwiki/contrib/confluence/parser/xhtml/internal/wikimodel/UserTagHandler.java#L104-L118
                         String value = confluenceValue.substring(1).toUpperCase();
                         parameters.put(AUTHENTICATION_TYPE_PARAM, value);
                     } else {
