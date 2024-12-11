@@ -63,7 +63,7 @@ Page tree search, no root page specified
 
 Page tree search, root page = Included page
 
-{{locationSearch reference="MySpace.Included page.WebHome"/}}
+{{locationSearch reference="confluencePage:page:MySpace.Included page"/}}
 
 
 
