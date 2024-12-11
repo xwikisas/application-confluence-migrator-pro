@@ -50,7 +50,7 @@ public class ConfluenceMigrationPrerequisitesManager
 
     private static final String LISTENER_NOTIFICATION_PREFILTERING = "Prefiltering Live Notification Email Listener";
 
-    private static final long EMPTY_SOLR_QUEUE_TIMEOUT = 5L * 60 * 1000000000;
+    private static final String LISTENER_USER_MENTION = "UserMentionEventListener";
 
     @Inject
     private ConfluenceMigrationPrerequisites prerequisites;
@@ -61,7 +61,7 @@ public class ConfluenceMigrationPrerequisitesManager
     @Inject
     private Logger logger;
 
-    private Map<EventListener, Integer> removedListeners = new HashMap<>();
+    private final Map<EventListener, Integer> removedListeners = new HashMap<>();
 
     /**
      * Reenable the prerequisites. See {@link #disablePrerequisites()} for the list of prerequisites.
@@ -72,17 +72,18 @@ public class ConfluenceMigrationPrerequisitesManager
         addListener(LISTENER_NOTIFICATION_PREFILTERING);
         addListener(LISTENER_NOTIFICATION_FILTERS);
         addListener(LISTENER_NOTIFICATION_EMAIL);
+        addListener(LISTENER_USER_MENTION);
     }
 
     /**
      * Disable/deactivate a list of prerequisites that will make the migration run smoother. Among the prerequisites, we
      * have the following:
-     *  - Wait for the Solr indexer queue size to be empty. The timeout period is of 5 minutes;
      *  - Clear the user notification preferences;
      *  - Remove the following listeners:
      *      - NotificationsFiltersPreferences,
      *      - Live Notification Email,
      *      - AutomaticNotificationsWatchMode,
+     *      - user mentions (as we don't want users to be notified about existing content),
      *      - Prefiltering Live Notification listeners.
      *
      */
@@ -95,6 +96,7 @@ public class ConfluenceMigrationPrerequisitesManager
         removeListener(LISTENER_NOTIFICATION_EMAIL);
         removeListener(LISTENER_NOTIFICATION_FILTERS);
         removeListener(LISTENER_NOTIFICATION_PREFILTERING);
+        removeListener(LISTENER_USER_MENTION);
     }
 
     private synchronized void removeListener(String listenerName)
