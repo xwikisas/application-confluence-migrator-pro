@@ -20,6 +20,7 @@
 package com.xwiki.confluencepro.converters.internal;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -40,60 +41,100 @@ import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverte
 @Singleton
 public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
 {
+    private static final String LIST_ITEM_PARAM_SEPARATOR = ",";
 
     private static final String GROUP_ID_PARAM = "groupIds";
 
-    private static final String GROUP_ID_SEPARATOR = ",";
-
     private static final String GROUP_PARAM = "group";
+
+    private static final String GROUPS_PARAM = "groups";
 
     private static final String SPECIAL_USERNAME_PARAM = "specialUsername";
 
     private static final String SPECIAL_PARAM = "special";
 
+    private static final String AUTHENTICATION_TYPE_PARAM = "authenticationType";
+
+    private static final String DISPLAY_PARAM_VALUE_PRINTABLE = "printable";
+
     @Inject
     private ConfluenceConverter converter;
 
     @Override
-    protected String toXWikiParameterValue(String confluenceParameterName, String confluenceParameterValue,
-        String confluenceId, Map<String, String> parameters, String confluenceContent)
+    protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
+        String content)
     {
-        if (confluenceParameterName.equals(GROUP_ID_PARAM)) {
-            return Arrays.stream(confluenceParameterValue.split(GROUP_ID_SEPARATOR))
-                .map(i -> {
-                    String groupRef = converter.convertGroupId(i);
-                    return groupRef == null ? i : groupRef;
-                }).collect(Collectors.joining(GROUP_ID_SEPARATOR));
-        } else if (GROUP_PARAM.equals(confluenceParameterName)) {
-            return Arrays.stream(confluenceParameterValue.split(GROUP_ID_SEPARATOR))
-                .map(i -> {
-                    String groupRef = converter.toGroupReference(i);
-                    return groupRef == null ? i : groupRef;
-                }).collect(Collectors.joining(GROUP_ID_SEPARATOR));
-        } else if (SPECIAL_PARAM.equals(confluenceParameterName)) {
-            // Convert something like @authenticated to AUTHENTICATED
-            return confluenceParameterValue.replace("@", "").toUpperCase();
-        }
-        return super.toXWikiParameterValue(confluenceParameterName, confluenceParameterValue, confluenceId, parameters,
-            confluenceContent);
-    }
+        Map<String, String> parameters = new LinkedHashMap<>(confluenceParameters.size());
 
-    @Override
-    protected String toXWikiParameterName(String confluenceParameterName, String id,
-        Map<String, String> confluenceParameters, String confluenceContent)
-    {
-        if ("match".equals(confluenceParameterName)) {
-            return "matchUsing";
-        } else if ("user".equals(confluenceParameterName)) {
-            return "users";
-        } else if (GROUP_ID_PARAM.equals(confluenceParameterName) || GROUP_PARAM.equals(confluenceParameterName)) {
-            return "groups";
-        } else if (SPECIAL_USERNAME_PARAM.equals(confluenceParameterName)
-            || SPECIAL_PARAM.equals(confluenceParameterName)) {
-            return "authenticationType";
-        } else if ("type".equals(confluenceParameterName)) {
-            return "contentType";
+        // Note that depending on if it's the Confluence cloud or Confluence server the parameter name and values are
+        // different, so it's why we have 2 group parameters with the value handled differently.
+        for (Map.Entry<String, String> entry : confluenceParameters.entrySet()) {
+            String name = entry.getKey();
+            String confluenceValue = entry.getValue();
+            String xwikiValue = toXWikiParameterValue(name, confluenceValue, confluenceId, parameters, content);
+
+            switch (name) {
+                case "match":
+                    parameters.put("matchUsing", xwikiValue);
+                    break;
+                case "user":
+                    if (xwikiValue.charAt(0) == '@') {
+                        // Handle a specific legacy case when the special username was set in the user parameter
+                        // (instead of in the new specific 'special' parameter)
+                        // Note that to make this working correctly, in confluence-xml a custom code avoid to make any
+                        // transformation when we have this specific parameter.
+                        // This part of code is available here:
+                        // https://github.com/xwiki-contrib/confluence/blob/5b12c59dd56253d559496d20b0f4d0d8ffac31ae/confluence-syntax-xhtml/src/main/java/org/xwiki/contrib/confluence/parser/xhtml/internal/wikimodel/UserTagHandler.java#L104-L118
+                        String value = confluenceValue.substring(1).toUpperCase();
+                        parameters.put(AUTHENTICATION_TYPE_PARAM, value);
+                    } else {
+                        parameters.put("users", xwikiValue);
+                    }
+                    break;
+                case GROUP_ID_PARAM:
+                    String valueGroupId = Arrays.stream(confluenceValue.split(LIST_ITEM_PARAM_SEPARATOR))
+                        .map(i -> {
+                            String groupRef = converter.convertGroupId(i);
+                            return groupRef == null ? i : groupRef;
+                        }).collect(Collectors.joining(LIST_ITEM_PARAM_SEPARATOR));
+                    parameters.put(GROUPS_PARAM, valueGroupId);
+                    break;
+
+                case GROUP_PARAM:
+                    String valueGroup = Arrays.stream(confluenceValue.split(LIST_ITEM_PARAM_SEPARATOR))
+                        .map(i -> {
+                            String groupRef = converter.toGroupReference(i);
+                            return groupRef == null ? i : groupRef;
+                        }).collect(Collectors.joining(LIST_ITEM_PARAM_SEPARATOR));
+                    parameters.put(GROUPS_PARAM, valueGroup);
+                    break;
+                case SPECIAL_USERNAME_PARAM:
+                    parameters.put(AUTHENTICATION_TYPE_PARAM, xwikiValue);
+                    break;
+                case SPECIAL_PARAM:
+                    String valueSpecial = confluenceValue.replace("@", "").toUpperCase();
+                    parameters.put(AUTHENTICATION_TYPE_PARAM, valueSpecial);
+                    break;
+                case "type":
+                    parameters.put("contentType", xwikiValue);
+                    break;
+                case "display":
+                    if ("word".equals(xwikiValue)) {
+                        xwikiValue = DISPLAY_PARAM_VALUE_PRINTABLE;
+                    } else if ("pdf".equals(xwikiValue)) {
+                        xwikiValue = DISPLAY_PARAM_VALUE_PRINTABLE;
+                    }
+                    parameters.put("displayType", xwikiValue);
+                    break;
+                case "label":
+                    parameters.put("tags", xwikiValue);
+                    break;
+                default:
+                    String parameterName = toXWikiParameterName(name, confluenceId, parameters, content);
+                    parameters.put(parameterName, xwikiValue);
+                    break;
+            }
         }
-        return super.toXWikiParameterName(confluenceParameterName, id, confluenceParameters, confluenceContent);
+        return parameters;
     }
 }
