@@ -19,7 +19,6 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
-
 <xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.Translations" locale="">
   <web>ConfluenceMigratorPro.Code</web>
   <name>Translations</name>
@@ -91,8 +90,10 @@ confluencepro.migration.raport.logs.title=The logs of the migration
 confluencepro.migration.raport.viewall.button=View all migrations
 confluencepro.migration.raport.viewtext=View in text format
 confluencepro.migration.raport.problems.skipped.title={0} page(s) have encountered critical issues during the import
+confluencepro.migration.raport.problems.confluencerefs.title={0} page(s) contain references to missing pages
+confluencepro.migration.raport.problems.confluencerefs.info=This usually means that these pages link to pages from other spaces, and the Confluence package you used doesn't contain those spaces. Confluence reference were used to work around this issue. To avoid this, import the target spaces, and then reimport this one. We advice converting these Confluence references to proper links when the targeted pages are available.
 confluencepro.migration.raport.problems.brokenLinks.title={0} page(s) have encountered link issues during the import
-confluencepro.migration.raport.problems.brokenLinks.info=This usually means that these pages link to pages from other spaces, and the Confluence package you used doesn't contain those spaces. To avoid this, you should use a full confluence export. Failing this, you can also try to detect and fix broken links after the migration.
+confluencepro.migration.raport.problems.brokenLinks.info=This usually means that these pages link to pages from other spaces, and the Confluence package you used doesn't contain those spaces. Newer migrations will issue confluence reference to work around this issue. To avoid this, import the target spaces, and then reimport this one. We advice fixing these broken links when the targeted pages are available.
 confluencepro.migration.raport.problems.missingUsersGroups.title=Missing users and groups
 confluencepro.migration.raport.problems.collisions.title=Reference collisions
 confluencepro.migration.raport.problems.collisions.info=The following references relate to several Confluence page titles. This means that those titles were translated to the same reference, and that the related pages overwrote each others during the migration
@@ -100,9 +101,8 @@ confluencepro.migration.raport.problems.missingUsersGroups.info=These users and 
 confluencepro.migration.raport.problems.missingUsersGroups.users=Missing users:
 confluencepro.migration.raport.problems.missingUsersGroups.groups=Missing groups:
 confluencepro.migration.raport.problems.done.title={0} page(s) have encountered issues during the import
-confluencepro.migration.raport.problems.other.title={0} other issue(s) were encountered during the import
-confluencepro.migration.raport.problems.other.error=Encountered {0} errors
-confluencepro.migration.raport.problems.other.warn=Encountered {0} warnings
+confluencepro.migration.raport.problems.other.title=Other issue were encountered during the import
+confluencepro.migration.raport.problems.confluencerefs.list=List of targeted but missing pages 
 confluencepro.migration.raport.problems.brokenLinks.list=List of pages targeted by potentially broken links
 confluencepro.migration.raport.confluencespace=Confluence space key
 confluencepro.migration.raport.pageTitle=Page title

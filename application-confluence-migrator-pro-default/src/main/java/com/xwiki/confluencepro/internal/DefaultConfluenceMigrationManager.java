@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -50,6 +49,7 @@ import com.xpn.xwiki.doc.XWikiAttachmentContent;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.xwiki.bridge.event.DocumentUpdatedEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
@@ -93,7 +93,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     private static final LocalDocumentReference MIGRATION_OBJECT =
         new LocalDocumentReference(CONFLUENCE_MIGRATOR_SPACE, "MigrationClass");
 
-    private static final String LINKS_BROKEN = "Links to this page may be broken";
+    private static final Marker CONFLUENCE_REF_MARKER = MarkerFactory.getMarker("confluenceRef");
 
     private static final String EXECUTED = "executed";
 
@@ -107,15 +107,11 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         new TypeReference<Map<String, Map<String, Integer>>>() { };
     private static final TypeReference<Map<String, Map<String, Set<?>>>> DOCS_MAP_TYPE_REF =
         new TypeReference<Map<String, Map<String, Set<?>>>>() { };
-    private static final Comparator<List<String>> BROKEN_LINKS_COMPARATOR = (t1, t2) -> {
-        int spaceCompare = t1.get(0).compareTo(t2.get(0));
-        if (spaceCompare == 0) {
-            return t1.get(1).compareTo(t2.get(1));
-        }
-        return spaceCompare;
-    };
 
     private static final String PAGE_ID = "pageId";
+
+    private static final Marker SEND_PAGE_MARKER = MarkerFactory.getMarker("ConfluenceSendingPage");
+
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -155,7 +151,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             object.setStringListValue("spaces", new ArrayList<>(jobStatus.getSpaces()));
             String root = updateMigrationPropertiesAndGetRoot(object);
             Map<String, Map<String, Integer>> macroPages = analyseLogs(jobStatus, object, document, root);
-            macroMap = createSerializableMacroMap(macroPages);
+            macroMap = computeMacroMap(macroPages);
             object.setLargeStringValue("macros", new ObjectMapper().writeValueAsString(macroMap.keySet()));
 
             if (StringUtils.isEmpty(document.getTitle())) {
@@ -212,19 +208,75 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return props;
     }
 
-    private void replaceKey(Map<String, List<String>> m, CurrentPage currentPage)
+    private void replaceKey(Map<String, List<LogLine<SimpleLog>>> m, CurrentPage currentPage)
     {
-        String oldKey = currentPage.id;
+        String oldKey = toString(currentPage.id);
         String newKey = currentPage.ref;
         if (m.containsKey(oldKey)) {
-            m.put(newKey, m.remove(oldKey));
+            List<LogLine<SimpleLog>> l = m.get(newKey);
+            if (l == null) {
+                m.put(newKey, m.remove(oldKey));
+            } else {
+                l.addAll(m.remove(oldKey));
+            }
         }
     }
-    
+
+    private static final class LogLine<T>
+    {
+        public Long pageId;
+        public Long originalVersion;
+        public String spaceKey;
+        public String pageTitle;
+        public T data;
+
+        private boolean isCurrentRevision()
+        {
+            return originalVersion == null || (originalVersion.equals(pageId));
+        }
+    }
+
+    private static final class SimpleLog
+    {
+        public String level;
+        public String marker;
+        public String msg;
+        public Object[] args;
+    }
+
     private static final class CurrentPage
     {
-        private String id;
+        private Long id;
+        private Long originalVersion;
+        private String spaceKey;
+        private String pageTitle;
         private String ref;
+
+        private boolean isCurrentRevision()
+        {
+            return originalVersion == null || (originalVersion.equals(id));
+        }
+
+        private <T> LogLine<T> toLogLine(T data)
+        {
+            LogLine<T> logLine = new LogLine<>();
+            logLine.data = data;
+            logLine.pageId = id;
+            logLine.originalVersion = originalVersion;
+            logLine.spaceKey = spaceKey;
+            logLine.pageTitle = pageTitle;
+            return logLine;
+        }
+
+        private LogLine<SimpleLog> toLogLine(LogEvent e)
+        {
+            SimpleLog cl = new SimpleLog();
+            cl.args = e.getArgumentArray();
+            cl.marker = e.getMarker() == null ? "" : e.getMarker().getName();
+            cl.msg = e.getMessage();
+            cl.level = e.getLevel().name();
+            return toLogLine(cl);
+        }
     }
 
     private boolean ignoredIssue(LogEvent event)
@@ -242,14 +294,13 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return false;
     }
 
-    Map<String, Map<String, Integer>> analyseLogs(ConfluenceMigrationJobStatus jobStatus, BaseObject object,
-        XWikiDocument document, String root)
+    Map<String, Map<String, Integer>> analyseLogs(ConfluenceMigrationJobStatus jobStatus,
+        BaseObject object, XWikiDocument document, String root)
     {
-        Map<String, List<String>> otherIssues = new TreeMap<>();
-        Map<String, List<String>> skipped = new TreeMap<>();
-        Map<String, List<String>> problematic = new TreeMap<>();
-        Map<String, List<String>> brokenLinksPages = new TreeMap<>();
-        Set<List<String>> brokenLinks = new TreeSet<>(BROKEN_LINKS_COMPARATOR);
+        Map<String, List<LogLine<SimpleLog>>> otherIssues = new TreeMap<>();
+        Map<String, List<LogLine<SimpleLog>>> skipped = new TreeMap<>();
+        Map<String, List<LogLine<SimpleLog>>> problematic = new TreeMap<>();
+        Map<String, List<LogLine<SimpleLog>>> confluenceRefWarnings = new TreeMap<>();
         Map<String, Map<String, Integer>> macroPages = new HashMap<>();
         Map<String, Map<String, List<String>>> collisions = new HashMap<>();
 
@@ -262,19 +313,19 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                     updateErrors(event, skipped, collisions, currentPage);
                     break;
                 case WARN:
-                    updateWarnings(event, brokenLinksPages, brokenLinks, otherIssues, currentPage);
+                    updateWarnings(event, confluenceRefWarnings, otherIssues, currentPage);
                     break;
                 case INFO:
                     Object[] args = event.getArgumentArray();
-                    if (Objects.equals(event.getMarker(), ConfluenceFilter.LOG_MACROS_FOUND)) {
-                        addMacros(currentPage.ref, args, macroPages);
+                    if (ConfluenceFilter.LOG_MACROS_FOUND.equals(event.getMarker())) {
+                        addMacros(currentPage, args, macroPages);
                     } else if (isADocumentOutputFilterEvent(event.getMarker())) {
                         updateCurrentDocument(currentPage, otherIssues, skipped, problematic,
-                            brokenLinksPages, docs, args);
-                    } else if (notNull(event.getMessage()).startsWith("Sending page [{}]")) {
+                            confluenceRefWarnings, docs, args);
+                    } else if (SEND_PAGE_MARKER.equals(event.getMarker())) {
                         docCount++;
                         currentPage.ref = null;
-                        currentPage.id = getCurrentPageId(args);
+                        tryUpdateCurrentPage(currentPage, args);
                     }
 
                     break;
@@ -286,15 +337,14 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         addAttachment("skipped.json", skipped, document);
         addAttachment("problems.json", problematic, document);
         addAttachment("otherIssues.json", otherIssues, document);
-        addAttachment("brokenLinksPages.json", brokenLinksPages, document);
-        addAttachment("brokenLinks.json", brokenLinks, document);
+        addAttachment("confluenceRefWarnings.json", confluenceRefWarnings, document);
         addAttachment("missingUsersGroups.json", getPermissionIssues(root, docs), document);
         addAttachment("collisions.json", collisions, document);
         object.setLongValue("imported", docCount);
         return macroPages;
     }
 
-    private void updateErrors(LogEvent event, Map<String, List<String>> skipped,
+    private void updateErrors(LogEvent event, Map<String, List<LogLine<SimpleLog>>> skipped,
         Map<String, Map<String, List<String>>> collisions, CurrentPage currentPage)
     {
         Object[] args = event.getArgumentArray();
@@ -320,11 +370,11 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return false;
     }
 
-    private static void addMacros(String currentDocument, Object[] args, Map<String, Map<String, Integer>> macroPages)
+    private static void addMacros(CurrentPage currentPage, Object[] args, Map<String, Map<String, Integer>> macroPages)
     {
-        if (currentDocument != null && args[0] instanceof  Map) {
+        if (currentPage.ref != null && currentPage.isCurrentRevision() && args[0] instanceof Map) {
             Map<String, Integer> macrosIds = (Map<String, Integer>) args[0];
-            macroPages.put(currentDocument, macrosIds);
+            macroPages.put(currentPage.ref, macrosIds);
         }
     }
 
@@ -335,45 +385,47 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             || markerName.equals("filter.instance.log.document.created");
     }
 
-    private static String getCurrentPageId(Object[] args)
+    private static <T> T getPageIdentifierField(Map<?, ?> pageIdentifier, String field, Class<T> clazz)
     {
-        if ((args.length > 1 && args[1] instanceof Long)) {
-            return toString((Long) args[1]);
-        }
-
-        if (args.length > 0 && args[0] instanceof Map) {
-            return toString((Long) ((Map<?, ?>) args[0]).get(PAGE_ID));
+        Object f = pageIdentifier.get(field);
+        if (clazz.isInstance(f)) {
+            return clazz.cast(f);
         }
 
         return null;
     }
 
-    private static String notNull(String s)
+    private static void tryUpdateCurrentPage(CurrentPage currentPage, Object[] args)
     {
-        if (s == null) {
-            return "";
+        if (args.length > 0 && args[0] instanceof Map) {
+            Map<?, ?> pageIdentifier = (Map<?, ?>) args[0];
+            currentPage.id = getPageIdentifierField(pageIdentifier, PAGE_ID, Long.class);
+            currentPage.originalVersion = getPageIdentifierField(pageIdentifier, "originalVersion", Long.class);
+            currentPage.spaceKey = getPageIdentifierField(pageIdentifier, "spaceKey", String.class);
+            currentPage.pageTitle = getPageIdentifierField(pageIdentifier, "pageTitle", String.class);
         }
-        return s;
     }
 
-    private static void addEventToCat(LogEvent logEvent, Map<String, List<String>> cat, CurrentPage currentPage)
+    private static void addEventToCat(LogEvent e, Map<String, List<LogLine<SimpleLog>>> cat, CurrentPage currentPage)
     {
         if (cat != null) {
-            String pageIdOrFullName = getPageIdOrFullName(logEvent, currentPage);
+            String pageIdOrFullName = getPageIdOrFullName(e, currentPage);
             if (pageIdOrFullName != null) {
-                cat.computeIfAbsent(pageIdOrFullName, k -> new ArrayList<>()).add(logEvent.getFormattedMessage());
+                List<LogLine<SimpleLog>> logLines = cat.computeIfAbsent(pageIdOrFullName, k -> new ArrayList<>());
+                logLines.add(currentPage.toLogLine(e));
             }
         }
     }
 
     private void updateCurrentDocument(CurrentPage currentPage,
-        Map<String, List<String>> otherIssues, Map<String, List<String>> skipped, Map<String, List<String>> problematic,
-        Map<String, List<String>> brokenLinksPages, Collection<String> docs, Object[] args)
+        Map<String, List<LogLine<SimpleLog>>> otherIssues,
+        Map<String, List<LogLine<SimpleLog>>> skipped, Map<String, List<LogLine<SimpleLog>>> problematic,
+        Map<String, List<LogLine<SimpleLog>>> confluenceRefWarnings, Collection<String> docs, Object[] args)
     {
         if (args.length == 0 || !(args[0] instanceof DocumentReference)) {
             return;
         }
-        
+
         DocumentReference docRef = (DocumentReference) args[0];
         currentPage.ref = serializer.serialize(docRef);
         docs.add(localSerializer.serialize(docRef));
@@ -381,25 +433,16 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             replaceKey(otherIssues, currentPage);
             replaceKey(skipped, currentPage);
             replaceKey(problematic, currentPage);
-            replaceKey(brokenLinksPages, currentPage);
+            replaceKey(confluenceRefWarnings, currentPage);
         }
     }
 
-    private static void updateWarnings(LogEvent event, Map<String, List<String>> brokenLinksPages,
-        Set<List<String>> brokenLinks, Map<String, List<String>> otherIssues, CurrentPage currentPage)
+    private static void updateWarnings(LogEvent event, Map<String, List<LogLine<SimpleLog>>> confluenceRefWarnings,
+        Map<String, List<LogLine<SimpleLog>>> otherIssues, CurrentPage currentPage)
     {
-        String msg = event.getMessage();
-        Object[] args = event.getArgumentArray();
-        Map<String, List<String>> cat;
-        if (msg.contains(LINKS_BROKEN)) {
-            cat = brokenLinksPages;
-            if (args.length > 1 && args[1] instanceof String && args[0] instanceof String) {
-                brokenLinks.add(List.of((String) args[1], (String) args[0]));
-            }
-        } else {
-            cat = otherIssues;
-        }
-        addEventToCat(event, cat, currentPage);
+        addEventToCat(event, CONFLUENCE_REF_MARKER.equals(event.getMarker())
+            ? confluenceRefWarnings
+            : otherIssues, currentPage);
     }
 
     private Map<String, List<String>> getPermissionIssues(String root, Collection<String> docs)
@@ -454,10 +497,10 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         if (!subjects.isEmpty()) {
             // We assume the users and groups are in the current wiki.
             List<String> foundSubjects = queryManager.createQuery(
-                String.format(
-                    "select o.name from BaseObject o where o.name in (:refs) and o.className = 'XWiki.XWiki%s'",
-                    StringUtils.capitalize(field)),
-                HQL)
+                    String.format(
+                        "select o.name from BaseObject o where o.name in (:refs) and o.className = 'XWiki.XWiki%s'",
+                        StringUtils.capitalize(field)),
+                    HQL)
                 .bindValue("refs", subjects)
                 .execute();
             subjects.removeIf(foundSubjects::contains);
@@ -541,7 +584,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                 }
             }
 
-            return currentPage.id;
+            return toString(currentPage.id);
         }
 
         return currentPage.ref;
@@ -643,7 +686,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return new HashMap<>();
     }
 
-    private Map<String, Map<String, Object>> createSerializableMacroMap(Map<String, Map<String, Integer>> macroPages)
+    private Map<String, Map<String, Object>> computeMacroMap(Map<String, Map<String, Integer>> macroPages)
     {
         Map<String, Map<String, Object>> macroMap = new HashMap<>();
 

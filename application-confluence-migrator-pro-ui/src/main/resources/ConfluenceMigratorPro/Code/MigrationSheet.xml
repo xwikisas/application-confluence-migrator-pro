@@ -45,6 +45,8 @@
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.MigrationSheet'))
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.JobDoneEventEmitter'))
 
+#set ($oldreverrors = $request.oldreverrors)
+
 ## Start of macro ##
 
 #**
@@ -133,14 +135,49 @@
   #end
 #end
 
-#macro(getJSON $obj $name)##
-#set ($attachment = $doc.getAttachment("${name}.json"))##
-#if ($objecttool.isNull($attachment))##
-## json strings used to be stored in the MigrationClass object
-$obj.getValue($name)##
-#else##
-$attachment.getContentAsString()##
-#end##
+#macro(filterCurrentRevision)
+  #if ($oldreverrors != "unsupported")
+    #set ($res = {})
+    #foreach ($entry in $jsonObject.entrySet())
+      #set ($lines = [])
+      #set ($loglines = $entry.getValue().listIterator())
+      #if ($objecttool.isNotNull($loglines))
+        #foreach ($logline in $loglines)
+          #set ($data = $logline.get("data"))
+          #if ($objecttool.isNull($data))
+            ## Old report without data about old revisions
+            #set ($oldreverrors = "unsupported")
+            #break
+          #end
+          #set ($discard = $lines.add($data))
+          #if ($oldreverrors || ($objecttool.isNull($logline.get("originalVersion")) || $logline.get("originalVersion") == $logline.get("pageId")))
+            #set ($discard = $data)
+          #end
+        #end
+        #if (!$lines.isEmpty())
+          #set ($discard = $res.put($entry.getKey(), $lines))
+        #end
+      #end
+    #end
+    #if ($oldreverrors != "unsupported")
+      #set ($jsonObject = $res)
+    #end
+  #end
+#end
+
+#macro(getJSON $obj $name $dontParse)
+  #set ($attachment = $doc.getAttachment("${name}.json"))
+  #if ($objecttool.isNull($attachment))
+    ## json strings used to be stored in the MigrationClass object
+    #set ($json = $!obj.getValue($name))
+  #else
+    #set ($json = $attachment.getContentAsString())
+  #end
+  #if (!$dontParse &amp;&amp; $objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+    #set ($jsonObject = $jsontool.fromString($json))
+  #else
+    #set ($jsonObject = {})
+  #end
 #end
 
 #macro(computeRootSpace)
@@ -312,158 +349,163 @@ $attachment.getContentAsString()##
       &lt;a href="https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.link'))&lt;/a&gt;
     &lt;/p&gt;
   &lt;/div&gt;
-  ## Migrated with issues section
-  #set ($json = "#getJSON($obj, 'problems')")
-  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
-    #set ($jsonObject = $jsontool.fromString($json))
-    #if (!$jsonObject.isEmpty())
-      #displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.keySet().size()])
-      #displayJson($jsonObject)
-    #end
+  
+  ## Issues section
+  #getJSON($obj, 'problems')
+  #filterCurrentRevision()
+  #if (!$jsonObject.isEmpty())
+    #displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.keySet().size()])
+    #displayJson('problems')
   #end
+
   ## Skipped section
-  #set ($json = "#getJSON($obj, 'skipped')")
-  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
-    #set ($jsonObject = $jsontool.fromString($json))
-    #if (!$jsonObject.isEmpty())
-      #displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
-      #displayJson($jsonObject)
-    #end
+  #getJSON($obj, 'skipped')
+  #filterCurrentRevision()
+  #if (!$jsonObject.isEmpty())
+    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
+    #displayJson('skipped')
   #end
-  ## Broken links section
-  #set ($json = "#getJSON($obj, 'brokenLinksPages')")
-  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
-    #set ($jsonObject = $jsontool.fromString($json))
-    #if (!$jsonObject.isEmpty())
-      #displaySubtitle('cross', 'confluencepro.migration.raport.problems.brokenLinks.title', '', [$jsonObject.keySet().size()])
-      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
-      #displayJson($jsonObject)
-      #set ($json = "#getJSON($obj, 'brokenLinks')")
-      #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
-        #set ($jsonObject = $jsontool.fromString($json))
-        #if (!$jsonObject.isEmpty())
 
-          &lt;details class="cfm-details"&gt;
-            &lt;summary&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.list')&lt;/summary&gt;
-
-            &lt;table&gt;
-              &lt;tr&gt;
-                &lt;th&gt;$services.localization.render('confluencepro.migration.raport.confluencespace')&lt;/th&gt;
-                &lt;th&gt;$services.localization.render('confluencepro.migration.raport.pageTitle')&lt;/th&gt;
-              &lt;/tr&gt;
-            #foreach($link in $jsonObject)
-              &lt;tr&gt;
-                &lt;td&gt;$escapetool.xml($link[0])&lt;/td&gt;
-                &lt;td&gt;$escapetool.xml($link[1])&lt;/td&gt;
-              &lt;/tr&gt;
-            #end
-            &lt;/table&gt;
-          &lt;/details&gt;
-
-        #end
+  ## Confluence reference warnings section
+  #getJSON($obj, 'confluenceRefWarnings')
+  #filterCurrentRevision()
+  #if (!$jsonObject.isEmpty())
+    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.confluencerefs.title', '', [$jsonObject.keySet().size()])
+    &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
+    #displayJson('confluenceRefWarnings')
+    #set ($missingPages = $collectiontool.getSortedSet())
+    #foreach ($entry in $jsonObject.entrySet())
+      #foreach ($log in $entry.getValue())
+        #set ($spaceKey = $log.get("args").get(1))
+        #set ($pageTitle = $log.get("args").get(0))
+        #set ($discard = $missingPages.add("${spaceKey}.${pageTitle}"))
       #end
     #end
-  #end
-  ## Missing users and groups section
-  #set ($json = "#getJSON($obj, 'missingUsersGroups')")
-  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
-    #set ($jsonObject = $jsontool.fromString($json))
-    #if (!$jsonObject.isEmpty() &amp;&amp; (!$jsonObject.users.isEmpty() || !$jsonObject.groups.isEmpty()))
-      #displaySubtitle('warning', 'confluencepro.migration.raport.problems.missingUsersGroups.title', '', [])
-      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.info')&lt;/p&gt;
-      #if (!$jsonObject.groups.isEmpty())
-        &lt;dl&gt;
-          &lt;dt&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.groups')&lt;/dt&gt;
-          &lt;dd&gt;#foreach ($group in $jsonObject.groups)#if(!$foreach.first), #end$escapetool.xml($group)#end
-          &lt;/dd&gt;
-        &lt;/ul&gt;
-      #end
-      #if (!$jsonObject.users.isEmpty())
-        &lt;dl&gt;
-          &lt;dt&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.users')&lt;/dt&gt;
-          &lt;dd&gt;#foreach ($user in $jsonObject.users)#if(!$foreach.first), #end$escapetool.xml($user)#end
-          &lt;/dd&gt;
-        &lt;/ul&gt;
-      #end
-    #end
-  #end
-  ## Collision section
-  #set ($json = "#getJSON($obj, 'collisions')")
-  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
-    #set ($hasCollisions = false)
-    #set ($jsonObject = $jsontool.fromString($json))
-    #foreach ($spaceEntry in $jsonObject.entrySet())
-      #if (!$spaceEntry.getValue().isEmpty())
-        #set ($hasCollisions = true)
-      #end
-    #end
-    #if ($hasCollisions)
-      #displaySubtitle('warning', 'confluencepro.migration.raport.problems.collisions.title', '', [])
-      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.collisions.info')&lt;/p&gt;
+    &lt;details class="cfm-details"&gt;
+      &lt;summary&gt;$services.localization.render('confluencepro.migration.raport.problems.confluencerefs.list')&lt;/summary&gt;
       &lt;table&gt;
         &lt;tr&gt;
-          &lt;th&gt;space&lt;/th&gt;
-          &lt;th&gt;reference&lt;/th&gt;
-          &lt;th&gt;Confluence page titles&lt;/th&gt;
+          &lt;th&gt;$services.localization.render('confluencepro.migration.raport.confluencespace')&lt;/th&gt;
+          &lt;th&gt;$services.localization.render('confluencepro.migration.raport.pageTitle')&lt;/th&gt;
         &lt;/tr&gt;
-        #foreach ($spaceEntry in $jsonObject.entrySet())
-          #set ($spaceKey = $spaceEntry.getKey())
-          #foreach ($collision in $spaceEntry.getValue().entrySet())
+      #foreach ($missingPage in $missingPages)
+        #set ($p = $missingPage.split('\.', 2))
+        &lt;tr&gt;
+          &lt;td&gt;$escapetool.xml($p[0])&lt;/td&gt;
+          &lt;td&gt;$escapetool.xml($p[1])&lt;/td&gt;
+        &lt;/tr&gt;
+      #end
+      &lt;/table&gt;
+    &lt;/details&gt;
+  #end
+
+  ## Legacy broken links section
+  #getJSON($obj, 'brokenLinksPages')
+  #if (!$jsonObject.isEmpty())
+    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.brokenLinks.title', '', [$jsonObject.keySet().size()])
+    &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
+    #displayJson('brokenLinksPages')
+    #set ($json = "#getJSON($obj, 'brokenLinks')")
+    #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+      #set ($jsonObject = $jsontool.fromString($json))
+      #if (!$jsonObject.isEmpty())
+        &lt;details class="cfm-details"&gt;
+          &lt;summary&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.list')&lt;/summary&gt;
+          &lt;table&gt;
             &lt;tr&gt;
-              &lt;td&gt;$escapetool.xml($spaceKey)&lt;/td&gt;
-              &lt;td&gt;$escapetool.xml($collision.getKey())&lt;/td&gt;
-              &lt;td&gt;
-                #foreach($pageTitle in $collision.getValue())
-                  $escapetool.xml($pageTitle)
-                  #if (!$foreach.last)&lt;br /&gt;#end
-                #end
-              &lt;/td&gt;
+              &lt;th&gt;$services.localization.render('confluencepro.migration.raport.confluencespace')&lt;/th&gt;
+              &lt;th&gt;$services.localization.render('confluencepro.migration.raport.pageTitle')&lt;/th&gt;
+            &lt;/tr&gt;
+          #foreach($link in $jsonObject)
+            &lt;tr&gt;
+              &lt;td&gt;$escapetool.xml($link[0])&lt;/td&gt;
+              &lt;td&gt;$escapetool.xml($link[1])&lt;/td&gt;
             &lt;/tr&gt;
           #end
-        #end
-      &lt;/table&gt;
+          &lt;/table&gt;
+        &lt;/details&gt;
+      #end
     #end
   #end
 
-  ## Other issues section
-  #set ($json = "#getJSON($obj, 'otherIssues')")
-  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
-    #set ($jsonObject = $jsontool.fromString($json))
-    #set ($errors = $jsonObject.get('ERROR'))
-    #set ($warns = $jsonObject.get('WARN'))
-    #set ($problems = 0)
-    #if ("$!errors" != '' &amp;&amp; $errors.size() &gt; 0)
-      #set ($problems = $problems + $errors.size())
+  ## Missing users and groups section
+  #getJSON($obj, 'missingUsersGroups')
+  #if (!$jsonObject.isEmpty() &amp;&amp; (!$jsonObject.users.isEmpty() || !$jsonObject.groups.isEmpty()))
+    #displaySubtitle('warning', 'confluencepro.migration.raport.problems.missingUsersGroups.title', '', [])
+    &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.info')&lt;/p&gt;
+    #if (!$jsonObject.groups.isEmpty())
+      &lt;dl&gt;
+        &lt;dt&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.groups')&lt;/dt&gt;
+        &lt;dd&gt;#foreach ($group in $jsonObject.groups)#if(!$foreach.first), #end$escapetool.xml($group)#end
+        &lt;/dd&gt;
+      &lt;/ul&gt;
     #end
-    #if ("$!warns" != '' &amp;&amp; $warns.size() &gt; 0)
-      #set ($problems = $problems + $warns.size())
-    #end
-    #if ($problems &gt; 0)
-      #displaySubtitle('question', 'confluencepro.migration.raport.problems.other.title', '', [$problems])
-      &lt;ul class="cfm-problem-pages"&gt;
-      #foreach ($entry in $jsonObject.entrySet())
-        &lt;li class="cfm-problem-page"&gt;
-          &lt;div class="cfm-page"&gt;
-            &lt;a role="button" data-toggle="collapse" href="#cfmOtherIssues${foreach.count}" aria-expanded="false" aria-controls="cfmOtherIssues${foreach.count}"&gt;
-              &lt;div class="cfmTitleIcon"&gt;
-                $services.icon.renderHTML('caret-down')
-              &lt;/div&gt;
-            &lt;/a&gt;
-            $escapetool.xml($services.localization.render("confluencepro.migration.raport.problems.other.$entry.key.toLowerCase()", $entry.value.size()))
-          &lt;/div&gt;
-          &lt;div id="cfmOtherIssues${foreach.count}" class="cfm-problems collapse"&gt;
-            &lt;ul&gt;
-              #foreach ($problem in $entry.value)
-                &lt;li class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/li&gt;
-              #end
-            &lt;/ul&gt;
-          &lt;/div&gt;
-        &lt;/li&gt;
-      #end
+    #if (!$jsonObject.users.isEmpty())
+      &lt;dl&gt;
+        &lt;dt&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.users')&lt;/dt&gt;
+        &lt;dd&gt;#foreach ($user in $jsonObject.users)#if(!$foreach.first), #end$escapetool.xml($user)#end
+        &lt;/dd&gt;
       &lt;/ul&gt;
     #end
   #end
+
+  ## Collision section
+  #getJSON($obj, 'collisions')
+  #set ($hasCollisions = false)
+  #foreach ($spaceEntry in $jsonObject.entrySet())
+    #if (!$spaceEntry.getValue().isEmpty())
+      #set ($hasCollisions = true)
+    #end
+  #end
+  #if ($hasCollisions)
+    #displaySubtitle('warning', 'confluencepro.migration.raport.problems.collisions.title', '', [])
+    &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.collisions.info')&lt;/p&gt;
+    &lt;table&gt;
+      &lt;tr&gt;
+        &lt;th&gt;space&lt;/th&gt;
+        &lt;th&gt;reference&lt;/th&gt;
+        &lt;th&gt;Confluence page titles&lt;/th&gt;
+      &lt;/tr&gt;
+      #foreach ($spaceEntry in $jsonObject.entrySet())
+        #set ($spaceKey = $spaceEntry.getKey())
+        #foreach ($collision in $spaceEntry.getValue().entrySet())
+          &lt;tr&gt;
+            &lt;td&gt;$escapetool.xml($spaceKey)&lt;/td&gt;
+            &lt;td&gt;$escapetool.xml($collision.getKey())&lt;/td&gt;
+            &lt;td&gt;
+              #foreach($pageTitle in $collision.getValue())
+                $escapetool.xml($pageTitle)
+                #if (!$foreach.last)&lt;br /&gt;#end
+              #end
+            &lt;/td&gt;
+          &lt;/tr&gt;
+        #end
+      #end
+    &lt;/table&gt;
+  #end
+
+  ## Other issues section
+  #getJSON($obj, 'otherIssues')
+  #filterCurrentRevision()
+
+  #if (!$jsonObject.isEmpty())
+    #displaySubtitle('question', 'confluencepro.migration.raport.problems.other.title', '', [])
+    #displayJson('otherIssues')
+  #end
+
   {{/html}}
+
+  -----
+
+  #if ($oldreverrors != "unsupported")
+  {{info}}
+      #if ($oldreverrors)
+        Issues impacting old revisions are displayed in the summary. [[Hide&gt;&gt;||queryString=""]].
+      #else
+        Issues impacting old revisions are hidden from the summary. [[Show&gt;&gt;||queryString="oldreverrors=1"]].
+      #end
+  {{/info}}
+  #end
 
   {{html clean=false}}
   #displaySubtitle('info', 'confluencepro.migration.raport.logs.title', '', [])
@@ -505,9 +547,8 @@ $attachment.getContentAsString()##
 
 #**
  * Display the properties of a json in a structured way.
- * @param $jsonObject the json that needs displaying. It should have the pattern: { key1: [vals..], key2: [vals..], ..}
  *#
-#macro(displayJson $jsonObject)
+#macro(displayJson $category)
   &lt;p&gt;
     &lt;button class="cfm-unfold-all btn" type="button"&gt;Unfold all&lt;/button&gt;
     &lt;button class="cfm-fold-all btn"   type="button"&gt;Fold all&lt;/button&gt;
@@ -519,7 +560,7 @@ $attachment.getContentAsString()##
     #end
     &lt;li class="cfm-problem-page"&gt;
       &lt;div class="cfm-page"&gt;
-        &lt;a role="button" data-toggle="collapse" href="#cfmPage${foreach.count}Issues" aria-expanded="false" aria-controls="cfmPage${foreach.count}Issues"&gt;
+        &lt;a role="button" data-toggle="collapse" href="#cfmPage-${category}-${foreach.count}" aria-expanded="false" aria-controls="cfmPage-${category}-${foreach.count}"&gt;
           &lt;div class="cfmTitleIcon"&gt;
             $services.icon.renderHTML('caret-down')
           &lt;/div&gt;
@@ -530,16 +571,44 @@ $attachment.getContentAsString()##
           $escapetool.xml($entry.key)
         #end
       &lt;/div&gt;
-      &lt;div id="cfmPage${foreach.count}Issues" class="cfm-problems collapse"&gt;
+      &lt;div id="cfmPage-${category}-${foreach.count}" class="cfm-problems collapse"&gt;
         &lt;ul&gt;
           #foreach ($problem in $entry.value)
-            &lt;li class="cfm-problem"&gt;$escapetool.xml($problem)&lt;/li&gt;
+            &lt;li class="cfm-problem"&gt;
+              #set ($msg = $problem.get("msg"))
+              #if ($objecttool.isNull($msg))
+                $escapetool.xml($problem)
+              #else
+                #foreach ($a in $problem.get("args"))
+                  #set ($msg = $stringtool.replaceOnce($msg, "{}", $a))
+                #end
+                $escapetool.xml($msg)
+              #end
+            &lt;/li&gt;
           #end
         &lt;/ul&gt;
       &lt;/div&gt;
     &lt;/li&gt;
   #end
   &lt;/ul&gt;
+#end
+
+#macro(displayBrokenLinks $jsonObject, $l10nkey)
+  &lt;details class="cfm-details"&gt;
+    &lt;summary&gt;$services.localization.render($l10nkey)&lt;/summary&gt;
+    &lt;table&gt;
+      &lt;tr&gt;
+        &lt;th&gt;$services.localization.render('confluencepro.migration.raport.confluencespace')&lt;/th&gt;
+        &lt;th&gt;$services.localization.render('confluencepro.migration.raport.pageTitle')&lt;/th&gt;
+      &lt;/tr&gt;
+    #foreach($link in $jsonObject)
+      &lt;tr&gt;
+        &lt;td&gt;$escapetool.xml($link[0])&lt;/td&gt;
+        &lt;td&gt;$escapetool.xml($link[1])&lt;/td&gt;
+      &lt;/tr&gt;
+    #end
+    &lt;/table&gt;
+  &lt;/details&gt;
 #end
 
 #**
@@ -744,24 +813,27 @@ $attachment.getContentAsString()##
   $os.print("Supported macros: $supportedMacros$escapetool.N")
   $os.print("Unsupported macros: $notSupportedMacros$escapetool.N")
 
-  #set ($json = "#getJSON($obj, 'brokenLinksPages')")
-  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+  ## Legacy, for old migrations
+  #getJSON($obj, 'brokenLinksPages')
+  #if (!$jsonObject.isEmpty())
     $os.print("Pages with broken links:$escapetool.N")
-    #foreach ($page in $jsontool.fromString($json).keySet())
+    #foreach ($page in $jsonObject.keySet())
       $os.print(" - $page$escapetool.N")
     #end
   #end
 
-  #set ($json = "#getJSON($obj, 'brokenLinks')")
-  #if ($objecttool.isNotNull($json) &amp;&amp; !$json.isEmpty())
+  ## Legacy, for old migrations
+  #getJSON($obj, 'brokenLinks')
+  #if (!$jsonObject.isEmpty())
     $os.print("Broken links:$escapetool.N")
-    #foreach ($page in $jsontool.fromString($json))
+    #foreach ($page in $jsonObject)
       $os.print(" - spaceKey: $page[0], title: $page[1]$escapetool.N")
     #end
   #end
+
   #foreach ($entry in ['problems', 'skipped', 'otherIssues'])
-    #set ($json = "#getJSON($obj, $entry)")
-    #if ($objecttool.isNotNull($json) &amp;&amp; $json.length() &gt; 2)
+    #getJSON($obj, $entry, true)
+    #if (!$jsonObject.isEmpty())
       $os.print("$escapetool.N")
       #if ($entry == "otherIssues")
         $os.print("other issues:$escapetool.N")
@@ -1510,6 +1582,10 @@ details.cfm-details summary {
 }
 
 .log-item:has(&gt;.fake-log-items) {
+  display: none;
+}
+
+.edit_section {
   display: none;
 }</code>
     </property>
