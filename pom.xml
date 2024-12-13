@@ -29,7 +29,7 @@
   </parent>
   <groupId>com.xwiki.confluencepro</groupId>
   <artifactId>application-confluence-migrator-pro</artifactId>
-  <version>1.27.12-SNAPSHOT</version>
+  <version>1.28.0</version>
   <name>Confluence Migrator Pro - Parent POM</name>
   <packaging>pom</packaging>
   <issueManagement>
@@ -40,7 +40,7 @@
     <connection>scm:git:git://github.com/xwikisas/application-confluence-migrator-pro.git</connection>
     <developerConnection>scm:git:git@github.com:xwikisas/application-confluence-migrator-pro.git</developerConnection>
     <url>https://github.com/xwikisas/application-confluence-migrator-pro/tree/master</url>
-    <tag>HEAD</tag>
+    <tag>application-confluence-migrator-pro-1.28.0</tag>
   </scm>
   <properties>
     <licensing.version>1.25</licensing.version>
