@@ -544,7 +544,7 @@
       &lt;p&gt;&lt;a class="btn btn-primary" href="?fulllogs=1"&gt;$services.localization.render('confluencepro.migration.raport.displayFullLog')&lt;/a&gt;&lt;/p&gt;
     #end
   #else
-    &lt;div id="cfmLogs" data-log-method="#if ($objecttool.isNull($doc.getAttachment))service#else{attachment}#end"&gt;
+    &lt;div id="cfmLogs" data-log-method="#if ($objecttool.isNull($doc.getAttachment('logs.json')))service#else{attachment}#end"&gt;
       #if ($request.fulllogs)
         &lt;div class="loading-icon loading"&gt;&lt;/div&gt;
       #else
