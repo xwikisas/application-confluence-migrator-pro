@@ -100,9 +100,9 @@ void printEvent(OutputStream os, LogEvent logEvent) {
     os.print("}\n");
 }
 
-void printLogs(OutputStream os, String name) {
+void printLogs(OutputStream os, String wiki, String name) {
     JobStatusStore store = services.component.getInstance(JobStatusStore.class);
-    JobStatus logStatus = store.getJobStatus(List.of("confluence", "migration", "xwiki",
+    JobStatus logStatus = store.getJobStatus(List.of("confluence", "migration", wiki,
             "ConfluenceMigratorPro", "Migrations", name));
     LogTail logTail = logStatus.getLogTail();
     for (LogEvent logEvent : logTail) {
@@ -125,7 +125,7 @@ if (name) {
     if (setContentType) {
       response.setContentType("text/jsonl");
     }
-    printLogs(os, name);
+    printLogs(os, xcontext.getDatabase(), name);
 } else {
     if (setContentType) {
       response.setContentType("text/plain");
