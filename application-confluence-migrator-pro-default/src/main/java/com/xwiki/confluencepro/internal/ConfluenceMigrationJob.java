@@ -175,6 +175,39 @@ public class ConfluenceMigrationJob
 
     private void maybeReducePageCount(ConfluenceMigrationJobRequest request)
     {
+        int maxPageCount = getMaxPageCount(request);
+
+        if (maxPageCount > -1 && maxPageCount <= TRIAL_PAGE_COUNT) {
+            return;
+        }
+
+        Licensor licensor = null;
+        try {
+            licensor = licensorProvider.get();
+        } catch (Exception e) {
+            logger.warn("Failed to get the licensor, allowing everything", e);
+        }
+
+        if (licensor == null) {
+            return;
+        }
+
+        // If there is no license, the user can still trial the application by importing one space and 30 of its pages.
+        String wiki = request.getStatusDocumentReference()
+            .getWikiReference().getName();
+
+        DocumentReference mainRef = new DocumentReference(wiki, Arrays.asList(
+            "ConfluenceMigratorPro", "Code"), "MigrationClass");
+
+        if (!licensor.hasLicensure(mainRef) || licensor.getLicense(mainRef) == null
+            || licensor.getLicense(mainRef).getType().equals(LicenseType.TRIAL)
+        ) {
+            request.getInputProperties().put(MAX_PAGE_COUNT, TRIAL_PAGE_COUNT);
+        }
+    }
+
+    private static int getMaxPageCount(ConfluenceMigrationJobRequest request)
+    {
         int maxPageCount = -1;
         Object maxPageCountObject = request.getInputProperties().get(MAX_PAGE_COUNT);
         if (maxPageCountObject instanceof String) {
@@ -186,27 +219,7 @@ public class ConfluenceMigrationJob
         } else if (maxPageCountObject instanceof Integer) {
             maxPageCount = (Integer) maxPageCountObject;
         }
-
-        if (maxPageCount > -1 && maxPageCount <= TRIAL_PAGE_COUNT) {
-            return;
-        }
-
-        // If there is no license, the user can still trial the application by importing one space and 30 of its pages.
-        String wiki = request.getStatusDocumentReference()
-            .getWikiReference().getName();
-        Licensor licensor = licensorProvider.get();
-        if (licensor == null) {
-            return;
-        }
-
-        DocumentReference mainRef = new DocumentReference(wiki, Arrays.asList(
-            "ConfluenceMigratorPro", "Code"), "MigrationClass");
-
-        if (!licensor.hasLicensure(mainRef) || licensor.getLicense(mainRef) == null
-            || licensor.getLicense(mainRef).getType().equals(LicenseType.TRIAL)
-        ) {
-            request.getInputProperties().put(MAX_PAGE_COUNT, TRIAL_PAGE_COUNT);
-        }
+        return maxPageCount;
     }
 
     private boolean isGeneralParameterEnabled(String parameterName)
