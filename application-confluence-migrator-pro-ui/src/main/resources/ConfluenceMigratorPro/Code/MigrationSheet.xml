@@ -149,9 +149,8 @@
             #set ($oldreverrors = "unsupported")
             #break
           #end
-          #set ($discard = $lines.add($data))
           #if ($oldreverrors || ($objecttool.isNull($logline.get("originalVersion")) || $logline.get("originalVersion") == $logline.get("pageId")))
-            #set ($discard = $data)
+            #set ($discard = $lines.add($data))
           #end
         #end
         #if (!$lines.isEmpty())
