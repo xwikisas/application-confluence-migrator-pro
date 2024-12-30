@@ -114,7 +114,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final Marker SEND_PAGE_MARKER = MarkerFactory.getMarker("ConfluenceSendingPage");
 
-
     @Inject
     private Provider<XWikiContext> contextProvider;
 
@@ -310,6 +309,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
         CurrentPage currentPage = new CurrentPage();
         long docCount = 0;
+        long revisionCount = 0;
         Collection<String> docs = new HashSet<>();
         for (LogEvent event : jobStatus.getLogTail()) {
             switch (event.getLevel()) {
@@ -327,9 +327,11 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                         updateCurrentDocument(currentPage, otherIssues, skipped, problematic,
                             confluenceRefWarnings, docs, args);
                     } else if (SEND_PAGE_MARKER.equals(event.getMarker())) {
-                        docCount++;
                         currentPage.ref = null;
-                        tryUpdateCurrentPage(currentPage, args);
+                        revisionCount++;
+                        if (tryUpdateCurrentPage(currentPage, args)) {
+                            docCount++;
+                        }
                     }
 
                     break;
@@ -345,6 +347,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         addAttachment("missingUsersGroups.json", getPermissionIssues(root, docs), document);
         addAttachment("collisions.json", collisions, document);
         object.setLongValue("imported", docCount);
+        object.setLongValue("revisions", revisionCount);
         return macroPages;
     }
 
@@ -399,7 +402,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return null;
     }
 
-    private static void tryUpdateCurrentPage(CurrentPage currentPage, Object[] args)
+    private static boolean tryUpdateCurrentPage(CurrentPage currentPage, Object[] args)
     {
         if (args.length > 0 && args[0] instanceof Map) {
             Map<?, ?> pageIdentifier = (Map<?, ?>) args[0];
@@ -407,7 +410,11 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             currentPage.originalVersion = getPageIdentifierField(pageIdentifier, "originalVersion", Long.class);
             currentPage.spaceKey = getPageIdentifierField(pageIdentifier, "spaceKey", String.class);
             currentPage.pageTitle = getPageIdentifierField(pageIdentifier, "pageTitle", String.class);
+            if (currentPage.originalVersion == null || currentPage.originalVersion.equals(currentPage.id)) {
+                return true;
+            }
         }
+        return false;
     }
 
     private static void addEventToCat(LogEvent e, Map<String, List<LogLine<SimpleLog>>> cat, CurrentPage currentPage)

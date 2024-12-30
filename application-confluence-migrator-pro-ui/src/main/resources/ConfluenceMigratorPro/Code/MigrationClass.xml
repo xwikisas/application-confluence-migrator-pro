@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.6" reference="ConfluenceMigratorPro.Code.MigrationClass" locale="">
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.MigrationClass" locale="">
   <web>ConfluenceMigratorPro.Code</web>
   <name>MigrationClass</name>
   <language/>
@@ -51,7 +51,7 @@
       <disabled>0</disabled>
       <hint/>
       <name>executed</name>
-      <number>6</number>
+      <number>4</number>
       <numberType>integer</numberType>
       <prettyName>executed</prettyName>
       <size>30</size>
@@ -65,7 +65,7 @@
       <disabled>0</disabled>
       <hint/>
       <name>imported</name>
-      <number>3</number>
+      <number>2</number>
       <numberType>long</numberType>
       <prettyName>imported</prettyName>
       <size>30</size>
@@ -81,7 +81,7 @@
       <editor>PureText</editor>
       <hint/>
       <name>inputProperties</name>
-      <number>9</number>
+      <number>6</number>
       <picker>0</picker>
       <prettyName>inputProperties</prettyName>
       <restricted>0</restricted>
@@ -99,7 +99,7 @@
       <editor>PureText</editor>
       <hint/>
       <name>macros</name>
-      <number>11</number>
+      <number>8</number>
       <picker>0</picker>
       <prettyName>macros</prettyName>
       <restricted>0</restricted>
@@ -117,7 +117,7 @@
       <editor>PureText</editor>
       <hint/>
       <name>outputProperties</name>
-      <number>10</number>
+      <number>7</number>
       <picker>0</picker>
       <prettyName>outputProperties</prettyName>
       <restricted>0</restricted>
@@ -133,7 +133,7 @@
       <disabled>0</disabled>
       <hint/>
       <name>package</name>
-      <number>2</number>
+      <number>1</number>
       <picker>1</picker>
       <prettyName>package</prettyName>
       <size>30</size>
@@ -142,6 +142,20 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
     </package>
+    <revisions>
+      <customDisplay/>
+      <disabled>0</disabled>
+      <hint/>
+      <name>revisions</name>
+      <number>3</number>
+      <numberType>long</numberType>
+      <prettyName>revisions</prettyName>
+      <size>30</size>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
+    </revisions>
     <spaces>
       <cache>0</cache>
       <customDisplay/>
@@ -153,7 +167,7 @@
       <largeStorage>0</largeStorage>
       <multiSelect>1</multiSelect>
       <name>spaces</name>
-      <number>7</number>
+      <number>5</number>
       <picker>0</picker>
       <prettyName>spaces</prettyName>
       <relationalStorage>0</relationalStorage>

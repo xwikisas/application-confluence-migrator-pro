@@ -260,13 +260,17 @@
   #if ($objecttool.isNull($imported) || $imported == 0)
     #set ($imported = '')
   #end
+  #set ($revisions = $obj.getValue('revisions'))
+  #if ($objecttool.isNull($revisions) || $revisions == 0)
+    #set ($revisions = '0')
+  #end
   #set ($spaceCount = $spaces.size())
   #if ($spaceCount == 0)
     #set ($spaceCount = "")
   #elseif ($spaceCount == 1)
-    #displaySubtitle('check', 'confluencepro.migration.raport.imported.onespace.title', '', [$imported])
+    #displaySubtitle('check', 'confluencepro.migration.raport.imported.onespace.title', '', [$imported, $revisions])
   #else
-    #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $spaceCount])
+    #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $revisions, $spaceCount])
   #end
 
   {{/html}}
