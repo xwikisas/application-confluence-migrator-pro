@@ -27,6 +27,8 @@ import org.mockito.stubbing.Answer;
 import org.slf4j.LoggerFactory;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceXMLPackage;
 import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceInputFilterStream;
+import org.xwiki.contrib.confluence.resolvers.ConfluencePageIdResolver;
+import org.xwiki.contrib.confluence.resolvers.ConfluencePageTitleResolver;
 import org.xwiki.environment.Environment;
 import org.xwiki.filter.input.InputFilterStreamFactory;
 import org.xwiki.filter.test.integration.FilterTestSuite;
@@ -79,6 +81,8 @@ public class IntegrationTests
         });
         when(validation.transform("spacetovalidate")).thenReturn("validatedspace");
         when(validation.transform("pagetovalidate")).thenReturn("validatedpage");
+        componentManager.registerMockComponent(ConfluencePageIdResolver.class);
+        componentManager.registerMockComponent(ConfluencePageTitleResolver.class);
 
         // Unregister all listeners since they are not needed for testing
         componentManager.registerMockComponent(ObservationManager.class);
