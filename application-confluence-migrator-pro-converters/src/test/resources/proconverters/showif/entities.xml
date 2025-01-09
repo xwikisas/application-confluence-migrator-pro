@@ -69,7 +69,7 @@
   </ac:rich-text-body>
 </ac:structured-macro>
 <ac:structured-macro ac:name="show-if" ac:schema-version="1" ac:macro-id="203ea288-7fe4-4636-afcd-c0ace451c0c7">
-  <ac:parameter ac:name="display">pdf</ac:parameter>
+  <ac:parameter ac:name="display">PDF</ac:parameter>
   <ac:parameter ac:name="match">all</ac:parameter>
   <ac:parameter ac:name="label">x</ac:parameter>
   <ac:parameter ac:name="endDateTime">2024-12-19T00:00:00</ac:parameter>

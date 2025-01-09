@@ -42,15 +42,15 @@
             </entry>
             <entry>
               <string>content</string>
-              <string>{{show-if groups="a39e82d8-1c93-4395-9358-dc67f2ffa3ef" users="XWiki.toto_hello@example_com" authenticationType="authenticated" matchUsing="all"}}
+              <string>{{show-if groups="a39e82d8-1c93-4395-9358-dc67f2ffa3ef" users="XWiki.toto_hello@example_com" authenticationType="AUTHENTICATED" matchUsing="all"}}
 Hello
 {{/show-if}}
 
-{{show-if displayType="printable" matchUsing="all" tags="x" endDateTime="2024-12-19T00:00:00" contentType="page" authenticationType="AUTHENTICATED" startDateTime="2024-12-10T00:00:00" spacePermission="@self" scope="test export show-hide if > ancestors" action="view" header="ab:salut" users="XWiki.totouser" groups="XWiki.myGroup"}}
+{{show-if displayType="PRINTABLE" matchUsing="ALL" tags="x" endDateTime="2024-12-19T00:00:00" contentType="page" authenticationType="AUTHENTICATED" startDateTime="2024-12-10T00:00:00" spacePermission="@self" scope="test export show-hide if > ancestors" action="view" header="ab:salut" users="XWiki.totouser" groups="XWiki.myGroup"}}
 show if content
 {{/show-if}}
 
-{{hide-if startDateTime="2024-12-18T00:00:00" authenticationType="AUTHENTICATED" displayType="printable" matchUsing="all" endDateTime="2024-12-05T00:00:00" groups="XWiki.otherGroup"}}
+{{hide-if startDateTime="2024-12-18T00:00:00" authenticationType="AUTHENTICATED" displayType="PRINTABLE" matchUsing="ALL" endDateTime="2024-12-05T00:00:00" groups="XWiki.otherGroup"}}
 hide if content
 {{/hide-if}}</string>
             </entry>

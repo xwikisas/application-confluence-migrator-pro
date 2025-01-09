@@ -75,7 +75,7 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
 
             switch (name) {
                 case "match":
-                    parameters.put("matchUsing", xwikiValue);
+                    parameters.put("matchUsing", xwikiValue.toUpperCase());
                     break;
                 case "user":
                     if (xwikiValue.charAt(0) == '@') {
@@ -109,7 +109,7 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
                     parameters.put(GROUPS_PARAM, valueGroup);
                     break;
                 case SPECIAL_USERNAME_PARAM:
-                    parameters.put(AUTHENTICATION_TYPE_PARAM, xwikiValue);
+                    parameters.put(AUTHENTICATION_TYPE_PARAM, xwikiValue.toUpperCase());
                     break;
                 case SPECIAL_PARAM:
                     String valueSpecial = confluenceValue.replace("@", "").toUpperCase();
@@ -119,12 +119,12 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
                     parameters.put("contentType", xwikiValue);
                     break;
                 case "display":
-                    if ("word".equals(xwikiValue)) {
+                    if ("word".equalsIgnoreCase(xwikiValue)) {
                         xwikiValue = DISPLAY_PARAM_VALUE_PRINTABLE;
-                    } else if ("pdf".equals(xwikiValue)) {
+                    } else if ("pdf".equalsIgnoreCase(xwikiValue)) {
                         xwikiValue = DISPLAY_PARAM_VALUE_PRINTABLE;
                     }
-                    parameters.put("displayType", xwikiValue);
+                    parameters.put("displayType", xwikiValue.toUpperCase());
                     break;
                 case "label":
                     parameters.put("tags", xwikiValue);
