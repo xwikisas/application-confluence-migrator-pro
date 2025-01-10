@@ -24,29 +24,21 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
-    <artifactId>application-confluence-migrator-pro</artifactId>
+    <artifactId>application-confluence-migrator-pro-reference-fixer-parent</artifactId>
     <version>1.28.4-SNAPSHOT</version>
   </parent>
-  <artifactId>application-confluence-migrator-pro-default</artifactId>
-  <name>Confluence Migrator Pro - Default API</name>
+  <artifactId>application-confluence-migrator-pro-reference-fixer-api</artifactId>
+  <name>Confluence Migrator Pro - Reference Fixer API</name>
   <properties>
-    <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
+    <xwiki.surefire.captureconsole.skip>true</xwiki.surefire.captureconsole.skip>
+    <xwiki.jacoco.instructionRatio>0.7</xwiki.jacoco.instructionRatio>
   </properties>
   <dependencies>
+    <!-- FIXME: servlet-api is only useful because we pass a null of type HttpServletRequest), we should probably
+     find a way not to depend on url-mapping. -->
     <dependency>
-      <groupId>com.xwiki.confluencepro</groupId>
-      <artifactId>application-confluence-migrator-pro-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-refactoring-api</artifactId>
-      <version>${platform.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.contrib.confluence</groupId>
-      <artifactId>confluence-xml</artifactId>
-      <version>${confluence.version}</version>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.xwiki.contrib.confluence</groupId>
@@ -66,15 +58,28 @@
       <version>${platform.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-notifications-filters-api</artifactId>
-      <version>${platform.version}</version>
+      <groupId>org.xwiki.commons</groupId>
+      <artifactId>xwiki-commons-tool-test-component</artifactId>
+      <version>${commons.version}</version>
+      <scope>test</scope>
     </dependency>
-    <!-- Needed for the application trial. -->
     <dependency>
-      <groupId>com.xwiki.licensing</groupId>
-      <artifactId>application-licensing-licensor-api</artifactId>
-      <version>${licensing.version}</version>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-test-page</artifactId>
+      <version>${platform.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.rendering</groupId>
+      <artifactId>xwiki-rendering-macro-message</artifactId>
+      <version>${rendering.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.contrib.confluence</groupId>
+      <artifactId>confluence-resource-reference-type-parsers</artifactId>
+      <version>${confluence.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>

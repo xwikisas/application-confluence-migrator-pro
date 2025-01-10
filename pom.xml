@@ -55,6 +55,7 @@
     <module>application-confluence-migrator-pro-default</module>
     <module>application-confluence-migrator-pro-resolvers</module>
     <module>application-confluence-migrator-pro-ui</module>
+    <module>application-confluence-migrator-pro-reference-fixer</module>
     <module>application-confluence-migrator-pro-xip</module>
   </modules>
   <build>

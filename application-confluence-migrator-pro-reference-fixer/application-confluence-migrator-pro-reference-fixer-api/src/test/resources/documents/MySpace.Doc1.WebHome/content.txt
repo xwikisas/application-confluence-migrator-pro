@@ -1,0 +1,69 @@
+Confluence reference in a simple paragraph: [[confluencePage:id:42]]
+
+Broken link in a simple paragraph: [[doc:MySpace.My Answer]], [[attach:MySpace.My Answer@image.png]] [[attach:MySpace.My Other Answer@image.png]] [[attach:MySpace.My Wrong Answer@image.png]]
+
+Short links in a single paragraph: [[http://base.url/x/2EkGOQ]], [[http://base2.url/x/2EkGOQ]], [[http://notbase.url/x/2EkGOQ]], [[http://base.url/x/badlink]]
+
+Image with a confluence ref attachment:
+
+[[image:confluenceAttach:id:42@image.png]]
+
+Images with a broken link attachment:
+
+[[image:attach:MySpace.My Answer@image.png]]
+
+[[image:attach:MySpace.My Other Answer@image.png]]
+
+Include outside a macro: {{include reference="confluencePage:id:42"/}}
+
+Empty include: {{include reference=""/}}
+
+Unresolved include: {{include reference="confluencePage:id:43"/}}
+
+[[Link to a regular document>>Sandbox.WebHome]]
+
+{{info}}
+
+Let's nest macros.
+
+{{warning}}
+
+Confluence reference in a paragraph in a nested macro: [[confluencePage:id:42]]
+
+Broken link in a paragraph in a nested macro: [[doc:MySpace.My Answer]]
+
+Display inside a macro:
+
+{{display reference="confluencePage:id:42"/}}
+
+Short links in a single paragraph: [[http://base.url/x/2EkGOQ]]
+
+[[image:confluenceAttach:id:42@image.png]]
+
+Image in a link:
+
+[[~[~[image:confluenceAttach:id:42@image.png~]~]>>confluencePage:id:42]]
+
+[[~[~[image:attach:MySpace.My Answer@image.png~]~]>>confluencePage:id:42]]
+
+Successful image in a failing link:
+
+[[~[~[image:confluenceAttach:id:42@image.png~]~]>>confluencePage:id:43]]
+
+[[~[~[image:attach:MySpace.My Answer@image.png~]~]>>confluencePage:id:43]]
+
+Failing image in a successful link:
+
+[[~[~[image:confluenceAttach:id:43@image.png~]~]>>confluencePage:id:42]]
+
+[[~[~[image:attach:MySpace.My Wrong Answer@image.png~]~]>>confluencePage:id:42]]
+
+Link to a found broken blog post link: [[xwiki:MyBlogSpace.Blog.Hello world.WebHome]]
+
+Link to a not found broken blog post link: [[xwiki:MyBlogSpace.Blog.Not Found.WebHome]]
+
+Link to something that looks like a broken blog post like but points to an existing document: [[doc:xwiki:MyBlogSpace.Blog.Actually a regular doc.WebHome]]
+
+{{/warning}}
+
+{{/info}}
