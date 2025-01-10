@@ -19,7 +19,6 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
-
 <xwikidoc version="1.5" reference="ConfluenceMigratorPro.WebHome" locale="">
   <web>ConfluenceMigratorPro</web>
   <name>WebHome</name>
@@ -191,6 +190,12 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
   limit="10"
   properties="name,occurrences,pages,supported"
   sort='occurrences:desc'}}$jsontool.serialize($liveDataConfig){{/liveData}}
+
+{{html}}
+#displaySubtitle('cube', 'Broken links and missing Confluence reference', '', {})
+{{/html}}
+
+[[Manage broken links and missing Confluence references&gt;&gt;ConfluenceMigratorPro.ReferenceFixer.WebHome||class="btn btn-primary"]]
 
 {{html}}
 #displaySubtitle('cube', 'Link Mapping State', '', {})

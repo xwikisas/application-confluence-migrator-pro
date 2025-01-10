@@ -247,7 +247,6 @@ public class ConfluenceMigrationScriptService implements ScriptService
      */
     public Map<String, Map<String, String>> getMutablePrefilledConfiguration()
     {
-
         Map<String, Map<String, String>> prefilledValues = new HashMap<>(2);
         prefilledValues.put("input", new HashMap<>(PREFILLED_INPUT_PARAMETERS));
         prefilledValues.put("output", new HashMap<>(PREFILLED_OUTPUT_PARAMETERS));
