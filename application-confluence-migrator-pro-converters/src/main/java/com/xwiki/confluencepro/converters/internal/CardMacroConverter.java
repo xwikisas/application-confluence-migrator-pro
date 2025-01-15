@@ -56,4 +56,10 @@ public class CardMacroConverter extends AbstractMacroConverter
         }
         return super.toXWikiParameterName(confluenceParameterName, id, confluenceParameters, confluenceContent);
     }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.NO;
+    }
 }

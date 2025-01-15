@@ -19,40 +19,29 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
-import java.util.Map;
-
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.util.Map;
+
 /**
- * Converter used for deck macro.
- *
+ * Test block macro converter for Deck macro to ensure that the deck macro is correctly converted to not inline macro.
+ * @since 1.29.0
  * @version $Id$
- * @since 1.27.0
  */
 @Component
 @Singleton
-@Named("deck")
-public class DeckMacroConverter extends AbstractMacroConverter
+@Named(DeckContainerMacroTestMacroConverter.DECK_CONTAINER)
+public class DeckContainerMacroTestMacroConverter extends AbstractMacroConverter
 {
-    @Override
-    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
-        boolean inline)
-    {
-        return "tab-group";
-    }
+    static final String DECK_CONTAINER = "deck-container";
 
     @Override
-    protected String toXWikiParameterName(String confluenceParameterName, String id,
-        Map<String, String> confluenceParameters, String confluenceContent)
+    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent, boolean inline)
     {
-        if ("class".equals(confluenceParameterName)) {
-            return "cssClass";
-        }
-        return super.toXWikiParameterName(confluenceParameterName, id, confluenceParameters, confluenceContent);
+        return DECK_CONTAINER;
     }
 
     @Override
@@ -61,4 +50,3 @@ public class DeckMacroConverter extends AbstractMacroConverter
         return InlineSupport.NO;
     }
 }
-
