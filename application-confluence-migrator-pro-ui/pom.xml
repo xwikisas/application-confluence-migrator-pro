@@ -53,6 +53,7 @@
     <dependency>
       <groupId>com.xwiki.confluencepro</groupId>
       <artifactId>application-confluence-migrator-pro-reference-fixer-ui</artifactId>
+      <type>xar</type>
       <version>${project.version}</version>
     </dependency>
     <dependency>

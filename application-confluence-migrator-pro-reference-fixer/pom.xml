@@ -29,6 +29,7 @@
   </parent>
   <packaging>pom</packaging>
   <artifactId>application-confluence-migrator-pro-reference-fixer-parent</artifactId>
+  <name>Confluence Migrator Pro - Reference Fixer Parent POM</name>
   <modules>
     <module>application-confluence-migrator-pro-reference-fixer-api</module>
     <module>application-confluence-migrator-pro-reference-fixer-ui</module>

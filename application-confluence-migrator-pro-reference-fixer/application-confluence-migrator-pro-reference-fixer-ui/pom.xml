@@ -28,7 +28,7 @@
     <version>1.28.4-SNAPSHOT</version>
   </parent>
   <artifactId>application-confluence-migrator-pro-reference-fixer-ui</artifactId>
-  <name>Confluence Migrator Pro - Reference Fixer UI</name>
+  <name>Confluence Migrator Pro - Reference Fixer</name>
   <packaging>xar</packaging>
   <description>A tool to help you fix broken links and references following a Confluence migration</description>
   <dependencies>
