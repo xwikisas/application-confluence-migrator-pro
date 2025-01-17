@@ -39,10 +39,35 @@
   <content>{{include reference="XWiki.LiveTableResultsMacros" /}}
 
 {{velocity wiki="false"}}
+#**
+ * Builds the JSON response to a live table data call.
+ *
+ * @param $map stores the JSON in memory so that it can be adjusted before serialization
+ *#
+#macro(gridresultwithfilter_buildJSON_custom $className $collist $filterfrom $filterwhere $filterParams $map)
+  #gridresultwithfilter_buildQuery($className $collist $filterfrom $filterwhere $filterParams)
+  #if("$!request.sql" == '1')
+    #set($discard = $map.put('sql', $sql))
+    #set($discard = $map.put('params', $sqlParams))
+  #end
+  #set($discard = $map.put('reqNo', $numbertool.toNumber($request.reqNo).intValue()))
+  ## Customization: get rid of the tag cloud
+  ## #gridresult_buildTagCloudJSON($map)
+  #gridresult_buildRowsJSON($map)
+#end
+#**
+ * Builds the JSON response to a live table data call.
+ *
+ * @param $map stores the JSON in memory so that it can be adjusted before serialization
+ *#
+#macro(gridresult_buildJSON_custom $className $collist $map)
+  #gridresultwithfilter_buildJSON_custom($className $collist '' '' {} $map)
+#end
+##
 #if($xcontext.action == 'get' &amp;&amp; "$!{request.outputSyntax}" == 'plain')
   $response.setContentType('application/json')
   #set($map = {})
-  #gridresult_buildJSON("$!request.className" $request.collist.split(',') $map)
+  #gridresult_buildJSON_custom("$!request.className" $request.collist.split(',') $map)
   ## Add the status of the executed/executing job.
   #macro (migrationStatus $icon $message)
     &lt;div class="migrationState"&gt;
