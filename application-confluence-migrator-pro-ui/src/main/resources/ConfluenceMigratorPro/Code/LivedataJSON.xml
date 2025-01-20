@@ -67,7 +67,7 @@
 #if($xcontext.action == 'get' &amp;&amp; "$!{request.outputSyntax}" == 'plain')
   $response.setContentType('application/json')
   #set($map = {})
-  #gridresult_buildJSON_custom("$!request.className" $request.collist.split(',') $map)
+  #gridresult_buildJSON_custom("$!request.classname" $request.collist.split(',') $map)
   ## Add the status of the executed/executing job.
   #macro (migrationStatus $icon $message)
     &lt;div class="migrationState"&gt;
