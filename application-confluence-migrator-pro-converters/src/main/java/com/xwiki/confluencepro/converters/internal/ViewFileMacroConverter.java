@@ -32,9 +32,9 @@ import java.util.Map;
  * @version $Id$
  * @since 1.21.0
  */
-@Component (hints = {ViewFileConverter.VIEW_FILE, "viewfile", "viewdoc", "viewppt", "viewxls", "viewpdf"})
+@Component (hints = {ViewFileMacroConverter.VIEW_FILE, "viewfile", "viewdoc", "viewppt", "viewxls", "viewpdf"})
 @Singleton
-public class ViewFileConverter extends AbstractMacroConverter
+public class ViewFileMacroConverter extends AbstractMacroConverter
 {
     static final String VIEW_FILE = "view-file";
 

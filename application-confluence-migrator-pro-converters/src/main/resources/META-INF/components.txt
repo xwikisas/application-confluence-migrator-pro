@@ -11,7 +11,7 @@ com.xwiki.confluencepro.converters.internal.TaskListMacroConverter
 com.xwiki.confluencepro.converters.internal.TasksReportMacroConverter
 com.xwiki.confluencepro.converters.internal.ProfileMacroConverter
 com.xwiki.confluencepro.converters.internal.ShowIfHideIfMacroConverter
-com.xwiki.confluencepro.converters.internal.ViewFileConverter
+com.xwiki.confluencepro.converters.internal.ViewFileMacroConverter
 com.xwiki.confluencepro.converters.internal.UserListerMacroConverter
 com.xwiki.confluencepro.converters.internal.ListLabelsMacroConverter
 com.xwiki.confluencepro.converters.internal.RoundRectMacroConvertor
