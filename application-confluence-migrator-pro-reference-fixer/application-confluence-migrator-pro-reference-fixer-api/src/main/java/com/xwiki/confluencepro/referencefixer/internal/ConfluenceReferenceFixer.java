@@ -308,7 +308,8 @@ public class ConfluenceReferenceFixer
         EntityNameValidation nameStrategy = entityNameValidationManagerProvider.get().getEntityReferenceNameStrategy();
         List<String> spaces = migrationDoc.getListValue("spaces");
         if (CollectionUtils.isEmpty(spaces)) {
-            logger.warn("Migration document [{}]: Could not find any space to handle", migrationDoc);
+            logger.warn("Migration document [{}]: Could not find any space to handle",
+                migrationDoc.getDocumentReference());
         }
 
         for (String space : spaces) {
