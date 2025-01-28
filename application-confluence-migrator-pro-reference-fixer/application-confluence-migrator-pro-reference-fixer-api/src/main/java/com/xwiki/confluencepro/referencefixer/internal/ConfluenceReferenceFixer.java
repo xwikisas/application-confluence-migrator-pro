@@ -43,6 +43,7 @@ import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.confluence.resolvers.ConfluencePageTitleResolver;
 import org.xwiki.contrib.confluence.resolvers.ConfluenceResolverException;
 import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceKeyResolver;
+import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceResolver;
 import org.xwiki.contrib.confluence.resolvers.resource.ConfluenceResourceReferenceResolver;
 import org.xwiki.contrib.confluence.resolvers.resource.ConfluenceResourceReferenceType;
 import org.xwiki.contrib.confluence.urlmapping.ConfluenceURLMapper;
@@ -77,6 +78,7 @@ import org.xwiki.rendering.parser.ResourceReferenceTypeParser;
 import org.xwiki.rendering.renderer.BlockRenderer;
 import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
 import org.xwiki.rendering.renderer.printer.WikiPrinter;
+import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.resource.entity.EntityResourceReference;
 import org.xwiki.search.solr.SolrUtils;
 
@@ -144,6 +146,7 @@ public class ConfluenceReferenceFixer
         "locationsearch",
         "children",
         "confluence_children");
+    private static final String SELF = "@self";
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -156,6 +159,9 @@ public class ConfluenceReferenceFixer
 
     @Inject
     private ConfluenceSpaceKeyResolver spaceKeyResolver;
+
+    @Inject
+    private ConfluenceSpaceResolver spaceResolver;
 
     @Inject
     private EntityReferenceResolver<String> resolver;
@@ -202,8 +208,8 @@ public class ConfluenceReferenceFixer
     {
         logConfluenceReferenceParserPresence();
         Stats s = new Stats();
-        int steps = (migrationReferences == null ? 0 : migrationReferences.size())
-            + (spaceReferences == null ? 0 : spaceReferences.size());
+        int steps = ((migrationReferences == null ? 0 : migrationReferences.size())
+                + (spaceReferences == null ? 0 : spaceReferences.size()));
         if (steps == 0) {
             logger.warn("There is nothing to fix");
             return s;
@@ -294,7 +300,7 @@ public class ConfluenceReferenceFixer
     private void fixDocumentsInSpace(Stats s, boolean updateInPlace, XWikiDocument migrationDoc,
         String[] baseURLs, Map<String, Object> props, boolean dryRun)
     {
-        EntityReference root = null;
+        EntityReference root;
         boolean guess;
         if (props == null) {
             guess = true;
@@ -369,7 +375,9 @@ public class ConfluenceReferenceFixer
         List<String> docFullNames;
         try {
             docFullNames = queryManager
-                .createQuery("select doc.fullName where doc.fullName like concat(:space, '.%')", Query.HQL)
+                .createQuery(
+                    "select doc.fullName from Document doc where doc.fullName like concat(:space, '.%')",
+                    Query.XWQL)
                 .setWiki(wiki)
                 .bindValue(SPACE, spaceRef)
                 .execute();
@@ -379,7 +387,9 @@ public class ConfluenceReferenceFixer
         }
 
         String[] baseURLsNotNull = baseURLs == null ? new String[0] : baseURLs;
-        fixDocuments(s, docFullNames, baseURLsNotNull, updateInPlace, brokenRefType, dryRun);
+        List<String> docs =
+            docFullNames.stream().map(fullName -> wiki + ':' + fullName).collect(Collectors.toList());
+        fixDocumentsInternal(s, docs, baseURLsNotNull, updateInPlace, brokenRefType, dryRun);
     }
 
     private EntityReference computeSpaceReference(String space, EntityNameValidation nameStrategy, boolean guess,
@@ -449,7 +459,7 @@ public class ConfluenceReferenceFixer
             });
         }).map(Map.Entry::getKey).collect(Collectors.toList());
 
-        fixDocuments(s, docRefs, baseURLs, updateInPlace, BrokenRefType.CONFLUENCE_REFS, dryRun);
+        fixDocumentsInternal(s, docRefs, baseURLs, updateInPlace, BrokenRefType.CONFLUENCE_REFS, dryRun);
         return true;
     }
 
@@ -479,7 +489,7 @@ public class ConfluenceReferenceFixer
         }
 
         Set<String> docRefs = brokenLinksPages.keySet();
-        fixDocuments(s, docRefs, baseURLs, updateInPlace, BrokenRefType.BROKEN_LINKS, dryRun);
+        fixDocumentsInternal(s, docRefs, baseURLs, updateInPlace, BrokenRefType.BROKEN_LINKS, dryRun);
         return true;
     }
 
@@ -520,7 +530,7 @@ public class ConfluenceReferenceFixer
         return new String[0];
     }
 
-    private void fixDocuments(Stats s, Collection<String> docRefs, String[] baseURLs, boolean updateInPlace,
+    private void fixDocumentsInternal(Stats s, Collection<String> docRefs, String[] baseURLs, boolean updateInPlace,
         BrokenRefType brokenRefType, boolean dryRun)
     {
         if (CollectionUtils.isEmpty(docRefs)) {
@@ -600,42 +610,61 @@ public class ConfluenceReferenceFixer
     private void maybeUpdateDocument(Stats s, XWikiDocument migratedDoc, XDOM xdom, String oldContent,
         boolean updateInPlace, boolean updated, boolean dryRun)
     {
+        String newContent = migratedDoc.getContent();
+        Syntax origSyntax = migratedDoc.getSyntax();
+        boolean upd = updated;
         DocumentReference migratedDocRef = migratedDoc.getDocumentReference();
         try {
+            String syntax = origSyntax.toIdString();
+            if (syntax.contains(CONFLUENCE)) {
+                logger.warn("Document [{}] uses syntax [{}] and will be converted to [{}]. "
+                    + "The report about references being updated at parse time would be inaccurate",
+                    migratedDocRef, syntax, Syntax.XWIKI_2_1);
+                migratedDoc.setSyntax(Syntax.XWIKI_2_1);
+                upd = true;
+            }
             migratedDoc.setContent(xdom);
         } catch (XWikiException e) {
             logger.error("Failed to update the document XDOM [{}]", migratedDocRef, e);
+            migratedDoc.setSyntax(origSyntax);
             s.incFailedDocs();
             return;
         }
 
-        if (hasXDOMChangedAtParseTime(s, migratedDocRef, oldContent, migratedDoc.getContent()) || updated) {
+        if (hasXDOMChangedAtParseTime(s, migratedDocRef, oldContent, newContent) || upd) {
             if (dryRun) {
                 migratedDoc.setContent(oldContent);
+                migratedDoc.setSyntax(origSyntax);
                 logger.info("Would update document [{}]", migratedDocRef);
                 s.incSuccessfulDocs();
                 return;
             }
-            try {
-                if (updateInPlace) {
-                    logger.info(UPDATED_MARKER, "Updating document [{}] without adding a revision",
-                        migratedDocRef);
-                    migratedDoc.setMetaDataDirty(false);
-                    migratedDoc.setContentDirty(false);
-                } else {
-                    logger.info(UPDATED_MARKER, "Updating document [{}], adding a new revision",
-                        migratedDocRef);
-                }
-                XWikiContext context = contextProvider.get();
-                context.getWiki().saveDocument(migratedDoc, "Fix broken links", context);
-                s.incSuccessfulDocs();
-            } catch (XWikiException e) {
-                logger.error("Failed to save document [{}]", migratedDocRef, e);
-                s.incFailedDocs();
-            }
+            updateDocument(s, migratedDoc, updateInPlace, migratedDocRef);
         } else {
             logger.info(UNCHANGED_MARKER, "Document [{}] is left unchanged", migratedDocRef);
             s.incUnchangedDocs();
+        }
+    }
+
+    private void updateDocument(Stats s, XWikiDocument migratedDoc, boolean updateInPlace,
+        DocumentReference migratedDocRef)
+    {
+        try {
+            if (updateInPlace) {
+                logger.info(UPDATED_MARKER, "Updating document [{}] without adding a revision",
+                    migratedDocRef);
+                migratedDoc.setMetaDataDirty(false);
+                migratedDoc.setContentDirty(false);
+            } else {
+                logger.info(UPDATED_MARKER, "Updating document [{}], adding a new revision",
+                    migratedDocRef);
+            }
+            XWikiContext context = contextProvider.get();
+            context.getWiki().saveDocument(migratedDoc, "Fix broken links", context);
+            s.incSuccessfulDocs();
+        } catch (XWikiException e) {
+            logger.error("Failed to save document [{}]", migratedDocRef, e);
+            s.incFailedDocs();
         }
     }
 
@@ -741,18 +770,24 @@ public class ConfluenceReferenceFixer
     private ResourceReference convertConvertURLAsResourceRef(String url, EntityReference ref,
         ConfluenceURLMapper mapper, Matcher m)
     {
-        URLMappingResult result = mapper.convert(new DefaultURLMappingMatch(url, "get", m, null));
-        if (result != null) {
-            org.xwiki.resource.ResourceReference resourceReference = result.getResourceReference();
-            if (resourceReference instanceof EntityResourceReference) {
-                EntityResourceReference rr = (EntityResourceReference) resourceReference;
-                String serializedEntity = serializer.serialize(rr.getEntityReference(), ref);
-                String type = rr.getEntityReference().getType().getLowerCase();
-                if (DOCUMENT.equals(type)) {
-                    type = "doc";
-                }
-                return new ResourceReference(serializedEntity, new ResourceType(type));
+        Object resultObj = mapper.convert(new DefaultURLMappingMatch(url, "get", m, null));
+        org.xwiki.resource.ResourceReference resourceReference = null;
+        if (resultObj != null) {
+            // The following condition is supposed to be always true, but the else branch is taken in Groovy
+            if (resultObj instanceof URLMappingResult) {
+                resourceReference = ((URLMappingResult) resultObj).getResourceReference();
+            } else if (resultObj instanceof org.xwiki.resource.ResourceReference) {
+                resourceReference = (org.xwiki.resource.ResourceReference) resultObj;
             }
+        }
+        if (resourceReference instanceof EntityResourceReference) {
+            EntityResourceReference rr = (EntityResourceReference) resourceReference;
+            String serializedEntity = serializer.serialize(rr.getEntityReference(), ref);
+            String type = rr.getEntityReference().getType().getLowerCase();
+            if (DOCUMENT.equals(type)) {
+                type = "doc";
+            }
+            return new ResourceReference(serializedEntity, new ResourceType(type));
         }
         return null;
     }
@@ -897,6 +932,19 @@ public class ConfluenceReferenceFixer
             return maybeConvertURLAsResourceRef(s, reference.getReference(), migratedDocRef, baseURLs);
         }
 
+        String scheme = type.getScheme();
+        if (scheme.startsWith(CONFLUENCE)) {
+            for (ConfluenceResourceReferenceType confluenceType : ConfluenceResourceReferenceType.values()) {
+                String candidateType = confluenceType.getId();
+                if (candidateType.equals(scheme)) {
+                    return maybeConvertConfluenceReference(s, reference.getReference(), migratedDocRef, confluenceType);
+                }
+            }
+
+            logger.warn("Docuemnt [{}]: unrecognized Confluence resource reference type [{}] for reference [{}]",
+                migratedDocRef, scheme, reference);
+        }
+
         return maybeConvertReference(s, reference.getReference(), migratedDocRef, baseURLs, brokenRefType);
     }
 
@@ -938,11 +986,7 @@ public class ConfluenceReferenceFixer
             return res;
         }
 
-        res = maybeFixBrokenBlogLink(s, reference, migratedDocRef);
-        if (res != null) {
-            return res;
-        }
-        return null;
+        return maybeFixBrokenBlogLink(s, reference, migratedDocRef);
     }
 
 
@@ -989,16 +1033,31 @@ public class ConfluenceReferenceFixer
             return null;
         }
 
+        String typelessReference = reference.substring(type.getId().length() + 1);
+        return maybeConvertConfluenceReference(s, typelessReference, migratedDocRef, type);
+    }
+
+    private ResourceReference maybeConvertConfluenceReference(Stats s, String reference, EntityReference migratedDocRef,
+        ConfluenceResourceReferenceType type)
+    {
+        String ref = reference;
         try {
-            String typelessReference = reference.substring(type.getId().length() + 1);
-            ResourceReference r = confluenceResourceReferenceResolver.resolve(type, typelessReference);
+            if (ref.startsWith("page:@self") || ref.startsWith(SELF)) {
+                String space = spaceResolver.getSpaceKey(migratedDocRef);
+                if (StringUtils.isNotEmpty(space)) {
+                    ref = StringUtils.replaceOnce(ref, SELF, space);
+                }
+            }
+            ResourceReference r = confluenceResourceReferenceResolver.resolve(type, ref);
             if (r == null) {
                 logger.warn(FAILED_REFERENCE_CONVERSION_MARKER,
-                    "Document [{}]: Failed to convert Confluence reference [{}]", migratedDocRef, reference);
+                    "Document [{}]: Failed to convert Confluence reference [{}:{}]",
+                    migratedDocRef, type.getId(), reference);
             } else {
                 s.incSuccessfulRefs();
                 logger.info(SUCCESSFUL_REFERENCE_CONVERSION_MARKER,
-                    "Document [{}]: Converting Confluence reference [{}] to [{}]", migratedDocRef, reference, r);
+                    "Document [{}]: Converting Confluence reference [{}:{}] to [{}]", migratedDocRef, type.getId(),
+                    reference, r);
                 return r;
             }
         } catch (ConfluenceResolverException e) {
@@ -1113,7 +1172,7 @@ public class ConfluenceReferenceFixer
         if (b instanceof LinkBlock) {
             return updateLinkBlockToFixRef(s, (LinkBlock) b, migratedDocRef, baseURLs, brokenRefType);
         }
-        
+
         if (b instanceof ImageBlock) {
             return updateImageBlockToFixRefs(s, (ImageBlock) b, migratedDocRef, baseURLs, brokenRefType);
         }

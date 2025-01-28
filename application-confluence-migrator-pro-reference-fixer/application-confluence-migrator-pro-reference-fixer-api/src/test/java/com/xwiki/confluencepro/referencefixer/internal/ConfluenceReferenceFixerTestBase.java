@@ -23,6 +23,8 @@ import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -162,6 +164,7 @@ class ConfluenceReferenceFixerTestBase
 
         Query hqlQuery = mock(Query.class);
         when(queryManager.createQuery(anyString(), eq("hql"))).thenReturn(hqlQuery);
+        when(queryManager.createQuery(anyString(), eq("xwql"))).thenReturn(hqlQuery);
         when(hqlQuery.setWiki(anyString())).thenReturn(hqlQuery);
         when(hqlQuery.bindValue(anyString(), anyString())).thenReturn(hqlQuery);
         when(hqlQuery.bindValue(eq("space"), anyString())).thenAnswer(i -> {
@@ -171,6 +174,7 @@ class ConfluenceReferenceFixerTestBase
             docRefsStr.set(docs.stream()
                 .map(d -> serializer.serialize(d.getDocumentReference()))
                 .filter(d -> d.startsWith("xwiki:" + i.getArgument(1)))
+                .map(d -> StringUtils.removeStart(d, "xwiki:"))
                 .collect(Collectors.toList()));
             return hqlQuery;
         });
