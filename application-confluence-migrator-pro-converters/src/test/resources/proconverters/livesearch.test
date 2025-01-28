@@ -47,7 +47,7 @@
 
 Format = none, space = Demo
 
-{{locationSearch reference="DEMO" width="100%" excerpt="true"/}}
+{{locationSearch reference="confluenceSpace:DEMO" width="100%" excerpt="true"/}}
 
 Format = space name
 

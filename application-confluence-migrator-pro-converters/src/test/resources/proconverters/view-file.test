@@ -43,7 +43,7 @@
               <string>content</string>
               <string>{{view-file att--filename="file.pptx" display="thumbnail" height="250"/}}
 
-{{view-file att--filename="file.pptx" display="full" height="250"/}}</string>
+{{view-file att--filename="file\@withat.pptx" display="full" height="250"/}}</string>
             </entry>
             <entry>
               <string>syntax</string>

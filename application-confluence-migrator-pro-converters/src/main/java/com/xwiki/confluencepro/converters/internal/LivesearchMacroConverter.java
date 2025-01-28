@@ -81,7 +81,7 @@ public class LivesearchMacroConverter extends AbstractMacroConverter
         Map<String, String> parameters = new HashMap<>();
 
         if (space != null && !space.isEmpty()) {
-            parameters.put("reference", converter.convertSpaceReference(space));
+            parameters.put("reference", space);
         }
 
         boolean excerpt = confluenceParameters.getOrDefault("additional", "").contains("none");

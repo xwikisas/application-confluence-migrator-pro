@@ -29,6 +29,7 @@ import org.xwiki.contrib.confluence.filter.input.ConfluenceXMLPackage;
 import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceInputFilterStream;
 import org.xwiki.contrib.confluence.resolvers.ConfluencePageIdResolver;
 import org.xwiki.contrib.confluence.resolvers.ConfluencePageTitleResolver;
+import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceKeyResolver;
 import org.xwiki.environment.Environment;
 import org.xwiki.filter.input.InputFilterStreamFactory;
 import org.xwiki.filter.test.integration.FilterTestSuite;
@@ -83,6 +84,7 @@ public class IntegrationTests
         when(validation.transform("pagetovalidate")).thenReturn("validatedpage");
         componentManager.registerMockComponent(ConfluencePageIdResolver.class);
         componentManager.registerMockComponent(ConfluencePageTitleResolver.class);
+        componentManager.registerMockComponent(ConfluenceSpaceKeyResolver.class);
 
         // Unregister all listeners since they are not needed for testing
         componentManager.registerMockComponent(ObservationManager.class);

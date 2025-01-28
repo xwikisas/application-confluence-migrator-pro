@@ -42,13 +42,13 @@
             </entry>
             <entry>
               <string>content</string>
-              <string>{{tagList spaces="TEOS" excludedTags="aa,aaa,aaaaa"/}}
+              <string>{{tagList spaces="confluenceSpace:TEOS" excludedTags="aa,aaa,aaaaa"/}}
 
 {{tagList spaces="MySpace" excludedTags="aaa"/}}
 
 
 
-{{tagList spaces="FOS"/}}
+{{tagList spaces="confluenceSpace:FOS"/}}
 
 
 
