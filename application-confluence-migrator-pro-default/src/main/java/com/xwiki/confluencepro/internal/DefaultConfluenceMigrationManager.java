@@ -312,6 +312,10 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         long revisionCount = 0;
         Collection<String> docs = new HashSet<>();
         for (LogEvent event : jobStatus.getLogTail()) {
+            if (event == null) {
+                logger.warn("Found a null event. This is unexpected.");
+                continue;
+            }
             switch (event.getLevel()) {
                 case ERROR:
                     updateErrors(event, skipped, collisions, currentPage);
