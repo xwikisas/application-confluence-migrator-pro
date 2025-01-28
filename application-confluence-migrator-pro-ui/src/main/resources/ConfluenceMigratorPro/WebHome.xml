@@ -48,7 +48,19 @@
 #else
 #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
 #if ($license.type == 'TRIAL')
-  {{warning}}$services.localization.render('confluencepro.extension.missingLicense', ['[[', "&gt;&gt;path:#getLicensesAdminSectionURL]]"]){{/warning}}
+  #if ($xwiki.exists($services.model.createDocumentReference($xcontext.mainWikiName, 'XWiki', 'ConfigurableClass')))
+  #set ($licenseHomeURL = $xwiki.getURL(
+    $services.model.createDocumentReference($xcontext.mainWikiName, 'XWiki', 'XWikiPreferences'),
+    'admin', 'editor=globaladmin&amp;section=Licenses'))
+  #else
+    ## Fall-back in case the Administration Application is not installed.
+    #set ($licenseHomeURL =
+      $xwiki.getURL($services.model.createDocumentReference($xcontext.mainWikiName, 'Licenses', 'WebHome')))
+  #end
+  #set ($label = $services.localization.render('confluencepro.extension.missingLicense.label', 'xwiki/2.1'))
+  #set ($translation = $services.localization.render('confluencepro.extension.missingLicense', 'xwiki/2.1', ['ADMIN_URL']))
+  #set ($licensePageLink = "[[${label}&gt;&gt;path:${licenseHomeURL}]]")
+  {{warning}}$translation.replace('ADMIN_URL', $licensePageLink){{/warning}}
 #end
 ## Prerequisites Section ##
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))

@@ -39,7 +39,8 @@
   <content>confluencepro.panel.title=Confluence Migrator Pro
 confluencepro.extension.name=Confluence Migrator Pro
 
-confluencepro.extension.missingLicense=The application is running in trial mode. In order to unlock the full capabilities please obtain a license from the {0}administration section{1}.
+confluencepro.extension.missingLicense=The application is running in trial mode. In order to unlock the full capabilities please obtain a license from the {0}.
+confluencepro.extension.missingLicense.label=administration section
 
 confluencepro.zippicker.title=Select a confluence package to start the migration
 confluencepro.zippicker.placeholder=Pick a confluence export package...
