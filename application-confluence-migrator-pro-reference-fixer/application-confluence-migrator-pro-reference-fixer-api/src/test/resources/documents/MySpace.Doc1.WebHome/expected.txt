@@ -4,6 +4,8 @@ Broken link in a simple paragraph: [[doc:Migrated.MySpace.My Answer.WebHome]], [
 
 Short links in a single paragraph: [[doc:Ok2EkGOQ.WebHome]], [[doc:Ok2EkGOQ.WebHome]], [[http://notbase.url/x/2EkGOQ]], [[http://base.url/x/badlink]]
 
+Link with anchor: [[doc:Ok2EkGOQ.WebHome||anchor="anchor"]]
+
 Image with a confluence ref attachment:
 
 [[image:attach:xwiki:MyAnswer.WebHome@image.png]]

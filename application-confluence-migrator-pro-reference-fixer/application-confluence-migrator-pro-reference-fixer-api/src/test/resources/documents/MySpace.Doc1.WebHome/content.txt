@@ -4,6 +4,8 @@ Broken link in a simple paragraph: [[doc:MySpace.My Answer]], [[attach:MySpace.M
 
 Short links in a single paragraph: [[http://base.url/x/2EkGOQ]], [[http://base2.url/x/2EkGOQ]], [[http://notbase.url/x/2EkGOQ]], [[http://base.url/x/badlink]]
 
+Link with anchor: [[http://base.url/x/2EkGOQ#anchor]]
+
 Image with a confluence ref attachment:
 
 [[image:confluenceAttach:id:42@image.png]]

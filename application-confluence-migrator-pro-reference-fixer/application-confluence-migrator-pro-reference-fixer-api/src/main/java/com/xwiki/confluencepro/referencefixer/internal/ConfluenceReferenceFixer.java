@@ -69,6 +69,7 @@ import org.xwiki.rendering.block.MacroBlock;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.block.match.ClassBlockMatcher;
 import org.xwiki.rendering.block.match.OrBlockMatcher;
+import org.xwiki.rendering.listener.reference.DocumentResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceType;
 import org.xwiki.rendering.macro.Macro;
@@ -707,19 +708,7 @@ public class ConfluenceReferenceFixer
                     continue;
                 }
 
-                String url = StringUtils.removeStart(maybeURL, baseURL).replaceAll("^/+", "");
-
-                ResourceReference serializedEntity = maybeConvertURLAsResourceRef(url, migratedDocRef, mappers);
-                if (serializedEntity == null) {
-                    logger.warn(FAILED_REFERENCE_CONVERSION_MARKER,
-                        "Document [{}]: Failed to convert Confluence URL [{}]", migratedDocRef, maybeURL);
-                    s.incFailedRefs();
-                    return null;
-                }
-
-                logger.info("Document [{}]: Converting URL [{}] to [{}]", migratedDocRef, maybeURL, serializedEntity);
-                s.incSuccessfulRefs();
-                return serializedEntity;
+                return maybeConvertURLAsResourceRef(s, maybeURL, migratedDocRef, baseURL, mappers);
             }
         } catch (Exception e) {
             logger.error(FAILED_REFERENCE_CONVERSION_MARKER,
@@ -728,6 +717,34 @@ public class ConfluenceReferenceFixer
         }
 
         return null;
+    }
+
+    private ResourceReference maybeConvertURLAsResourceRef(Stats s, String maybeURL, EntityReference migratedDocRef,
+        String baseURL, List<ConfluenceURLMapper> mappers)
+    {
+        String url = StringUtils.removeStart(maybeURL, baseURL).replaceAll("^/+", "");
+        String anchor = null;
+        int anchorPos = url.indexOf('#');
+        if (anchorPos != -1) {
+            anchor = url.substring(anchorPos + 1);
+            url = url.substring(0, anchorPos);
+        }
+
+        ResourceReference serializedEntity = maybeConvertURLAsResourceRef(url, migratedDocRef, mappers);
+        if (serializedEntity == null) {
+            logger.warn(FAILED_REFERENCE_CONVERSION_MARKER,
+                "Document [{}]: Failed to convert Confluence URL [{}]", migratedDocRef, maybeURL);
+            s.incFailedRefs();
+            return null;
+        }
+
+        if (anchor != null && (serializedEntity instanceof DocumentResourceReference)) {
+            ((DocumentResourceReference) serializedEntity).setAnchor(anchor);
+        }
+
+        logger.info("Document [{}]: Converting URL [{}] to [{}]", migratedDocRef, maybeURL, serializedEntity);
+        s.incSuccessfulRefs();
+        return serializedEntity;
     }
 
     private List<ConfluenceURLMapper> getConfluenceURLMappers(Stats s, String maybeURL, EntityReference migratedDocRef)
@@ -785,7 +802,7 @@ public class ConfluenceReferenceFixer
             String serializedEntity = serializer.serialize(rr.getEntityReference(), ref);
             String type = rr.getEntityReference().getType().getLowerCase();
             if (DOCUMENT.equals(type)) {
-                type = "doc";
+                return new DocumentResourceReference(serializedEntity);
             }
             return new ResourceReference(serializedEntity, new ResourceType(type));
         }
