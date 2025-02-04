@@ -58,10 +58,6 @@ Failing image in a successful link:
 
 [[~[~[image:attach:MySpace.My Wrong Answer@image.png~]~]>>doc:xwiki:MyAnswer.WebHome]]
 
-Link to a found broken blog post link: [[doc:xwiki:MyBlogSpace.Blog.Hello world]]
-
-Link to a not found broken blog post link: [[xwiki:MyBlogSpace.Blog.Not Found.WebHome]]
-
 Link to something that looks like a broken blog post like but points to an existing document: [[doc:xwiki:MyBlogSpace.Blog.Actually a regular doc.WebHome]]
 {{/warning}}
 {{/info}}

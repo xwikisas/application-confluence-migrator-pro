@@ -291,10 +291,8 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
         );
 
         String content = "[[url:http://BASE.URL/x/2EkGOQ]][[MySpace.My Answer]][[confluencePage:id:42]]"
-            + "{{display reference=\"xwiki:MyBlogSpace.Blog.Hello world.WebHome\"/}}"
             + "{{children reference=\"document:MySpace.My Answer\"/}}";
         String expected = "[[doc:Ok2EkGOQ.WebHome]][[doc:Migrated.MySpace.My Answer.WebHome]][[confluencePage:id:42]]"
-            + "{{display reference=\"xwiki:MyBlogSpace.Blog.Hello world\"/}}"
             + "{{children reference=\"document:Migrated.MySpace.My Answer.WebHome\"/}}";
 
         for (String testDoc : docsWithReferenceIssues) {

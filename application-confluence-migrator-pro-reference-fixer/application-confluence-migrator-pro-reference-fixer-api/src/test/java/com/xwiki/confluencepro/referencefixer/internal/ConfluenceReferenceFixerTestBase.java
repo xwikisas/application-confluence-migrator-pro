@@ -25,9 +25,7 @@ import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
 import org.junit.jupiter.api.BeforeEach;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.util.DefaultParameterizedType;
@@ -60,9 +58,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -81,7 +77,6 @@ class ConfluenceReferenceFixerTestBase
             new EntityReference("ConfluenceMigratorPro", EntityType.SPACE, WIKI_REFERENCE)));
     static final EntityReference MY_SPACE = new EntityReference(MY_SPACE_STR, EntityType.SPACE, WIKI_REFERENCE);
     static final String WEB_HOME = "WebHome";
-    static final String FULLNAME = "fullname";
     static final String MIGRATED = "Migrated";
     static final String CONFLUENCE_REF_WARNINGS_JSON = "confluenceRefWarnings.json";
 
@@ -138,17 +133,25 @@ class ConfluenceReferenceFixerTestBase
             new EntityReference(WEB_HOME, EntityType.DOCUMENT,
                 new EntityReference("ResolvedTitle", EntityType.SPACE, MY_SPACE))
         );
+        when(confluencePageTitleResolver.getDocumentByTitle(MY_SPACE_STR, "My Answer")).thenReturn(
+            new EntityReference(WEB_HOME, EntityType.DOCUMENT,
+                new EntityReference("My Answer", EntityType.SPACE, MY_SPACE.replaceParent(WIKI_REFERENCE,
+                    new EntityReference(MIGRATED, EntityType.SPACE, WIKI_REFERENCE))))
+        );
+        when(confluencePageTitleResolver.getDocumentByTitle(MY_SPACE_STR, "My Other Answer")).thenReturn(
+            new EntityReference(WEB_HOME, EntityType.DOCUMENT,
+                new EntityReference("My Other Answer", EntityType.SPACE, MY_SPACE.replaceParent(WIKI_REFERENCE,
+                    new EntityReference(MIGRATED, EntityType.SPACE, WIKI_REFERENCE))))
+        );
         when(confluenceSpaceKeyResolver.getSpaceByKey(MY_SPACE_STR)).thenReturn(MY_SPACE);
-        when(solrEntityReferenceResolver.resolve(any(), eq(EntityType.DOCUMENT))).thenAnswer(i ->
-        {
-            EntityReferenceResolver<String> resolver = componentManager.getInstance(
-                new DefaultParameterizedType(null, EntityReferenceResolver.class, String.class));
-            SolrDocument doc = i.getArgument(0);
-            return resolver.resolve((String) doc.get(FULLNAME), EntityType.DOCUMENT);
-        });
+        when(confluenceSpaceKeyResolver.getSpaceByKey("SpaceA")).thenReturn(new EntityReference("SpaceA",
+            EntityType.SPACE, WIKI_REFERENCE));
+        when(confluenceSpaceKeyResolver.getSpaceByKey("SpaceB")).thenReturn(new EntityReference("SpaceB",
+            EntityType.SPACE, WIKI_REFERENCE));
     }
+
     @BeforeEach
-    void beforeEach() throws ComponentLookupException, XWikiException, QueryException
+    void beforeEach() throws ComponentLookupException, QueryException
     {
         Provider<XWikiContext> contextProvider = componentManager.getInstance(XWikiContext.TYPE_PROVIDER);
         context = contextProvider.get();
@@ -157,11 +160,6 @@ class ConfluenceReferenceFixerTestBase
         docs = new ArrayList<>();
 
         AtomicReference<List<Object>> docRefsStr = new AtomicReference<>();
-        AtomicReference<SolrDocumentList> solrDocs = new AtomicReference<>();
-
-        QueryResponse solrQueryResponse = mock(QueryResponse.class);
-        when(solrQueryResponse.getResults()).thenAnswer(i -> solrDocs.get());
-
         Query hqlQuery = mock(Query.class);
         when(queryManager.createQuery(anyString(), eq("hql"))).thenReturn(hqlQuery);
         when(queryManager.createQuery(anyString(), eq("xwql"))).thenReturn(hqlQuery);
@@ -179,33 +177,6 @@ class ConfluenceReferenceFixerTestBase
             return hqlQuery;
         });
         when(hqlQuery.execute()).thenAnswer(i -> docRefsStr.get());
-
-        Query solrQuery = mock(Query.class);
-        when(queryManager.createQuery(anyString(), eq("solr"))).thenAnswer(i -> {
-            SolrDocumentList newValue = new SolrDocumentList();
-            if (i.getArgument(0).equals(
-                "(name:My\\ Answer or title:My\\ Answer) and (fullname:MySpace.* or fullname:*.MySpace.*))")
-            ) {
-                newValue.add(new SolrDocument(Map.of(FULLNAME, "Migrated.MySpace.My Answer.WebHome")));
-            } else if (i.getArgument(0).equals(
-                "(name:My\\ Other\\ Answer or title:My\\ Other\\ Answer) "
-                    + "and (fullname:MySpace.* or fullname:*.MySpace.*))")
-            ) {
-                newValue.add(new SolrDocument(Map.of(FULLNAME, "Migrated.MySpace.My Other Answer.WebHome")));
-            } else if (i.getArgument(0).equals("fullname:SpaceA.WebHome or fullname:*.SpaceA.WebHome")) {
-                newValue.add(new SolrDocument(Map.of(FULLNAME, "SpaceA.WebHome")));
-            } else if (i.getArgument(0).equals("fullname:SpaceB.WebHome or fullname:*.SpaceB.WebHome")) {
-                newValue.add(new SolrDocument(Map.of(FULLNAME, "SpaceB.WebHome")));
-            }
-
-            solrDocs.set(newValue);
-            return solrQuery;
-        });
-        when(solrQuery.bindValue(anyString(), anyString())).thenReturn(solrQuery);
-        when(solrQuery.setLimit(anyInt())).thenReturn(solrQuery);
-        when(solrQuery.execute()).thenReturn(Collections.singletonList(solrQueryResponse));
-        wiki.saveDocument(newExistingDoc("MyBlogSpace.Blog.Hello world"), context);
-        wiki.saveDocument(newExistingDoc("MyBlogSpace.Blog.Actually a regular doc.WebHome"), context);
     }
 
     XWikiDocument newExistingDoc(String fullName) throws ComponentLookupException

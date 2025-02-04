@@ -22,7 +22,6 @@ package com.xwiki.confluencepro.referencefixer.internal;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiAttachment;
@@ -31,9 +30,6 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xwiki.confluencepro.referencefixer.BrokenRefType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
@@ -52,7 +48,6 @@ import org.xwiki.contrib.urlmapping.URLMappingResult;
 import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
@@ -81,7 +76,6 @@ import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
 import org.xwiki.rendering.renderer.printer.WikiPrinter;
 import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.resource.entity.EntityResourceReference;
-import org.xwiki.search.solr.SolrUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -108,9 +102,10 @@ import java.util.stream.Collectors;
 @Singleton
 public class ConfluenceReferenceFixer
 {
+
     private static final String DOCUMENT = "document";
     private static final Pattern BROKEN_LINK_PATTERN = Pattern.compile(
-        "(?<space>[a-zA-Z0-9]+)"
+        "(?<space>[a-zA-Z0-9_~-]+)"
             + "\\."
             + "(?<nameValidatedTitle>[\\s\\S]+?)"
             + "(?:(?<!\\\\)@"
@@ -149,6 +144,8 @@ public class ConfluenceReferenceFixer
         "confluence_children");
     private static final String SELF = "@self";
 
+    private static final String ATTACH = "attach:";
+
     @Inject
     private Provider<XWikiContext> contextProvider;
 
@@ -168,9 +165,6 @@ public class ConfluenceReferenceFixer
     private EntityReferenceResolver<String> resolver;
 
     @Inject
-    private DocumentReferenceResolver<SolrDocument> solResolver;
-
-    @Inject
     @Named("compactwiki")
     private EntityReferenceSerializer<String> serializer;
 
@@ -179,9 +173,6 @@ public class ConfluenceReferenceFixer
 
     @Inject
     private Logger logger;
-
-    @Inject
-    private SolrUtils solrUtils;
 
     @Inject
     private ConfluenceResourceReferenceResolver confluenceResourceReferenceResolver;
@@ -402,35 +393,13 @@ public class ConfluenceReferenceFixer
             try {
                 spaceReference = spaceKeyResolver.getSpaceByKey(space);
             } catch (ConfluenceResolverException e) {
-                logger.error("Failed to resolve space [{}] using Confluence resolvers, will try using Solr", space, e);
-            }
-
-            if (spaceReference == null) {
-                String spaceHome = validatedSpace + DOT_WEB_HOME;
-
-                try {
-                    spaceReference = resolveUniqueSolrResult(fullNameLike(spaceHome, false));
-                } catch (QueryException e) {
-                    logger.error("Failed to resolve space [{}] using Solr", space);
-                }
-                if (spaceReference == null) {
-                    logger.error("Failed to resolve space [{}], skipping", space);
-                } else {
-                    spaceReference = spaceReference.getParent();
-                }
+                logger.error("Failed to resolve space [{}] using Confluence resolvers", e);
             }
         } else {
             spaceReference = new EntityReference(validatedSpace, EntityType.SPACE, root);
         }
 
         return spaceReference;
-    }
-
-    private String fullNameLike(String spaceHome, boolean prefix)
-    {
-        String maybeStar = prefix ? "*" : "";
-        return "fullname:" + solrUtils.toFilterQueryString(spaceHome) + maybeStar
-            + " or fullname:*" + solrUtils.toFilterQueryString('.' + spaceHome)  + maybeStar;
     }
 
     private boolean fixDocumentsListedInRefWarnings(Stats s, XWikiDocument migrationDoc, String[] baseURLs,
@@ -596,7 +565,7 @@ public class ConfluenceReferenceFixer
         XWikiDocument migratedDoc;
         try {
             XWikiContext context = contextProvider.get();
-            migratedDoc = context.getWiki().getDocument(migratedDocRef, context);
+            migratedDoc = context.getWiki().getDocument(migratedDocRef, context).clone();
         } catch (XWikiException e) {
             logger.error("Failed to get the migrated document [{}], skipping.", migratedDocRef, e);
             return null;
@@ -627,15 +596,12 @@ public class ConfluenceReferenceFixer
             migratedDoc.setContent(xdom);
         } catch (XWikiException e) {
             logger.error("Failed to update the document XDOM [{}]", migratedDocRef, e);
-            migratedDoc.setSyntax(origSyntax);
             s.incFailedDocs();
             return;
         }
 
         if (hasXDOMChangedAtParseTime(s, migratedDocRef, oldContent, newContent) || upd) {
             if (dryRun) {
-                migratedDoc.setContent(oldContent);
-                migratedDoc.setSyntax(origSyntax);
                 logger.info("Would update document [{}]", migratedDocRef);
                 s.incSuccessfulDocs();
                 return;
@@ -831,9 +797,13 @@ public class ConfluenceReferenceFixer
         // let's play safe here.
 
         String nameValidatedTitle = m.group("nameValidatedTitle");
-        if (WEB_HOME.equals(nameValidatedTitle)) {
-            // Likely not a broken link: WebHome links were output only for documents which were found during the
-            // migration. And for pages with a title "WebHome", but that's unlikely, so we choose we ignore this case.
+        if (containsUnescapedChar(nameValidatedTitle, '.') || WEB_HOME.equals(nameValidatedTitle)) {
+            // Links we handle here should not contain dots, as they should be of the shape SPACE.page title, where
+            // page title does not contain a dot. But the regular expression we use is to limited to check that the
+            // title doesn't contain an unescaped dot.
+            // If the name is 'WebHome', the reference is likely not a broken link: WebHome links were output only for
+            // documents which were found during the migration.
+            // And for pages with a title "WebHome", but that's unlikely, so we choose we ignore this case.
             // Ignoring this case allows the script to be fast by ignoring most (valid) links without querying the
             // database.
             // Worst case, it shouldn't be too hard to handle these hypothetical broken links with a custom script for
@@ -876,11 +846,32 @@ public class ConfluenceReferenceFixer
         int prefixLength = getReferencePrefixLength(str);
         String oldRef = str.substring(prefixLength);
         String prefix = str.substring(0, prefixLength);
+        if (prefix.equals(ATTACH) && !containsUnescapedChar(oldRef, '@')) {
+            // This reference doesn't contain an '@' character, it should not be converted.
+            return null;
+        }
+
         ResourceReference newRef = maybeConvertUnprefixedBrokenLink(s, oldRef, ref);
         if (newRef == null) {
             return null;
         }
         return prefix + newRef.getReference();
+    }
+
+    private static boolean containsUnescapedChar(String str, char character)
+    {
+        int i = 0;
+        int len = str.length();
+        while (i < len) {
+            char c = str.charAt(i);
+            if (c == '\\') {
+                i++;
+            } else if (c == character) {
+                return true;
+            }
+            i++;
+        }
+        return false;
     }
 
     private EntityReference tryResolvingBrokenLinkDoc(String nameValidatedTitle, String space)
@@ -895,35 +886,7 @@ public class ConfluenceReferenceFixer
             return new EntityReference(WEB_HOME, EntityType.DOCUMENT, spaceRef);
         }
 
-        // let's try very hard to resolve the link.
-
-        // first, let's use a regular confluence resolver. This can work no naming strategy was set.
-        EntityReference docRef = pageTitleResolver.getDocumentByTitle(space, nameValidatedTitle);
-
-        if (docRef != null) {
-            return docRef;
-        }
-
-        // it didn't work, so let's just try to get a document with the expected validated name or title that
-        // also has the space in its full name
-
-        String solrEscapedName = solrUtils.toFilterQueryString(nameValidatedTitle);
-
-        return resolveUniqueSolrResult(
-            "(name:" + solrEscapedName + " or title:" + solrEscapedName + ") "
-            + "and (" + fullNameLike(space + '.', true) + ')'
-            + ')');
-    }
-
-    private DocumentReference resolveUniqueSolrResult(String queryString) throws QueryException
-    {
-        Query query = queryManager.createQuery(queryString, "solr")
-            .bindValue("fq", "type:DOCUMENT").setLimit(1);
-        SolrDocumentList results = ((QueryResponse) query.execute().get(0)).getResults();
-        if (results.isEmpty()) {
-            return null;
-        }
-        return solResolver.resolve(results.get(0));
+        return pageTitleResolver.getDocumentByTitle(space, nameValidatedTitle);
     }
 
     private String maybeConvertMacroParameter(Stats s, String str, EntityReference migratedDocRef, String[] baseURLs)
@@ -976,7 +939,7 @@ public class ConfluenceReferenceFixer
             return maybeConvertURLAsResourceRef(s, reference.substring(4), migratedDocRef, baseURLs);
         }
 
-        ResourceReference res = maybeConvertReference(s, reference, migratedDocRef, baseURLs);
+        ResourceReference res = maybeConvertURLAsResourceRef(s, reference, migratedDocRef, baseURLs);
         if (res != null) {
             return res;
         }
@@ -993,54 +956,6 @@ public class ConfluenceReferenceFixer
             res = maybeConvertConfluenceReference(s, reference, migratedDocRef);
         }
         return res;
-    }
-
-    private ResourceReference maybeConvertReference(Stats s, String reference, EntityReference migratedDocRef,
-        String[] baseURLs)
-    {
-        ResourceReference res = maybeConvertURLAsResourceRef(s, reference, migratedDocRef, baseURLs);
-        if (res != null) {
-            return res;
-        }
-
-        return maybeFixBrokenBlogLink(s, reference, migratedDocRef);
-    }
-
-
-    private ResourceReference maybeFixBrokenBlogLink(Stats s, String oldRef, EntityReference migratedDocRef)
-    {
-        if (oldRef.matches(".+\\.Blog\\..+\\.WebHome")) {
-            EntityReference oldRefResolved = resolver.resolve(oldRef, EntityType.DOCUMENT);
-            XWikiContext context = contextProvider.get();
-            XWiki wiki = context.getWiki();
-
-            boolean oldRefExists;
-            try {
-                oldRefExists = wiki.exists(new DocumentReference(oldRefResolved), context);
-            } catch (XWikiException e) {
-                logger.error(FAILED_BLOG_REF_MESSAGE, migratedDocRef, oldRefResolved, e);
-                return null;
-            }
-
-            if (!oldRefExists) {
-                String newRef = StringUtils.removeEnd(oldRef, DOT_WEB_HOME);
-                EntityReference newRefResolved = resolver.resolve(newRef, EntityType.DOCUMENT);
-
-                boolean newRefExists;
-                try {
-                    newRefExists = wiki.exists(new DocumentReference(newRefResolved), context);
-                } catch (XWikiException e) {
-                    logger.error(FAILED_BLOG_REF_MESSAGE, migratedDocRef, newRefResolved, e);
-                    return null;
-                }
-
-                if (newRefExists) {
-                    s.incSuccessfulRefs();
-                    return new ResourceReference(newRef, ResourceType.DOCUMENT);
-                }
-            }
-        }
-        return null;
     }
 
     private ResourceReference maybeConvertConfluenceReference(Stats s, String reference, EntityReference migratedDocRef)
@@ -1094,13 +1009,7 @@ public class ConfluenceReferenceFixer
             return false;
         }
 
-        String newRef;
-        ResourceReference newReference = maybeFixBrokenBlogLink(s, oldRef, migratedDocRef);
-        if (newReference == null) {
-            newRef = maybeConvertBrokenLink(s, oldRef, migratedDocRef);
-        } else {
-            newRef = newReference.getReference();
-        }
+        String newRef = maybeConvertBrokenLink(s, oldRef, migratedDocRef);
 
         if (newRef == null) {
             return false;
@@ -1125,7 +1034,7 @@ public class ConfluenceReferenceFixer
             return 9;
         }
 
-        if (p.startsWith("attach:")) {
+        if (p.startsWith(ATTACH)) {
             return 7;
         }
 
