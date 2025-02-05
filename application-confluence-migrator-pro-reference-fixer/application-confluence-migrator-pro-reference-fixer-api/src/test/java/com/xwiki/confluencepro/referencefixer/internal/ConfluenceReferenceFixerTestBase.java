@@ -69,7 +69,7 @@ import static org.mockito.Mockito.when;
 class ConfluenceReferenceFixerTestBase
 {
     static final String CONTENT = "[[confluencePage:id:42]]";
-    static final String CONVERTED = "[[doc:xwiki:MyAnswer.WebHome]]";
+    static final String CONVERTED = "[[doc:MyAnswer.WebHome]]";
     static final WikiReference WIKI_REFERENCE = new WikiReference("xwiki");
     static final String MY_SPACE_STR = "MySpace";
     static final EntityReference MIGRATION_CLASS = new EntityReference("MigrationClass", EntityType.DOCUMENT,

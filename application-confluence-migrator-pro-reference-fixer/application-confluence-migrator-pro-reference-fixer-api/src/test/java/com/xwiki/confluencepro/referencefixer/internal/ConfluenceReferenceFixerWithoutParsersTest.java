@@ -383,7 +383,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
         );
 
         String content = "[[doc:MySpace.Resolved Title]] [[confluencePage:id:42]] [[http://base.url/x/2EkGOQ]]";
-        String expected = "[[doc:MySpace.ResolvedTitle.WebHome]] [[doc:xwiki:MyAnswer.WebHome]] "
+        String expected = "[[doc:MySpace.ResolvedTitle.WebHome]] [[doc:MyAnswer.WebHome]] "
             + "[[doc:Ok2EkGOQ.WebHome]]";
 
         for (String testDoc : docsWithReferenceIssues) {
@@ -434,7 +434,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
         addDoc("SpaceC.WebHome", "");
 
         String content = "[[MySpace.My Answer]][[confluencePage:id:42]][[MySpace.@home]][[NotFound.@home]]";
-        String expected = "[[doc:Migrated.MySpace.My Answer.WebHome]][[doc:xwiki:MyAnswer.WebHome]]"
+        String expected = "[[doc:Migrated.MySpace.My Answer.WebHome]][[doc:MyAnswer.WebHome]]"
             + "[[doc:MySpace.WebHome]][[NotFound.@home]]";
 
         for (String testDoc : docsWithReferenceIssues) {

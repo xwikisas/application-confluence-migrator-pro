@@ -42,6 +42,10 @@ Short links in a single paragraph: [[http://base.url/x/2EkGOQ]]
 
 [[image:confluenceAttach:id:42@image.png]]
 
+Document tree:
+
+{{documentTree root="document:confluencePage:id:42"/}}
+
 Image in a link:
 
 [[~[~[image:confluenceAttach:id:42@image.png~]~]>>confluencePage:id:42]]

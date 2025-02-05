@@ -135,8 +135,6 @@ public class ConfluenceReferenceFixer
     private static final String EXCEPTION_WHILE_RESOLVING
         = "Document [{}]: Failed to resolve [{}] because of an exception";
     private static final String DOT_WEB_HOME = ".WebHome";
-    private static final String FAILED_BLOG_REF_MESSAGE
-        = "Document [{}]: Failed to determine whether [{}] exists. Skipping conversion.";
     private static final List<String> ALLOWED_BROKEN_LINK_MACROS = List.of("include",
         "display",
         "locationsearch",
@@ -145,6 +143,8 @@ public class ConfluenceReferenceFixer
     private static final String SELF = "@self";
 
     private static final String ATTACH = "attach:";
+
+    private static final String DOCUMENT_COL = "document:";
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -896,7 +896,7 @@ public class ConfluenceReferenceFixer
             return null;
         }
 
-        return rr.getType().getScheme() + ':' + rr.getReference();
+        return rr.getReference();
     }
 
     private ResourceReference maybeConvertReference(Stats s, ResourceReference reference,
@@ -987,6 +987,11 @@ public class ConfluenceReferenceFixer
                     migratedDocRef, type.getId(), reference);
             } else {
                 s.incSuccessfulRefs();
+                EntityReference wikiRef = migratedDocRef.getRoot();
+                if (wikiRef.getType() == EntityType.WIKI && r.getReference().startsWith(wikiRef.getName() + ':')) {
+                    // Strip the wiki
+                    r.setReference(r.getReference().substring(wikiRef.getName().length() + 1));
+                }
                 logger.info(SUCCESSFUL_REFERENCE_CONVERSION_MARKER,
                     "Document [{}]: Converting Confluence reference [{}:{}] to [{}]", migratedDocRef, type.getId(),
                     reference, r);
@@ -1030,7 +1035,7 @@ public class ConfluenceReferenceFixer
             return 4;
         }
 
-        if (p.startsWith("document:")) {
+        if (p.startsWith(DOCUMENT_COL)) {
             return 9;
         }
 
@@ -1047,10 +1052,15 @@ public class ConfluenceReferenceFixer
         boolean updated = false;
         for (Map.Entry<String, String> parameter : block.getParameters().entrySet()) {
             String oldRef = parameter.getValue();
+            String prefix = "";
+            if (StringUtils.isNotEmpty(oldRef) && oldRef.startsWith(DOCUMENT_COL)) {
+                oldRef = oldRef.substring(9);
+                prefix = DOCUMENT_COL;
+            }
             String newRef = maybeConvertMacroParameter(s, oldRef, migratedDocRef,  baseURLs);
             if (newRef != null) {
                 String paramName = parameter.getKey();
-                block.setParameter(paramName, newRef);
+                block.setParameter(paramName, prefix + newRef);
                 logger.info(UPDATE_PARAM_LOG, migratedDocRef, block.getId(), paramName, oldRef, newRef);
                 updated = true;
             }

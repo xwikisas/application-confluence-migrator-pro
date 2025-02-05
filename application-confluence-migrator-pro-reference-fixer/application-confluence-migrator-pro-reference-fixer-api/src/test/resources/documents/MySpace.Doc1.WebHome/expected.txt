@@ -1,4 +1,4 @@
-Confluence reference in a simple paragraph: [[doc:xwiki:MyAnswer.WebHome]]
+Confluence reference in a simple paragraph: [[doc:MyAnswer.WebHome]]
 
 Broken link in a simple paragraph: [[doc:Migrated.MySpace.My Answer.WebHome]], [[attach:Migrated.MySpace.My Answer.WebHome@image.png]] [[attach:Migrated.MySpace.My Other Answer.WebHome@image.png]] [[attach:MySpace.My Wrong Answer@image.png]]
 
@@ -8,7 +8,7 @@ Link with anchor: [[doc:Ok2EkGOQ.WebHome||anchor="anchor"]]
 
 Image with a confluence ref attachment:
 
-[[image:attach:xwiki:MyAnswer.WebHome@image.png]]
+[[image:attach:MyAnswer.WebHome@image.png]]
 
 Images with a broken link attachment:
 
@@ -16,7 +16,7 @@ Images with a broken link attachment:
 
 [[image:attach:Migrated.MySpace.My Other Answer.WebHome@image.png]]
 
-Include outside a macro: {{include reference="doc:xwiki:MyAnswer.WebHome"/}}
+Include outside a macro: {{include reference="MyAnswer.WebHome"/}}
 
 Empty include: {{include reference=""/}}
 
@@ -28,35 +28,39 @@ Unresolved include: {{include reference="confluencePage:id:43"/}}
 Let's nest macros.
 
 {{warning}}
-Confluence reference in a paragraph in a nested macro: [[doc:xwiki:MyAnswer.WebHome]]
+Confluence reference in a paragraph in a nested macro: [[doc:MyAnswer.WebHome]]
 
 Broken link in a paragraph in a nested macro: [[doc:Migrated.MySpace.My Answer.WebHome]]
 
 Display inside a macro:
 
-{{display reference="doc:xwiki:MyAnswer.WebHome"/}}
+{{display reference="MyAnswer.WebHome"/}}
 
 Short links in a single paragraph: [[doc:Ok2EkGOQ.WebHome]]
 
-[[image:attach:xwiki:MyAnswer.WebHome@image.png]]
+[[image:attach:MyAnswer.WebHome@image.png]]
+
+Document tree:
+
+{{documentTree root="document:MyAnswer.WebHome"/}}
 
 Image in a link:
 
-[[~[~[image:attach:xwiki:MyAnswer.WebHome@image.png~]~]>>doc:xwiki:MyAnswer.WebHome]]
+[[~[~[image:attach:MyAnswer.WebHome@image.png~]~]>>doc:MyAnswer.WebHome]]
 
-[[~[~[image:attach:Migrated.MySpace.My Answer.WebHome@image.png~]~]>>doc:xwiki:MyAnswer.WebHome]]
+[[~[~[image:attach:Migrated.MySpace.My Answer.WebHome@image.png~]~]>>doc:MyAnswer.WebHome]]
 
 Successful image in a failing link:
 
-[[~[~[image:attach:xwiki:MyAnswer.WebHome@image.png~]~]>>confluencePage:id:43]]
+[[~[~[image:attach:MyAnswer.WebHome@image.png~]~]>>confluencePage:id:43]]
 
 [[~[~[image:attach:Migrated.MySpace.My Answer.WebHome@image.png~]~]>>confluencePage:id:43]]
 
 Failing image in a successful link:
 
-[[~[~[image:confluenceAttach:id:43@image.png~]~]>>doc:xwiki:MyAnswer.WebHome]]
+[[~[~[image:confluenceAttach:id:43@image.png~]~]>>doc:MyAnswer.WebHome]]
 
-[[~[~[image:attach:MySpace.My Wrong Answer@image.png~]~]>>doc:xwiki:MyAnswer.WebHome]]
+[[~[~[image:attach:MySpace.My Wrong Answer@image.png~]~]>>doc:MyAnswer.WebHome]]
 
 Link to something that looks like a broken blog post like but points to an existing document: [[doc:xwiki:MyBlogSpace.Blog.Actually a regular doc.WebHome]]
 {{/warning}}
