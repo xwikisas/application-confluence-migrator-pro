@@ -39,6 +39,12 @@
   <content>{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
 
 {{velocity}}
-#displayMigrationsLiveData
+#if (!$xcontext.isMainWiki())
+  {{info}}
+    {{translation key="confluencepro.extension.notMainWiki"/}}
+  {{/info}}
+#else
+    #displayMigrationsLiveData
+#end
 {{/velocity}}</content>
 </xwikidoc>

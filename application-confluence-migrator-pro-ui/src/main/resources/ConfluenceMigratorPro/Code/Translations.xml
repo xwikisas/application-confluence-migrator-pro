@@ -41,6 +41,7 @@ confluencepro.extension.name=Confluence Migrator Pro
 
 confluencepro.extension.missingLicense=The application is running in trial mode. In order to unlock the full capabilities please obtain a license from the {0}.
 confluencepro.extension.missingLicense.label=administration section
+confluencepro.extension.notMainWiki=Confluence Migrations are managed on the main wiki.
 
 confluencepro.zippicker.title=Select a confluence package to start the migration
 confluencepro.zippicker.placeholder=Pick a confluence export package...

@@ -45,6 +45,10 @@
 #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
 #if (!$services.licensing.licensor.hasLicensureForEntity($mainReference))
   {{missingLicenseMessage extensionName="confluencepro.extension.name"/}}
+#elseif (!$xcontext.isMainWiki())
+  {{info}}
+    {{translation key="confluencepro.extension.notMainWiki"/}}
+  {{/info}}
 #else
 #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
 #if ($license.type == 'TRIAL')
