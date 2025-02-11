@@ -886,7 +886,9 @@
 
 {{velocity}}
 #set ($discard = $doc.use('ConfluenceMigratorPro.Code.MigrationClass'))
-#if ($xcontext.action == 'edit' || $xcontext.action == 'admin')
+#if (!$xcontext.isMainWiki())
+  #displayMainWikiInfoBox
+#elseif ($xcontext.action == 'edit' || $xcontext.action == 'admin')
   #if ($doc.isNew())
     #newDocView
   #else

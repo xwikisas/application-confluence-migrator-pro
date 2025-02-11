@@ -365,6 +365,17 @@
     #end
   #end
 #end
+#**
+ * Display an info box informing the user that migrations are managed on the main wiki.
+ *#
+#macro(displayMainWikiInfoBox)
+  #set ($label = $services.rendering.escape($services.localization.render("confluencepro.extension.notMainWiki.link.label"), $xwiki.currentContentSyntaxId))
+  #set ($message = $services.localization.render("confluencepro.extension.notMainWiki", $xwiki.currentContentSyntaxId, ['MAIN_LINK']))
+  #set ($link = "[[$label&gt;&gt;$xcontext.mainWikiName:ConfluenceMigratorPro.WebHome]]")
+  {{info}}
+    $message.replace('MAIN_LINK', $link)
+  {{/info}}
+#end
 {{/velocity}}</content>
   <object>
     <name>ConfluenceMigratorPro.Code.CommonCode</name>
