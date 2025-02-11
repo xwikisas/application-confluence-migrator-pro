@@ -40,11 +40,9 @@
 
 {{velocity}}
 #if (!$xcontext.isMainWiki())
-  {{info}}
-    {{translation key="confluencepro.extension.notMainWiki"/}}
-  {{/info}}
+  #displayMainWikiInfoBox
 #else
-    #displayMigrationsLiveData
+  #displayMigrationsLiveData
 #end
 {{/velocity}}</content>
 </xwikidoc>
