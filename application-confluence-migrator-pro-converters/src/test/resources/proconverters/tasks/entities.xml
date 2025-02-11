@@ -71,7 +71,28 @@
 <ac:task-body><span class="placeholder-inline-tasks">And this!!! <ac:link><ri:user ri:account-id="6321bed3051efc6985671eed" /></ac:link> <time datetime="2023-03-20" /> </span></ac:task-body>
 </ac:task>
 </ac:task-list>
-<p>Some more editing!!!</p>]]></property>
+<p>Some more editing!!!</p>
+
+<ac:task-list>
+  <ac:task>
+    <ac:task-id>153</ac:task-id>
+    <ac:task-status>incomplete</ac:task-status>
+    <ac:task-body>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed<br /><ac:task-list>
+      <ac:task>
+        <ac:task-id>156</ac:task-id>
+        <ac:task-status>incomplete</ac:task-status>
+        <ac:task-body>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed</ac:task-body>
+      </ac:task>
+      <ac:task>
+        <ac:task-id>206</ac:task-id>
+        <ac:task-status>incomplete</ac:task-status>
+        <ac:task-body>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed</ac:task-body>
+      </ac:task>
+      </ac:task-list>
+    </ac:task-body>
+  </ac:task>
+</ac:task-list>
+]]></property>
     <property name="content" class="Page" package="com.atlassian.confluence.pages"><id name="id">45809845</id></property>
     <property name="bodyType">2</property>
   </object>

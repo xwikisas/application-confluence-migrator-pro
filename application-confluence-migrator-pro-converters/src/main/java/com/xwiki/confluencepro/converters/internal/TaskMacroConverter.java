@@ -49,14 +49,21 @@ public class TaskMacroConverter extends AbstractMacroConverter
 
     private static final String TASK_REFERENCE_PREFIX = "/Tasks/Task_";
 
-    // A workaround for issue XWIKI-20805 that causes the wysiwyg editor to delete the macros inside the content of
-    // another macro when saving the page.
     @Override
     protected String toXWikiContent(String confluenceId, Map<String, String> parameters, String confluenceContent)
     {
-        return confluenceContent != null
-            ? confluenceContent.replace("(% class=\"placeholder-inline-tasks\" %)", "")
-            : "";
+        if (confluenceContent == null) {
+            return "";
+        }
+        // A workaround for issue XWIKI-20805 that causes the wysiwyg editor to delete the macros inside the content of
+        // another macro when saving the page.
+        String newContent = confluenceContent.replace("(% class=\"placeholder-inline-tasks\" %)", "");
+
+        // On certain confluence versions, some tasks may contain subtasks. If the subtasks were introduced inline,
+        // since the confluence tasks are not supported inline, they also inserted a <br/> element which gets converted
+        // to a "\n " in XWiki. This newline does not appear in confluence.
+        newContent = newContent.replaceAll("\n \n\n\\{\\{task", "\n\n{{task");
+        return newContent;
     }
 
     @Override

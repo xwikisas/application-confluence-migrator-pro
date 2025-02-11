@@ -68,7 +68,26 @@ And this!!! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAM
 {{/task}}
 )))
 
-Some more editing!!!</string>
+Some more editing!!!
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_153" status="InProgress"}}
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed\\
+
+(% class="task-list" %)
+(((
+
+{{task reference="/Tasks/Task_156" status="InProgress"}}
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed
+{{/task}}
+
+{{task reference="/Tasks/Task_206" status="InProgress"}}
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed
+{{/task}}
+)))
+{{/task}}
+)))</string>
             </entry>
             <entry>
               <string>syntax</string>
