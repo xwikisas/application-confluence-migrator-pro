@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
     <artifactId>application-confluence-migrator-pro-test</artifactId>
-    <version>1.22.6-SNAPSHOT</version>
+    <version>1.29.6-SNAPSHOT</version>
   </parent>
   <artifactId>application-confluence-migrator-pro-test-docker</artifactId>
   <properties>
@@ -38,7 +38,6 @@
       <artifactId>application-confluence-migrator-pro-ui</artifactId>
       <version>${project.version}</version>
       <type>xar</type>
-      <scope>test</scope>
       <exclusions>
         <!-- Run the functional tests without a license. -->
         <exclusion>

@@ -64,9 +64,13 @@
   &lt;/label&gt;
   &lt;div class="xform"&gt;
     ## &lt;input type="hidden" name="form_token" value="$!escapetool.xml($services.csrf.token)" /&gt;
+    #set ($docTitle = $doc.documentReference.name)
+    #if ($docTitle == 'WebHome')
+      #set ($docTitle = $doc.documentReference.parent.name)
+    #end
     &lt;dl id="titleinput" class="form-group"&gt;
       &lt;dd&gt;
-        &lt;input type="text" id="xwikidoctitleinput" name="title" value="$doc.name" class=""
+        &lt;input type="text" id="xwikidoctitleinput" name="title" value="$docTitle" class=""
           placeholder="$!escapetool.xml($services.localization.render('confluencepro.migration.title.placeholder'))"&gt;
       &lt;/dd&gt;
     &lt;/dl&gt;
