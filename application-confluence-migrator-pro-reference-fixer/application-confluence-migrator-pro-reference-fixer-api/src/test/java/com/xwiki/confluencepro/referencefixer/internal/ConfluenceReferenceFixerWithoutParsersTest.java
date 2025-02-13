@@ -21,6 +21,7 @@ package com.xwiki.confluencepro.referencefixer.internal;
 
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.test.junit5.mockito.OldcoreTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,6 +49,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Vector;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -65,10 +67,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 })
 class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixerTestBase
 {
+
     private static final String INPUT_PROPERTIES = "inputProperties";
     private static final String SPACE_A = "SpaceA";
     private static final String SPACE_B = "SpaceB";
     private static final String SPACES = "spaces";
+    private static final String COMMENT = "comment";
 
     @Test
     void testMostFixing() throws ComponentLookupException, IOException, XWikiException
@@ -80,7 +84,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
             File contentFile = new File(docDir, "content.txt");
             Path contentFilePath = contentFile.toPath();
             String content = Files.readString(contentFilePath, StandardCharsets.UTF_8);
-            addDoc(fullName, content);
+            addDoc(fullName, content, false);
         }
 
         fixer.fixDocuments(
@@ -112,11 +116,11 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
         );
 
         for (String testDoc : convertedTestDocs) {
-            addDoc(testDoc, CONTENT);
+            addDoc(testDoc, CONTENT, false);
         }
 
         for (String testDoc : unconvertedTestDocs) {
-            addDoc(testDoc, CONTENT);
+            addDoc(testDoc, CONTENT, false);
         }
 
         fixer.fixDocuments(
@@ -148,7 +152,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
         );
 
         for (String testDoc : convertedTestDocs) {
-            addDoc(testDoc, CONTENT);
+            addDoc(testDoc, CONTENT, false);
         }
 
         fixer.fixDocuments(
@@ -173,7 +177,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
             "Migrated.Empty.WebHome"
         );
         for (String testDoc : convertedTestDocs) {
-            addDoc(testDoc, content);
+            addDoc(testDoc, content, false);
         }
 
         fixer.fixDocuments(
@@ -192,14 +196,14 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void testUpdateInPlace(boolean updateInPlace) throws ComponentLookupException, XWikiException
+    void testUpdateInPlaceAndComment(boolean updateInPlace) throws ComponentLookupException, XWikiException
     {
         List<String> convertedTestDocs = List.of(
             "Migrated.SpaceA.Update.WebHome"
         );
 
         for (String testDoc : convertedTestDocs) {
-            addDoc(testDoc, CONTENT);
+            addDoc(testDoc, CONTENT, true);
         }
 
         fixer.fixDocuments(
@@ -213,6 +217,9 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
 
         for (String testDoc : convertedTestDocs) {
             assertEquals(CONVERTED, getContent(testDoc));
+            Vector<BaseObject> comments = wiki.getDocument(getEntityReference(testDoc), context).getComments();
+            assertEquals(1, comments.size());
+            assertEquals(CONVERTED, comments.get(0).getLargeStringValue(COMMENT));
             assertEquals(updateInPlace ? "1.1" : "2.1",
                 wiki.getDocument(getEntityReference(testDoc), context).getRCSVersion().toString());
         }
@@ -234,14 +241,14 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
         );
 
         for (String testDoc : docsWithReferenceIssues) {
-            addDoc(testDoc, CONTENT + ' ' + testDoc);
+            addDoc(testDoc, CONTENT + ' ' + testDoc, false);
         }
 
         for (String testDoc : docsWithoutReferenceIssues) {
-            addDoc(testDoc, CONTENT + ' ' + testDoc);
+            addDoc(testDoc, CONTENT + ' ' + testDoc, false);
         }
 
-        XWikiDocument migration1Doc = addDoc("Migrations.Migration1", "");
+        XWikiDocument migration1Doc = addDoc("Migrations.Migration1", "", false);
         migration1Doc.setAttachment(CONFLUENCE_REF_WARNINGS_JSON, new ByteArrayInputStream((
             "{ \"xwiki:MySpace.DocA.WebHome\":["
                 + "   {\"pageId\":2,\"originalVersion\":1}],"
@@ -256,7 +263,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
 
         wiki.saveDocument(migration1Doc, context);
 
-        XWikiDocument migration2Doc = addDoc("Migrations.Migration2", "");
+        XWikiDocument migration2Doc = addDoc("Migrations.Migration2", "", false);
         migration2Doc.setAttachment(CONFLUENCE_REF_WARNINGS_JSON, new ByteArrayInputStream(
             ("{\"xwiki:MySpace.Doc4.WebHome\":[{\"pageId\":7}]}").getBytes(StandardCharsets.UTF_8)
         ), context);
@@ -296,14 +303,14 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
             + "{{children reference=\"document:Migrated.MySpace.My Answer.WebHome\"/}}";
 
         for (String testDoc : docsWithReferenceIssues) {
-            addDoc(testDoc, content + ' ' + testDoc);
+            addDoc(testDoc, content + ' ' + testDoc, false);
         }
 
         for (String testDoc : docsWithoutReferenceIssues) {
-            addDoc(testDoc, content + ' ' + testDoc);
+            addDoc(testDoc, content + ' ' + testDoc, false);
         }
 
-        XWikiDocument migrationDoc = addDoc("Migrations.Migration10", "");
+        XWikiDocument migrationDoc = addDoc("Migrations.Migration10", "", false);
         migrationDoc.setAttachment("brokenLinksPages.json", new ByteArrayInputStream(
             ("{\"xwiki:MySpace.Doc10.WebHome\":{}}").getBytes(StandardCharsets.UTF_8)
         ), context);
@@ -339,14 +346,14 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
         String expected = "[[doc:Migrated.MySpace.My Answer.WebHome]][[confluencePage:id:42]][[doc:Ok2EkGOQ.WebHome]]";
 
         for (String testDoc : docsWithReferenceIssues) {
-            addDoc(testDoc, content + ' ' + testDoc);
+            addDoc(testDoc, content + ' ' + testDoc, false);
         }
 
         for (String testDoc : docsWithoutReferenceIssues) {
-            addDoc(testDoc, content + ' ' + testDoc);
+            addDoc(testDoc, content + ' ' + testDoc, false);
         }
 
-        XWikiDocument migrationDoc = addDoc("Migrations.Migration20", "");
+        XWikiDocument migrationDoc = addDoc("Migrations.Migration20", "", false);
         migrationDoc.setStringValue(MIGRATION_CLASS, "brokenLinksPages",
             "{\"xwiki:MySpace.Doc20.WebHome\":{}}");
         migrationDoc.setStringValue(MIGRATION_CLASS, INPUT_PROPERTIES,
@@ -387,14 +394,14 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
             + "[[doc:Ok2EkGOQ.WebHome]]";
 
         for (String testDoc : docsWithReferenceIssues) {
-            addDoc(testDoc, content + ' ' + testDoc);
+            addDoc(testDoc, content + ' ' + testDoc, false);
         }
 
         for (String testDoc : docsWithoutReferenceIssues) {
-            addDoc(testDoc, content + ' ' + testDoc);
+            addDoc(testDoc, content + ' ' + testDoc, false);
         }
 
-        XWikiDocument migrationDoc = addDoc("Migrations.Migration30", "");
+        XWikiDocument migrationDoc = addDoc("Migrations.Migration30", "", false);
         migrationDoc.setStringValue(MIGRATION_CLASS, INPUT_PROPERTIES,
             "{\"baseURLs\":\"http://base.url/\",\"root\":\"space:xwiki:Migrated\"}");
         migrationDoc.setStringListValue(MIGRATION_CLASS, SPACES, List.of(SPACE_A, SPACE_B));
@@ -429,23 +436,23 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
             "SpaceC.Doc11.WebHome"
         );
 
-        addDoc("SpaceA.WebHome", "");
-        addDoc("SpaceB.WebHome", "");
-        addDoc("SpaceC.WebHome", "");
+        addDoc("SpaceA.WebHome", "", false);
+        addDoc("SpaceB.WebHome", "", false);
+        addDoc("SpaceC.WebHome", "", false);
 
         String content = "[[MySpace.My Answer]][[confluencePage:id:42]][[MySpace.@home]][[NotFound.@home]]";
         String expected = "[[doc:Migrated.MySpace.My Answer.WebHome]][[doc:MyAnswer.WebHome]]"
             + "[[doc:MySpace.WebHome]][[NotFound.@home]]";
 
         for (String testDoc : docsWithReferenceIssues) {
-            addDoc(testDoc, content + ' ' + testDoc);
+            addDoc(testDoc, content + ' ' + testDoc, false);
         }
 
         for (String testDoc : docsWithoutReferenceIssues) {
-            addDoc(testDoc, content + ' ' + testDoc);
+            addDoc(testDoc, content + ' ' + testDoc, false);
         }
 
-        XWikiDocument migrationDoc = addDoc("Migrations.Migration40", "");
+        XWikiDocument migrationDoc = addDoc("Migrations.Migration40", "", false);
         migrationDoc.setStringListValue(MIGRATION_CLASS, SPACES, List.of(SPACE_A, SPACE_B));
 
         wiki.saveDocument(migrationDoc, context);

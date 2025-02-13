@@ -23,6 +23,7 @@ import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.objects.BaseObject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrDocument;
@@ -218,10 +219,16 @@ class ConfluenceReferenceFixerTestBase
         return resolver.resolve(documentReference, EntityType.DOCUMENT);
     }
 
-    XWikiDocument addDoc(String fullName, String content) throws ComponentLookupException, XWikiException
+    XWikiDocument addDoc(String fullName, String content, boolean addAComment)
+        throws ComponentLookupException, XWikiException
     {
         XWikiDocument doc = newExistingDoc(fullName);
         doc.setContent(content);
+        if (addAComment) {
+            BaseObject comment = doc.newXObject(new EntityReference("XWikiComments", EntityType.DOCUMENT,
+                new EntityReference("XWiki", EntityType.SPACE)), context);
+            comment.setLargeStringValue("comment", content);
+        }
         wiki.saveDocument(doc, context);
         docs.add(doc);
         return doc;

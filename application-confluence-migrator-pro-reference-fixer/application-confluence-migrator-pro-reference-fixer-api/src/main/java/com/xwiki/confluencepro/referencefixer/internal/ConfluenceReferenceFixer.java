@@ -27,6 +27,7 @@ import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiAttachmentContent;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.objects.BaseObject;
 import com.xwiki.confluencepro.referencefixer.BrokenRefType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -145,6 +146,8 @@ public class ConfluenceReferenceFixer
     private static final String ATTACH = "attach:";
 
     private static final String DOCUMENT_COL = "document:";
+
+    private static final String COMMENT = "comment";
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -549,15 +552,52 @@ public class ConfluenceReferenceFixer
         }
         try {
             String oldContent = migratedDoc.getContent();
-
             XDOM xdom = migratedDoc.getXDOM();
             String syntax = migratedDoc.getSyntax().toIdString();
             String[] baseURLsNotNull = baseURLs == null ? new String[0] : baseURLs;
             boolean updated = visitXDOMToFixRefs(s, xdom, syntax, migratedDocRef, baseURLsNotNull, brokenRefType);
+            updated = updateComments(s, migratedDoc, syntax, migratedDocRef, baseURLsNotNull, brokenRefType) || updated;
             maybeUpdateDocument(s, migratedDoc, xdom, oldContent, updateInPlace, updated, dryRun);
         } catch (Exception e) {
             logger.error("Failed to fix document [{}]", migratedDocRef, e);
         }
+    }
+
+    private boolean updateComments(Stats s, XWikiDocument migratedDoc, String syntaxId, EntityReference migratedDocRef,
+        String[] baseURLsNotNull, BrokenRefType brokenRefType)
+    {
+        boolean updated = false;
+        for (BaseObject comment : migratedDoc.getComments()) {
+            String content = comment.getLargeStringValue(COMMENT);
+            XDOM xdom = getCommentXDOM(syntaxId, content);
+            if (xdom == null) {
+                continue;
+            }
+            boolean commentUpdated = hasXDOMChangedAtParseTime(s, migratedDocRef, content, render(xdom, syntaxId),
+                true);
+            commentUpdated = commentUpdated || visitXDOMToFixRefs(s, xdom, syntaxId, migratedDocRef,
+                baseURLsNotNull,
+                brokenRefType);
+            if (commentUpdated) {
+                String newContent = render(xdom, syntaxId);
+                comment.setLargeStringValue(COMMENT, newContent);
+            }
+            updated = updated || commentUpdated;
+        }
+        return updated;
+    }
+
+    private XDOM getCommentXDOM(String syntaxId, String content)
+    {
+        if (StringUtils.isEmpty(content)) {
+            return null;
+        }
+        XDOM xdom = parse(content, syntaxId);
+        if (xdom == null) {
+            logger.warn("Failed to parse comment content, skipping.");
+            return null;
+        }
+        return xdom;
     }
 
     private XWikiDocument getDocument(EntityReference migratedDocRef)
@@ -580,7 +620,6 @@ public class ConfluenceReferenceFixer
     private void maybeUpdateDocument(Stats s, XWikiDocument migratedDoc, XDOM xdom, String oldContent,
         boolean updateInPlace, boolean updated, boolean dryRun)
     {
-        String newContent = migratedDoc.getContent();
         Syntax origSyntax = migratedDoc.getSyntax();
         boolean upd = updated;
         DocumentReference migratedDocRef = migratedDoc.getDocumentReference();
@@ -600,7 +639,9 @@ public class ConfluenceReferenceFixer
             return;
         }
 
-        if (hasXDOMChangedAtParseTime(s, migratedDocRef, oldContent, newContent) || upd) {
+        String newContent = migratedDoc.getContent();
+
+        if (hasXDOMChangedAtParseTime(s, migratedDocRef, oldContent, newContent, false) || upd) {
             if (dryRun) {
                 logger.info("Would update document [{}]", migratedDocRef);
                 s.incSuccessfulDocs();
@@ -636,7 +677,7 @@ public class ConfluenceReferenceFixer
     }
 
     private boolean hasXDOMChangedAtParseTime(Stats s, EntityReference migratedDocRef, String oldContent,
-        String newContent)
+        String newContent, boolean inAComment)
     {
         // Even if the document has not been updated during the visit of its XDOM, it could have been updated
         // at parse type by Confluence reference type parsers.
@@ -648,8 +689,14 @@ public class ConfluenceReferenceFixer
         int newConfluenceOccurrences = StringUtils.countMatches(newContent, CONFLUENCE);
         int diff = oldConfluenceOccurences - newConfluenceOccurrences;
         if (diff > 0) {
-            logger.info(CHANGED_AT_PARSE_TIME_MARKER,
-                "Document [{}] has changed at parse time ([{}] references updated)", migratedDocRef, diff);
+            if (inAComment) {
+                logger.info(CHANGED_AT_PARSE_TIME_MARKER,
+                    "Document [{}] has changed at parse time ([{}] references updated) in a comment",
+                    migratedDocRef, diff);
+            } else {
+                logger.info(CHANGED_AT_PARSE_TIME_MARKER,
+                    "Document [{}] has changed at parse time ([{}] references updated)", migratedDocRef, diff);
+            }
             s.incSuccessfulRefs(diff);
             return true;
         }

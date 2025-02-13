@@ -67,14 +67,14 @@ class ConfluenceReferenceFixerWithParsersTest extends ConfluenceReferenceFixerTe
             + "[[http://base.url/x/2EkGOQ]]";
 
         for (String testDoc : docsWithReferenceIssues) {
-            addDoc(testDoc, content + ' ' + testDoc);
+            addDoc(testDoc, content + ' ' + testDoc, false);
         }
 
         for (String testDoc : docsWithoutReferenceIssues) {
-            addDoc(testDoc, content + ' ' + testDoc);
+            addDoc(testDoc, content + ' ' + testDoc, false);
         }
 
-        XWikiDocument migrationDoc = addDoc("Migrations.Migration10", "");
+        XWikiDocument migrationDoc = addDoc("Migrations.Migration10", "", false);
         migrationDoc.setAttachment("brokenLinksPages.json", new ByteArrayInputStream(
             ("{\"xwiki:MySpace.Doc10.WebHome\":{}}").getBytes(StandardCharsets.UTF_8)
         ), context);
