@@ -10,5 +10,7 @@
   <suppress checks="ClassFanOutComplexity"
             files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceObjectsOnlyInstanceOutputFilterStream\.java$"/>
   <suppress checks="ClassFanOutComplexity"
+            files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceAttachmentsOnlyInstanceOutputFilterStream\.java$"/>
+  <suppress checks="ClassFanOutComplexity"
             files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceFilteringListener\.java$"/>
 </suppressions>

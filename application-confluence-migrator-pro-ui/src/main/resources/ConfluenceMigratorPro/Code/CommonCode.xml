@@ -184,6 +184,13 @@
     &lt;dd&gt;
       &lt;input id="rightOnly" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('rightOnly', 'false')" data-key="rightOnly"/&gt;
     &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="attachmentsOnly"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyattachments.question.title'))&lt;/label&gt;
+      &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyattachments.question.hint'))&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input id="attachmentsOnly" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('attachmentsOnly', 'false')" data-key="attachmentsOnly"/&gt;
+    &lt;/dd&gt;
   &lt;/dl&gt;
   &lt;h3&gt;$escapetool.xml($services.localization.render('confluencepro.job.linkmapping.title'))&lt;/h3&gt;
   &lt;dl&gt;
@@ -205,7 +212,7 @@
   &lt;div style="display: none"&gt;
     ## See https://github.com/xwikisas/application-confluence-migrator-pro/issues/83
     &lt;div class="box warningmessage"&gt;
-      &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.job.onlyrights.warning'))&lt;/p&gt;
+      &lt;p&gt;If you choose to only import rights or attachments, options in the next section will be ignored (because the default instance output filter stream is replaced with a custom one)&lt;/p&gt;
     &lt;/div&gt;
     &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.job.question.advanced.output'))&lt;/h2&gt;
     &lt;dl&gt;

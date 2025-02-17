@@ -132,14 +132,20 @@ public class ConfluenceMigrationJob
     protected void runInternal() throws InterruptedException
     {
         boolean rightOnly = isGeneralParameterEnabled("rightOnly");
+        boolean attachmentsOnly = isGeneralParameterEnabled("attachmentsOnly");
         migrationManager.disablePrerequisites();
         Map<String, Object> inputProperties = getFilterInputProperties();
 
         Map<String, Object> outputProperties = getFilterOutputProperties();
 
-        String outputStreamRoleHint = rightOnly
-            ? ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT
-            : XWIKI_INSTANCE_ROLEHINT;
+        String outputStreamRoleHint;
+        if (rightOnly) {
+            outputStreamRoleHint = ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT;
+        } else if (attachmentsOnly) {
+            outputStreamRoleHint = ConfluenceAttachmentsOnlyInstanceOutputFilterStream.ROLEHINT;
+        } else {
+            outputStreamRoleHint = XWIKI_INSTANCE_ROLEHINT;
+        }
 
         maybeReducePageCount(request);
 
