@@ -129,17 +129,15 @@
 
   $('#confluence-pro-tab-root li').on('click', function () {
     let currentElement = $(this);
-    console.log(currentElement.data());
     // If the container already exist just display it, otherwise lazy load the content when the user clicks on the tab
     let contentContainer = $(`.${currentElement.data('contentContainer')}`)
-    console.log(contentContainer)
     if (contentContainer.length != 0) {
       hideSections();
       contentContainer.removeClass('hidden')
     }
     else {
       let pageReference = currentElement.data('pageReference');
-      lazyLoad(currentElement.data('contentContainer'), pageReference)
+      lazyLoad(currentElement.data('contentContainer'), pageReference);
     }
   });
 
@@ -159,12 +157,12 @@
 
   function hideSections() {
     $('.confluence-pro-section-containers &gt; div').each(function () {
-      $(this).addClass('hidden')
+      $(this).addClass('hidden');
     })
   }
 
   $(document).ready(function(){
-    lazyLoad('confluence-pro-tab-container-new','ConfluenceMigratorPro.UI.NewSection')
+    lazyLoad('confluence-pro-tab-container-new','ConfluenceMigratorPro.UI.NewSection');
   });
 });
 
