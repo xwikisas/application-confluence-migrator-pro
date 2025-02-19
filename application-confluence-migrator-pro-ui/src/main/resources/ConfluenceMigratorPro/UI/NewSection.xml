@@ -1,0 +1,333 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.UI.NewSection" locale="">
+  <web>ConfluenceMigratorPro.UI</web>
+  <name>NewSection</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>NewSection</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity output="false"}}
+#template('display_macros.vm')
+#initRequiredSkinExtensions()
+{{/velocity}}
+{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
+{{velocity output="false"}}
+#template('attachment_macros.vm')
+{{/velocity}}
+{{velocity}}
+#macro (displaySubsection $icon $key $class $params)
+&lt;h3 class="cfmTitle $!class"&gt;
+  &lt;div&gt;
+    &lt;span class="cfmTitleIcon"&gt;
+      $services.icon.renderHTML($icon)
+    &lt;/span&gt;
+    &lt;span&gt;
+      $escapetool.xml($services.localization.render($key, $params))
+    &lt;/span&gt;
+  &lt;/div&gt;
+&lt;/h3&gt;
+#end
+#macro (addPrerequisiteToList $list $icon $translationKey $url $params)
+  #if ($icon != 'check')
+    #set ($prerequisitesComplete = 'incomplete')
+  #end
+  #set ($discard = $list.add({
+    'icon': $icon,
+    'translationKey': "confluencepro.prerequisites.$translationKey",
+    'url': "$!url",
+    'params': $params
+  }))
+#end
+#macro (prerequisitesSection)
+#set ($prerequisitesComplete = 'completed')
+#set ($prerequisites = [])
+#addPrerequisiteToList($prerequisites, $services.confluenceMigration.checkMemory(), 'memory', 'https://www.xwiki.org/xwiki/bin/view/Documentation/AdminGuide/Performances/#HMemory', [$services.confluenceMigration.xmx, $services.confluenceMigration.xms, $mathtool.div($services.confluenceMigration.memory, 2), $services.confluenceMigration.memory])
+{{html}}
+&lt;a role="button" data-toggle="collapse" href="#cfmPrerequisitesCollapse" aria-expanded="false" aria-controls="cfmPrerequisitesCollapse"&gt;
+#displaySubtitle('caret-down', 'confluencepro.prerequisites.title', $prerequisitesComplete, {})
+&lt;/a&gt;
+&lt;div id="cfmPrerequisitesCollapse" class="cfmPrerequisites collapse"&gt;
+  &lt;div class="box infomessage"&gt;
+    &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.prerequisites.hint'))&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;ul&gt;
+  #foreach($prerequisite in $prerequisites)
+    &lt;li&gt;
+      $services.icon.renderHTML($prerequisite.icon)
+      #if ("$prerequisite.url" != '')
+        &lt;a href="$prerequisite.url" target="_blank"&gt;
+          $escapetool.xml($services.localization.render($prerequisite.translationKey, $prerequisite.params))
+        &lt;/a&gt;
+      #else
+        $escapetool.xml($services.localization.render($prerequisite.translationKey, $prerequisite.params))
+      #end
+    &lt;/li&gt;
+  #end
+  &lt;/ul&gt;
+&lt;/div&gt;
+{{/html}}
+#end
+#macro (howToMigrateUploadSubesction)
+&lt;a role="button" data-toggle="collapse" href="#cfmHowToMigrateUploadCollapse" aria-expanded="false" aria-controls="cfmHowToMigrateUploadCollapse"&gt;
+#displaySubsection('caret-down', 'confluencepro.howToMigrate.upload.title', '', {})
+&lt;/a&gt;
+  &lt;div id="cfmHowToMigrateUploadCollapse" class="collapse"&gt;
+  &lt;div&gt;
+    &lt;button id="facade-upload-button" class="btn btn-primary"&gt;$services.icon.renderHTML('add') $escapetool.xml($services.localization.render('confluencepro.uploadFacadeButton'))&lt;/button&gt;
+    &lt;div id='facade-upload-progress'&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  #set ($storeDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.PackagesStore'))
+  #showAttachmentsLiveData($storeDoc 'confluencePackages')
+
+  #if ($hasEdit || $hasAdmin)
+    ## Hide the form because it comes from the platform, and we cannot customize its appearance. We are using a 'facade' button to trigger the upload via JS.
+    &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
+    &lt;div&gt;
+    ## CSRF prevention
+    &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
+    &lt;fieldset&gt;
+      &lt;div class="fileupload-field"&gt;
+        &lt;label class="sr-only" for="confluenceUploadFile"&gt;$escapetool.xml(
+          $services.localization.render('core.viewers.attachments.upload.file'))&lt;/label&gt;
+        &lt;input id="confluenceUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems hidden"
+          data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;
+      &lt;/div&gt;
+    &lt;/fieldset&gt;
+    &lt;/div&gt;
+    &lt;/form&gt;
+  #end
+&lt;/div&gt;
+#end
+
+#macro (howToMigrateServerSection)
+&lt;a role="button" data-toggle="collapse" href="#cfmHowToMigrateServerCollapse" aria-expanded="false" aria-controls="cfmHowToMigrateServerCollapse"&gt;
+#displaySubsection('caret-down', 'confluencepro.howToMigrate.server.title', '', {})
+&lt;/a&gt;
+&lt;div id="cfmHowToMigrateServerCollapse" class="cfmPrerequisites collapse"&gt;
+  #set ($escapedMessage = $escapetool.xml($services.localization.render('confluencepro.packages.serverPath')))
+  #set ($editURL = $xwiki.getURL("ConfluenceMigratorPro.Migrations.Migration${datetool.date.time}", 'edit', $escapetool.url({
+    'template': 'ConfluenceMigratorPro.Code.MigrationTemplate',
+    'parent': 'ConfluenceMigratorPro.Migrations.WebHome',
+    'isPath': '1',
+    'form_token': $services.csrf.token
+  })))
+  #set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;0}', "&lt;button class='btn btn-primary'&gt;$services.icon.renderHTML('drive') "))
+  #set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;1}', '&lt;/button&gt;'))
+  &lt;form method="post" action="$escapetool.xml($editURL)"&gt;
+    &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
+    &lt;p&gt;$escapedMessage&lt;/p&gt;
+    #displayPrefillForm
+  &lt;/form&gt;
+&lt;/div&gt;
+#end
+
+#macro (howToMigrate)
+{{html wiki="true"}}
+  #displaySubtitle('cube', 'confluencepro.packages.title', '', {})
+  #howToMigrateUploadSubesction()
+  #howToMigrateServerSection()
+{{/html}}
+#end
+
+#set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
+#if (!$services.licensing.licensor.hasLicensureForEntity($mainReference))
+  {{missingLicenseMessage extensionName="confluencepro.extension.name"/}}
+#else
+#set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
+#if ($license.type == 'TRIAL')
+  #if ($xwiki.exists($services.model.createDocumentReference($xcontext.mainWikiName, 'XWiki', 'ConfigurableClass')))
+  #set ($licenseHomeURL = $xwiki.getURL(
+    $services.model.createDocumentReference($xcontext.mainWikiName, 'XWiki', 'XWikiPreferences'),
+    'admin', 'editor=globaladmin&amp;section=Licenses'))
+  #else
+    ## Fall-back in case the Administration Application is not installed.
+    #set ($licenseHomeURL =
+      $xwiki.getURL($services.model.createDocumentReference($xcontext.mainWikiName, 'Licenses', 'WebHome')))
+  #end
+  #set ($label = $services.localization.render('confluencepro.extension.missingLicense.label', 'xwiki/2.1'))
+  #set ($translation = $services.localization.render('confluencepro.extension.missingLicense', 'xwiki/2.1', ['ADMIN_URL']))
+  #set ($licensePageLink = "[[${label}&gt;&gt;path:${licenseHomeURL}]]")
+  {{warning}}$translation.replace('ADMIN_URL', $licensePageLink){{/warning}}
+#end
+## Js for facade button
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.UI.NewSection'))
+## Prerequisites Section ##
+#set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
+#set ($discard = $xwiki.ssfx.use('uicomponents/widgets/upload.css', true))
+#set ($discard = $xwiki.jsfx.use('uicomponents/widgets/upload.js', {
+  'forceSkinAction': true,
+  'language': $xcontext.locale
+}))
+## Reuse Attachments tab delete action events for the uploaded packages livedata.
+$xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'language': ${xcontext.locale}})
+#prerequisitesSection()
+
+#howToMigrate()
+
+{{html}}
+
+## Tbh I'm not sure where this is used I tried to search in the code base, but there were no queries.
+&lt;div class="modal fade migrationNameModal" tabindex="-1" role="dialog"&gt;
+  &lt;div class="modal-dialog modal-lg"&gt;
+    &lt;div class="modal-content"&gt;
+      &lt;div class="modal-header"&gt;
+        &lt;button type="button" class="close" data-dismiss="modal"&gt;&amp;times;&lt;/button&gt;
+        &lt;div class="modal-title"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.popup.title'))&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="modal-body xform"&gt;
+        &lt;div class="imageEditor" data-src="$escapetool.xml($services.model.serialize($attachment.getReference()))"&gt;&lt;/div&gt;
+        &lt;input id="confluence-migration-name" type="text" placeholder="$escapetool.xml($services.localization.render('confluencepro.migration.popup.placeholder'))"/&gt;
+      &lt;/div&gt;
+      &lt;div class="modal-footer"&gt;
+        &lt;input type="button" class="btn btn-primary save"  data-dismiss="modal"
+          value="$escapetool.xml($services.localization.render('confluencepro.migration.popup.startMigration'))" data-filename="$attachment.getFilename()"&gt;
+        &lt;input type="button" class="btn btn-default" data-dismiss="modal"
+          value="$escapetool.xml($services.localization.render('cancel'))"&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+{{/html}}
+#end
+
+#getRequiredSkinExtensions($requiredSkinExtensions)
+## We use the X-XWIKI-HTML-HEAD custom HTTP header to return the required JavaScript and CSS resources. Note that the
+## HTML of the UI element is returned in the response body.
+#set ($discard = $response.setHeader('X-XWIKI-HTML-HEAD', $requiredSkinExtensions))
+{{/velocity}}</content>
+  <object>
+    <name>ConfluenceMigratorPro.UI.NewSection</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>7707213e-63bb-4175-82fc-794eb76f16cd</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>require(['jquery'], function($){
+  $('#facade-upload-button').on('click', function(){
+    $('#confluenceUploadFile').click();
+  })
+});</code>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+</xwikidoc>

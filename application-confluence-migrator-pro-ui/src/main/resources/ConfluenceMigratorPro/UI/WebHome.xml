@@ -19,61 +19,31 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
-<xwikidoc version="1.5" reference="ConfluenceMigratorPro.WebHome" locale="">
-  <web>ConfluenceMigratorPro</web>
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.UI.WebHome" locale="">
+  <web>ConfluenceMigratorPro.UI</web>
   <name>WebHome</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
-  <parent>Main.WebHome</parent>
+  <parent>ConfluenceMigratorPro.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <version>1.1</version>
-  <title>ConfluenceMigratorPro</title>
+  <title>UI</title>
   <comment/>
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
-  <hidden>false</hidden>
-  <content>{{velocity}}
-#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.UI.WebHome'))
-##JS/CSS required by the lazy loaded pages.
-#set ($discard = $xwiki.jsfx.use('uicomponents/widgets/liveData.js', {'forceSkinAction': true}))
-{{/velocity}}
-
-{{html}}
-&lt;div class="floatcontainer" id="confluence-pro-tab-root"&gt;
-  &lt;ul class="xwikitabbar"&gt;
-    &lt;li class="active" data-content-container="confluence-pro-tab-container-new" data-page-reference="ConfluenceMigratorPro.UI.NewSection"&gt;
-      &lt;a href="#New" rel="nofollow"&gt;
-        New&lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li class="" data-content-container="confluence-pro-tab-container-all-migrations" data-page-reference="ConfluenceMigratorPro.UI.AllMigrations"&gt;
-      &lt;a href="#AllMigrations" rel="nofollow"&gt;
-        All Migrations&lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li class="" data-content-container="confluence-pro-tab-container-imported-macros" data-page-reference="ConfluenceMigratorPro.UI.ImportedMacros"&gt;
-      &lt;a href="#ImportedMacros" rel="nofollow"&gt;
-        Imported Macros &lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li class="" data-content-container="confluence-pro-tab-container-post-migration-fixes" data-page-reference="ConfluenceMigratorPro.UI.PostMigrationFIxes"&gt;
-      &lt;a href="#PostMigrationFixes" rel="nofollow"&gt;
-        Post Migration Fixes &lt;/a&gt;
-    &lt;/li&gt;
-  &lt;/ul&gt;
-  &lt;div class='confluence-pro-section-containers'&gt;&lt;/div&gt;
-&lt;/div&gt;
-{{/html}}
-
-
-</content>
+  <hidden>true</hidden>
+  <content/>
   <object>
-    <name>ConfluenceMigratorPro.WebHome</name>
+    <name>ConfluenceMigratorPro.UI.WebHome</name>
     <number>0</number>
-    <className>XWiki.StyleSheetExtension</className>
-    <guid>10c7fd81-0e12-4c75-b5bb-ac8bfb9e5252</guid>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>f2260e41-1fc0-4916-8165-4da80bbcbdc5</guid>
     <class>
-      <name>XWiki.StyleSheetExtension</name>
+      <name>XWiki.JavaScriptExtension</name>
       <customClass/>
       <customMapping/>
       <defaultViewSheet/>
@@ -113,24 +83,6 @@
         <unmodifiable>0</unmodifiable>
         <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
       </code>
-      <contentType>
-        <cache>0</cache>
-        <disabled>0</disabled>
-        <displayType>select</displayType>
-        <freeText>forbidden</freeText>
-        <largeStorage>0</largeStorage>
-        <multiSelect>0</multiSelect>
-        <name>contentType</name>
-        <number>6</number>
-        <prettyName>Content Type</prettyName>
-        <relationalStorage>0</relationalStorage>
-        <separator> </separator>
-        <separators>|, </separators>
-        <size>1</size>
-        <unmodifiable>0</unmodifiable>
-        <values>CSS|LESS</values>
-        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
-      </contentType>
       <name>
         <disabled>0</disabled>
         <name>name</name>
@@ -173,35 +125,59 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>.cfmPrerequisites ul{
-  list-style: none;
-}
+      <code>require(['jquery'], function ($) {
 
-.cfmTitle::after {
-  font-style: italic;
-  color: #bbb;
-  margin-left: 0.5em;
-}
+  $('#confluence-pro-tab-root li').on('click', function () {
+    let currentElement = $(this);
+    console.log(currentElement.data());
+    // If the container already exist just display it, otherwise lazy load the content when the user clicks on the tab
+    let contentContainer = $(`.${currentElement.data('contentContainer')}`)
+    console.log(contentContainer)
+    if (contentContainer.length != 0) {
+      hideSections();
+      contentContainer.removeClass('hidden')
+    }
+    else {
+      let pageReference = currentElement.data('pageReference');
+      lazyLoad(currentElement.data('contentContainer'), pageReference)
+    }
+  });
 
-.cfmTitle.completed::after {
-  content: "(${services.localization.render('confluencepro.prerequisites.completed')})"
-}
 
-.cfmTitle.incomplete::after {
-  content: "(${services.localization.render('confluencepro.prerequisites.incomplete')})"
-}</code>
-    </property>
-    <property>
-      <contentType>CSS</contentType>
+  function lazyLoad(containerClass, pageReference) {
+    let URL = new XWiki.Document(XWiki.Model.resolve(pageReference, XWiki.EntityType.DOCUMENT)).getURL('get');
+    hideSections();
+    $('.confluence-pro-section-containers').addClass('loading');
+    $.get(URL)
+      .done(function (data) {
+        $('.confluence-pro-section-containers').append(`&lt;div class=${containerClass}&gt;${data}&lt;/div&gt;`);
+        $('.confluence-pro-section-containers').removeClass('loading');
+        $(document).trigger('xwiki:dom:updated', { 'elements': $(`.${containerClass}`).toArray() });
+      })
+      .fail(function () { console.error("Failed to load section"); });
+  }
+
+  function hideSections() {
+    $('.confluence-pro-section-containers &gt; div').each(function () {
+      $(this).addClass('hidden')
+    })
+  }
+
+  $(document).ready(function(){
+    lazyLoad('confluence-pro-tab-container-new','ConfluenceMigratorPro.UI.NewSection')
+  });
+});
+
+</code>
     </property>
     <property>
       <name/>
     </property>
     <property>
-      <parse>1</parse>
+      <parse/>
     </property>
     <property>
-      <use>onDemand</use>
+      <use>currentPage</use>
     </property>
   </object>
 </xwikidoc>
