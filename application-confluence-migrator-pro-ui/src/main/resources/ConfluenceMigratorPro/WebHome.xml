@@ -37,6 +37,7 @@
   <hidden>false</hidden>
   <content>{{velocity}}
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.UI.WebHome'))
+#set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
 ##JS/CSS required by the lazy loaded pages.
 #set ($discard = $xwiki.jsfx.use('uicomponents/widgets/liveData.js', {'forceSkinAction': true}))
 {{/velocity}}
@@ -61,7 +62,7 @@
         Post Migration Fixes &lt;/a&gt;
     &lt;/li&gt;
   &lt;/ul&gt;
-  &lt;div class='confluence-pro-section-containers loading'&gt;&lt;/div&gt;
+  &lt;div class='confluence-pro-section-containers'&gt;&lt;/div&gt;
 &lt;/div&gt;
 {{/html}}
 
@@ -189,10 +190,36 @@
 
 .cfmTitle.incomplete::after {
   content: "(${services.localization.render('confluencepro.prerequisites.incomplete')})"
+}
+
+#confluencePackages .attachmentActions a:nth-last-child(2)
+{
+  margin: 5px;
+}
+
+## We add a margin only to the icon on the right
+#confluencePackages .attachmentActions a &gt; span:nth-child(1)
+{
+  margin-right: 3px;
+}
+
+
+.howToMigrateSubsection {
+  margin : 20px;
+}
+
+.howToMigrateSubsection &gt; a
+{
+  color: @text-color;
+}
+
+.confluence-pro-tab-container-new &gt; p:nth-child(1)
+{
+  display:none;
 }</code>
     </property>
     <property>
-      <contentType>CSS</contentType>
+      <contentType>LESS</contentType>
     </property>
     <property>
       <name/>

@@ -46,7 +46,7 @@
 {{/velocity}}
 {{velocity}}
 #macro (displaySubsection $icon $key $class $params)
-&lt;h3 class="cfmTitle $!class"&gt;
+&lt;div class="cfmTitle $!class"&gt;
   &lt;div&gt;
     &lt;span class="cfmTitleIcon"&gt;
       $services.icon.renderHTML($icon)
@@ -55,7 +55,7 @@
       $escapetool.xml($services.localization.render($key, $params))
     &lt;/span&gt;
   &lt;/div&gt;
-&lt;/h3&gt;
+&lt;/div&gt;
 #end
 #macro (addPrerequisiteToList $list $icon $translationKey $url $params)
   #if ($icon != 'check')
@@ -98,57 +98,61 @@
 {{/html}}
 #end
 #macro (howToMigrateUploadSubesction)
-&lt;a role="button" data-toggle="collapse" href="#cfmHowToMigrateUploadCollapse" aria-expanded="false" aria-controls="cfmHowToMigrateUploadCollapse"&gt;
-#displaySubsection('caret-down', 'confluencepro.howToMigrate.upload.title', '', {})
-&lt;/a&gt;
-  &lt;div id="cfmHowToMigrateUploadCollapse" class="collapse"&gt;
-  &lt;div&gt;
-    &lt;button id="facade-upload-button" class="btn btn-primary"&gt;$services.icon.renderHTML('add') $escapetool.xml($services.localization.render('confluencepro.uploadFacadeButton'))&lt;/button&gt;
-    &lt;div id='facade-upload-progress'&gt;&lt;/div&gt;
-  &lt;/div&gt;
-
-  #set ($storeDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.PackagesStore'))
-  #showAttachmentsLiveData($storeDoc 'confluencePackages')
-
-  #if ($hasEdit || $hasAdmin)
-    ## Hide the form because it comes from the platform, and we cannot customize its appearance. We are using a 'facade' button to trigger the upload via JS.
-    &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
+&lt;div class="howToMigrateSubsection"&gt;
+  &lt;a class="collapsed" role="button" data-toggle="collapse" href="#cfmHowToMigrateUploadCollapse" aria-expanded="false" aria-controls="cfmHowToMigrateUploadCollapse"&gt;
+  #displaySubsection('caret-down', 'confluencepro.howToMigrate.upload.title', '', {})
+  &lt;/a&gt;
+    &lt;div id="cfmHowToMigrateUploadCollapse" class="collapse"&gt;
     &lt;div&gt;
-    ## CSRF prevention
-    &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
-    &lt;fieldset&gt;
-      &lt;div class="fileupload-field"&gt;
-        &lt;label class="sr-only" for="confluenceUploadFile"&gt;$escapetool.xml(
-          $services.localization.render('core.viewers.attachments.upload.file'))&lt;/label&gt;
-        &lt;input id="confluenceUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems hidden"
-          data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;
-      &lt;/div&gt;
-    &lt;/fieldset&gt;
+      &lt;button id="facade-upload-button" class="btn btn-primary"&gt;$services.icon.renderHTML('add') $escapetool.xml($services.localization.render('confluencepro.uploadFacadeButton'))&lt;/button&gt;
+      &lt;div id='facade-upload-progress'&gt;&lt;/div&gt;
     &lt;/div&gt;
-    &lt;/form&gt;
-  #end
+
+    #set ($storeDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.PackagesStore'))
+    #showAttachmentsLiveData($storeDoc 'confluencePackages')
+
+    #if ($hasEdit || $hasAdmin)
+      ## Hide the form because it comes from the platform, and we cannot customize its appearance. We are using a 'facade' button to trigger the upload via JS.
+      &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
+      &lt;div&gt;
+      ## CSRF prevention
+      &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
+      &lt;fieldset&gt;
+        &lt;div class="fileupload-field"&gt;
+          &lt;label class="sr-only" for="confluenceUploadFile"&gt;$escapetool.xml(
+            $services.localization.render('core.viewers.attachments.upload.file'))&lt;/label&gt;
+          &lt;input id="confluenceUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems hidden"
+            data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;
+        &lt;/div&gt;
+      &lt;/fieldset&gt;
+      &lt;/div&gt;
+      &lt;/form&gt;
+    #end
+  &lt;/div&gt;
 &lt;/div&gt;
 #end
 
 #macro (howToMigrateServerSection)
-&lt;a role="button" data-toggle="collapse" href="#cfmHowToMigrateServerCollapse" aria-expanded="false" aria-controls="cfmHowToMigrateServerCollapse"&gt;
-#displaySubsection('caret-down', 'confluencepro.howToMigrate.server.title', '', {})
-&lt;/a&gt;
-&lt;div id="cfmHowToMigrateServerCollapse" class="cfmPrerequisites collapse"&gt;
-  #set ($escapedMessage = $escapetool.xml($services.localization.render('confluencepro.packages.serverPath')))
-  #set ($editURL = $xwiki.getURL("ConfluenceMigratorPro.Migrations.Migration${datetool.date.time}", 'edit', $escapetool.url({
-    'template': 'ConfluenceMigratorPro.Code.MigrationTemplate',
-    'parent': 'ConfluenceMigratorPro.Migrations.WebHome',
-    'isPath': '1',
-    'form_token': $services.csrf.token
-  })))
-  #set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;0}', "&lt;button class='btn btn-primary'&gt;$services.icon.renderHTML('drive') "))
-  #set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;1}', '&lt;/button&gt;'))
-  &lt;form method="post" action="$escapetool.xml($editURL)"&gt;
-    &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
-    &lt;p&gt;$escapedMessage&lt;/p&gt;
-    #displayPrefillForm
-  &lt;/form&gt;
+&lt;div class="howToMigrateSubsection"&gt;
+  &lt;a class="collapsed" role="button" data-toggle="collapse" href="#cfmHowToMigrateServerCollapse" aria-expanded="false" aria-controls="cfmHowToMigrateServerCollapse"&gt;
+  #displaySubsection('caret-down', 'confluencepro.howToMigrate.server.title', '', {})
+  &lt;/a&gt;
+    &lt;div id="cfmHowToMigrateServerCollapse" class="cfmPrerequisites collapse"&gt;
+      #set ($escapedMessage = $escapetool.xml($services.localization.render('confluencepro.packages.serverPath')))
+      #set ($editURL = $xwiki.getURL("ConfluenceMigratorPro.Migrations.Migration${datetool.date.time}", 'edit', $escapetool.url({
+        'template': 'ConfluenceMigratorPro.Code.MigrationTemplate',
+        'parent': 'ConfluenceMigratorPro.Migrations.WebHome',
+        'isPath': '1',
+        'form_token': $services.csrf.token
+      })))
+      #set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;0}', "&lt;button class='btn btn-primary'&gt;$services.icon.renderHTML('drive') "))
+      #set ($escapedMessage = $stringtool.replace($escapedMessage, '&amp;#123;1}', '&lt;/button&gt;'))
+      &lt;form method="post" action="$escapetool.xml($editURL)"&gt;
+        &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
+        &lt;p&gt;$escapedMessage&lt;/p&gt;
+        #displayPrefillForm
+      &lt;/form&gt;
+    &lt;/div&gt;
 &lt;/div&gt;
 #end
 
@@ -180,7 +184,7 @@
   #set ($licensePageLink = "[[${label}&gt;&gt;path:${licenseHomeURL}]]")
   {{warning}}$translation.replace('ADMIN_URL', $licensePageLink){{/warning}}
 #end
-## Js for facade button
+## JS/CSS needed for the new section to work.
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.UI.NewSection'))
 ## Prerequisites Section ##
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
@@ -318,6 +322,33 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
   $('#facade-upload-button').on('click', function(){
     $('#confluenceUploadFile').click();
   })
+
+  function areAllCollapsed() {
+    return $('.howToMigrateSubsection &gt; a').toArray().some(el =&gt; !$(el).hasClass('collapsed'));
+}
+
+  function updateFontWeight() {
+    let collapsed = areAllCollapsed();
+    if (collapsed) {
+      $('.howToMigrateSubsection &gt; a').css('font-weight', 'bold');
+    } else {
+      $('.howToMigrateSubsection &gt; a').css('font-weight', 'normal');
+    }
+  }
+
+  // We use an observer because the collapse class is added via js and we might
+  // reach some cases were the on click event is handled before the class is added/removed.
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.type === 'attributes' &amp;&amp; mutation.attributeName === 'class') {
+        updateFontWeight(); // Run the function when class is changed
+      }
+    });
+  });
+
+  $('.howToMigrateSubsection &gt; a').each(function() {
+    observer.observe(this, { attributes: true });
+  });
 });</code>
     </property>
     <property>
