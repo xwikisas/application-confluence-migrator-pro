@@ -78,8 +78,6 @@ public class ConfluenceHomePage extends ViewPage
         getDriver().setDriverImplicitWait();
         List<WebElement> subsections = getDriver().findElements(By.cssSelector(".confluence-pro-tab-container-new h3 "
             + "a .cfmTitleIcon"));
-        System.out.println("THERE WERE ELEMENTS");
-        System.out.println(subsections.size());
         subsections.get(0).click();
     }
 
