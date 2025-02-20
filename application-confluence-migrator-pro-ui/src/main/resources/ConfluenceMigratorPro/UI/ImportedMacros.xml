@@ -43,7 +43,6 @@
 
 {{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
 
-
 {{velocity}}
 
 {{html}}
@@ -68,7 +67,6 @@
   limit="10"
   properties="name,occurrences,pages,supported"
   sort='occurrences:desc'}}$jsontool.serialize($liveDataConfig){{/liveData}}
-
 
 #getRequiredSkinExtensions($requiredSkinExtensions)
 ## We use the X-XWIKI-HTML-HEAD custom HTTP header to return the required JavaScript and CSS resources. Note that the
