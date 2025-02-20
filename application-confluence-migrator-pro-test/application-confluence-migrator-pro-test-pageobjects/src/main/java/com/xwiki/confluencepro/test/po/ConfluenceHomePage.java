@@ -75,7 +75,6 @@ public class ConfluenceHomePage extends ViewPage
                 )
             )
         );
-        System.out.println("AFTER WAIT");
         getDriver().setDriverImplicitWait();
         List<WebElement> subsections = getDriver().findElements(By.cssSelector(".confluence-pro-tab-container-new h3 "
             + "a .cfmTitleIcon"));
