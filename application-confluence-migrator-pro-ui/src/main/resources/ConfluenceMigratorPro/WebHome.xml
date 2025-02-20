@@ -203,7 +203,10 @@
   margin-right: 3px;
 }
 
-
+.cmpServerParametersForm label
+{
+  font-weight: normal;
+}
 .howToMigrateSubsection {
   margin : 20px;
 }
