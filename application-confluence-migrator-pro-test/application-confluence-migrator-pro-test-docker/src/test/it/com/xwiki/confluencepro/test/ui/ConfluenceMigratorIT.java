@@ -22,7 +22,6 @@ package com.xwiki.confluencepro.test.ui;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.xwiki.livedata.test.po.TableLayoutElement;
 import org.xwiki.test.docker.junit5.ExtensionOverride;
 import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.UITest;
@@ -68,6 +67,7 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.openUploadConfluenceSection();
         confluenceHomePage.attachFile(testConfiguration.getBrowser().getTestResourcesPath(), PACKAGE_NAME);
         assertTrue(confluenceHomePage.getPackageLiveTable().getTableLayout().countRows() > 0);
     }
@@ -78,13 +78,14 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.openUploadConfluenceSection();
         MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(1);
         migrationCreationPage.setTitle(MIGRATION_TITLE);
         migrationCreationPage.clickAdvancedMigrationOptions();
         assertTrue(migrationCreationPage.getAdvancedInputFilterProperties().size() > 1);
         assertTrue(migrationCreationPage.getAdvancedOutputProperties().size() > 1);
-        // TODO: Uncomment the following lines when issue https://github.com/xwikisas/application-licensing/issues/151
-        //  is fixed.
+//         TODO: Uncomment the following lines when issue https://github.com/xwikisas/application-licensing/issues/151
+//          is fixed.
 //        migrationCreationPage.clickSaveAndView();
 //        MigrationRunningPage runningPage = new MigrationRunningPage();
 //        assertEquals(MIGRATION_TITLE, runningPage.getDocumentTitle());
@@ -98,23 +99,24 @@ public class ConfluenceMigratorIT
 //        assertEquals("Waiting", migrationStatus);
     }
 
-    @Test
-    @Order(3)
-    void selectSpaceAndRunJob()
-    {
-        ConfluenceHomePage.goToPage();
-        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        TableLayoutElement migrationsLiveTable = confluenceHomePage.getMigrationsLiveTable().getTableLayout();
-        // TODO: Uncomment the following lines when issue https://github.com/xwikisas/application-licensing/issues/151
-        //  is fixed.
+//    @Test
+//    @Order(3)
+//    void selectSpaceAndRunJob()
+//    {
+// TODO: Uncomment the following lines when issue https://github.com/xwikisas/application-licensing/issues/151
+//  is fixed.
+//        ConfluenceHomePage.goToPage();
+//        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+//        TableLayoutElement migrationsLiveTable = confluenceHomePage.getMigrationsLiveTable().getTableLayout();
+//
 //        migrationsLiveTable.getCell("Migration", 1).findElement(By.cssSelector("a")).click();
 //        MigrationRunningPage runningPage = new MigrationRunningPage();
-
+//
 //        QuestionSpace questionSpace = runningPage.getSelectableSpace(0);
 //        questionSpace.getCheckbox().click();
 //        MigrationRaportView raportView = runningPage.confirmSpacesToMigrate();
 //
 //        assertEquals(1, raportView.getImportedSpaces().size());
 //        assertTrue(raportView.hasErrorLogs());
-    }
+//    }
 }

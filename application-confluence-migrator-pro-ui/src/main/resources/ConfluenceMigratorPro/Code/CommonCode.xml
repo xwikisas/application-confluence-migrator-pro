@@ -274,7 +274,7 @@
   &lt;/dd&gt;
 #end
 #macro (getMigrations)
-  #set ($migrations = $services.query.xwql("select doc.fullName, doc.name, doc.title from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.fullName desc").execute())
+  #set ($migrations = $services.query.xwql("select doc.fullName, doc.name, doc.title from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.creationDate desc").execute())
 #end
 #macro (displaySelectMigrations $fieldName $allowEmpty)
   &lt;select name="$fieldName" id="$fieldName" autocomplete="off"&gt;
@@ -287,7 +287,12 @@
       #if ($escapedMigrationTitle == "")
         #set ($escapedMigrationTitle = $escapetool.xml($migration[1]))
       #end
-      &lt;option value="$escapedMigrationName" #if ($migration[0] == $specifiedMigration) selected="selected"#end&gt;$escapedMigrationTitle&lt;/option&gt;
+      #if ($velocityCount == 1)
+        #set ($lastMigration = $escapetool.xml($services.localization.render('confluencepro.lastMigration')))
+        &lt;option value="$escapedMigrationName" selected="selected"&gt;${escapedMigrationTitle} (${lastMigration})&lt;/option&gt;
+      #else
+        &lt;option value="$escapedMigrationName" #if ($migration[0] == $specifiedMigration) selected="selected"#end&gt;$escapedMigrationTitle&lt;/option&gt;
+      #end
     #end
   &lt;/select&gt;
 #end
@@ -308,31 +313,22 @@
         #set ($configSource = "default")
       #end
     #end
-    &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.packages.prefillUsing'))&lt;/p&gt;
-    &lt;p&gt;
-      &lt;label&gt;
-        &lt;input type="radio" name="config-source" value="default" id="config-source-default" autocomplete="off" #if ($configSource == "default") checked="checked" #end/&gt;
-        $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingDefaults'))
-      &lt;/label&gt;
-    &lt;/p&gt;
-    &lt;p&gt;
-      &lt;label&gt;
-        &lt;input type="radio" name="config-source" value="last" id="config-source-last" autocomplete="off" #if ($configSource == "last") checked="checked" #end/&gt;
-        $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingLast'))
-      &lt;/label&gt;
-    &lt;/p&gt;
-    &lt;p&gt;
-      &lt;label&gt;
-        &lt;input type="radio" name="config-source" value="specified" id="config-source-specified" autocomplete="off" #if ($configSource == "specified") checked="specified" #end/&gt;
-        $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingSpecified'))
-      &lt;/label&gt;
-      #displaySelectMigrations("specified-migration", true)
-    &lt;/p&gt;
-    &lt;p&gt;
-      &lt;label&gt;
-        &lt;input type="checkbox" id="save-prefill-choices" name="save-prefill-choices" checked="checked" autocomplete="off" /&gt;
-        $escapetool.xml($services.localization.render('confluencepro.packages.rememberPrefillConfig'))
-      &lt;/label&gt;
+    &lt;div class="cmpServerParametersForm"&gt;
+      &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.packages.prefillUsing'))&lt;/p&gt;
+      &lt;p&gt;
+        &lt;label&gt;
+          &lt;input type="radio" name="config-source" value="default" id="config-source-default" autocomplete="off" #if ($configSource == "default") checked="checked" #end/&gt;
+          $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingDefaults'))
+        &lt;/label&gt;
+      &lt;/p&gt;
+      &lt;p&gt;
+        &lt;label&gt;
+          &lt;input type="radio" name="config-source" value="specified" id="config-source-specified" autocomplete="off" #if ($configSource == "specified") checked="specified" #end/&gt;
+          $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingSpecified'))
+        &lt;/label&gt;
+        #displaySelectMigrations("specified-migration", true)
+      &lt;/p&gt;
+    &lt;/div&gt;
   #end
 #end
 #**
@@ -670,6 +666,129 @@
     </property>
     <property>
       <parse>0</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+  <object>
+    <name>ConfluenceMigratorPro.Code.CommonCode</name>
+    <number>1</number>
+    <className>XWiki.StyleSheetExtension</className>
+    <guid>44b40a39-371f-4283-a15f-2fd06a5a7a52</guid>
+    <class>
+      <name>XWiki.StyleSheetExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <contentType>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>contentType</name>
+        <number>6</number>
+        <prettyName>Content Type</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>CSS|LESS</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </contentType>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>.cmpServerParametersForm input[type="radio"] {
+  accent-color: @btn-primary-bg;
+}</code>
+    </property>
+    <property>
+      <contentType>LESS</contentType>
+    </property>
+    <property>
+      <name>less</name>
+    </property>
+    <property>
+      <parse>1</parse>
     </property>
     <property>
       <use>onDemand</use>
