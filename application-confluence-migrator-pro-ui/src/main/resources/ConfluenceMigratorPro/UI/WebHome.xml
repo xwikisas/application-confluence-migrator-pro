@@ -129,18 +129,17 @@
 
   $('#confluence-pro-tab-root li').on('click', function () {
     let currentElement = $(this);
-    // If the container already exist just display it, otherwise lazy load the content when the user clicks on the tab
-    let contentContainer = $(`.${currentElement.data('contentContainer')}`)
+    // If the container already exist just display it, otherwise lazy load the content when the user clicks on the tab.
+    let contentContainer = $(`.${currentElement.data('contentContainer')}`);
     if (contentContainer.length != 0) {
       hideSections();
-      contentContainer.removeClass('hidden')
+      contentContainer.removeClass('hidden');
     }
     else {
       let pageReference = currentElement.data('pageReference');
       lazyLoad(currentElement.data('contentContainer'), pageReference);
     }
   });
-
 
   function lazyLoad(containerClass, pageReference) {
     let URL = new XWiki.Document(XWiki.Model.resolve(pageReference, XWiki.EntityType.DOCUMENT)).getURL('get');

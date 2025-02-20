@@ -192,32 +192,27 @@
   content: "(${services.localization.render('confluencepro.prerequisites.incomplete')})"
 }
 
-#confluencePackages .attachmentActions a:nth-last-child(2)
-{
+#confluencePackages .attachmentActions a:nth-last-child(2) {
   margin: 5px;
 }
 
 ## We add a margin only to the icon on the right
-#confluencePackages .attachmentActions a &gt; span:nth-child(1)
-{
+#confluencePackages .attachmentActions a &gt; span:nth-child(1) {
   margin-right: 3px;
 }
 
-.cmpServerParametersForm label
-{
+.cmpServerParametersForm label {
   font-weight: normal;
 }
 .howToMigrateSubsection {
   margin : 20px;
 }
 
-.howToMigrateSubsection &gt; a
-{
+.howToMigrateSubsection &gt; a {
   color: @text-color;
 }
 
-.confluence-pro-tab-container-new &gt; p:nth-child(1)
-{
+.confluence-pro-tab-container-new &gt; p:nth-child(1) {
   display:none;
 }</code>
     </property>
