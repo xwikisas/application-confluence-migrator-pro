@@ -114,6 +114,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final Marker SEND_PAGE_MARKER = MarkerFactory.getMarker("ConfluenceSendingPage");
 
+    private static final Marker SEND_TEMPLATE_MARKER = MarkerFactory.getMarker("ConfluenceSendingTemplate");
+
     @Inject
     private Provider<XWikiContext> contextProvider;
 
@@ -308,6 +310,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         Map<String, Map<String, List<String>>> collisions = new HashMap<>();
 
         CurrentPage currentPage = new CurrentPage();
+        long templateCount = 0;
         long docCount = 0;
         long revisionCount = 0;
         Collection<String> docs = new HashSet<>();
@@ -336,6 +339,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                         if (tryUpdateCurrentPage(currentPage, args)) {
                             docCount++;
                         }
+                    } else if (SEND_TEMPLATE_MARKER.equals(event.getMarker())) {
+                        templateCount++;
                     }
 
                     break;
@@ -351,6 +356,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         addAttachment("missingUsersGroups.json", getPermissionIssues(root, docs), document);
         addAttachment("collisions.json", collisions, document);
         object.setLongValue("imported", docCount);
+        object.setLongValue("templates", templateCount);
         object.setLongValue("revisions", revisionCount);
         return macroPages;
     }

@@ -74,6 +74,20 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
     </imported>
+    <templates>
+      <customDisplay/>
+      <disabled>0</disabled>
+      <hint/>
+      <name>templates</name>
+      <number>2</number>
+      <numberType>long</numberType>
+      <prettyName>templates</prettyName>
+      <size>30</size>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
+    </templates>
     <inputProperties>
       <contenttype>PureText</contenttype>
       <customDisplay/>
