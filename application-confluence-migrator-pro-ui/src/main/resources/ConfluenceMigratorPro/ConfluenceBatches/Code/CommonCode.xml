@@ -1,0 +1,124 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.ConfluenceBatches.Code.CommonCode" locale="">
+  <web>ConfluenceMigratorPro.ConfluenceBatches.Code</web>
+  <name>CommonCode</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ConfluenceMigratorPro.ConfluenceBatches.Code.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity output=false}}
+#macro (computeName $base $number)
+  #set ($name = "$base$number")
+  #if (!$xwiki.getDocument("ConfluenceMigratorPro.ConfluenceBatches.Batches.$name").isNew())
+    #set ($number = $number + 1)
+    #computeName($base, $number)
+  #end
+#end
+
+#macro (displaySelectBatches $fieldName $allowEmpty)
+  #set ($prefill = $request.prefill)
+  &lt;select name="$fieldName" id="$fieldName"&gt;
+    #if ($allowEmpty)
+      &lt;option value=""&gt;-&lt;/option&gt;
+    #end
+    #foreach ($batch in $batches)
+      #set ($escapedBatch = $escapetool.xml($batch))
+      &lt;option
+        value="$escapedBatch"
+        #if ($prefill == $escapedBatch)
+          selected
+        #end
+        #if ($batch == $request.get($fieldName))
+          { }selected="selected"
+        #end
+      &gt;$escapedBatch&lt;/option&gt;
+    #end
+  &lt;/select&gt;
+#end
+
+#macro (getBatches)
+  #set ($batches = $services.query.xwql("select doc.name from Document doc where doc.fullName like 'ConfluenceMigratorPro.ConfluenceBatches.Batches.%' and doc.name &lt;&gt; 'WebHome' order by doc.name").execute())
+#end
+
+#macro (displayBatchCopyForm)
+  #getBatches
+  #if (!$batches.isEmpty())
+    &lt;form method="post" class="xform" action="$xwiki.getURL('ConfluenceMigratorPro.ConfluenceBatches.Copy')"&gt;
+      &lt;dl&gt;
+        &lt;dt&gt;
+          &lt;label for="from_batch"&gt;Batch to copy&lt;/label&gt;
+          &lt;span class="xHint"&gt;
+            Copy this batch and start from here. All its migrations will be copied. You'll be able to review and tweak them, and then run the batch.
+          &lt;/span&gt;
+        &lt;/dt&gt;
+        &lt;dd&gt;
+          #displaySelectBatches('from_batch' true)
+        &lt;/dd&gt;
+        &lt;dt&gt;
+          &lt;label for="name"&gt;Name&lt;/label&gt;
+          &lt;span class="xHint"&gt;
+            Name of the new batch
+          &lt;/span&gt;
+        &lt;/td&gt;
+        &lt;dd&gt;
+          #set ($name = $request.name)
+          #if ("$!name" == "" &amp;&amp; $request.from_batch)
+            #computeName("${request.from_batch}_", 1)
+          #end
+          &lt;input id="name" type="text" value="$!name" name="name" /&gt;
+        &lt;/dd&gt;
+      &lt;/dl&gt;
+      &lt;p&gt;&lt;button class="btn btn-primary" name="confirm" value="1"&gt;Copy&lt;/p&gt;
+    &lt;/form&gt;
+    &lt;hr/&gt;
+  #end
+#end
+
+#macro(rerunWarning)
+
+{{warning}}
+There's currently nothing in the batch manager to check whether a batch has already been run, or whether migrations are still running. Re-running should work but this will erase previous migration logs, and doing this while the migrations are already running is not supported.
+{{/warning}}
+
+#end
+
+#macro (batchRunMigration $migDoc)
+
+    Starting the job for [[$migDoc.getDocumentReference()]]
+
+    #runMigrationJob($migDoc, true)
+
+#end
+{{/velocity}}
+</content>
+</xwikidoc>

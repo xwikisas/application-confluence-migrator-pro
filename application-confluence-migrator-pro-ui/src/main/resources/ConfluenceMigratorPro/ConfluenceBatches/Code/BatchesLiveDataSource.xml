@@ -1,0 +1,96 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.ConfluenceBatches.Code.BatchesLiveDataSource" locale="">
+  <web>ConfluenceMigratorPro.ConfluenceBatches.Code</web>
+  <name>BatchesLiveDataSource</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>BatchesLiveDataSource</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity wiki="true"}}
+#macro(actions, $docName)
+&lt;div&gt;
+  &lt;a href="$xwiki.getURL('ConfluenceMigratorPro.ConfluenceBatches.Copy', 'view', "from_batch=$docName")"&gt;
+    &lt;span &gt;$services.icon.renderHTML('copy') $escapetool.xml($services.localization.render('confluencemigratorpro.baches.copyButton'))&lt;/span&gt;
+  &lt;/a&gt;
+&lt;/div&gt;
+#end
+
+#macro (renderBatchLink $document)
+  &lt;a href="$xwiki.getURL($document.getFullName())"&gt;$document.getName()&lt;/a&gt;
+#end
+
+#macro(renderUser, $userReference)
+#set ($dotIndex = $userReference.indexOf('.'))
+#set ($name = $userReference.substring($dotIndex + 1))
+&lt;a href="$xwiki.getURL($userReference)"&gt;$name&lt;/a&gt;
+#end
+
+#set ($offset = $numbertool.toNumber($request.offset).intValue())
+## The offset sent by the live table starts at 1.
+#set ($offset = $offset - 1)
+#if (!$offset || $offset &lt; 0)
+  #set ($offset = 0)
+#end
+  #set ($limit = $numbertool.toNumber($request.limit).intValue())
+#if (!$limit)
+  #set ($limit = 10)
+#end
+
+## Livedata needs the total nb of elemnts to make the pagination every time you request a new page.
+#set ($count = $services.query.xwql('from doc.object(ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchClass) as batch').addFilter('count').execute())
+#set ($batches = $services.query.xwql('from doc.object(ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchClass) as batch').setLimit($limit).setOffset($offset).execute())
+## Compute the return json.
+  #set ($results = {
+    'totalrows': $count,
+    'returnedrows': $batches.size(),
+    'offset': $mathtool.add($offset, 1),
+    'reqNo': $numbertool.toNumber($request.reqNo).intValue(),
+    'rows': []
+  })
+
+#foreach ($batch in $batches)
+  ## We first have to get the object
+  #set ($document = $xwiki.getDocument($batch))
+  #set ($classObject = $document.getObject('ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchClass'))
+  #set ($discard = $results.rows.add({
+    'pageName': "#renderBatchLink($document)",
+    'totalSize': $services.confluenceBatches.computeBatchSize($classObject.getProperty('sources').getValue()),
+    'creationDate': $document.getCreationDate(),
+    'author': "#renderUser($document.getAuthor())",
+    'actions': "#actions($document.getName())"
+  }))
+#end
+#jsonResponse($results)
+{{/velocity}}
+</content>
+</xwikidoc>

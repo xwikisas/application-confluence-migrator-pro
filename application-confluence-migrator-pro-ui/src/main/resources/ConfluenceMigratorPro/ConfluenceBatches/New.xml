@@ -1,0 +1,476 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.ConfluenceBatches.New" locale="">
+  <web>ConfluenceMigratorPro.ConfluenceBatches</web>
+  <name>New</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>New Batch</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
+
+{{include reference="ConfluenceMigratorPro.ConfluenceBatches.Code.CommonCode" /}}
+
+{{velocity}}
+
+= Copy an existing batch
+
+{{html}}
+#displayBatchCopyForm
+{{/html}}
+
+= Create a batch from scratch
+
+{{html}}
+&lt;form method="get" class="xform"&gt;
+  &lt;dl&gt;
+    #set ($path = "$!escapetool.xml($request.path)")
+    &lt;dt&gt;
+      &lt;label for="path"&gt;Path&lt;/label&gt;
+      &lt;span class="xHint"&gt;
+        Select the path where to find the Confluence exports to be imported in this batch.
+        &lt;strong class="from-batch-info"&gt;
+        &lt;br /&gt;When copying from a batch, you can leave this empty if you want to use the same path.
+        &lt;/strong&gt;
+      &lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;&lt;input type="text" name="path" id="path" value="$path"/&gt;&lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;div class="empty-batch"&gt;
+    #displayPrefillForm
+  &lt;/div&gt;
+  &lt;p&gt;&lt;input type="submit" value="Refresh" class="button primary" /&gt;&lt;/p&gt;
+&lt;/form&gt;
+&lt;hr /&gt;
+{{/html}}
+
+{{/velocity}}
+
+{{groovy}}
+  import java.nio.file.Path
+  import java.nio.file.Paths
+  import org.xwiki.xml.XMLUtils
+
+  files = null
+  if (request.path) {
+    batchPath = request.path
+    if (batchPath.startsWith("file:")) {
+      batchPath = batchPath.substring(5)
+    }
+    File folder = new File(batchPath)
+    if (folder.isDirectory()) {
+      files = folder.listFiles()
+    } else {
+      println "This path isn't a directory: " + folder
+
+      Path currentRelativePath = Paths.get("")
+      String s = currentRelativePath.toAbsolutePath().toString()
+      println("Current absolute path is: " + s)
+    }
+  }
+  return // useful because it prevents files from being printed
+{{/groovy}}
+
+{{velocity}}
+#if ($objecttool.isNotNull($files) &amp;&amp; $files.size() &gt; 0)
+
+#handlePrefilledValues
+#set ($discard = $prefilledValues['output'].put("skipQuestions", true))
+
+{{html}}
+&lt;form method="post" class="xform" action="$xwiki.getURL('Create')" id="form-create"&gt;
+  &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
+  &lt;dl&gt;
+    &lt;dt&gt;
+       &lt;label for="batchName"&gt;Batch name&lt;/label&gt;
+       &lt;span class="xHint"&gt;
+         This is the name to give to this batch.
+       &lt;/span&gt;
+     &lt;/dt&gt;
+     &lt;dd&gt;&lt;input required="required" type="text" name="batchName" id="batchName" value="$!escapetool.xml($request.batchName)"/&gt;&lt;/dd&gt;
+     &lt;dt&gt;
+       &lt;label for="linkMappingPass"&gt;Link Mapping Pass&lt;/label&gt;
+       &lt;span class="xHint"&gt;
+         Perform a link mapping pass for all imports before actually importing the content.
+       &lt;/span&gt;
+     &lt;/dt&gt;
+     &lt;dd&gt;&lt;input type="checkbox" name="linkMappingPass" id="linkMappingPass" checked="checked"/&gt;&lt;/dd&gt;
+     &lt;dt&gt;
+       &lt;label for="dryRun"&gt;Dry run&lt;/label&gt;
+       &lt;span class="xHint"&gt;
+         Don't actually create the batch and run the migrations, but say what will be done.
+       &lt;/span&gt;
+     &lt;/dt&gt;
+     &lt;dd&gt;&lt;input type="checkbox" name="dryRun" id="dryRun"/&gt;&lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;ul id="confluence-exports"&gt;
+    #set ($escapedBatchPath = $escapetool.xml($batchPath))
+    #foreach ($fileEntry in $files)
+      #set ($escapedFilename = $escapetool.xml($fileEntry.name))
+      &lt;li&gt;
+        &lt;label&gt;
+          &lt;input class="confluence-export-checkbox" type="checkbox" name="source" value="$escapedBatchPath/$escapedFilename"/&gt;
+          $escapedFilename
+        &lt;/label&gt;
+      &lt;/li&gt;
+    #end
+  &lt;/ul&gt;
+
+  #displayMigrationParameterFormFields
+
+  &lt;p&gt;&lt;input type="submit" value="Create the batch " class="button primary" /&gt;&lt;/p&gt;
+  &lt;p&gt; You will be able to review and tweak the created migrations, and then run the batch. &lt;/p&gt;
+&lt;/form&gt;
+{{/html}}
+
+#end
+{{/velocity}}
+</content>
+  <object>
+    <name>ConfluenceMigratorPro.ConfluenceBatches.New</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>44e6d604-c040-4465-8e78-65ea9c83ff74</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>window.addEventListener("DOMContentLoaded", function () {
+    "use strict";
+    const p = document.createElement("p");
+    const selectAll = document.createElement("input");
+    selectAll.type = "button";
+    selectAll.onclick = function () {
+        for (const input of document.querySelectorAll(".confluence-export-checkbox")) {
+            input.checked = true;
+        }
+    };
+    selectAll.value = "Select All";
+    selectAll.className = "btn btn-secondary";
+
+    const selectNone = document.createElement("input");
+    selectNone.type = "button";
+    selectNone.onclick = function () {
+        for (const input of document.querySelectorAll(".confluence-export-checkbox")) {
+            input.checked = false;
+        }
+    };
+    selectNone.value = "Select None";
+    selectNone.className = "btn btn-secondary";
+
+    const invert = document.createElement("input");
+    invert.type = "button";
+    invert.onclick = function () {
+        for (const input of document.querySelectorAll(".confluence-export-checkbox")) {
+            input.checked = !input.checked;
+        }
+    };
+    invert.value = "Invert selection";
+    invert.className = "btn btn-secondary";
+    
+    const filter = document.createElement("input");
+    filter.type = "text";
+    filter.placeholder = "Filter…";
+    filter.ariaLabel = "Filter";
+    filter.addEventListener("keyup", filterKeyUp);
+
+    function filterKeyUp() {
+        const search = filter.value.toLowerCase();
+        for (const li of document.querySelectorAll("#confluence-exports &gt; li")) {
+            if (li.textContent.toLowerCase().includes(search)) {
+                li.classList.remove("filtered-out");
+            } else {
+                li.classList.add("filtered-out");
+            }
+        }
+    }
+
+    p.append(selectAll, document.createTextNode(" "), selectNone, document.createTextNode(" "), document.createTextNode(" "), invert, filter);
+    filterKeyUp();
+    const confluenceExports = document.getElementById("confluence-exports");
+    confluenceExports.parentNode.insertBefore(p, confluenceExports);
+    
+    document.getElementById("form-create").addEventListener("submit", function (e) {
+        if (!document.querySelectorAll(".confluence-export-checkbox:checked")[0]) {
+            alert("Please select at least one package");
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+});
+
+// FIXME: copy-pasted from Confluence Migrator Pro's MigrationSheet javascript extension
+require(['jquery'], function ($, l10n) {
+  function handleFilterPropertyChange() {
+    const input = document.getElementById(
+      this.classList.contains('cfm-input-filter-property')
+        ? 'cfm-input-properties'
+        : 'cfm-output-properties'
+    );
+
+    if (input) {
+      let json = {};
+      try {
+        json = JSON.parse(input.value);
+      } catch (e) {
+        console.error("Could not parse the json value of input", input, e);
+      }
+      json[this.dataset.key] = this.value;
+      input.value = JSON.stringify(json);
+    } else {
+        console.error("BUG: could not find the input to update for this property", this);
+    }
+  };
+
+  $('.cfm-input-filter-property').on('change', handleFilterPropertyChange);
+  $('.cfm-output-filter-property').on('change', handleFilterPropertyChange);
+});
+</code>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>ConfluenceMigratorPro.ConfluenceBatches.New</name>
+    <number>0</number>
+    <className>XWiki.StyleSheetExtension</className>
+    <guid>24926e26-bfd4-4791-92e7-87baebdaed48</guid>
+    <class>
+      <name>XWiki.StyleSheetExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <contentType>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>contentType</name>
+        <number>6</number>
+        <prettyName>Content Type</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>CSS|LESS</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </contentType>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>#confluence-exports {
+  list-style: none;
+}
+
+.filtered-out {
+  display: none;
+}
+</code>
+    </property>
+    <property>
+      <contentType>CSS</contentType>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+</xwikidoc>
