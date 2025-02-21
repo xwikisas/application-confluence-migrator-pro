@@ -1,0 +1,154 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.ConfluenceBatches.Run" locale="">
+  <web>ConfluenceMigratorPro.ConfluenceBatches</web>
+  <name>Run</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ConfluenceMigratorPro.ConfluenceBatches.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>Run</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{include reference="ConfluenceMigratorPro.ConfluenceBatches.Code.CommonCode"/}}
+
+{{include reference="ConfluenceMigratorPro.Code.CommonCode"/}}
+
+{{velocity}}
+#getBatches
+#if ($batches.isEmpty())
+
+  {{info}}
+  There are no batches to run
+  {{/info}}
+
+#elseif ($request.name &amp;&amp; ($request.confirm == "1" || $request.dryrun == "1"))
+  #set ($batchName = $request.name)
+  #set ($batchDoc = $xwiki.getDocument("ConfluenceMigratorPro.ConfluenceBatches.Batches.$batchName"))
+  #set ($migrations = $batchDoc.getValue('migrations'))
+
+  Running Batch [[$batchDoc]].
+
+  #if ($request.linkmapping)
+    #set ($lmMigrations = [])
+    #foreach ($migration in $migrations)
+      #set ($migrationDoc = $xwiki.getDocument($migration))
+      #set ($migrationDocRef = $migrationDoc.getDocumentReference())
+      #set ($migrationDocRefStr = $services.model.serialize($migrationDocRef))
+      #set ($migrationName = $migrationDocRef.getName())
+      #set ($lmMigrationName = $migrationName.replace("__CONTENT__", "__LM__"))
+      #if ($lmMigrationName == $migrationName)
+        * {{warning}}Link mapping phase for $migrationName skipped: it doesn't have a name in the expected format (it does not contain {{code language=none}}__CONTENT__{{/code}}){{/warning}}
+      #else
+        #set ($lmMigrationDocRef = $services.model.createDocumentReference($lmMigrationName, $migrationDocRef.getParent()))
+        #set ($lmMigrationDocRefStr = $services.model.serialize($lmMigrationDocRef))
+        #set ($outputProperties = $jsontool.fromString($migrationDoc.getValue("outputProperties")))
+        #if (!$outputProperties)
+          #set ($outputProperties = {})
+        #end
+        #set ($discard = $outputProperties.put("onlyLinkMapping", "true"))
+        #set ($discard = $outputProperties.put("saveLinkMapping", "true"))
+        #set ($outputPropertiesJSON = $jsontool.serialize($outputProperties))
+        #if ($request.confirm == "1")
+          #set ($discard = $xwiki.copyDocument($migrationDocRefStr, $lmMigrationDocRefStr))
+          #set ($lmMigrationDoc = $xwiki.getDocument($lmMigrationDocRef))
+          #set ($discard = $lmMigrationDoc.set("outputProperties", $outputPropertiesJSON))
+          #set ($discard = $lmMigrationDoc.set("executed", 0))
+          #set ($discard = $lmMigrationDoc.set("spaces", []))
+          #set ($d = $lmMigrationDoc.getDocument())
+          #foreach ($attachment in $d.getAttachmentList())
+            #set ($discard = $d.removeAttachment($attachment))
+          #end
+          #set ($discard = $lmMigrationDoc.save("Set link mapping output properties"))
+          #batchRunMigration($lmMigrationDoc)
+          #set ($discard = $lmMigrations.add($lmMigrationDocRefStr))
+        #else
+          * Would copy migration $migrationDocRef to $lmMigrationDocRefStr with output properties adapted to make a link mapping phase, {{code language=none}}$outputPropertiesJSON{{/code}}, and run it.
+        #end
+      #end
+    #end
+    #if ($request.confirm == "1")
+      #set ($discard = $batchDoc.set('lmMigrations', $lmMigrations))
+      #set ($discard = $batchDoc.save("Ran the migrations with the link mapping phase enabled"))
+    #end
+  #else
+
+    {{info}}
+    Link mapping phase is disabled
+    {{/info}}
+
+  #end
+  #foreach ($migration in $migrations)
+    #set ($migrationDoc = $xwiki.getDocument($migration))
+    #if ($request.confirm == "1")
+      #batchRunMigration($migrationDoc)
+    #else
+      * Would run [[$migrationDoc.getDocumentReference()]]
+    #end
+  #end
+#end
+#if (!$request.name || "$!request.confirm" != "1")
+
+
+{{html}}
+&lt;form method="post" action="" class="xform"&gt;
+  &lt;dl&gt;
+    &lt;dt&gt;
+      &lt;label for="name"&gt;Name&lt;/label&gt;
+      &lt;span class="xHint"&gt;
+        Name of the batch to run.
+      &lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      #displaySelectBatches('name')
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="linkmapping"&gt;Link mapping phase&lt;/label&gt;
+      &lt;span class="xHint"&gt;
+        Create and run link mapping migrations before the actual migrations. Disabling this is not recommanded. If you enabled Link Mapping at batch creation time, doubly so because link mapping wouldn't be saved at all.
+      &lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;p&gt;&lt;input type="checkbox" id="linkmapping" name="linkmapping" checked="checked"/&gt;&lt;/p&gt;
+    &lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;p&gt;
+    &lt;button class="btn" name="dryrun" value="1"&gt;Dry Run&lt;/button&gt;
+    &lt;button class="btn btn-primary" name="confirm" value="1"&gt;Run the migrations&lt;/button&gt;
+  &lt;/p&gt;
+&lt;/form&gt;
+{{/html}}
+
+
+#rerunWarning
+
+#end
+{{/velocity}}
+</content>
+</xwikidoc>

@@ -1,0 +1,180 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.ConfluenceBatches.Create" locale="">
+  <web>ConfluenceMigratorPro.ConfluenceBatches</web>
+  <name>Create</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ConfluenceMigratorPro.ConfluenceBatches.New</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>Create</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
+
+{{groovy}}
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.stream.Collectors;
+
+import groovy.json.JsonOutput;
+import groovy.json.JsonSlurper;
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.objects.BaseObject;
+import org.xwiki.model.reference.LocalDocumentReference;
+
+import org.xwiki.model.reference.DocumentReference;
+
+import com.xpn.xwiki.api.Object;
+import com.xpn.xwiki.api.Document;
+import com.xpn.xwiki.doc.XWikiDocument;
+
+MIGRATION_BASENAME_PATTERN = Pattern.compile('(?:.*/)?([^/]+?)(?:\\.zip)?$', Pattern.CASE_INSENSITIVE);
+migrationDocs = new ArrayList&lt;Document&gt;();
+
+Document getMigrationDoc(String batchName, String migrationBasename, XWikiContext context)
+{
+    int migrationIndex = 0;
+    XWikiDocument migrationDoc = null;
+    while (migrationDoc == null || !migrationDoc.isNew()) {
+        DocumentReference migrationReference = new DocumentReference(
+            xcontext.getDatabase(),
+            ["ConfluenceMigratorPro", "Migrations"],
+            "Batch_" + batchName + "__CONTENT__" + migrationBasename + migrationIndex
+        );
+        migrationDoc = new XWikiDocument(migrationReference);
+        migrationIndex = migrationIndex + 1;
+    }
+    return new Document(migrationDoc, context);
+}
+
+static String ensureFilePrefix(String source)
+{
+    if (source.startsWith("file:")) {
+        return source;
+    }
+
+    return "file://" + source;
+}
+
+void createMigrations(String batchName, String[] sources, Map&lt;String, String&gt; inputPropertiesMap, String outputProperties, boolean dryRun)
+{
+    for (String source : sources) {
+        Matcher m = MIGRATION_BASENAME_PATTERN.matcher(source);
+        if (m.matches()) {
+            String migrationBasename = m.group(1);
+            XWikiContext context = xcontext.getContext();
+            Document migrationDoc = getMigrationDoc(batchName, migrationBasename, context);
+            Object migrationObject = migrationDoc.getObject("ConfluenceMigratorPro.Code.MigrationClass", true);
+            Map&lt;String, String&gt; ownInputPropertiesMap = new HashMap&lt;&gt;(inputPropertiesMap);
+            ownInputPropertiesMap.put("source", ensureFilePrefix(source));
+            migrationObject.set("inputProperties", new JsonOutput().toJson(ownInputPropertiesMap));
+            migrationObject.set("outputProperties", outputProperties);
+            migrationDoc.save();
+            if (dryRun) {
+                println("Would create " + migrationDoc.getDocumentReference());
+            } else {
+                println("Creating " + migrationDoc.getDocumentReference());
+                migrationDocs.add(migrationDoc);
+            }
+        } else {
+            println("Could not create a migration basename for package " + source);
+        }
+    }
+}
+
+static String getPropertiesAsJSON(request, String type)
+{
+    String[] properties = request.getParameterMap().get("ConfluenceMigratorPro.Code.MigrationClass_0_" + type + "Properties")
+    if (properties == null || properties.length == 0) {
+        return null;
+    }
+    return properties[0];
+}
+
+batchName = request.batchName;
+
+String inputProperties = getPropertiesAsJSON(request, "input");
+String outputProperties = getPropertiesAsJSON(request, "output");
+String[] sources = request.getParameterMap().get("source");
+boolean linkMappingPass = request.linkMappingPass &amp;&amp; request.linkMappingPass != "off" &amp;&amp; request.linkMappingPass != "0";
+boolean dryRun = request.dryRun &amp;&amp; request.dryRun != "0" &amp;&amp; request.dryRun != "off";
+
+println "Batch name: " + batchName;
+println "Sources: " + sources;
+println "Input Properties: " + inputProperties;
+println "Output Properties: " + outputProperties;
+println "Link mapping pass: " + linkMappingPass;
+println "Dry run: " + dryRun;
+println "";
+
+if (batchName &amp;&amp; sources &amp;&amp; sources.length &amp;&amp; inputProperties &amp;&amp; outputProperties) {
+    Map&lt;String, String&gt; inputPropertiesMap = new JsonSlurper().parseText(inputProperties);
+    Map&lt;String, String&gt; outputPropertiesMap = new JsonSlurper().parseText(outputProperties);
+    if (linkMappingPass) {
+        outputPropertiesMap.put("onlyLinkMapping", "false");
+        outputPropertiesMap.put("saveLinkMapping", "false");
+        outputPropertiesMap.put("useLinkMapping", "true");
+        outputProperties = new JsonOutput().toJson(outputPropertiesMap);
+    }
+    createMigrations(batchName, sources, inputPropertiesMap, outputProperties, dryRun);
+
+    LocalDocumentReference batchReference = new LocalDocumentReference(List.of("ConfluenceMigratorPro", "ConfluenceBatches", "Batches"), batchName);
+    if (dryRun) {
+        println "Would create " + batchReference;
+    } else {
+        Document batchPage = xwiki.getDocument(batchReference)
+        Object b = batchPage.getObject("ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchClass", true)
+        b.set("sources", Arrays.asList(sources));
+        b.set("migrations", migrationDocs.stream()
+            .map(d -&gt; services.model.serialize(d.getDocumentReference()))
+            .collect(Collectors.toList()));
+        batchPage.save();
+        println "BatchPage: [[" + services.model.serialize(batchReference) + "]]"
+    }
+} else {
+    println "{{warning}}Some parameters are missing{{/warning}}\n";
+    println "[[New batch&gt;&gt;New]]"
+}
+
+{{/groovy}}
+
+{{velocity}}
+
+{{html}}
+&lt;form method="post" action="$xwiki.getURL('ConfluenceMigratorPro.ConfluenceBatches.Run')"&gt;
+    &lt;input type="hidden" name="name" value="$escapetool.xml($batchName)" /&gt;
+    &lt;p&gt;&lt;button class="btn btn-primary" value"=confirm" name="1"&gt;Run the migrations&lt;/button&gt;&lt;/p&gt;
+&lt;/form&gt;
+{{/html}}
+
+{{/velocity}}
+</content>
+</xwikidoc>

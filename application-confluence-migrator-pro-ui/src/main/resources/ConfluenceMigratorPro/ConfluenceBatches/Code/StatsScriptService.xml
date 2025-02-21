@@ -1,0 +1,336 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.ConfluenceBatches.Code.StatsScriptService" locale="">
+  <web>ConfluenceMigratorPro.ConfluenceBatches.Code</web>
+  <name>StatsScriptService</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ConfluenceMigratorPro.ConfluenceBatches.Code.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content/>
+  <object>
+    <name>ConfluenceMigratorPro.ConfluenceBatches.Code.StatsScriptService</name>
+    <number>0</number>
+    <className>XWiki.ScriptComponentClass</className>
+    <guid>7ff6e503-7f7f-4b54-9f18-d45ce6ef76d9</guid>
+    <class>
+      <name>XWiki.ScriptComponentClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <scope>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>scope</name>
+        <number>2</number>
+        <prettyName>Scope</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>|wiki|global|user</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </scope>
+      <script_content>
+        <disabled>0</disabled>
+        <editor>Text</editor>
+        <name>script_content</name>
+        <number>3</number>
+        <prettyName>Script</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </script_content>
+      <script_language>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>script_language</name>
+        <number>1</number>
+        <prettyName>Language</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>groovy|python</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </script_language>
+    </class>
+    <property>
+      <scope>wiki</scope>
+    </property>
+    <property>
+      <script_content>import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xpn.xwiki.XWiki;
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.api.Document;
+import com.xpn.xwiki.doc.XWikiAttachment;
+import com.xpn.xwiki.doc.XWikiDocument;
+import org.slf4j.Logger;
+import org.xwiki.component.annotation.Component;
+import org.xwiki.job.JobStatusStore;
+import org.xwiki.job.event.status.JobProgressManager;
+import org.xwiki.job.event.status.JobStatus;
+import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
+import org.xwiki.model.EntityType;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReferenceResolver;
+import org.xwiki.script.service.ScriptService;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+import java.util.Collections;
+import java.util.Map;
+import java.util.List;
+import java.util.Date;
+
+@Component
+@Singleton
+@Named("ConfluenceMigratorPro.ConfluenceBatches.stats")
+public class BatchStatsScriptService implements ScriptService
+{
+    private static final TypeReference&lt;Map&lt;String, Object&gt;&gt; MAP_TYPE_REF = new TypeReference&lt;Map&lt;String, Object&gt;&gt;() {};
+    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private static final TypeReference&lt;Map&lt;String, List&lt;Map&lt;String, Object&gt;&gt;&gt;&gt; REF_WARNING_TYPE_REF = new TypeReference&lt;Map&lt;String, List&lt;Map&lt;String, Object&gt;&gt;&gt;&gt;() { }
+    private static final TypeReference&lt;Map&lt;String, List&lt;Object&gt;&gt;&gt; CRITICAL_TYPE_REF = new TypeReference&lt;Map&lt;String, List&lt;Object&gt;&gt;&gt;() { }
+
+    @Inject
+    private JobStatusStore jobStatusStore;
+
+    @Inject
+    private Provider&lt;XWikiContext&gt; contextProvider;
+
+    @Inject
+    private Logger logger;
+
+    @Inject
+    private JobProgressManager progressManager;
+
+    @Inject
+    private EntityReferenceResolver&lt;String&gt; resolver;
+
+    public String getCSV(Document batchDoc)
+    {
+        List&lt;String&gt; migrations = (List&lt;String&gt;) batchDoc.getValue("migrations");
+        String csv = (
+                "migration," +
+                "source," +
+                "spaces," +
+                "start," +
+                "end," +
+                "duration_ms," +
+                "docCount," +
+                "revisionCount," +
+                "duration_per_doc," +
+                "duration_per_revision," +
+                "reference_issues," +
+                "critical_issues," +
+                "executed," +
+                "requires_extra_attention\n"
+        );
+
+        int migrationCount = 0;
+        progressManager.pushLevelProgress(migrations.size(), this);
+        for (String migration : migrations) {
+            progressManager.startStep(this);
+            migrationCount++;
+            logger.info("Computing time for migration [{}] ({}/{})", migration, migrationCount, migrations.size());
+            csv += getCSVLine(migration);
+            progressManager.endStep(this);
+        }
+        progressManager.popLevelProgress(this);
+
+        return csv;
+    }
+
+    public void computeAndSaveTimeAnalysis(Document batchDoc)
+    {
+        logger.info("Computing the CSV");
+        String csv = getCSV(batchDoc);
+        logger.info("Saving the CSV in time.csv");
+        batchDoc.addAttachment("time.csv", csv.getBytes());
+        batchDoc.save("Add time.csv");
+        logger.info("Done");
+    }
+
+    private String getCSVLine(String migration)
+    {
+        XWikiContext xcontext = contextProvider.get();
+        XWiki wiki = xcontext.getWiki();
+
+        DocumentReference migrationDoc = new DocumentReference(resolver.resolve(migration, EntityType.DOCUMENT));
+        String startDateString = "-";
+        String endDateString = "-";
+        long durationMs = 0;
+
+        JobStatus jobStatus = jobStatusStore.getJobStatus(ConfluenceMigrationJobRequest.getJobId(migrationDoc));
+        if (jobStatus != null) {
+          Date start = jobStatus.getStartDate();
+          Date end = jobStatus.getEndDate();
+          durationMs = end.getTime() - start.getTime();
+          startDateString = wiki.formatDate(start, DATE_FORMAT, xcontext);
+          endDateString = wiki.formatDate(end, DATE_FORMAT, xcontext);
+        }
+
+        XWikiDocument doc = wiki.getDocument(migrationDoc, xcontext);
+        List&lt;String&gt; spaces = doc != null ? doc.getListValue("spaces") : Collections.EMPTY_LIST;
+        boolean executed = doc != null ? doc.getIntValue("executed") == 1 : false;
+        long imported = doc != null ? doc.getLongValue("imported") : 0;
+        long revisions = doc != null ? doc.getLongValue("revisions") : 0;
+
+        String source = getSource(doc);
+
+        long referenceIssues = countReferenceIssues(doc);
+        def (long criticalIssues, boolean extraBad) = countCriticalIssues(doc);
+
+        extraBad = extraBad || (imported == 0);
+
+        return (
+            migration + ',' +
+            source + ',' +
+            String.join("|", spaces) + ',' +
+            startDateString + ',' +
+            endDateString + ',' +
+            s(durationMs) + ',' +
+            s(imported) + ',' +
+            s(revisions) + ',' +
+            s(Math.round(durationMs / Math.max(1, imported))) + ',' +
+            s(Math.round(durationMs / Math.max(1, revisions))) + ',' +
+            s(referenceIssues) + ',' +
+            s(criticalIssues) + ',' +
+            s(executed) + ',' +
+            s(extraBad) + '\n'
+        );
+    }
+
+    private String getSource(XWikiDocument doc)
+    {
+        try {
+            Map inputProperties = new ObjectMapper()
+                    .readValue(doc.getStringValue("inputProperties"), MAP_TYPE_REF);
+            return (String) inputProperties.getOrDefault("source", "");
+        } catch (Exception e) {
+            logger.error("Failed to get the source from input properties, this data will be missing", e);
+        }
+    }
+
+    private long countReferenceIssues(XWikiDocument doc)
+    {
+        long referenceIssues = 0;
+        def atachmentWarnings = getJSON(doc, "confluenceRefWarnings.json", REF_WARNING_TYPE_REF);
+        if (atachmentWarnings == null) {
+            return -1;
+        }
+        for (def warningList : atachmentWarnings.values()) {
+            for (def entry : warningList) {
+                def originalVersion = entry.get("originalVersion");
+                if (originalVersion == null || originalVersion.equals(entry.get("pageId"))) {
+                    referenceIssues++;
+                }
+            }
+        }
+        return referenceIssues;
+    }
+
+    private def countCriticalIssues(XWikiDocument doc)
+    {
+        long criticalIssues = 0;
+        boolean extraBad = false;
+        def issues = getJSON(doc, "skipped.json", CRITICAL_TYPE_REF);
+        if (issues == null) {
+            return [-1, true];
+        }
+        for (def issueList : issues.values()) {
+            if (!issueList.isEmpty()) {
+                if (issueList.get(0) instanceof String) {
+                    // old report
+                    criticalIssues += issueList.size();
+                    extraBad = extraBad || issueList.contains("Exception thrown during job execution");
+                } else {
+                    for (def entry : issueList) {
+                        def originalVersion = entry.get("originalVersion");
+                        if (originalVersion == null || originalVersion.equals(entry.get("pageId"))) {
+                            criticalIssues++;
+                        }
+                        def data = entry.get("data");
+                        extraBad = extraBad || "Exception thrown during job execution".equals(data.get("msg"));
+                    }
+                }
+            }
+        }
+        return [criticalIssues, extraBad];
+    }
+
+    private Map&lt;String, List&lt;Object&gt;&gt; getJSON(XWikiDocument doc, String filename, TypeReference&lt;?&gt; typeRef)
+    {
+        XWikiAttachment a = doc.getAttachment(filename);
+        if (a == null) {
+            return null;
+        }
+
+        try {
+            return new ObjectMapper().readValue(a.getAttachmentContent(contextProvider.get()).getContentInputStream(), typeRef);
+        } catch (Exception e) {
+            logger.error("Failed to parse [{}], related numbers will probably be inaccurate", e);
+        }
+        return null;
+    }
+
+    private static String s(Object o)
+    {
+        return o.toString();
+    }
+}</script_content>
+    </property>
+    <property>
+      <script_language>groovy</script_language>
+    </property>
+  </object>
+</xwikidoc>

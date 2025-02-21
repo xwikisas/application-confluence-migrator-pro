@@ -1,0 +1,135 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchRefFixingSheet" locale="">
+  <web>ConfluenceMigratorPro.ConfluenceBatches.Code</web>
+  <name>ConfluenceBatchRefFixingSheet</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ConfluenceMigratorPro.ConfluenceBatches.Code.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity}}
+* Batch: $doc.display("batch")
+* Dry run: $doc.display("dryRun")
+* Update in place: $doc.display("updateInPlace")
+
+#if ($request.run != "1")
+  #if ("$!doc.getValue('executed')" == "1")
+    Already executed. [[Compute statistics&gt;&gt;$doc||queryString="computeStats=1" class="btn btn-primary"]]
+    #if ($request.computeStats)
+      #set ($stats = {})
+      #foreach ($session in $doc.getValue("sessions"))
+        #set ($sessionDoc = $xwiki.getDocument($session))
+        #set ($sessionStats = $jsontool.fromString($sessionDoc.getAttachment("stats.json").getContentAsString()))
+        #if ($sessionStats)
+          #foreach ($entry in $sessionStats.entrySet())
+            #if ($stats[$entry.key])
+              #set ($stats[$entry.key] = $stats[$entry.key] + $entry.value)
+            #else
+              #set ($stats[$entry.key] = $entry.value)
+            #end
+          #end
+        #else
+          * {{warning}}Missing stats for [[$session]]{{/warning}}
+        #end
+        #set ($discard = $doc.addAttachment("stats.json", $jsontool.serialize($stats).getBytes()))
+        #set ($discard = $doc.save("Add statistics"))
+      #end
+    #end
+    #set ($stats = $doc.getAttachment("stats.json").getContentAsString())
+    #if ($stats)
+        #set ($stats = $jsontool.fromString($stats))
+
+        == Statistics
+
+        * Unchanged documents: $stats['unchangedDocs']
+        * Changed documents: $stats['successfulDocs']
+        * Failed documents: $stats['failedDocs']
+        * Successful reference conversions: $stats['successfulRefs']
+        * Failed reference conversions: $stats['failedRefs']
+
+    #end
+  #else
+
+    {{html}}
+    &lt;form method="post"&gt;
+      &lt;p&gt;&lt;button name="run" value="1" class="btn btn-primary"&gt;Run&lt;/button&gt;&lt;/p&gt;
+    &lt;/form&gt;
+    {{/html}}
+
+    #set ($confluenceRefTypeParser = $services.component.getInstance("org.xwiki.rendering.parser.ResourceReferenceTypeParser", "confluencePage"))
+    #if ($objecttool.isNull($confluenceRefTypeParser))
+      {{success}}
+      Confluence Resource Reference Type Parsers are not present, which helps having more detailed reference fixing logs.
+      {{/success}}
+    #else
+      {{warning}}
+      Confluence Resource Reference Type Parsers are present. This means that some Confluence references may be automatically and silently fixed at parse time and not while analysing the document content, and these fixes will not be logged.. Uninstall them if you'd like to have more detailed logs.
+      {{/warning}}
+    #end
+  #end
+#end
+
+#if ($request.run == "1")
+  #set ($dryRun = $request.dryRun == "on" || $request.dryRun == "1")
+  #foreach ($session in $doc.getValue("sessions"))
+    #if ($dryRun)
+      * Would trigger reference fixing session at [[$session]]
+    #else
+      #set ($jobId = $services.get("confluencepro.referencefixer").createAndRunReferenceFixingJob($xwiki.getDocument($session)).request.id)
+      #set ($id = $services.rendering.escape("$jobId", $xwiki.currentContentSyntaxId))
+      * Triggering reference fixing session at [[$session]]: job $id
+    #end
+  #end
+  #if (!$dryRun)
+    #set ($discard = $doc.set("executed", 1))
+    #set ($discard = $doc.save("Execute"))
+  #end
+#else
+Sessions: $doc.display("sessions")
+
+{{liveData
+  id="confluenceproreferencefixingsessions"
+  properties="doc.name,executed,migrations,spaces,dryRun,updateInPlace,doc.creationDate,doc.date"
+  source="liveTable"
+  sourceParameters="className=ConfluenceMigratorPro.ReferenceFixer.Code.ReferenceFixingSessionClass&amp;translationPrefix=confluencepro.referencefixer.livedata."
+  filters="doc.name=${doc.documentReference.name}__"
+  sort='doc.date:desc'
+}}{
+  "meta": {
+    "actions": [
+      {"id": "edit", "allowProperty": false}
+    ]
+  }
+}{{/liveData}}
+#end
+{{/velocity}}</content>
+</xwikidoc>

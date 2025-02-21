@@ -177,8 +177,50 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
     &lt;/div&gt;
   &lt;/div&gt;
 &lt;/div&gt;
+{{/html}}
+
+{{html}}
+#displaySubtitle('cube', 'Batch Migration', '', {})
+&lt;div&gt;
+  &lt;a href="$xwiki.getURL('ConfluenceMigratorPro.ConfluenceBatches.New')"&gt;
+    &lt;button class='btn btn-primary'&gt;$services.icon.renderHTML('add') $escapetool.xml($services.localization.render('confluencemigratorpro.baches.uploadButton'))&lt;/button&gt;
+  &lt;/a&gt;
+&lt;/div&gt;
+{{/html}}
+
+  #set ($parameters = $escapetool.url({
+    'resultPage': 'ConfluenceMigratorPro.ConfluenceBatches.Code.BatchesLiveDataSource',
+    'translationPrefix': 'confluenceMigratorPro.batches.header.'
+  }))
+
+  #set ($liveDataConfig= {
+    'meta': {
+      'propertyDescriptors': [
+        {'id': 'pageName', 'displayer': 'html'},
+        {'id': 'totalSize', 'displayer': 'html'},
+        {'id': 'creationDate', 'displayer': 'date'},
+        {'id': 'author', 'displayer': 'html'},
+        {'id': 'actions', 'displayer': 'html'}
+      ],
+      'entryDescriptor': {
+        'idProperty': 'pageName'
+      }
+    }
+  })
+
+  {{liveData
+    id="confluenceMigratorProBatches"
+    properties="pageName,totalSize, creationDate, author, actions"
+    source='liveTable'
+    sourceParameters="$parameters"
+    sort='creationDate:desc'
+  	limit="10"}}$jsontool.serialize($liveDataConfig){{/liveData}}
+
+
+{{html}}
 #displaySubtitle('book', 'confluencepro.migrations.title', '', {})
 {{/html}}
+
 
 #displayMigrationsLiveData
 
