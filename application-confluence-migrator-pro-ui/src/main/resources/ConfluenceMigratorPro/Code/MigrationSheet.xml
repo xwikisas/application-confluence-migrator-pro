@@ -404,8 +404,14 @@
     #set ($missingPages = $collectiontool.getSortedSet())
     #foreach ($entry in $jsonObject.entrySet())
       #foreach ($log in $entry.getValue())
-        #set ($spaceKey = $log.get("args").get(1))
-        #set ($pageTitle = $log.get("args").get(0))
+        #set ($args = $log.get("args"))
+        #if ($args.size() == 1)
+          #set ($spaceKey = $args.get(0))
+          #set ($pageTitle = "")
+        #else
+          #set ($spaceKey = $args.get(1))
+          #set ($pageTitle = $args.get(0))
+        #end
         #set ($discard = $missingPages.add("${spaceKey}.${pageTitle}"))
       #end
     #end
