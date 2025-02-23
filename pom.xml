@@ -29,7 +29,7 @@
   </parent>
   <groupId>com.xwiki.confluencepro</groupId>
   <artifactId>application-confluence-migrator-pro</artifactId>
-  <version>1.30.2-SNAPSHOT</version>
+  <version>1.31.1-SNAPSHOT</version>
   <name>Confluence Migrator Pro - Parent POM</name>
   <packaging>pom</packaging>
   <issueManagement>
@@ -46,7 +46,7 @@
     <licensing.version>1.25</licensing.version>
     <listeneradmin.version>1.0.2</listeneradmin.version>
     <xwiki.extension.category>application</xwiki.extension.category>
-    <confluence.version>9.77.3</confluence.version>
+    <confluence.version>9.79.0</confluence.version>
     <xwiki.enforcer.enforce-javase-dependencies.skip>true</xwiki.enforcer.enforce-javase-dependencies.skip>
   </properties>
   <modules>

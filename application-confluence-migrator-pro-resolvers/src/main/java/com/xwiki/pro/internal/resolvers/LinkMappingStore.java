@@ -22,6 +22,7 @@ package com.xwiki.pro.internal.resolvers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -113,9 +114,13 @@ public class LinkMappingStore implements Initializable
 
     private boolean areTableAbsent()
     {
+        boolean res;
         Session session = beginTransaction();
-        boolean res = areTableAbsent(session);
-        endTransaction(false);
+        try {
+            res = areTableAbsent(session);
+        } finally {
+            endTransaction(false);
+        }
         return res;
     }
 
@@ -130,8 +135,13 @@ public class LinkMappingStore implements Initializable
         }
 
         boolean found = session.createNativeQuery(
-                "select 1 from information_schema.tables where lower(table_name) = '" + TABLE_BY_ID + "'")
+                "select 1 from information_schema.tables where lower(table_name) = '" + TABLE_BY_ID + "' "
+                    + "and lower(table_schema) in ('xwiki', 'app', 'public')")
                 .getResultStream().findFirst().isPresent();
+        // we want to check that the existing table is only on the main wiki. On postgresql, table_schema is set to
+        // public. On database not based on catalogs, the schema is xwiki.
+        // We need to do this because former versions of Confluence Migrator Pro incorrectly created the table in
+        // subwikis under certain conditions, including when running it on a subwiki.
 
         if (found) {
             initialized = true;
@@ -148,8 +158,8 @@ public class LinkMappingStore implements Initializable
     public Session beginTransaction()
     {
         XWikiContext context = contextProvider.get();
-        XWikiHibernateStore store = context.getWiki().getHibernateStore();
         try {
+            XWikiHibernateStore store = XWiki.getMainXWiki(context).getHibernateStore();
             if (store.beginTransaction(context)) {
                 return store.getSession(context);
             }
@@ -221,11 +231,15 @@ public class LinkMappingStore implements Initializable
             return null;
         }
 
+        String ref;
         Session session = beginTransaction();
-        String ref = getOneString(
-            session.createNativeQuery(SELECT_REFERENCE_FROM + TABLE_BY_ID + WHERE_PAGE_ID)
-            .setParameter(1, pageId));
-        endTransaction(false);
+        try {
+            ref = getOneString(
+                session.createNativeQuery(SELECT_REFERENCE_FROM + TABLE_BY_ID + WHERE_PAGE_ID)
+                    .setParameter(1, pageId));
+        } finally {
+            endTransaction(false);
+        }
         return ref;
     }
 
@@ -239,12 +253,16 @@ public class LinkMappingStore implements Initializable
             return null;
         }
 
+        String ref;
         Session session = beginTransaction();
-        String ref = getOneString(session.createNativeQuery(
-                SELECT_REFERENCE_FROM + TABLE_BY_TITLE + WHERE_SPACE_KEY_AND_PAGE_TITLE)
-            .setParameter(1, spaceKey)
-            .setParameter(2, pageTitle));
-        endTransaction(false);
+        try {
+            ref = getOneString(session.createNativeQuery(
+                    SELECT_REFERENCE_FROM + TABLE_BY_TITLE + WHERE_SPACE_KEY_AND_PAGE_TITLE)
+                .setParameter(1, spaceKey)
+                .setParameter(2, pageTitle));
+        } finally {
+            endTransaction(false);
+        }
         return ref;
     }
 
@@ -258,11 +276,15 @@ public class LinkMappingStore implements Initializable
             return null;
         }
 
+        String ref;
         Session session = beginTransaction();
-        String ref = getOneString(session.createNativeQuery(
-                "select spaceKey from " + TABLE_BY_TITLE + " where reference = ?")
-            .setParameter(1, reference));
-        endTransaction(false);
+        try {
+            ref = getOneString(session.createNativeQuery(
+                    "select spaceKey from " + TABLE_BY_TITLE + " where reference = ?")
+                .setParameter(1, reference));
+        } finally {
+            endTransaction(false);
+        }
         return ref;
     }
 
@@ -272,17 +294,19 @@ public class LinkMappingStore implements Initializable
             convertOldMappings();
         }
 
-        if (areTableAbsent()) {
-            return null;
-        }
-
         Session session = beginTransaction();
-        String ref = getOneString(session.createNativeQuery(
-                "select reference from (select reference from " + TABLE_BY_TITLE
-                    + " where spaceKey = ? order by length(reference) asc limit 1)")
-            .setParameter(1, spaceKey));
-        endTransaction(false);
-        return ref;
+        try {
+            if (areTableAbsent(session)) {
+                return null;
+            }
+
+            return getOneString(session.createNativeQuery(
+                    "select reference from (select reference from " + TABLE_BY_TITLE
+                        + " where spaceKey = ? order by length(reference) asc limit 1) sub")
+                .setParameter(1, spaceKey));
+        } finally {
+            endTransaction(false);
+        }
     }
 
     String getShortestReferenceForSpaceByReference(String reference)
@@ -295,12 +319,16 @@ public class LinkMappingStore implements Initializable
             return null;
         }
 
+        String ref;
         Session session = beginTransaction();
-        String ref = getOneString(session.createNativeQuery(
-                "select reference " + TABLE_BY_TITLE + " where spaceKey in (select spaceKey from " + TABLE_BY_TITLE
-                    + " where reference = ? limit 1) order by length(reference) asc limit 1)")
-            .setParameter(1, reference));
-        endTransaction(false);
+        try {
+            ref = getOneString(session.createNativeQuery(
+                    SELECT_REFERENCE_FROM + TABLE_BY_TITLE + " where spaceKey in (select spaceKey from "
+                        + TABLE_BY_TITLE + " where reference = ? limit 1) order by length(reference) asc limit 1")
+                .setParameter(1, reference));
+        } finally {
+            endTransaction(false);
+        }
         return ref;
     }
 
@@ -328,20 +356,21 @@ public class LinkMappingStore implements Initializable
         }
 
         Session session = beginTransaction();
+        try {
+            session.createNativeQuery(
+                    DELETE_FROM + TABLE_BY_ID + " where reference in (select reference from " + TABLE_BY_TITLE
+                        + " where spaceKey in (:spaces))")
+                .setParameterList(SPACES, spaces)
+                .executeUpdate();
 
-        session.createNativeQuery(
-            DELETE_FROM + TABLE_BY_ID + " where reference in (select reference from " + TABLE_BY_TITLE
-                + " where spaceKey in (:spaces))")
-            .setParameterList(SPACES, spaces)
-            .executeUpdate();
+            session.createNativeQuery(DELETE_FROM + TABLE_BY_TITLE + " where spaceKey in (:spaces)")
+                .setParameter(SPACES, spaces)
+                .executeUpdate();
 
-        session.createNativeQuery(DELETE_FROM + TABLE_BY_TITLE + " where spaceKey in (:spaces)")
-            .setParameter(SPACES, spaces)
-            .executeUpdate();
-
-        maybeDropTables(session);
-
-        endTransaction(true);
+            maybeDropTables(session);
+        } finally {
+            endTransaction(true);
+        }
     }
 
     /**
@@ -374,8 +403,11 @@ public class LinkMappingStore implements Initializable
     public void empty()
     {
         Session session = beginTransaction();
-        empty(session);
-        endTransaction(true);
+        try {
+            empty(session);
+        } finally {
+            endTransaction(true);
+        }
     }
 
     /**
@@ -385,11 +417,14 @@ public class LinkMappingStore implements Initializable
     {
         long res = 0;
         Session session = beginTransaction();
-        if (!areTableAbsent(session)) {
-            res += getCount(session, TABLE_BY_ID);
-            res += getCount(session, TABLE_BY_TITLE);
+        try {
+            if (!areTableAbsent(session)) {
+                res += getCount(session, TABLE_BY_ID);
+                res += getCount(session, TABLE_BY_TITLE);
+            }
+        } finally {
+            endTransaction(true);
         }
-        endTransaction(true);
         return res;
     }
 
@@ -478,31 +513,34 @@ public class LinkMappingStore implements Initializable
     {
         List<Object[]> res = getOldMappings();
         if (res == null || res.isEmpty()) {
-            return;
+            needsConversion = false; return;
         }
-        Session session = beginTransaction();
-        logger.info("Migrating old link mapping documents to the new SQL storage");
         List<XWikiDocument> documentsToDelete = new ArrayList<>(res.size());
-        int i = 0;
-        for (Object[] line : res) {
-            i++;
-            XWikiDocument d = (XWikiDocument) line[0];
-            logger.info("Converting [{}] ({}/{})", d, i, res.size());
-            String spaceKey = getSpaceKey(line);
-            if (isSpaceFoundInConfluencePageClassObj(spaceKey)) {
-                logger.info("ConfluencePageClass objects found for the related space, skipping import of [{}]", d);
-                documentsToDelete.add(d);
-            } else {
-                try {
-                    boolean isPageIdMapping = d.getDocumentReference().getName().endsWith(IDS_SUFFIX);
-                    parseOldMapping(session, (String) line[2], spaceKey, isPageIdMapping);
+        Session session = beginTransaction();
+        try {
+            logger.info("Migrating old link mapping documents to the new SQL storage");
+            int i = 0;
+            for (Object[] line : res) {
+                i++;
+                XWikiDocument d = (XWikiDocument) line[0];
+                logger.info("Converting [{}] ({}/{})", d, i, res.size());
+                String spaceKey = getSpaceKey(line);
+                if (isSpaceFoundInConfluencePageClassObj(spaceKey)) {
+                    logger.info("ConfluencePageClass objects found for the related space, skipping import of [{}]", d);
                     documentsToDelete.add(d);
-                } catch (Exception e) {
-                    logger.error("Failed to convert [{}], the document will not be removed", d);
+                } else {
+                    try {
+                        boolean isPageIdMapping = d.getDocumentReference().getName().endsWith(IDS_SUFFIX);
+                        parseOldMapping(session, (String) line[2], spaceKey, isPageIdMapping);
+                        documentsToDelete.add(d);
+                    } catch (Exception e) {
+                        logger.error("Failed to convert [{}], the document will not be removed", d);
+                    }
                 }
             }
+        } finally {
+            endTransaction(true);
         }
-        endTransaction(true);
         removeOldMappings(documentsToDelete);
         needsConversion = false;
     }

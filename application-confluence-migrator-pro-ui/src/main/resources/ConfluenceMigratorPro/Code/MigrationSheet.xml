@@ -269,8 +269,12 @@
   ## Spaces section
   #set ($spaces = $obj.getProperty('spaces').value)
   #set ($imported = $obj.getValue('imported'))
+  #set ($templates = $obj.getValue('templates'))
   #if ($objecttool.isNull($imported) || $imported == 0)
-    #set ($imported = '')
+    #set ($imported = '0')
+  #end
+  #if ($objecttool.isNull($templates) || $templates == 0)
+    #set ($templates = 0)
   #end
   #set ($revisions = $obj.getValue('revisions'))
   #if ($objecttool.isNull($revisions) || $revisions == 0)
@@ -280,9 +284,9 @@
   #if ($spaceCount == 0)
     #set ($spaceCount = "")
   #elseif ($spaceCount == 1)
-    #displaySubtitle('check', 'confluencepro.migration.raport.imported.onespace.title', '', [$imported, $revisions])
+    #displaySubtitle('check', 'confluencepro.migration.raport.imported.onespace.title', '', [$imported, $revisions, $templates])
   #else
-    #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $revisions, $spaceCount])
+    #displaySubtitle('check', 'confluencepro.migration.raport.imported.title', '', [$imported, $revisions, $templates, $spaceCount])
   #end
 
   {{/html}}
@@ -404,8 +408,14 @@
     #set ($missingPages = $collectiontool.getSortedSet())
     #foreach ($entry in $jsonObject.entrySet())
       #foreach ($log in $entry.getValue())
-        #set ($spaceKey = $log.get("args").get(1))
-        #set ($pageTitle = $log.get("args").get(0))
+        #set ($args = $log.get("args"))
+        #if ($args.size() == 1)
+          #set ($spaceKey = $args.get(0))
+          #set ($pageTitle = "")
+        #else
+          #set ($spaceKey = $args.get(1))
+          #set ($pageTitle = $args.get(0))
+        #end
         #set ($discard = $missingPages.add("${spaceKey}.${pageTitle}"))
       #end
     #end
@@ -813,6 +823,10 @@
 
   #if ($obj.getValue('imported'))
     $os.print("Number of imported pages: $obj.getValue('imported')$escapetool.N")
+  #end
+
+  #if ($obj.getValue('templates'))
+    $os.print("Number of imported templates: $obj.getValue('templates')$escapetool.N")
   #end
 
   #if ($obj.getValue('spaces'))

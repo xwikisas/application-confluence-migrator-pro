@@ -1,0 +1,133 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.ConfluenceBatches.FixRefs" locale="">
+  <web>ConfluenceMigratorPro.ConfluenceBatches</web>
+  <name>FixRefs</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>Fix References</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{include reference="ConfluenceMigratorPro.ConfluenceBatches.Code.CommonCode" /}}
+
+{{velocity}}
+#macro (showBatchReferenceFixingForm)
+
+    {{html}}
+    &lt;form method="get"&gt;
+        #getBatches
+        &lt;p&gt;&lt;label&gt; Batch: #displaySelectBatches("batch", false)&lt;/label&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;label&gt;&lt;input type="checkbox" name="dryRun"/&gt; Dry run &lt;/label&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;label&gt;&lt;input type="checkbox" name="updateInPlace"/&gt; Update in place &lt;/label&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;button class="btn btn-primary" name="confirm" value="1"&gt;Prepare the batch reference fixing session&lt;/button&gt;&lt;/p&gt;
+    &lt;/form&gt;
+    {{/html}}
+#end
+#if ($request.batch &amp;&amp; $request.confirm == 1)
+    #set ($batchName = $request.batch)
+    #set ($batchRefStr = "ConfluenceMigratorPro.ConfluenceBatches.Batches.$batchName")
+    #set ($batchDoc = $xwiki.getDocument($batchRefStr))
+    #if ($batchDoc.isNew())
+
+        {{warning}}
+        Could not find batch $batchName.
+        {{/warning}}
+
+        #showBatchReferenceFixingForm
+
+    #else
+        #set ($refFixes = $batchDoc.getValue("refFixes"))
+        #set ($reFixesCount = $refFixes.size())
+        #if (!$refFixesCount)
+            #set ($refFixesCount = 0)
+        #end
+        #set ($sessionNumber = $reFixesCount + 1)
+        #set ($batchRefFixSessionName = "${sessionNumber}_Batch_${batchName}")
+        #set ($batchRefFixSessionRef = $services.model.createDocumentReference($xcontext.getDatabase(), ["ConfluenceBatches", "ReferenceFixes"], $batchRefFixSessionName))
+        #set ($batchRefFixSession = $xwiki.getDocument($batchRefFixSessionRef))
+        #set ($migrations = $batchDoc.getValue('migrations'))
+        #set ($sessions = [])
+        #if ($request.dryRun &amp;&amp; $request.dryRun != "0" &amp;&amp; $request.dryRun != "off")
+            #set ($dryRun = 1)
+        #else
+            #set ($dryRun = 0)
+        #end
+        #if ($request.updateInPlace &amp;&amp; $request.updateInPlace != "0" &amp;&amp; $request.updateInPlace != "off")
+            #set ($updateInPlace = 1)
+        #else
+            #set ($updateInPlace = 0)
+        #end
+        #foreach ($migrationRefStr in $migrations)
+            #set ($migrationRef = $services.model.resolveDocument($migrationRefStr))
+            #set ($sessionRef = $services.model.createDocumentReference($xcontext.getDatabase(), ["ConfluenceMigratorPro", "ReferenceFixer", "Sessions"], "${sessionNumber}_${migrationRef.getName()}"))
+            #set ($sessionDoc = $xwiki.getDocument($sessionRef))
+            #set ($sessionObj = $sessionDoc.getObject("ConfluenceMigratorPro.ReferenceFixer.Code.ReferenceFixingSessionClass", true))
+            #set ($discard = $sessionObj.set("migrations", [$migrationRefStr]))
+            #set ($discard = $sessionObj.set("dryRun", $dryRun))
+            #set ($discard = $sessionObj.set("updateInPlace", $updateInPlace))
+            #set ($discard = $sessionDoc.save())
+            #set ($discard = $sessions.add($services.model.serialize($sessionRef, "default")))
+        #end
+        #set ($obj = $batchRefFixSession.getObject("ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchRefFixingClass", true))
+        #set ($discard = $obj.set("batch", $batchDoc.getDocumentReference()))
+        #set ($discard = $obj.set("sessions", $sessions))
+        #set ($discard = $obj.set("dryRun", $dryRun))
+        #set ($discard = $obj.set("updateInPlace", $updateInPlace))
+        #set ($discard = $batchRefFixSession.save())
+        #set ($discard = $refFixes.add($services.model.serialize($batchRefFixSessionRef, "default")))
+        #set ($discard = $batchDoc.set("refFixes", $refFixes))
+        #set ($discard = $batchDoc.save())
+        The batch reference fixing session for batch [[$batchDoc]] is prepared at [[$batchRefFixSession]]. Visit it to trigger it.
+    #end
+#else
+
+#showBatchReferenceFixingForm
+
+{{liveData
+  id="batchreferencefixingsessions"
+  source="liveTable"
+  sourceParameters="className=ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchRefFixingClass&amp;translationPrefix=confluencebatches.referencefixing.livetable."
+  properties="doc.name,batch,executed,doc.date"
+  sort="doc.date:desc"
+}}{
+  "meta": {
+    "actions": [
+      {"id": "edit", "allowProperty": false}
+    ],
+    "propertiesDescriptor": [
+        {"id": "executed", "displayer":"Boolean"}
+    ]
+  }
+}{{/liveData}}
+#end
+
+{{/velocity}}</content>
+</xwikidoc>

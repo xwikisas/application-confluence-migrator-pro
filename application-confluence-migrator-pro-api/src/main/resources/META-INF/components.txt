@@ -1,1 +1,2 @@
 com.xwiki.confluencepro.script.ConfluenceMigrationScriptService
+com.xwiki.confluencepro.script.BatchesScriptServices
