@@ -88,6 +88,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-component-wiki</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.xwiki.confluencepro</groupId>
       <artifactId>application-confluence-migrator-pro-test-pageobjects</artifactId>
       <scope>test</scope>
