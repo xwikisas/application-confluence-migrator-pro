@@ -147,7 +147,8 @@ public class ConfluenceMigratorIT
 
     @Test
     @Order(5)
-    void batchPackageSelectorButtons(TestConfiguration testConfiguration) {
+    void batchPackageSelectorButtons(TestConfiguration testConfiguration)
+    {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
         confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
@@ -162,8 +163,6 @@ public class ConfluenceMigratorIT
         createBatchPage.inverseSelection();
         assertEquals(2, createBatchPage.countSelectedPackages());
     }
-
-
 
     /**
      * Create a new batch.
@@ -185,6 +184,6 @@ public class ConfluenceMigratorIT
         confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".batchSubsection");
         //Check that the batch was created.
-        assertTrue(confluenceHomePage.countBatches()>=1);
+        assertTrue(confluenceHomePage.countBatches() >= 1);
     }
 }
