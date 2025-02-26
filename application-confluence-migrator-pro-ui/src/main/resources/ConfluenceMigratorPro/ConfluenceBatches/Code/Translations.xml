@@ -84,7 +84,13 @@ confluencemigratorpro.batches.batchSheet.stats=Stats
 confluencemigratorpro.batches.batchSheet.fixReferences=Fix references
 confluencemigratorpro.batches.batchSheet.copyBatch=Copy batch
 confluencemigratorpro.batches.batchSheet.runBatch=Run batch
-confluencemigratorpro.batches.batchSheet.resumeBatch=Resume batch</content>
+confluencemigratorpro.batches.batchSheet.resumeBatch=Resume batch
+
+## Batch fix references
+confluencebatches.referencefixing.livetable.doc.name=Name
+confluencebatches.referencefixing.livetable.batch=Batch
+confluencebatches.referencefixing.livetable.executed=Executed
+confluencebatches.referencefixing.livetable.doc.date=Date</content>
   <object>
     <name>ConfluenceMigratorPro.ConfluenceBatches.Code.Translations</name>
     <number>0</number>

@@ -239,7 +239,7 @@
   {{warning}}$translation.replace('ADMIN_URL', $licensePageLink){{/warning}}
 #end
 ## JS/CSS needed for the new section to work.
-#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.Tabs.NewSection'))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.Tabs.NewMigration'))
 ## Prerequisites Section ##
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
 #set ($discard = $xwiki.ssfx.use('uicomponents/widgets/upload.css', true))

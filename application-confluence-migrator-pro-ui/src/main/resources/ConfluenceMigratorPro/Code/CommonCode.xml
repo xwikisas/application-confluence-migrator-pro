@@ -287,7 +287,7 @@
       #if ($escapedMigrationTitle == "")
         #set ($escapedMigrationTitle = $escapetool.xml($migration[1]))
       #end
-      #if ($foreach.index == 1)
+      #if ($foreach.count == 1)
         #set ($lastMigration = $escapetool.xml($services.localization.render('confluencepro.lastMigration')))
         &lt;option value="$escapedMigrationName" selected="selected"&gt;${escapedMigrationTitle} (${lastMigration})&lt;/option&gt;
       #else
