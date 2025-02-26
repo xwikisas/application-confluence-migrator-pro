@@ -59,7 +59,7 @@ confluencepro.migration.batch.livetable.header.doc.date=Date
 confluencepro.migration.batch.livetable.header.doc.author=Author
 confluencepro.migration.batch.livetable.header.actions=Actions
 
-## Create batch translations
+## Create batch
 confluencemigrator.pro.batches.createForm.selectAll=Select all
 confluencemigrator.pro.batches.createForm.selectNone=Unselect All
 confluencemigrator.pro.batches.createForm.invertSelect=Inverse selection
