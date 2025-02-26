@@ -20,9 +20,9 @@
 package com.xwiki.confluencepro.test.po;
 
 import java.io.File;
-import java.util.List;
 
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -65,7 +65,7 @@ public class ConfluenceHomePage extends ViewPage
         return new MigrationCreationPage();
     }
 
-    public void openUploadConfluenceSection()
+    private void loadingSection()
     {
         getDriver().waitUntilCondition(
             ExpectedConditions.not(
@@ -75,10 +75,35 @@ public class ConfluenceHomePage extends ViewPage
                 )
             )
         );
+    }
+
+    public void  openHowToMigrateSubsection(String subsectionClass)
+    {
         getDriver().setDriverImplicitWait();
-        List<WebElement> subsections = getDriver().findElements(By.cssSelector(".confluence-pro-tab-container-new h3 "
-            + "a .cfmTitleIcon"));
-        subsections.get(0).click();
+        WebElement subsections = getDriver().findElement(By.cssSelector(subsectionClass + " .cfmTitleIcon"));
+        subsections.click();
+    }
+
+    public void lazyLoadSection(String contentContainer){
+        getDriver().findElement(By.cssSelector(String.format("li[data-content-container=%s]", contentContainer)))
+            .click();
+        loadingSection();
+    }
+
+    public boolean checkIfSectionWasLoaded(String sectionClass){
+        try {
+            getDriver().findElement(By.cssSelector(sectionClass));
+            return true;
+        }
+        catch (TimeoutException e)
+        {
+            return false;
+        }
+    }
+
+    public CreateBatchPage createNewBatch(){
+        getDriver().findElement(By.cssSelector("#createNewBatchButton")).click();
+        return new CreateBatchPage();
     }
 
     public void attachFile(String testResourcePath, String file)
@@ -101,4 +126,10 @@ public class ConfluenceHomePage extends ViewPage
     {
         return new File(testResourcePath, "ConfluenceMigratorIT/" + filename);
     }
+
+    public int countBatches()
+    {
+        return getDriver().findElements(By.cssSelector("#confluenceMigratorProBatches table tbody tr")).size();
+    }
+
 }

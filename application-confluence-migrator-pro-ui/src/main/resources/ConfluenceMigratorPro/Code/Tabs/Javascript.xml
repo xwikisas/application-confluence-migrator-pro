@@ -20,28 +20,28 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="ConfluenceMigratorPro.UI.WebHome" locale="">
-  <web>ConfluenceMigratorPro.UI</web>
-  <name>WebHome</name>
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.Tabs.Javascript" locale="">
+  <web>ConfluenceMigratorPro.Code.Tabs</web>
+  <name>Javascript</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
-  <parent>ConfluenceMigratorPro.WebHome</parent>
+  <parent>ConfluenceMigratorPro.Code.Tabs.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <version>1.1</version>
-  <title>UI</title>
+  <title>Javascript</title>
   <comment/>
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content/>
   <object>
-    <name>ConfluenceMigratorPro.UI.WebHome</name>
+    <name>ConfluenceMigratorPro.Code.Tabs.Javascript</name>
     <number>0</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>f2260e41-1fc0-4916-8165-4da80bbcbdc5</guid>
+    <guid>8795bca1-8201-4525-af29-021efdff6cf7</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -125,7 +125,14 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery'], function ($) {
+      <code>define('confluenceMigratorPro', {
+  prefix: 'confluencemigratorpro.javascript.notifications.',
+  keys: [
+    'failedToLoad'
+  ]
+});
+
+require(['jquery', 'xwiki-l10n!confluenceMigratorPro'], function ($, l10n) {
 
   $('#confluence-pro-tab-root li').on('click', function () {
     let currentElement = $(this);
@@ -151,7 +158,10 @@
         $('.confluence-pro-section-containers').removeClass('loading');
         $(document).trigger('xwiki:dom:updated', { 'elements': $(`.${containerClass}`).toArray() });
       })
-      .fail(function () { console.error("Failed to load section"); });
+      .fail(function () {
+        new XWiki.widgets.Notification(l10n['failedToLoad'], 'error');
+        console.error("Failed to load section");
+      });
   }
 
   function hideSections() {
@@ -161,7 +171,7 @@
   }
 
   $(document).ready(function(){
-    lazyLoad('confluence-pro-tab-container-new','ConfluenceMigratorPro.UI.NewSection');
+    lazyLoad('confluence-pro-tab-container-new-migration','ConfluenceMigratorPro.Code.Tabs.NewMigration');
   });
 });
 
@@ -171,7 +181,7 @@
       <name/>
     </property>
     <property>
-      <parse/>
+      <parse>0</parse>
     </property>
     <property>
       <use>currentPage</use>

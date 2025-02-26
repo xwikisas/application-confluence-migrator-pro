@@ -41,13 +41,6 @@
 {{include reference="ConfluenceMigratorPro.ConfluenceBatches.Code.CommonCode" /}}
 
 {{velocity}}
-
-= Copy an existing batch
-
-{{html}}
-#displayBatchCopyForm
-{{/html}}
-
 = Create a batch from scratch
 
 {{html}}
@@ -58,9 +51,6 @@
       &lt;label for="path"&gt;Path&lt;/label&gt;
       &lt;span class="xHint"&gt;
         Select the path where to find the Confluence exports to be imported in this batch.
-        &lt;strong class="from-batch-info"&gt;
-        &lt;br /&gt;When copying from a batch, you can leave this empty if you want to use the same path.
-        &lt;/strong&gt;
       &lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;&lt;input type="text" name="path" id="path" value="$path"/&gt;&lt;/dd&gt;
@@ -68,7 +58,7 @@
   &lt;div class="empty-batch"&gt;
     #displayPrefillForm
   &lt;/div&gt;
-  &lt;p&gt;&lt;input type="submit" value="Refresh" class="button primary" /&gt;&lt;/p&gt;
+  &lt;p&gt;&lt;input id="refreshButton" type="submit" value="Refresh" class="button primary" /&gt;&lt;/p&gt;
 &lt;/form&gt;
 &lt;hr /&gt;
 {{/html}}
@@ -111,44 +101,82 @@
   &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
   &lt;dl&gt;
     &lt;dt&gt;
-       &lt;label for="batchName"&gt;Batch name&lt;/label&gt;
-       &lt;span class="xHint"&gt;
-         This is the name to give to this batch.
-       &lt;/span&gt;
-     &lt;/dt&gt;
-     &lt;dd&gt;&lt;input required="required" type="text" name="batchName" id="batchName" value="$!escapetool.xml($request.batchName)"/&gt;&lt;/dd&gt;
-     &lt;dt&gt;
-       &lt;label for="linkMappingPass"&gt;Link Mapping Pass&lt;/label&gt;
-       &lt;span class="xHint"&gt;
-         Perform a link mapping pass for all imports before actually importing the content.
-       &lt;/span&gt;
-     &lt;/dt&gt;
-     &lt;dd&gt;&lt;input type="checkbox" name="linkMappingPass" id="linkMappingPass" checked="checked"/&gt;&lt;/dd&gt;
-     &lt;dt&gt;
-       &lt;label for="dryRun"&gt;Dry run&lt;/label&gt;
-       &lt;span class="xHint"&gt;
-         Don't actually create the batch and run the migrations, but say what will be done.
-       &lt;/span&gt;
-     &lt;/dt&gt;
-     &lt;dd&gt;&lt;input type="checkbox" name="dryRun" id="dryRun"/&gt;&lt;/dd&gt;
+      &lt;label for="batchName"&gt;Batch name&lt;/label&gt;
+      &lt;span class="xHint"&gt;
+        This is the name to give to this batch.
+      &lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;&lt;input required="required" type="text" name="batchName" id="batchName"
+        value="$!escapetool.xml($request.batchName)" /&gt;&lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="linkMappingPass"&gt;Link Mapping Pass&lt;/label&gt;
+
+    &lt;/dt&gt;
+    &lt;dd class="checkbox-input-span"&gt;
+      &lt;input type="checkbox" name="linkMappingPass" id="linkMappingPass" checked="checked" /&gt;
+      &lt;span class="xHint"&gt;
+        Perform a link mapping pass for all imports before actually importing the content.
+      &lt;/span&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="dryRun"&gt;Dry run&lt;/label&gt;
+    &lt;/dt&gt;
+    &lt;dd class="checkbox-input-span"&gt;
+      &lt;input type="checkbox" name="dryRun" id="dryRun" /&gt;
+      &lt;span class="xHint"&gt;
+        Don't actually create the batch and run the migrations, but say what will be done.
+      &lt;/span&gt;
+    &lt;/dd&gt;
   &lt;/dl&gt;
-  &lt;ul id="confluence-exports"&gt;
-    #set ($escapedBatchPath = $escapetool.xml($batchPath))
-    #foreach ($fileEntry in $files)
+
+  &lt;div class="cfm-batches-create-button-containers"&gt;
+    &lt;div id="selectAll" class="btn btn-default"&gt;
+      &lt;span &gt;$escapetool.xml($services.localization.render('confluencemigrator.pro.batches.createForm.selectAll'))&lt;/span&gt;
+    &lt;/div&gt;
+      &lt;div id="selectNone" class="btn btn-default"&gt;
+      &lt;span &gt;$escapetool.xml($services.localization.render('confluencemigrator.pro.batches.createForm.selectNone'))&lt;/span&gt;
+    &lt;/div&gt;
+      &lt;div id="inverseSelect" class="btn btn-default inverse-button"&gt;
+       $services.icon.renderHTML('contrast')
+       &lt;span&gt;
+         $escapetool.xml($services.localization.render('confluencemigrator.pro.batches.createForm.invertSelect'))
+       &lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;br/&gt;
+  &lt;div&gt;
+    &lt;input id="export-filterer" type="text" aria-label="Filter"  placeholder="$escapetool.xml($services.localization.render('confluencemigrator.pro.batches.createForm.filterPlaceholder'))" /&gt;
+    &lt;br/&gt;
+  &lt;/div&gt;
+  &lt;div style="max-height: 400px; overflow: scroll; "&gt;
+    &lt;hr&gt;
+    &lt;ul id="confluence-exports"&gt;
+      #set ($escapedBatchPath = $escapetool.xml($batchPath))
+      #foreach ($fileEntry in $files)
       #set ($escapedFilename = $escapetool.xml($fileEntry.name))
       &lt;li&gt;
         &lt;label&gt;
-          &lt;input class="confluence-export-checkbox" type="checkbox" name="source" value="$escapedBatchPath/$escapedFilename"/&gt;
+          &lt;input class="confluence-export-checkbox" type="checkbox" name="source"
+            value="$escapedBatchPath/$escapedFilename" /&gt;
           $escapedFilename
         &lt;/label&gt;
       &lt;/li&gt;
-    #end
-  &lt;/ul&gt;
-
-  #displayMigrationParameterFormFields
-
-  &lt;p&gt;&lt;input type="submit" value="Create the batch " class="button primary" /&gt;&lt;/p&gt;
-  &lt;p&gt; You will be able to review and tweak the created migrations, and then run the batch. &lt;/p&gt;
+      #end
+    &lt;/ul&gt;
+    &lt;hr&gt;
+  &lt;/div&gt;
+  &lt;a class="collapsed uploadSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateUploadCollapse"
+      aria-expanded="false" aria-controls="cfmHowToMigrateUploadCollapse"&gt;
+    $services.icon.renderHTML('caret-down') $escapetool.xml($services.localization.render('confluencepro.job.question.advanced.link'))
+  &lt;/a&gt;
+  &lt;div id="cfmHowToMigrateUploadCollapse" class="collapse"&gt;
+    #displayMigrationParameterFormFields
+  &lt;/div&gt;
+  &lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+    &lt;div&gt;
+    &lt;p&gt;&lt;input type="submit" value="Create the batch " class="button primary createBatch" /&gt;&lt;/p&gt;
+    &lt;p&gt; You will be able to review and tweak the created migrations, and then run the batch. &lt;/p&gt;
+  &lt;/div&gt;
 &lt;/form&gt;
 {{/html}}
 
@@ -243,71 +271,7 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>window.addEventListener("DOMContentLoaded", function () {
-    "use strict";
-    const p = document.createElement("p");
-    const selectAll = document.createElement("input");
-    selectAll.type = "button";
-    selectAll.onclick = function () {
-        for (const input of document.querySelectorAll(".confluence-export-checkbox")) {
-            input.checked = true;
-        }
-    };
-    selectAll.value = "Select All";
-    selectAll.className = "btn btn-secondary";
-
-    const selectNone = document.createElement("input");
-    selectNone.type = "button";
-    selectNone.onclick = function () {
-        for (const input of document.querySelectorAll(".confluence-export-checkbox")) {
-            input.checked = false;
-        }
-    };
-    selectNone.value = "Select None";
-    selectNone.className = "btn btn-secondary";
-
-    const invert = document.createElement("input");
-    invert.type = "button";
-    invert.onclick = function () {
-        for (const input of document.querySelectorAll(".confluence-export-checkbox")) {
-            input.checked = !input.checked;
-        }
-    };
-    invert.value = "Invert selection";
-    invert.className = "btn btn-secondary";
-    
-    const filter = document.createElement("input");
-    filter.type = "text";
-    filter.placeholder = "Filter…";
-    filter.ariaLabel = "Filter";
-    filter.addEventListener("keyup", filterKeyUp);
-
-    function filterKeyUp() {
-        const search = filter.value.toLowerCase();
-        for (const li of document.querySelectorAll("#confluence-exports &gt; li")) {
-            if (li.textContent.toLowerCase().includes(search)) {
-                li.classList.remove("filtered-out");
-            } else {
-                li.classList.add("filtered-out");
-            }
-        }
-    }
-
-    p.append(selectAll, document.createTextNode(" "), selectNone, document.createTextNode(" "), document.createTextNode(" "), invert, filter);
-    filterKeyUp();
-    const confluenceExports = document.getElementById("confluence-exports");
-    confluenceExports.parentNode.insertBefore(p, confluenceExports);
-    
-    document.getElementById("form-create").addEventListener("submit", function (e) {
-        if (!document.querySelectorAll(".confluence-export-checkbox:checked")[0]) {
-            alert("Please select at least one package");
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    });
-});
-
-// FIXME: copy-pasted from Confluence Migrator Pro's MigrationSheet javascript extension
+      <code>// FIXME: copy-pasted from Confluence Migrator Pro's MigrationSheet javascript extension
 require(['jquery'], function ($, l10n) {
   function handleFilterPropertyChange() {
     const input = document.getElementById(
@@ -332,6 +296,34 @@ require(['jquery'], function ($, l10n) {
 
   $('.cfm-input-filter-property').on('change', handleFilterPropertyChange);
   $('.cfm-output-filter-property').on('change', handleFilterPropertyChange);
+
+  $("#selectAll").on('click', function () {
+    $('.confluence-export-checkbox').prop('checked', true);
+  });
+
+  $("#selectNone").on('click', function () {
+    $('.confluence-export-checkbox').prop('checked', false);
+  });
+
+  $("#inverseSelect").on('click', function () {
+    $('.confluence-export-checkbox').each(function () {
+      let currentElement = $(this);
+      currentElement.prop('checked', !currentElement.prop('checked'));
+    })
+  });
+  $('#export-filterer').on('keyup', function() {
+      let filter = $(this);
+      let search = filter.val().toLowerCase();
+
+      $("#confluence-exports &gt; li").each(function() {
+          if ($(this).text().toLowerCase().includes(search)) {
+              $(this).removeClass("filtered-out");
+          } else {
+              $(this).addClass("filtered-out");
+          }
+  });
+});
+
 });
 </code>
     </property>
@@ -453,15 +445,25 @@ require(['jquery'], function ($, l10n) {
     <property>
       <code>#confluence-exports {
   list-style: none;
+  margin-top: 1em;
 }
 
 .filtered-out {
   display: none;
 }
-</code>
+
+.checkbox-input-span {
+  display: flex;
+  align-items: center;
+  gap: 0.1em;
+}
+
+input[type="checkbox"] {
+  accent-color: @btn-primary-bg;
+}</code>
     </property>
     <property>
-      <contentType>CSS</contentType>
+      <contentType>LESS</contentType>
     </property>
     <property>
       <name/>

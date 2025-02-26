@@ -48,7 +48,7 @@
 
   #set ($parameters = $escapetool.url({
     'resultPage': 'ConfluenceMigratorPro.ConfluenceBatches.Code.BatchesLiveDataSource',
-    'translationPrefix': 'confluenceMigratorPro.batches.header.'
+    'translationPrefix': 'confluencemigratorpro.batches.header.'
   }))
 
   #set ($liveDataConfig= {

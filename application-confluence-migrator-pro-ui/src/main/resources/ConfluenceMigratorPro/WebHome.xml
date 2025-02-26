@@ -36,7 +36,7 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
   <content>{{velocity}}
-#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.UI.WebHome'))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.Tabs.Javascript'))
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
 ##JS/CSS required by the lazy loaded pages.
 #set ($discard = $xwiki.jsfx.use('uicomponents/widgets/liveData.js', {'forceSkinAction': true}))
@@ -45,19 +45,19 @@
 {{html}}
 &lt;div class="floatcontainer" id="confluence-pro-tab-root"&gt;
   &lt;ul class="xwikitabbar"&gt;
-    &lt;li class="active" data-content-container="confluence-pro-tab-container-new" data-page-reference="ConfluenceMigratorPro.UI.NewSection"&gt;
-      &lt;a href="#New" rel="nofollow"&gt;
-        New&lt;/a&gt;
+    &lt;li class="active" data-content-container="confluence-pro-tab-container-new-migration" data-page-reference="ConfluenceMigratorPro.Code.Tabs.NewMigration"&gt;
+      &lt;a href="#NewMigration" rel="nofollow"&gt;
+        New Migration&lt;/a&gt;
     &lt;/li&gt;
-    &lt;li class="" data-content-container="confluence-pro-tab-container-all-migrations" data-page-reference="ConfluenceMigratorPro.UI.AllMigrations"&gt;
+    &lt;li class="" data-content-container="confluence-pro-tab-container-all-migrations" data-page-reference="ConfluenceMigratorPro.Code.Tabs.AllMigrations"&gt;
       &lt;a href="#AllMigrations" rel="nofollow"&gt;
         All Migrations&lt;/a&gt;
     &lt;/li&gt;
-    &lt;li class="" data-content-container="confluence-pro-tab-container-imported-macros" data-page-reference="ConfluenceMigratorPro.UI.ImportedMacros"&gt;
+    &lt;li class="" data-content-container="confluence-pro-tab-container-imported-macros" data-page-reference="ConfluenceMigratorPro.Code.Tabs.ImportedMacros"&gt;
       &lt;a href="#ImportedMacros" rel="nofollow"&gt;
         Imported Macros &lt;/a&gt;
     &lt;/li&gt;
-    &lt;li class="" data-content-container="confluence-pro-tab-container-post-migration-fixes" data-page-reference="ConfluenceMigratorPro.UI.PostMigrationFIxes"&gt;
+    &lt;li class="" data-content-container="confluence-pro-tab-container-post-migration-fixes" data-page-reference="ConfluenceMigratorPro.Code.Tabs.PostMigrationFixes"&gt;
       &lt;a href="#PostMigrationFixes" rel="nofollow"&gt;
         Post Migration Fixes &lt;/a&gt;
     &lt;/li&gt;
@@ -68,6 +68,113 @@
 
 
 </content>
+  <object>
+    <name>ConfluenceMigratorPro.WebHome</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>d49cc169-63c1-4f59-9a58-11cfc3f3ed90</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>require(['jquery'], function($){
+      $('#confluence-pro-tab-root li').on('click', function(){
+        let currentElement = $(this);
+        let selectedElement = $('#confluence-pro-tab-root .active');
+        selectedElement.removeClass('active');
+        currentElement.addClass('active');
+      })
+    })</code>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
   <object>
     <name>ConfluenceMigratorPro.WebHome</name>
     <number>0</number>
@@ -192,6 +299,33 @@
   content: "(${services.localization.render('confluencepro.prerequisites.incomplete')})"
 }
 
+
+#confluencePackages .attachmentActions a:nth-last-child(2)
+{
+  margin: 5px;
+}
+
+## We add a margin only to the icon on the right
+#confluencePackages .attachmentActions a &gt; span:nth-child(1)
+{
+  margin-right: 3px;
+}
+
+
+.howToMigrateSubsection {
+  margin : 20px;
+}
+
+.howToMigrateSubsection &gt; a
+{
+  color: @text-color;
+}
+
+.cmpServerParametersForm label
+{
+  font-weight: normal;
+}
+
 #confluencePackages .attachmentActions a:nth-last-child(2) {
   margin: 5px;
 }
@@ -212,8 +346,8 @@
   color: @text-color;
 }
 
-.confluence-pro-tab-container-new &gt; p:nth-child(1) {
-  display:none;
+.confluence-pro-tab-container-new-migration &gt; p {
+  display: none !important;
 }</code>
     </property>
     <property>

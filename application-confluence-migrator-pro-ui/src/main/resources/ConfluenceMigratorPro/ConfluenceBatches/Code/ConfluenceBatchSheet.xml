@@ -39,13 +39,14 @@
   <content>{{include reference="ConfluenceMigratorPro.Code.CommonCode"/}}
 
 {{velocity}}
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchSheet'))
 #set ($escapedBatchName = $services.rendering.escape($doc.documentReference.name, $xwiki.currentContentSyntaxId))
 (% style="text-align: right"%)
-[[Stats&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Stats||class="btn button" queryString="batch=$escapedBatchName"]] ##
-[[Fix references&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.FixRefs||class="btn button" queryString="batch=$escapedBatchName"]] ##
-[[Copy the batch&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Copy||class="btn button" queryString="from_batch=$escapedBatchName"]] ##
-[[Run the batch&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Run||class="btn button" queryString="name=$escapedBatchName"]] ##
-[[Resume the batch&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Resume||class="btn button" queryString="name=$escapedBatchName"]]
+[[$escapetool.xml($services.localization.render("confluencemigratorpro.batches.batchSheet.stats"))&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Stats||class="btn button" queryString="batch=$escapedBatchName"]] ##
+[[$escapetool.xml($services.localization.render("confluencemigratorpro.batches.batchSheet.fixReferences"))&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.FixRefs||class="btn button" queryString="batch=$escapedBatchName"]] ##
+[[$escapetool.xml($services.localization.render("confluencemigratorpro.batches.batchSheet.copyBatch"))&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Copy||class="btn button" queryString="from_batch=$escapedBatchName"]] ##
+[[$escapetool.xml($services.localization.render("confluencemigratorpro.batches.batchSheet.runBatch"))&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Run||class="btn button" queryString="name=$escapedBatchName"]] ##
+[[$escapetool.xml($services.localization.render("confluencemigratorpro.batches.batchSheet.resumeBatch"))&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Resume||class="btn button" queryString="name=$escapedBatchName"]]
 
 ; Sources
 : $services.rendering.escape($doc.display("sources"), $xwiki.currentContentSyntaxId)
@@ -84,6 +85,114 @@
   }
 }{{/liveData}}
 
+{{html}}
+&lt;div&gt;&lt;span style="font-weight:bold;"&gt;$escapetool.xml($services.localization.render('confluencemigratorpro.batches.batch.refreshLivedata.hint')):&lt;/span&gt; &lt;button class="btn btn-primary" id="batchRefresh"&gt;$services.icon.renderHTML('refresh') $escapetool.xml($services.localization.render('confluencemigratorpro.batches.batch.refreshLivedata.button'))&lt;/button&gt;&lt;/div&gt;
+{{/html}}
+
 {{/velocity}}
 </content>
+  <object>
+    <name>ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchSheet</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>0497bbf9-f02f-4b34-af86-d0ad1f7a1215</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>require(['jquery'], function($) {
+  $('#batchRefresh').on('click', function(){
+    $('#confluenceMigrations').data('liveData').updateEntries();
+  })
+})</code>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse/>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
 </xwikidoc>

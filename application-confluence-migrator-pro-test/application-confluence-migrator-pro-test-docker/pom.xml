@@ -81,6 +81,17 @@
     </dependency>
     <!-- Remove to here -->
     <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-component-wiki</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
+  <!-- TODO remove this when moving the batches code from groovy to java -->
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-rendering-macro-groovy</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.xwiki.licensing</groupId>
       <artifactId>application-licensing-test-dependencies</artifactId>
       <version>${licensing.version}</version>

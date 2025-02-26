@@ -20,9 +20,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="ConfluenceMigratorPro.UI.ImportedMacros" locale="">
-  <web>ConfluenceMigratorPro.UI</web>
-  <name>ImportedMacros</name>
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.Tabs.AllMigrations" locale="">
+  <web>ConfluenceMigratorPro.Code.Tabs</web>
+  <name>AllMigrations</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
@@ -31,7 +31,7 @@
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <version>1.1</version>
-  <title>ImportedMacros</title>
+  <title>AllMigrations</title>
   <comment/>
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
@@ -46,27 +46,10 @@
 {{velocity}}
 
 {{html}}
-#displaySubtitle('list', 'confluencepro.macros.title', '', {})
-&lt;a href="https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation"&gt;$escapetool.xml($services.localization.render('confluencepro.macros.link'))&lt;/a&gt;
+#displaySubtitle('book', 'confluencepro.migrations.title', '', {})
 {{/html}}
 
-#set ($liveDataConfig = {
-  'meta': {
-    'propertyDescriptors': [
-      { 'id': 'name', 'displayer': 'html', 'sortable': 'false' },
-      { 'id': 'occurrences', 'filterable': 'false', 'sortable': 'false' },
-      { 'id': 'pages', 'filterable': 'false', 'sortable': 'false' },
-      { 'id': 'supported', 'displayer': 'html', 'filterable': 'false', 'sortable': 'false' }
-    ]
-  }
-})
-{{liveData 
-  id='confluenceImportedMacros'
-  source='liveTable'
-  sourceParameters="resultPage=ConfluenceMigratorPro.Code.MigratedMacroLiveTable&amp;translationPrefix=confluencepro.macros.livetable."
-  limit="10"
-  properties="name,occurrences,pages,supported"
-  sort='occurrences:desc'}}$jsontool.serialize($liveDataConfig){{/liveData}}
+#displayMigrationsLiveData
 
 #getRequiredSkinExtensions($requiredSkinExtensions)
 ## We use the X-XWIKI-HTML-HEAD custom HTTP header to return the required JavaScript and CSS resources. Note that the

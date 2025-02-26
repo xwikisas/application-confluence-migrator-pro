@@ -20,9 +20,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="ConfluenceMigratorPro.UI.NewSection" locale="">
-  <web>ConfluenceMigratorPro.UI</web>
-  <name>NewSection</name>
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.Tabs.NewMigration" locale="">
+  <web>ConfluenceMigratorPro.Code.Tabs</web>
+  <name>NewMigration</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
@@ -31,7 +31,7 @@
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <version>1.1</version>
-  <title>NewSection</title>
+  <title>NewMigration</title>
   <comment/>
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
@@ -97,9 +97,10 @@
 &lt;/div&gt;
 {{/html}}
 #end
-#macro (howToMigrateUploadSubesction)
+#macro (howToMigrateUploadSubsection)
 &lt;div class="howToMigrateSubsection"&gt;
-  &lt;a class="collapsed" role="button" data-toggle="collapse" href="#cfmHowToMigrateUploadCollapse" aria-expanded="false" aria-controls="cfmHowToMigrateUploadCollapse"&gt;
+  &lt;a class="collapsed uploadSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateUploadCollapse"
+    aria-expanded="false" aria-controls="cfmHowToMigrateUploadCollapse"&gt;
   #displaySubsection('caret-down', 'confluencepro.howToMigrate.upload.title', '', {})
   &lt;/a&gt;
     &lt;div id="cfmHowToMigrateUploadCollapse" class="collapse"&gt;
@@ -134,7 +135,8 @@
 
 #macro (howToMigrateServerSection)
 &lt;div class="howToMigrateSubsection"&gt;
-  &lt;a class="collapsed" role="button" data-toggle="collapse" href="#cfmHowToMigrateServerCollapse" aria-expanded="false" aria-controls="cfmHowToMigrateServerCollapse"&gt;
+  &lt;a class="collapsed serverSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateServerCollapse"
+    aria-expanded="false" aria-controls="cfmHowToMigrateServerCollapse"&gt;
   #displaySubsection('caret-down', 'confluencepro.howToMigrate.server.title', '', {})
   &lt;/a&gt;
     &lt;div id="cfmHowToMigrateServerCollapse" class="cfmPrerequisites collapse"&gt;
@@ -156,11 +158,63 @@
 &lt;/div&gt;
 #end
 
+#macro (howToMigrateBatches)
+&lt;div class="howToMigrateSubsection"&gt;
+  &lt;a class="collapsed batchSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateBatchesCollapse"
+    aria-expanded="false" aria-controls="cfmHowToMigrateBatchesCollapse"&gt;
+  #displaySubsection('caret-down', 'confluencepro.howToMigrate.batch.title', '', {})
+  &lt;/a&gt;
+    &lt;div id="cfmHowToMigrateBatchesCollapse" class="cfmPrerequisites collapse"&gt;
+&lt;div&gt;
+  &lt;a href="$xwiki.getURL('ConfluenceMigratorPro.ConfluenceBatches.New')"&gt;
+    &lt;button id="createNewBatchButton" class='btn btn-primary'&gt;$services.icon.renderHTML('add')
+    $escapetool.xml($services.localization.render('confluencemigratorpro.baches.uploadButton'))&lt;/button&gt;
+  &lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;
+  &lt;br/&gt;
+  &lt;span&gt;$escapetool.xml($services.localization.render('confluencemigratorpro.baches.section.hint'))&lt;/span&gt;
+  &lt;br/&gt;
+&lt;/div&gt;
+  #set ($parameters = $escapetool.url({
+    'resultPage': 'ConfluenceMigratorPro.ConfluenceBatches.Code.BatchesLiveDataSource',
+    'translationPrefix': 'confluencemigratorpro.batches.header.'
+  }))
+
+  #set ($liveDataConfig= {
+    'meta': {
+      'propertyDescriptors': [
+        {'id': 'pageName', 'displayer': 'html'},
+        {'id': 'totalSize', 'displayer': 'html'},
+        {'id': 'creationDate', 'displayer': 'date'},
+        {'id': 'author', 'displayer': 'html'},
+        {'id': 'actions', 'displayer': 'html'}
+      ],
+      'entryDescriptor': {
+        'idProperty': 'pageName'
+      }
+    }
+  })
+
+  {{liveData
+    id="confluenceMigratorProBatches"
+    properties="pageName,totalSize, creationDate, author, actions"
+    source='liveTable'
+    sourceParameters="$parameters"
+    sort='creationDate:desc'
+  	limit="10"}}$jsontool.serialize($liveDataConfig){{/liveData}}
+
+    &lt;/div&gt;
+&lt;/div&gt;
+
+#end
+
 #macro (howToMigrate)
 {{html wiki="true"}}
   #displaySubtitle('cube', 'confluencepro.packages.title', '', {})
-  #howToMigrateUploadSubesction()
+  #howToMigrateUploadSubsection()
   #howToMigrateServerSection()
+  #howToMigrateBatches()
 {{/html}}
 #end
 
@@ -185,7 +239,7 @@
   {{warning}}$translation.replace('ADMIN_URL', $licensePageLink){{/warning}}
 #end
 ## JS/CSS needed for the new section to work.
-#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.UI.NewSection'))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.Tabs.NewSection'))
 ## Prerequisites Section ##
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
 #set ($discard = $xwiki.ssfx.use('uicomponents/widgets/upload.css', true))
@@ -199,30 +253,6 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 
 #howToMigrate()
 
-{{html}}
-
-## Tbh I'm not sure where this is used I tried to search in the code base, but there were no queries.
-&lt;div class="modal fade migrationNameModal" tabindex="-1" role="dialog"&gt;
-  &lt;div class="modal-dialog modal-lg"&gt;
-    &lt;div class="modal-content"&gt;
-      &lt;div class="modal-header"&gt;
-        &lt;button type="button" class="close" data-dismiss="modal"&gt;&amp;times;&lt;/button&gt;
-        &lt;div class="modal-title"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.popup.title'))&lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class="modal-body xform"&gt;
-        &lt;div class="imageEditor" data-src="$escapetool.xml($services.model.serialize($attachment.getReference()))"&gt;&lt;/div&gt;
-        &lt;input id="confluence-migration-name" type="text" placeholder="$escapetool.xml($services.localization.render('confluencepro.migration.popup.placeholder'))"/&gt;
-      &lt;/div&gt;
-      &lt;div class="modal-footer"&gt;
-        &lt;input type="button" class="btn btn-primary save"  data-dismiss="modal"
-          value="$escapetool.xml($services.localization.render('confluencepro.migration.popup.startMigration'))" data-filename="$attachment.getFilename()"&gt;
-        &lt;input type="button" class="btn btn-default" data-dismiss="modal"
-          value="$escapetool.xml($services.localization.render('cancel'))"&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-{{/html}}
 #end
 
 #getRequiredSkinExtensions($requiredSkinExtensions)
@@ -231,7 +261,7 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
 #set ($discard = $response.setHeader('X-XWIKI-HTML-HEAD', $requiredSkinExtensions))
 {{/velocity}}</content>
   <object>
-    <name>ConfluenceMigratorPro.UI.NewSection</name>
+    <name>ConfluenceMigratorPro.Code.Tabs.NewMigration</name>
     <number>0</number>
     <className>XWiki.JavaScriptExtension</className>
     <guid>7707213e-63bb-4175-82fc-794eb76f16cd</guid>
@@ -347,6 +377,7 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
   });
 
   $('.howToMigrateSubsection &gt; a').each(function() {
+    console.info('Observer registred');
     observer.observe(this, { attributes: true });
   });
 });</code>
