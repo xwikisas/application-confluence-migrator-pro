@@ -180,7 +180,7 @@
     </property>
     <property>
       <code>require(['jquery'], function($) {
-  $('#batchRefresh').on('click', function(){
+  $('#batchRefresh').on('click', function() {
     $('#confluenceMigrations').data('liveData').updateEntries();
   })
 })</code>
