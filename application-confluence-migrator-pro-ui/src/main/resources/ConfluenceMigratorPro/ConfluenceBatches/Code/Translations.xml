@@ -43,11 +43,11 @@ ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.doc.date=Date
 ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.
 
 ## Main batch livedata
-confluenceMigratorPro.batches.header.pageName=Name
-confluenceMigratorPro.batches.header.totalSize=Batch Size
-confluenceMigratorPro.batches.header.creationDate=Date
-confluenceMigratorPro.batches.header.author=Created by
-confluenceMigratorPro.batches.header.actions=Actions
+confluencemigratorpro.batches.header.pageName=Name
+confluencemigratorpro.batches.header.totalSize=Batch Size
+confluencemigratorpro.batches.header.creationDate=Date
+confluencemigratorpro.batches.header.author=Created by
+confluencemigratorpro.batches.header.actions=Actions
 confluencemigratorpro.baches.uploadButton=New batch
 confluencemigratorpro.baches.copyButton=Copy batch
 
@@ -57,7 +57,46 @@ confluencepro.migration.batch.livetable.header.job_status=Status
 confluencepro.migration.batch.livetable.header.executed=Executed
 confluencepro.migration.batch.livetable.header.doc.date=Date
 confluencepro.migration.batch.livetable.header.doc.author=Author
-confluencepro.migration.batch.livetable.header.actions=Actions</content>
+confluencepro.migration.batch.livetable.header.actions=Actions
+
+## Create batch
+confluencemigratorpro.batches.createForm.selectAll=Select all
+confluencemigratorpro.batches.createForm.selectNone=Unselect All
+confluencemigratorpro.batches.createForm.invertSelect=Inverse selection
+confluencemigratorpro.batches.createForm.filterPlaceholder=Filter...
+confluencemigratorpro.batches.create.batchName=BATCH NAME
+confluencemigratorpro.batches.create.sources=SOURCES
+confluencemigratorpro.batches.create.inputProperties=INPUT PROPERTIES
+confluencemigratorpro.batches.create.outputProperties=OUTPUT PROPERTIES
+confluencemigratorpro.batches.create.linkMappingPass=LINK MAPPING PASS
+confluencemigratorpro.batches.create.dryRun=DRY RUN
+confluencemigratorpro.batches.create.button.title=New batch
+confluencemigratorpro.batches.create.warn.missingParameters=Some parameters are missing.
+confluencemigratorpro.batches.create.filesThatCouldBeCreated=WILL CREATE THE FOLLOWING MIGRATION PAGES:
+confluencemigratorpro.batches.create.batchPage=BATCH PAGE
+confluencemigratorpro.batches.createForm.linkMapping.hint=Perform a link mapping pass for all imports before actually importing the content.
+confluencemigratorpro.batches.createForm.linkMapping.title=Link Mapping Pass
+confluencemigratorpro.batches.createForm.dryRun.hint=Don't actually create the batch and run the migrations, but say what will be done.
+confluencemigratorpro.batches.createForm.dryRun.title=Dry run
+
+## Batch section
+confluencepro.howToMigrate.batch.title=Create or copy batches to import multiple Confluence exports
+confluencemigratorpro.baches.section.hint=Alternatively, select from below a batch to copy and start from it. All its migrations will be copied and you will be able to review and tweak them, and then run the batch.
+
+## Batch sheet
+confluencemigratorpro.batches.batch.refreshLivedata.hint=The status of the job in the above table is not refreshed automatically, and you have to trigger it manually
+confluencemigratorpro.batches.batch.refreshLivedata.button=Refresh
+confluencemigratorpro.batches.batchSheet.stats=Stats
+confluencemigratorpro.batches.batchSheet.fixReferences=Fix references
+confluencemigratorpro.batches.batchSheet.copyBatch=Copy batch
+confluencemigratorpro.batches.batchSheet.runBatch=Run batch
+confluencemigratorpro.batches.batchSheet.resumeBatch=Resume batch
+
+## Batch fix references
+confluencebatches.referencefixing.livetable.doc.name=Name
+confluencebatches.referencefixing.livetable.batch=Batch
+confluencebatches.referencefixing.livetable.executed=Executed
+confluencebatches.referencefixing.livetable.doc.date=Date</content>
   <object>
     <name>ConfluenceMigratorPro.ConfluenceBatches.Code.Translations</name>
     <number>0</number>

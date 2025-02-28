@@ -20,25 +20,41 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.LinkMappingState.WebHome" locale="">
-  <web>ConfluenceMigratorPro.Code.LinkMappingState</web>
-  <name>WebHome</name>
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.Tabs.AllMigrations" locale="">
+  <web>ConfluenceMigratorPro.Code.Tabs</web>
+  <name>AllMigrations</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
-  <parent>Main.WebHome</parent>
+  <parent>WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <version>1.1</version>
-  <title>LinkMappingState</title>
+  <title>AllMigrations</title>
   <comment/>
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>Hi there!
+  <content>{{velocity output="false"}}
+#template('display_macros.vm')
+#initRequiredSkinExtensions()
+{{/velocity}}
 
-{{info}}
-The link mapping state is not stored in this space anymore (except if some old mappings failed to convert to the new storage). Please head over to [[ConfluenceMigratorPro.WebHome]] for basic information on the link mapping state, and to empty it.
-{{/info}}</content>
+{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
+
+{{velocity}}
+
+{{html}}
+#displaySubtitle('book', 'confluencepro.migrations.title', '', {})
+{{/html}}
+
+#displayMigrationsLiveData
+
+#getRequiredSkinExtensions($requiredSkinExtensions)
+## We use the X-XWIKI-HTML-HEAD custom HTTP header to return the required JavaScript and CSS resources. Note that the
+## HTML of the UI element is returned in the response body.
+#set ($discard = $response.setHeader('X-XWIKI-HTML-HEAD', $requiredSkinExtensions))
+{{/velocity}}
+</content>
 </xwikidoc>

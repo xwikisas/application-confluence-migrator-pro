@@ -46,7 +46,7 @@
 #end
 
 #macro (renderBatchLink $document)
-  &lt;a href="$xwiki.getURL($document.getFullName())"&gt;$document.getName()&lt;/a&gt;
+  &lt;a href="$xwiki.getURL($document.documentReference)"&gt;$document.documentReference.name&lt;/a&gt;
 #end
 
 #macro(renderUser, $userReference)
@@ -87,7 +87,7 @@
     'totalSize': $services.confluenceBatches.computeBatchSize($classObject.getProperty('sources').getValue()),
     'creationDate': $document.getCreationDate(),
     'author': "#renderUser($document.getAuthor())",
-    'actions': "#actions($document.getName())"
+    'actions': "#actions($document.documentReference.name)"
   }))
 #end
 #jsonResponse($results)

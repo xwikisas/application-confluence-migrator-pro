@@ -19,19 +19,22 @@
  */
 package com.xwiki.confluencepro.test.ui;
 
+import java.io.File;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.xwiki.livedata.test.po.TableLayoutElement;
 import org.xwiki.test.docker.junit5.ExtensionOverride;
 import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.UITest;
 import org.xwiki.test.ui.TestUtils;
 
 import com.xwiki.confluencepro.test.po.ConfluenceHomePage;
+import com.xwiki.confluencepro.test.po.CreateBatchPage;
 import com.xwiki.confluencepro.test.po.MigrationCreationPage;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 @UITest(properties = {
     // Add the FileUploadPlugin which is needed by the test to upload attachment files
@@ -68,6 +71,8 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
         confluenceHomePage.attachFile(testConfiguration.getBrowser().getTestResourcesPath(), PACKAGE_NAME);
         assertTrue(confluenceHomePage.getPackageLiveTable().getTableLayout().countRows() > 0);
     }
@@ -78,13 +83,15 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
         MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(1);
         migrationCreationPage.setTitle(MIGRATION_TITLE);
         migrationCreationPage.clickAdvancedMigrationOptions();
         assertTrue(migrationCreationPage.getAdvancedInputFilterProperties().size() > 1);
         assertTrue(migrationCreationPage.getAdvancedOutputProperties().size() > 1);
-        // TODO: Uncomment the following lines when issue https://github.com/xwikisas/application-licensing/issues/151
-        //  is fixed.
+//         TODO: Uncomment the following lines when issue https://github.com/xwikisas/application-licensing/issues/151
+//          is fixed.
 //        migrationCreationPage.clickSaveAndView();
 //        MigrationRunningPage runningPage = new MigrationRunningPage();
 //        assertEquals(MIGRATION_TITLE, runningPage.getDocumentTitle());
@@ -98,23 +105,87 @@ public class ConfluenceMigratorIT
 //        assertEquals("Waiting", migrationStatus);
     }
 
-    @Test
-    @Order(3)
-    void selectSpaceAndRunJob()
-    {
-        ConfluenceHomePage.goToPage();
-        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        TableLayoutElement migrationsLiveTable = confluenceHomePage.getMigrationsLiveTable().getTableLayout();
-        // TODO: Uncomment the following lines when issue https://github.com/xwikisas/application-licensing/issues/151
-        //  is fixed.
+//    @Test
+//    @Order(3)
+//    void selectSpaceAndRunJob()
+//    {
+// TODO: Uncomment the following lines when issue https://github.com/xwikisas/application-licensing/issues/151
+//  is fixed.
+//        ConfluenceHomePage.goToPage();
+//        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+//        TableLayoutElement migrationsLiveTable = confluenceHomePage.getMigrationsLiveTable().getTableLayout();
+//
 //        migrationsLiveTable.getCell("Migration", 1).findElement(By.cssSelector("a")).click();
 //        MigrationRunningPage runningPage = new MigrationRunningPage();
-
+//
 //        QuestionSpace questionSpace = runningPage.getSelectableSpace(0);
 //        questionSpace.getCheckbox().click();
 //        MigrationRaportView raportView = runningPage.confirmSpacesToMigrate();
 //
 //        assertEquals(1, raportView.getImportedSpaces().size());
 //        assertTrue(raportView.hasErrorLogs());
+//    }
+
+    /**
+     * Check that all sections are loaded.
+     */
+    @Test
+    @Order(4)
+    void changeSection()
+    {
+        ConfluenceHomePage.goToPage();
+        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        assertTrue(confluenceHomePage.checkIfSectionWasLoaded(".confluence-pro-tab-container-new-migration"));
+        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-all-migrations");
+        assertTrue(confluenceHomePage.checkIfSectionWasLoaded(".confluence-pro-tab-container-all-migrations"));
+        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-imported-macros");
+        assertTrue(confluenceHomePage.checkIfSectionWasLoaded(".confluence-pro-tab-container-imported-macros"));
+        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-post-migration-fixes");
+        assertTrue(confluenceHomePage.checkIfSectionWasLoaded(".confluence-pro-tab-container-post-migration-fixes"));
+    }
+
+    @Test
+     /**
+     * Check that the buttons work and the packages are selected.
+     */
+    void batchPackageSelectorButtons(TestConfiguration testConfiguration)
+    {
+        ConfluenceHomePage.goToPage();
+        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".batchSubsection");
+        CreateBatchPage createBatchPage = confluenceHomePage.createNewBatch();
+        createBatchPage.completePath(new File(testConfiguration.getBrowser().getTestResourcesPath()).getAbsolutePath())
+            .refreshPage();
+        createBatchPage.selectAll();
+        assertEquals(2, createBatchPage.countSelectedPackages());
+        createBatchPage.selectNone();
+        assertEquals(0, createBatchPage.countSelectedPackages());
+        createBatchPage.inverseSelection();
+        assertEquals(2, createBatchPage.countSelectedPackages());
+    }
+
+    /**
+     * Create a new batch.
+     */
+    @Test
+    @Order(6)
+    void createNewBatch(TestConfiguration testConfiguration)
+    {
+        ConfluenceHomePage.goToPage();
+        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".batchSubsection");
+        CreateBatchPage createBatchPage = confluenceHomePage.createNewBatch();
+        createBatchPage.completePath(new File(testConfiguration.getBrowser().getTestResourcesPath()).getAbsolutePath())
+            .refreshPage().completeName("Test");
+        createBatchPage.selectAll();
+        createBatchPage.createBatch();
+        ConfluenceHomePage.goToPage();
+        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".batchSubsection");
+        //Check that the batch was created.
+        assertTrue(confluenceHomePage.countBatches() >= 1);
     }
 }
