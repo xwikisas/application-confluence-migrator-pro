@@ -60,18 +60,24 @@ confluencepro.migration.batch.livetable.header.doc.author=Author
 confluencepro.migration.batch.livetable.header.actions=Actions
 
 ## Create batch
-confluencemigrator.pro.batches.createForm.selectAll=Select all
-confluencemigrator.pro.batches.createForm.selectNone=Unselect All
-confluencemigrator.pro.batches.createForm.invertSelect=Inverse selection
-confluencemigrator.pro.batches.createForm.filterPlaceholder=Filter...
+confluencemigratorpro.batches.createForm.selectAll=Select all
+confluencemigratorpro.batches.createForm.selectNone=Unselect All
+confluencemigratorpro.batches.createForm.invertSelect=Inverse selection
+confluencemigratorpro.batches.createForm.filterPlaceholder=Filter...
 confluencemigratorpro.batches.create.batchName=BATCH NAME
 confluencemigratorpro.batches.create.sources=SOURCES
 confluencemigratorpro.batches.create.inputProperties=INPUT PROPERTIES
 confluencemigratorpro.batches.create.outputProperties=OUTPUT PROPERTIES
 confluencemigratorpro.batches.create.linkMappingPass=LINK MAPPING PASS
-confluencemigratorpro.batches.create.dryRun= DRY RUN
+confluencemigratorpro.batches.create.dryRun=DRY RUN
+confluencemigratorpro.batches.create.button.title=New batch
 confluencemigratorpro.batches.create.warn.missingParameters=Some parameters are missing.
+confluencemigratorpro.batches.create.filesThatCouldBeCreated=WILL CREATE THE FOLLOWING MIGRATION PAGES:
 confluencemigratorpro.batches.create.batchPage=BATCH PAGE
+confluencemigratorpro.batches.createForm.linkMapping.hint=Perform a link mapping pass for all imports before actually importing the content.
+confluencemigratorpro.batches.createForm.linkMapping.title=Link Mapping Pass
+confluencemigratorpro.batches.createForm.dryRun.hint=Don't actually create the batch and run the migrations, but say what will be done.
+confluencemigratorpro.batches.createForm.dryRun.title=Dry run
 
 ## Batch section
 confluencepro.howToMigrate.batch.title=Create or copy batches to import multiple Confluence exports

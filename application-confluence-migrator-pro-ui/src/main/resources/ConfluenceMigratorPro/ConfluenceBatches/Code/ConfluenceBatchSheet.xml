@@ -40,13 +40,14 @@
 
 {{velocity}}
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchSheet'))
+#set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchSheet'))
 #set ($escapedBatchName = $services.rendering.escape($doc.documentReference.name, $xwiki.currentContentSyntaxId))
 (% style="text-align: right"%)
-[[$escapetool.xml($services.localization.render("confluencemigratorpro.batches.batchSheet.stats"))&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Stats||class="btn button" queryString="batch=$escapedBatchName"]] ##
-[[$escapetool.xml($services.localization.render("confluencemigratorpro.batches.batchSheet.fixReferences"))&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.FixRefs||class="btn button" queryString="batch=$escapedBatchName"]] ##
-[[$escapetool.xml($services.localization.render("confluencemigratorpro.batches.batchSheet.copyBatch"))&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Copy||class="btn button" queryString="from_batch=$escapedBatchName"]] ##
-[[$escapetool.xml($services.localization.render("confluencemigratorpro.batches.batchSheet.runBatch"))&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Run||class="btn button" queryString="name=$escapedBatchName"]] ##
-[[$escapetool.xml($services.localization.render("confluencemigratorpro.batches.batchSheet.resumeBatch"))&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Resume||class="btn button" queryString="name=$escapedBatchName"]]
+[[$services.rendering.escape($services.localization.render("confluencemigratorpro.batches.batchSheet.stats"), 'xwiki/2.1')&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Stats||class="btn button" queryString="batch=$escapedBatchName"]] ##
+[[$services.rendering.escape($services.localization.render("confluencemigratorpro.batches.batchSheet.fixReferences"), 'xwiki/2.1')&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.FixRefs||class="btn button" queryString="batch=$escapedBatchName"]] ##
+[[$services.rendering.escape($services.localization.render("confluencemigratorpro.batches.batchSheet.copyBatch"), 'xwiki/2.1')&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Copy||class="btn button" queryString="from_batch=$escapedBatchName"]] ##
+[[$services.rendering.escape($services.localization.render("confluencemigratorpro.batches.batchSheet.runBatch"), 'xwiki/2.1')&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Run||class="btn button" queryString="name=$escapedBatchName"]] ##
+[[$services.rendering.escape($services.localization.render("confluencemigratorpro.batches.batchSheet.resumeBatch"), 'xwiki/2.1')&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.Resume||class="btn button" queryString="name=$escapedBatchName"]]
 
 ; Sources
 : $services.rendering.escape($doc.display("sources"), $xwiki.currentContentSyntaxId)
@@ -190,6 +191,129 @@
     </property>
     <property>
       <parse/>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchSheet</name>
+    <number>0</number>
+    <className>XWiki.StyleSheetExtension</className>
+    <guid>fbccec44-ef11-4917-ac28-31c4e86c4501</guid>
+    <class>
+      <name>XWiki.StyleSheetExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <contentType>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>contentType</name>
+        <number>6</number>
+        <prettyName>Content Type</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>CSS|LESS</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </contentType>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>#confluenceMigrations .fa.fa-stop {
+  color: #8f2020;
+}</code>
+    </property>
+    <property>
+      <contentType>CSS</contentType>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>0</parse>
     </property>
     <property>
       <use>currentPage</use>

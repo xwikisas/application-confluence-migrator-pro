@@ -146,9 +146,9 @@ public class ConfluenceMigratorIT
     }
 
     @Test
- /**
- * Check that the buttons work and the packages are selected.
- */
+     /**
+     * Check that the buttons work and the packages are selected.
+     */
     void batchPackageSelectorButtons(TestConfiguration testConfiguration)
     {
         ConfluenceHomePage.goToPage();

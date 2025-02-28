@@ -70,6 +70,7 @@
   import java.nio.file.Paths
   import org.xwiki.xml.XMLUtils
 
+  xcontext.put('fileSeparator', File.separator)
   files = null
   if (request.path) {
     batchPath = request.path
@@ -109,43 +110,42 @@
     &lt;dd&gt;&lt;input required="required" type="text" name="batchName" id="batchName"
         value="$!escapetool.xml($request.batchName)" /&gt;&lt;/dd&gt;
     &lt;dt&gt;
-      &lt;label for="linkMappingPass"&gt;Link Mapping Pass&lt;/label&gt;
-
+      &lt;label for="linkMappingPass"&gt;$escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.linkMapping.title'))&lt;/label&gt;
     &lt;/dt&gt;
     &lt;dd class="checkbox-input-span"&gt;
-      &lt;input type="checkbox" name="linkMappingPass" id="linkMappingPass" checked="checked" /&gt;
+      &lt;input class="cmpInputAccentBlue" type="checkbox" name="linkMappingPass" id="linkMappingPass" checked="checked" /&gt;
       &lt;span class="xHint"&gt;
-        Perform a link mapping pass for all imports before actually importing the content.
+        $escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.linkMapping.hint'))
       &lt;/span&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
-      &lt;label for="dryRun"&gt;Dry run&lt;/label&gt;
+      &lt;label for="dryRun"&gt;$escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.dryRun.title'))&lt;/label&gt;
     &lt;/dt&gt;
     &lt;dd class="checkbox-input-span"&gt;
-      &lt;input type="checkbox" name="dryRun" id="dryRun" /&gt;
+      &lt;input class="cmpInputAccentBlue" type="checkbox" name="dryRun" id="dryRun" /&gt;
       &lt;span class="xHint"&gt;
-        Don't actually create the batch and run the migrations, but say what will be done.
+        $escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.dryRun.hint'))
       &lt;/span&gt;
     &lt;/dd&gt;
   &lt;/dl&gt;
 
   &lt;div class="cfm-batches-create-button-containers"&gt;
     &lt;div id="selectAll" class="btn btn-default"&gt;
-      &lt;span &gt;$escapetool.xml($services.localization.render('confluencemigrator.pro.batches.createForm.selectAll'))&lt;/span&gt;
+      &lt;span &gt;$escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.selectAll'))&lt;/span&gt;
     &lt;/div&gt;
       &lt;div id="selectNone" class="btn btn-default"&gt;
-      &lt;span &gt;$escapetool.xml($services.localization.render('confluencemigrator.pro.batches.createForm.selectNone'))&lt;/span&gt;
+      &lt;span &gt;$escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.selectNone'))&lt;/span&gt;
     &lt;/div&gt;
       &lt;div id="inverseSelect" class="btn btn-default inverse-button"&gt;
        $services.icon.renderHTML('contrast')
        &lt;span&gt;
-         $escapetool.xml($services.localization.render('confluencemigrator.pro.batches.createForm.invertSelect'))
+         $escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.invertSelect'))
        &lt;/span&gt;
     &lt;/div&gt;
   &lt;/div&gt;
   &lt;br/&gt;
   &lt;div&gt;
-    &lt;input id="export-filterer" type="text" aria-label="Filter"  placeholder="$escapetool.xml($services.localization.render('confluencemigrator.pro.batches.createForm.filterPlaceholder'))" /&gt;
+    &lt;input id="export-filterer" type="text" aria-label="Filter"  placeholder="$escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.filterPlaceholder'))" /&gt;
     &lt;br/&gt;
   &lt;/div&gt;
   &lt;div style="max-height: 400px; overflow: scroll; "&gt;
@@ -156,8 +156,8 @@
       #set ($escapedFilename = $escapetool.xml($fileEntry.name))
       &lt;li&gt;
         &lt;label&gt;
-          &lt;input class="confluence-export-checkbox" type="checkbox" name="source"
-            value="$escapedBatchPath/$escapedFilename" /&gt;
+          &lt;input class="confluence-export-checkbox cmpInputAccentBlue" type="checkbox" name="source"
+            value="$escapedBatchPath$xcontext.get('fileSeparator')$escapedFilename" /&gt;
           $escapedFilename
         &lt;/label&gt;
       &lt;/li&gt;
@@ -458,7 +458,7 @@ require(['jquery'], function ($, l10n) {
   gap: 0.1em;
 }
 
-input[type="checkbox"] {
+.cmpInputAccentBlue {
   accent-color: @btn-primary-bg;
 }</code>
     </property>

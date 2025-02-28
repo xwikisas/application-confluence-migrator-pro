@@ -186,6 +186,10 @@ confluencepro.job.savelinkmapping.question.title=Update link mapping
 confluencepro.job.savelinkmapping.question.hint=Save information about documents in this package so links to these documents in migrations will work. This includes documents that are not in the spaces selected for import. You can disable this behavior by setting this to false.
 
 ##Confluence Pro UI translations
+confluencemigratorpro.homepage.tab.newMigration.title=New migration
+confluencemigratorpro.homepage.tab.allMigrations.title=All migrations
+confluencemigratorpro.homepage.tab.importedMacros.title=Imported macros
+confluencemigratorpro.homepage.tab.postMigrationFixes.title=Post migration fixes
 confluencepro.howToMigrate.upload.title=Upload a Confluence export(or use an already uploaded one)
 confluencepro.howToMigrate.server.title=Select from your server a Confluence export
 confluencepro.uploadFacadeButton=Upload export

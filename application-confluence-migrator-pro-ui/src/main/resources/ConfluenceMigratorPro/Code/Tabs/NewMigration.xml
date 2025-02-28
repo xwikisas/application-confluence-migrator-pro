@@ -152,7 +152,11 @@
       &lt;form method="post" action="$escapetool.xml($editURL)"&gt;
         &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
         &lt;p&gt;$escapedMessage&lt;/p&gt;
-        #displayPrefillForm
+
+        {{html}}
+          #displayPrefillForm
+        {{/html}}
+
       &lt;/form&gt;
     &lt;/div&gt;
 &lt;/div&gt;

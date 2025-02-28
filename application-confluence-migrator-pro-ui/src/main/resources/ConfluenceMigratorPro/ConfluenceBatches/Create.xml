@@ -56,7 +56,7 @@ import com.xpn.xwiki.api.Object;
 import com.xpn.xwiki.api.Document;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.fasterxml.jackson.databind.ObjectMapper
-  
+
 MIGRATION_BASENAME_PATTERN = Pattern.compile('(?:.*/)?([^/]+?)(?:\\.zip)?$', Pattern.CASE_INSENSITIVE);
 migrationDocs = new ArrayList&lt;Document&gt;();
 
@@ -87,6 +87,7 @@ static String ensureFilePrefix(String source)
 
 void createMigrations(String batchName, String[] sources, Map&lt;String, String&gt; inputPropertiesMap, String outputProperties, boolean dryRun)
 {
+    def messageList = new LinkedList()
     for (String source : sources) {
         Matcher m = MIGRATION_BASENAME_PATTERN.matcher(source);
         if (m.matches()) {
@@ -98,18 +99,19 @@ void createMigrations(String batchName, String[] sources, Map&lt;String, String&
             ownInputPropertiesMap.put("source", ensureFilePrefix(source));
             migrationObject.set("inputProperties", new JsonOutput().toJson(ownInputPropertiesMap));
             migrationObject.set("outputProperties", outputProperties);
-            migrationDoc.save();
-            migrationDocs.add(migrationDoc);
-            // if (dryRun) {
-            //    println("Would create " + migrationDoc.getDocumentReference());
-            // } else {
-            //    println("Creating " + migrationDoc.getDocumentReference());
-            //    migrationDocs.add(migrationDoc);
-            // }
+            if (dryRun) {
+               messageList.add("Would create " + migrationDoc.getDocumentReference() + "\n")
+            }
+            else {
+              migrationDoc.save();
+              messageList.add("Creating " + migrationDoc.getDocumentReference() + "\n")
+              migrationDocs.add(migrationDoc)
+            }
         } else {
             println("Could not create a migration basename for package " + source);
         }
     }
+    xcontext.put('pageThatCouldBeCreated', messageList)
 }
 
 static String getPropertiesAsJSON(request, String type)
@@ -148,9 +150,9 @@ if (batchName &amp;&amp; sources &amp;&amp; sources.length &amp;&amp; inputPrope
     }
     createMigrations(batchName, sources, inputPropertiesMap, outputProperties, dryRun);
 
-    LocalDocumentReference batchReference = new LocalDocumentReference(List.of("ConfluenceMigratorPro","ConfluenceBatches", "Batches"), batchName);
+    LocalDocumentReference batchReference = new LocalDocumentReference(List.of("ConfluenceMigratorPro", "ConfluenceBatches", "Batches"), batchName);
     if (dryRun) {
-        println "Would create " + batchReference;
+      xcontext.put('batchPage', "Would create " + batchReference)
     } else {
         Document batchPage = xwiki.getDocument(batchReference)
         Object b = batchPage.getObject("ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchClass", true)
@@ -159,7 +161,7 @@ if (batchName &amp;&amp; sources &amp;&amp; sources.length &amp;&amp; inputPrope
             .map(d -&gt; services.model.serialize(d.getDocumentReference()))
             .collect(Collectors.toList()));
         batchPage.save();
-        xcontext.put('batchPage', services.model.serialize(batchReference));
+        xcontext.put('batchPage', services.model.serialize(batchReference))
     }
 } else {
     xcontext.put('warning', true)
@@ -169,21 +171,24 @@ if (batchName &amp;&amp; sources &amp;&amp; sources.length &amp;&amp; inputPrope
 
 {{velocity}}
 #macro (renderProperty $propertyNameTranslationKey, $valueDisplay, $overflow)
-  &lt;div #if($overflow) style="max-height: 500px; overflow-y:scroll;" #end&gt;
-    &lt;span class="cmfBatchCreateTitle"&gt;$escapetool.xml("$services.localization.render($propertyNameTranslationKey)")&lt;/span&gt; $valueDisplay
+  &lt;div&gt;
+    &lt;span class="cmpBatchCreateTitle"&gt;$escapetool.xml("$services.localization.render($propertyNameTranslationKey)")&lt;/span&gt; #if($overflow) &lt;div class='cmpBatchCreateOverflow'&gt; #end&lt;span&gt;$valueDisplay&lt;/span&gt;#if($overflow)&lt;/div&gt;#end
   &lt;/div&gt;
 #end
 
 #macro (prepareSourcesDisplay $sources)
-  #set ($sourceDisplayer = "&lt;br/&gt;")
+  #set ($sourceDisplayer = "")
   #foreach($source in $sources)
-    #set ($sourceDisplayer =$sourceDisplayer + "&lt;span style='font-weight: bold;&gt;#$foreach.index &lt;/span&gt;$escapetool.xml($source)&lt;br/&gt;")
+    #set ($sourceDisplayer =$sourceDisplayer + "&lt;span class='cmpBatchCreateBold' &gt;#$foreach.index &lt;/span&gt;
+    $escapetool.xml($source)&lt;br/&gt;")
   #end
 #end
 
 #macro (renderJson $translationKey, $json, $overflow)
-  &lt;div #if($overflow) style="max-height: 500px; overflow-y:scroll;" #end&gt;
-    &lt;span class="cmfBatchCreateTitle"&gt;$escapetool.xml("$services.localization.render($translationKey)")&lt;/span&gt;
+  &lt;div&gt;
+    &lt;span class="cmpBatchCreateTitle"&gt;$escapetool.xml("$services.localization.render($translationKey)")&lt;/span&gt;
+    #if($overflow)&lt;div class='cmpBatchCreateOverflow'&gt; #end
+
 
       {{code}}
       #foreach ($key in $json.keySet())
@@ -191,9 +196,23 @@ if (batchName &amp;&amp; sources &amp;&amp; sources.length &amp;&amp; inputPrope
       #end
       {{/code}}
 
+
+   #if($overflow)&lt;/div&gt;#end
   &lt;/div&gt;
 #end
-
+##
+## Render the files that could/are(depending on the dryRun parameter) be created when running the batch.
+##
+#macro (renderFiles $translationKey, $files, $overflow)
+  &lt;div #if($overflow) class='cmpBatchCreateOverflow' #end&gt;
+    &lt;span class="cmpBatchCreateTitle"&gt;$escapetool.xml("$services.localization.render($translationKey)")&lt;/span&gt;
+    &lt;div #if($overflow) class='cmpBatchCreateOverflow' #end&gt;
+      #foreach ($file in $files)
+        &lt;span&gt;$services.rendering.escape($file, 'xwiki/2.1') &lt;br/&gt;&lt;/span&gt;
+      #end
+    &lt;/div&gt;
+  &lt;/div&gt;
+#end
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.ConfluenceBatches.Create'))
 
 {{html wiki='true'}}
@@ -206,12 +225,18 @@ if (batchName &amp;&amp; sources &amp;&amp; sources.length &amp;&amp; inputPrope
   #renderJson('confluencemigratorpro.batches.create.outputProperties', $!xcontext.get('outputProperties'), true)
   #renderProperty('confluencemigratorpro.batches.create.linkMappingPass', "$!xcontext.get('linkMappingPass')")
   #renderProperty('confluencemigratorpro.batches.create.dryRun', "$!xcontext.get('dryRun')")
-  #renderProperty('confluencemigratorpro.batches.create.batchPage', "[[$!xcontext.get('batchPage')]]")
+  #if ("$!xcontext.get('dryRun')" == 'true')
+    #set ($batchPage  = "$!xcontext.get('batchPage')")
+  #else
+    #set ($batchPage = "[[$!xcontext.get('batchPage')]]")
+  #end
+  #renderProperty('confluencemigratorpro.batches.create.batchPage', $batchPage)
+  #renderFiles('confluencemigratorpro.batches.create.filesThatCouldBeCreated', $!xcontext.get('pageThatCouldBeCreated') , true)
   #if($!xcontext.get('warning'))
     &lt;br/&gt;
       {{warning}}$escapetool.xml($services.localization.render('confluencemigratorpro.batches.create.warn.missingParameters')){{/warning}}
     &lt;br/&gt;
-    [[New batch&gt;&gt;New]]
+    [[$escapetool.xml("$services.localization.render('confluencemigratorpro.batches.create.button.title')")&gt;&gt;ConfluenceMigratorPro.ConfluenceBatches.New]]
   #end
 &lt;/div&gt;
 {{/html}}
@@ -332,9 +357,19 @@ if (batchName &amp;&amp; sources &amp;&amp; sources.length &amp;&amp; inputPrope
       <cache>long</cache>
     </property>
     <property>
-      <code>.cmfBatchCreateTitle {
+      <code>.cmpBatchCreateTitle {
   font-weight: bold;
-}</code>
+}
+
+.cmpBatchCreateOverflow {
+  max-height: 500px;
+  overflow-y: scroll;
+}
+
+.cmpBatchCreateBold {
+  font-weight: bold;
+}
+</code>
     </property>
     <property>
       <contentType/>

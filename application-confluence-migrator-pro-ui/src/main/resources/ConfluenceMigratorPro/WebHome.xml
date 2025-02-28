@@ -42,29 +42,41 @@
 #set ($discard = $xwiki.jsfx.use('uicomponents/widgets/liveData.js', {'forceSkinAction': true}))
 {{/velocity}}
 
-{{html}}
-&lt;div class="floatcontainer" id="confluence-pro-tab-root"&gt;
-  &lt;ul class="xwikitabbar"&gt;
-    &lt;li class="active" data-content-container="confluence-pro-tab-container-new-migration" data-page-reference="ConfluenceMigratorPro.Code.Tabs.NewMigration"&gt;
-      &lt;a href="#NewMigration" rel="nofollow"&gt;
-        New Migration&lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li class="" data-content-container="confluence-pro-tab-container-all-migrations" data-page-reference="ConfluenceMigratorPro.Code.Tabs.AllMigrations"&gt;
-      &lt;a href="#AllMigrations" rel="nofollow"&gt;
-        All Migrations&lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li class="" data-content-container="confluence-pro-tab-container-imported-macros" data-page-reference="ConfluenceMigratorPro.Code.Tabs.ImportedMacros"&gt;
-      &lt;a href="#ImportedMacros" rel="nofollow"&gt;
-        Imported Macros &lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li class="" data-content-container="confluence-pro-tab-container-post-migration-fixes" data-page-reference="ConfluenceMigratorPro.Code.Tabs.PostMigrationFixes"&gt;
-      &lt;a href="#PostMigrationFixes" rel="nofollow"&gt;
-        Post Migration Fixes &lt;/a&gt;
-    &lt;/li&gt;
-  &lt;/ul&gt;
-  &lt;div class='confluence-pro-section-containers'&gt;&lt;/div&gt;
-&lt;/div&gt;
-{{/html}}
+{{velocity}}
+#set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
+#if (!$services.licensing.licensor.hasLicensureForEntity($mainReference))
+  {{missingLicenseMessage extensionName="confluencepro.extension.name"/}}
+#else
+  {{html}}
+  &lt;div class="floatcontainer" id="confluence-pro-tab-root"&gt;
+    &lt;ul class="xwikitabbar"&gt;
+      &lt;li class="active" data-content-container="confluence-pro-tab-container-new-migration" data-page-reference="ConfluenceMigratorPro.Code.Tabs.NewMigration"&gt;
+        &lt;a href="#NewMigration" rel="nofollow"&gt;
+          $escapetool.xml($services.localization.render('confluencemigratorpro.homepage.tab.newMigration.title'))
+        &lt;/a&gt;
+      &lt;/li&gt;
+      &lt;li class="" data-content-container="confluence-pro-tab-container-all-migrations" data-page-reference="ConfluenceMigratorPro.Code.Tabs.AllMigrations"&gt;
+        &lt;a href="#AllMigrations" rel="nofollow"&gt;
+          $escapetool.xml($services.localization.render('confluencemigratorpro.homepage.tab.allMigrations.title'))
+        &lt;/a&gt;
+      &lt;/li&gt;
+      &lt;li class="" data-content-container="confluence-pro-tab-container-imported-macros" data-page-reference="ConfluenceMigratorPro.Code.Tabs.ImportedMacros"&gt;
+        &lt;a href="#ImportedMacros" rel="nofollow"&gt;
+          $escapetool.xml($services.localization.render('confluencemigratorpro.homepage.tab.importedMacros.title'))
+        &lt;/a&gt;
+      &lt;/li&gt;
+      &lt;li class="" data-content-container="confluence-pro-tab-container-post-migration-fixes" data-page-reference="ConfluenceMigratorPro.Code.Tabs.PostMigrationFixes"&gt;
+        &lt;a href="#PostMigrationFixes" rel="nofollow"&gt;
+          $escapetool.xml($services.localization.render('confluencemigratorpro.homepage.tab.postMigrationFixes.title'))
+        &lt;/a&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;div class='confluence-pro-section-containers'&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  {{/html}}
+#end
+
+{{/velocity}}
 
 
 </content>
