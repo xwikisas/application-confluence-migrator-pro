@@ -63,35 +63,19 @@
 &lt;hr /&gt;
 {{/html}}
 
-{{/velocity}}
+#if ($request.path)
+#set ($batchPath = $request.path)
+#set ($fileSeparator = $services.confluenceBatches.getSystemFileSeparator())
+#set ($files = $services.confluenceBatches.getZips($batchPath))
+#if (!$files)
+  #set ($absPath = $services.confluenceBatches.getServerAbsolutePath())
+  {{warning}}
+    $escapetool.xml($services.localization.render("cfm.batches.create.invalidPathHint")): $absPath
+  {{/warning}}
+#end
 
-{{groovy}}
-  import java.nio.file.Path
-  import java.nio.file.Paths
-  import org.xwiki.xml.XMLUtils
+#end
 
-  xcontext.put('fileSeparator', File.separator)
-  files = null
-  if (request.path) {
-    batchPath = request.path
-    if (batchPath.startsWith("file:")) {
-      batchPath = batchPath.substring(5)
-    }
-    File folder = new File(batchPath)
-    if (folder.isDirectory()) {
-      files = folder.listFiles()
-    } else {
-      println "This path isn't a directory: " + folder
-
-      Path currentRelativePath = Paths.get("")
-      String s = currentRelativePath.toAbsolutePath().toString()
-      println("Current absolute path is: " + s)
-    }
-  }
-  return // useful because it prevents files from being printed
-{{/groovy}}
-
-{{velocity}}
 #if ($objecttool.isNotNull($files) &amp;&amp; $files.size() &gt; 0)
 
 #handlePrefilledValues
@@ -157,7 +141,7 @@
       &lt;li&gt;
         &lt;label&gt;
           &lt;input class="confluence-export-checkbox cmpInputAccentBlue" type="checkbox" name="source"
-            value="$escapedBatchPath$xcontext.get('fileSeparator')$escapedFilename" /&gt;
+            value="$escapedBatchPath$fileSeparator$escapedFilename" /&gt;
           $escapedFilename
         &lt;/label&gt;
       &lt;/li&gt;
