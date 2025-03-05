@@ -5,8 +5,6 @@
         "http://www.puppycrawl.com/dtds/suppressions_1_0.dtd">
 
 <suppressions>
-  <suppress checks="NPathComplexity|CyclomaticComplexity"
-            files="src/main/java/com/xwiki/confluencepro/converters/internal/LivesearchMacroConverter\.java$"/>
   <suppress checks="NPathComplexity"
             files="src/main/java/com/xwiki/confluencepro/converters/internal/MultiExcerptIncludeMacroConverter\.java$"/>
   <suppress checks="CyclomaticComplexity|JavaNCSS|LineLength"
