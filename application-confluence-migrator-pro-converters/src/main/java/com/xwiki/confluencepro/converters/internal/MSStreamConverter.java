@@ -38,6 +38,9 @@ import java.util.Map;
 @Named("net-presago-stream-macro")
 public class MSStreamConverter extends AbstractMacroConverter
 {
+    private static final String URI = "uri";
+    private static final String URL = "url";
+
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
@@ -49,11 +52,19 @@ public class MSStreamConverter extends AbstractMacroConverter
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
         String content)
     {
+        markHandledParameter(confluenceParameters, URI, true);
+        markHandledParameter(confluenceParameters, URL, true);
+        markHandledParameter(confluenceParameters, "width", true);
+        markHandledParameter(confluenceParameters, "height", true);
+        markHandledParameter(confluenceParameters, "start", true);
+        markHandledParameter(confluenceParameters, "showinfo", true);
+        markHandledParameter(confluenceParameters, "autoplay", true);
+
         Map<String, String> parameters = new LinkedHashMap<>(confluenceParameters.size());
         for (Map.Entry<String, String> p : confluenceParameters.entrySet()) {
             String key = p.getKey();
-            if (key.equals("uri")) {
-                key = "url";
+            if (key.equals(URI)) {
+                key = URL;
             }
             parameters.put(key, p.getValue());
         }

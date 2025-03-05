@@ -46,6 +46,9 @@ import org.xwiki.model.reference.EntityReferenceSerializer;
 @Named("userlister")
 public class UserListerMacroConverter extends AbstractMacroConverter
 {
+    private static final String GROUPS = "groups";
+    private static final String USERS = "users";
+
     @Inject
     @Named("group")
     private EntityReferenceResolver<String> referenceResolver;
@@ -65,12 +68,15 @@ public class UserListerMacroConverter extends AbstractMacroConverter
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
         String content)
     {
+        markHandledParameter(confluenceParameters, GROUPS, true);
+        markHandledParameter(confluenceParameters, USERS, true);
+
         Map<String, String> parameters = new HashMap<>(confluenceParameters.size());
         List<String> groupList = new ArrayList<>();
         for (Map.Entry<String, String> p : confluenceParameters.entrySet()) {
             String key = p.getKey();
             String value = p.getValue();
-            if (key.equals("groups")) {
+            if (key.equals(GROUPS)) {
                 value = convertGroupsParameter(p, groupList);
             }
             parameters.put(key, value);
@@ -91,7 +97,7 @@ public class UserListerMacroConverter extends AbstractMacroConverter
             {
                 groupName = "XWikiAdminGroup";
             } else if (group.startsWith("site-users") || group.startsWith("confluence-users") || group.equals(
-                "users"))
+                USERS))
             {
                 groupName = "XWikiAllGroup";
             } else {

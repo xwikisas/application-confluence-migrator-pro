@@ -38,10 +38,29 @@ import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverte
 @Named("card")
 public class CardMacroConverter extends AbstractMacroConverter
 {
+    private static final String CSS_CLASS = "cssClass";
+    private static final String CSS_STYLE = "cssStyle";
+
+    private static final String[] KNOWN_PARAMETERS = {
+        "label",
+        "id",
+        "showByDefault",
+        CSS_CLASS,
+        CSS_STYLE,
+        "nextAfter",
+        "effectType",
+        "effectDuration"
+    };
+
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
+        // Useless for now, since we don't override toXWikiParameters, all the parameters are output, but we could
+        // decide to warn about unknown parameters in the future even for such macro converters.
+        for (String p : KNOWN_PARAMETERS) {
+            markHandledParameter(confluenceParameters, p, true);
+        }
         return "tab";
     }
 
@@ -50,9 +69,9 @@ public class CardMacroConverter extends AbstractMacroConverter
         Map<String, String> confluenceParameters, String confluenceContent)
     {
         if ("style".equals(confluenceParameterName)) {
-            return "cssStyle";
+            return CSS_STYLE;
         } else if ("class".equals(confluenceParameterName)) {
-            return "cssClass";
+            return CSS_CLASS;
         }
         return super.toXWikiParameterName(confluenceParameterName, id, confluenceParameters, confluenceContent);
     }

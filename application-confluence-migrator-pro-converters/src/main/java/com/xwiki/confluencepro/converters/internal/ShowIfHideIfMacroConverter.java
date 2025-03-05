@@ -71,7 +71,8 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
         for (Map.Entry<String, String> entry : confluenceParameters.entrySet()) {
             String name = entry.getKey();
             String confluenceValue = entry.getValue();
-            String xwikiValue = toXWikiParameterValue(name, confluenceValue, confluenceId, parameters, content);
+            String xwikiValue = toXWikiParameterValue(name, confluenceValue, confluenceId, confluenceParameters,
+                content);
 
             switch (name) {
                 case "match":
@@ -130,7 +131,7 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
                     parameters.put("tags", xwikiValue);
                     break;
                 default:
-                    String parameterName = toXWikiParameterName(name, confluenceId, parameters, content);
+                    String parameterName = toXWikiParameterName(name, confluenceId, confluenceParameters, content);
                     parameters.put(parameterName, xwikiValue);
                     break;
             }

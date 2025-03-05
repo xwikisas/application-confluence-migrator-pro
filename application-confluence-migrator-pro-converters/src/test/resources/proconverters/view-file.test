@@ -41,9 +41,13 @@
             </entry>
             <entry>
               <string>content</string>
-              <string>{{view-file att--filename="file.pptx" display="thumbnail" height="250"/}}
+              <string>{{view-file name="file.pptx" display="thumbnail" height="250"/}}
 
-{{view-file att--filename="file\@withat.pptx" display="full" height="250"/}}</string>
+{{view-file name="file\@withat.pptx" display="full" height="250"/}}
+
+{{view-file name="t.xlsx" display="full" page="confluencePage:page:MySpace.RJ Test Home"/}}
+
+{{view-file name="compte_resultat.xls" display="full" page="confluencePage:page:FOS.View xls"/}}</string>
             </entry>
             <entry>
               <string>syntax</string>

@@ -18,7 +18,7 @@
 
 {{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" name="exerpt2" nopanel="true" templateData="eJyLrlbKVrJSKk5Nzs9LKUssykxMyklV0lEqAwoGgwUVwqCiQEZOaapSbSwA0BARww=="/}}
 
-{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" inline="true" name="exerpt1" templateData="eJyLrlbKVrJSKkssykxMyklV0lEqA3Iz85JzSlNSFTLzcjLzUpVqYwH7Xw0L"/}}
+{{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" inline="true" name="exerpt1" nopanel="true" templateData="eJyLrlbKVrJSKkssykxMyklV0lEqA3Iz85JzSlNSFTLzcjLzUpVqYwH7Xw0L"/}}
 
 {{excerpt-include 0="TestSpace.Multiple excerpts.WebHome" name="exerpt1" nopanel="true"/}}</string>
             </entry>

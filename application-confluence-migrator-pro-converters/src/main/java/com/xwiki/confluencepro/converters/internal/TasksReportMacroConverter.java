@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
@@ -83,6 +84,9 @@ public class TasksReportMacroConverter extends AbstractMacroConverter
         "location", PARAMETER_OWNER,
         "completedate", "completeDate"
     );
+
+    @Inject
+    private Logger logger;
 
     @Inject
     private ConfluenceConverter converter;
@@ -154,8 +158,8 @@ public class TasksReportMacroConverter extends AbstractMacroConverter
                 Date date = simpleDateFormat.parse(confluenceDate);
                 simpleDateFormat = new SimpleDateFormat(dateMacroConfiguration.getStorageDateFormat());
                 xwikiParams.put("createdAfter", simpleDateFormat.format(date));
-            } catch (Exception ignored) {
-
+            } catch (Exception e) {
+                logger.warn("Failed to produce the createdAfter parameter of macro task-report", e);
             }
         }
 

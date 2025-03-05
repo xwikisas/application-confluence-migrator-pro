@@ -19,11 +19,13 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
 import org.xwiki.rendering.listener.Listener;
@@ -57,15 +59,17 @@ public class ListLabelsMacroConverter extends AbstractMacroConverter
         String content)
     {
         if (confluenceParameters.isEmpty()) {
-            return confluenceParameters;
+            return Collections.emptyMap();
         }
 
-        Map<String, String> xwikiParameters = new HashMap<>();
-        if (confluenceParameters.containsKey(SPACE_KEY)) {
-            xwikiParameters.put("spaces", confluenceParameters.get(SPACE_KEY));
+        Map<String, String> xwikiParameters = new HashMap<>(2);
+        String spaceKey = confluenceParameters.get(SPACE_KEY);
+        if (StringUtils.isNotEmpty(spaceKey)) {
+            xwikiParameters.put("spaces", spaceKey);
         }
-        if (confluenceParameters.containsKey(EXCLUDED_LABELS)) {
-            xwikiParameters.put("excludedTags", confluenceParameters.get(EXCLUDED_LABELS));
+        String excludedLabels = confluenceParameters.get(EXCLUDED_LABELS);
+        if (StringUtils.isNotEmpty(excludedLabels)) {
+            xwikiParameters.put("excludedTags", excludedLabels);
         }
         return xwikiParameters;
     }

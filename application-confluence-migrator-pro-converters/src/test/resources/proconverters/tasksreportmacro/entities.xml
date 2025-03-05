@@ -78,19 +78,16 @@
   <ac:parameter ac:name="pageSize">10</ac:parameter>
   <ac:parameter ac:name="createddateFrom">05-09-2022</ac:parameter>
   <ac:parameter ac:name="sortBy">assignee</ac:parameter>
-  <ac:parameter ac:name="isMissingRequiredParameters">true</ac:parameter>
   <ac:parameter ac:name="reverseSort">true</ac:parameter>
   <ac:parameter ac:name="labels">somelabel</ac:parameter>
 </ac:structured-macro>
 <ac:structured-macro ac:name="tasks-report-macro" ac:schema-version="1" data-layout="default" ac:local-id="b9499664-d104-494f-a04f-dcd27cc93c1a" ac:macro-id="e4fca17cd414282e9e5bae0aee9360bc817d2d763056a5baf7d118fccd7bcdae">
    <ac:parameter ac:name="spaces">TEOS</ac:parameter>
    <ac:parameter ac:name="sortBy">page title</ac:parameter>
-   <ac:parameter ac:name="isMissingRequiredParameters">true</ac:parameter>
    <ac:parameter ac:name="status">complete</ac:parameter>
 </ac:structured-macro>
 <ac:structured-macro ac:name="tasks-report-macro" ac:schema-version="1" data-layout="default" ac:local-id="40c8dcbf-624e-48ab-b7c0-5d174f392e0d" ac:macro-id="4ddeb41f368ad7000750cac64dd25ce9be7aa3f63273d4a195f2598305f9fe2f">
   <ac:parameter ac:name="pages">45809845</ac:parameter>
-  <ac:parameter ac:name="isMissingRequiredParameters">true</ac:parameter>
 </ac:structured-macro>
 ]]></property>
     <property name="content" class="Page" package="com.atlassian.confluence.pages"><id name="id">45809845</id></property>

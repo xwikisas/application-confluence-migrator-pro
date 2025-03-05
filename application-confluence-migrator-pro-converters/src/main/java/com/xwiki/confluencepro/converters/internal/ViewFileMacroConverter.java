@@ -19,6 +19,7 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
+import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
 
@@ -32,11 +33,12 @@ import java.util.Map;
  * @version $Id$
  * @since 1.21.0
  */
-@Component (hints = {ViewFileMacroConverter.VIEW_FILE, "viewfile", "viewdoc", "viewppt", "viewxls", "viewpdf"})
+@Component (hints = {ViewFileMacroConverter.VIEW_FILE, "viewfile", "viewdoc", "viewppt", "viewxls", "viewpdf", "excel"})
 @Singleton
 public class ViewFileMacroConverter extends AbstractMacroConverter
 {
     static final String VIEW_FILE = "view-file";
+    private static final String NAME = "name";
 
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -49,15 +51,32 @@ public class ViewFileMacroConverter extends AbstractMacroConverter
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
         String content)
     {
-        Map<String, String> parameters = new HashMap<>(confluenceParameters.size() + 1);
+        Map<String, String> parameters = new HashMap<>(4);
         parameters.put("display", VIEW_FILE.equals(confluenceId) ? "thumbnail" : "full");
-        for (Map.Entry<String, String> p : confluenceParameters.entrySet()) {
-            String key = p.getKey();
-            if (key.equals("att-filename")) {
-                key = "name";
-            }
-            parameters.put(key, p.getValue());
+        String filename = confluenceParameters.get("att--filename");
+        if (StringUtils.isEmpty(filename)) {
+            filename = confluenceParameters.get(NAME);
         }
+
+        if (StringUtils.isEmpty(filename)) {
+            throw new RuntimeException("Missing file name in viewfile-like macro [" + confluenceId + "],"
+                + " killing the macro conversion.");
+        }
+
+        parameters.put(NAME, filename);
+        retrieveParameter(confluenceParameters, parameters, "height");
+        retrieveParameter(confluenceParameters, parameters, "width");
+        retrieveParameter(confluenceParameters, parameters, "page");
+        retrieveParameter(confluenceParameters, parameters, "exportFileDelimiter");
         return parameters;
+    }
+
+    private static void retrieveParameter(Map<String, String> confluenceParameters,
+        Map<String, String> parameters, String key)
+    {
+        String v = confluenceParameters.get(key);
+        if (StringUtils.isNotEmpty(v)) {
+            parameters.put(key, v);
+        }
     }
 }

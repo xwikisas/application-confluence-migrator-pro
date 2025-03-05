@@ -19,6 +19,7 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
+import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.MacroConverter;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
@@ -42,11 +43,14 @@ import java.util.TreeMap;
 @Singleton
 public class MultiExcerptIncludeMacroConverter extends AbstractMacroConverter implements MacroConverter
 {
+
     private static final String INLINE = "inline";
     private static final String BLOCK = "block";
     private static final String TEMPLATE_DATA = "templateData";
     private static final String NAME = "name";
     private static final String TRUE = "true";
+    private static final String NOPANEL = "nopanel";
+    private static final String FALSE = "false";
 
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -90,17 +94,32 @@ public class MultiExcerptIncludeMacroConverter extends AbstractMacroConverter im
             p.put(TEMPLATE_DATA, templateData);
         }
 
+        handleInlineAndPanel(confluenceId, confluenceParameters, content, p);
+
+        return p;
+    }
+
+    private void handleInlineAndPanel(String confluenceId, Map<String, String> confluenceParameters, String content,
+        Map<String, String> p)
+    {
+        String nopanel = confluenceParameters.get(NOPANEL);
+        String addpanel = confluenceParameters.get("addpanel");
+        if (StringUtils.isEmpty(nopanel)) {
+            nopanel = FALSE.equals(addpanel) ? TRUE : FALSE;
+        }
+
         InlineSupport supportsInlineMode = supportsInlineMode(confluenceId, confluenceParameters, content);
         if (InlineSupport.YES.equals(supportsInlineMode)) {
             p.put(INLINE, TRUE);
+            if (StringUtils.isNotEmpty(nopanel)) {
+                p.put(NOPANEL, nopanel);
+            }
         } else {
             if (InlineSupport.NO.equals(supportsInlineMode)) {
-                p.put(INLINE, "false");
+                p.put(INLINE, FALSE);
             }
-            p.put("nopanel", TRUE);
+            p.put(NOPANEL, TRUE);
         }
-
-        return p;
     }
 
     @Override

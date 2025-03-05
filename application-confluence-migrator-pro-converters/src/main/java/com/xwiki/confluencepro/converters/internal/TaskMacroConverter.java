@@ -62,8 +62,7 @@ public class TaskMacroConverter extends AbstractMacroConverter
         // On certain confluence versions, some tasks may contain subtasks. If the subtasks were introduced inline,
         // since the confluence tasks are not supported inline, they also inserted a <br/> element which gets converted
         // to a "\n " in XWiki. This newline does not appear in confluence.
-        newContent = newContent.replaceAll("\n \n\n\\{\\{task", "\n\n{{task");
-        return newContent;
+        return newContent.replace("\n \n\n{{task", "\n\n{{task");
     }
 
     @Override
@@ -72,13 +71,15 @@ public class TaskMacroConverter extends AbstractMacroConverter
     {
         Map<String, String> params = new HashMap<>();
         // TODO: Use a configurable value instead of "Done".
-        String xwikiStatus =
-            !confluenceParameters.get(TASK_STATUS_PARAMETER).equals("complete")
-                && !confluenceParameters.get(TASK_STATUS_PARAMETER).equals(Task.STATUS_DONE) ? Task.STATUS_IN_PROGRESS
-                : Task.STATUS_DONE;
-        String xwikiIdParam = confluenceParameters.get(TASK_ID_PARAMETER) != null
-            ? TASK_REFERENCE_PREFIX + confluenceParameters.get(TASK_ID_PARAMETER)
-            : confluenceParameters.get(TASK_REFERENCE_PARAMETER);
+        String confluenceStatus = confluenceParameters.get(TASK_STATUS_PARAMETER);
+        String xwikiStatus = confluenceStatus.equals("complete") || confluenceStatus.equals(Task.STATUS_DONE)
+            ? Task.STATUS_DONE
+            : Task.STATUS_IN_PROGRESS;
+        String confluenceTaskId = confluenceParameters.get(TASK_ID_PARAMETER);
+        String reference = confluenceParameters.get(TASK_REFERENCE_PARAMETER);
+        String xwikiIdParam = confluenceTaskId != null
+            ? TASK_REFERENCE_PREFIX + confluenceTaskId
+            : reference;
 
         params.put(TASK_STATUS_PARAMETER, xwikiStatus);
         params.put(TASK_REFERENCE_PARAMETER, xwikiIdParam);

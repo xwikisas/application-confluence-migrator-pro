@@ -42,7 +42,7 @@
             </entry>
             <entry>
               <string>content</string>
-              <string>{{userList isMissingRequiredParameters="true"/}}
+              <string>{{userList/}}
 
 {{userList groups="XWiki.GroupB"/}}
 

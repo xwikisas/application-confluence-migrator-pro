@@ -60,17 +60,18 @@ public class IncDrawIoMacroConvertor extends AbstractMacroConverter
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
         String content)
     {
+        Map<String, String> xwikiParameters = new HashMap<>(confluenceParameters);
+        confluenceParameters.forEach((a, b) -> markHandledParameter(confluenceParameters, a, true));
 
         // First we make sure that we log the entries that embed diagrams from other sources.
         if (confluenceParameters.containsKey("service") || confluenceParameters.containsKey("diagramUrl")) {
             logger.warn("The inc-drawio was used with unsupported parameters.");
-            return confluenceParameters;
+            return xwikiParameters;
         }
         long pageId = Long.parseLong(confluenceParameters.get("pageId"));
         // The reference will always start with "Document " and we want to remove that and keep only the actual
         // reference to the page
         EntityReference reference = converter.convertDocumentReference(pageId, false);
-        Map<String, String> xwikiParameters = new HashMap<>();
         if (reference != null) {
             String ref = reference.toString().substring(reference.toString().indexOf(" ") + 1);
             xwikiParameters.put("originalDocumentRef", ref);

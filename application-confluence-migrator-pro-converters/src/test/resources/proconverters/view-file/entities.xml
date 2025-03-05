@@ -11,34 +11,47 @@
         <property name="hibernateVersion">5</property>
         <property name="title">My Space Home</property>
         <property name="lowerTitle">my space home</property>
-        <collection name="bodyContents" class="java.util.Collection"><element class="BodyContent" package="com.atlassian.confluence.core"><id name="id">156868656</id>
-        </element>
+        <collection name="bodyContents" class="java.util.Collection">
+            <element class="BodyContent" package="com.atlassian.confluence.core">
+                <id name="id">156868656</id>
+            </element>
         </collection>
         <property name="version">1</property>
-        <property name="creator" class="ConfluenceUserImpl" package="com.atlassian.confluence.user"><id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
+        <property name="creator" class="ConfluenceUserImpl" package="com.atlassian.confluence.user">
+            <id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
         </property>
         <property name="creationDate">2012-08-21 15:37:47.000</property>
-        <property name="lastModifier" class="ConfluenceUserImpl" package="com.atlassian.confluence.user"><id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
+        <property name="lastModifier" class="ConfluenceUserImpl" package="com.atlassian.confluence.user">
+            <id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
         </property>
         <property name="lastModificationDate">2016-10-11 14:47:37.000</property>
         <property name="versionComment"><![CDATA[]]></property>
         <property name="contentStatus"><![CDATA[current]]></property>
-        <collection name="labellings" class="java.util.Collection"></collection>
-        <property name="space" class="Space" package="com.atlassian.confluence.spaces"><id name="id">46268417</id>
+        <collection name="labellings" class="java.util.Collection"/>
+        <property name="space" class="Space" package="com.atlassian.confluence.spaces">
+            <id name="id">46268417</id>
         </property>
-        <collection name="attachments" class="java.util.Collection(com.atlassian.confluence.core.ContentEntityObject.attachments)"><element class="Attachment" package="com.atlassian.confluence.pages"><id name="id">134204920</id></element></collection>
+        <collection name="attachments" class="java.util.Collection(com.atlassian.confluence.core.ContentEntityObject.attachments)">
+            <element class="Attachment" package="com.atlassian.confluence.pages">
+                <id name="id">134204920</id>
+            </element>
+        </collection>
     </object>
     <object class="Space" package="com.atlassian.confluence.spaces">
         <id name="id">46268417</id>
         <property name="name"><![CDATA[My Space]]></property>
         <property name="key"><![CDATA[MySpace]]></property>
         <property name="lowerKey"><![CDATA[myspace]]></property>
-        <property name="homePage" class="Page" package="com.atlassian.confluence.pages"><id name="id">45809845</id></property>
-        <collection name="permissions" class="java.util.Collection"></collection>
-        <property name="creator" class="ConfluenceUserImpl" package="com.atlassian.confluence.user"><id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
+        <property name="homePage" class="Page" package="com.atlassian.confluence.pages">
+            <id name="id">45809845</id>
+        </property>
+        <collection name="permissions" class="java.util.Collection"/>
+        <property name="creator" class="ConfluenceUserImpl" package="com.atlassian.confluence.user">
+            <id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
         </property>
         <property name="creationDate">2012-08-21 15:37:47.000</property>
-        <property name="lastModifier" class="ConfluenceUserImpl" package="com.atlassian.confluence.user"><id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
+        <property name="lastModifier" class="ConfluenceUserImpl" package="com.atlassian.confluence.user">
+            <id name="key"><![CDATA[01f7c1cc638e0d8c0163d05ca6f60124]]></id>
         </property>
         <property name="lastModificationDate">2016-10-11 14:47:37.000</property>
         <property name="spaceType">global</property>
@@ -55,6 +68,33 @@
   <ac:parameter ac:name="name"><ri:attachment ri:filename="file@withat.pptx" /></ac:parameter>
   <ac:parameter ac:name="height">250</ac:parameter>
 </ac:structured-macro></p>
+<ac:structured-macro ac:name="viewxls" ac:schema-version="1" data-layout="default">
+    <ac:parameter ac:name="name">
+        <ri:attachment ri:filename="t.xlsx">
+            <ri:content-entity ri:content-id="960004102" ri:version-at-save="1" />
+        </ri:attachment>
+    </ac:parameter>
+    <ac:parameter ac:name="page">
+        <ac:link>
+            <ri:page ri:content-title="RJ Test Home" ri:version-at-save="17" />
+        </ac:link>
+    </ac:parameter>
+</ac:structured-macro>
+<ac:structured-macro ac:name="viewxls" ac:schema-version="1" data-layout="default">
+    <ac:parameter ac:name="name">
+        <ri:attachment ri:filename="compte_resultat.xls">
+            <ri:content-entity ri:content-id="960004102" ri:version-at-save="1" />
+        </ri:attachment>
+    </ac:parameter>
+    <ac:parameter ac:name="page">
+        <ac:link>
+            <ri:page ri:content-title="View xls" />
+        </ac:link>
+    </ac:parameter>
+    <ac:parameter ac:name="space">
+        <ri:space ri:space-key="FOS" />
+    </ac:parameter>
+</ac:structured-macro>
 ]]></property>
         <property name="content" class="Page" package="com.atlassian.confluence.pages"><id name="id">45809845</id></property>
         <property name="bodyType">2</property>

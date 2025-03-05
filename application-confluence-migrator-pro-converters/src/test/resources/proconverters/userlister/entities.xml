@@ -48,7 +48,6 @@
     <id name="id">156868656</id>
     <property name="body"><![CDATA[
 <ac:structured-macro ac:name="userlister" ac:schema-version="1" data-layout="default" ac:local-id="6d1ae1bb-225b-4ef6-99de-30c00625e493" ac:macro-id="fbe48f78d5203f479c391d20408b985d6b05c67e32f460f282745260f99e2740">
-  <ac:parameter ac:name="isMissingRequiredParameters">true</ac:parameter>
 </ac:structured-macro>
 <ac:structured-macro ac:name="userlister" ac:schema-version="1" data-layout="default" ac:local-id="efa53476-c51d-4e9b-8563-c80ac23ffedd" ac:macro-id="8327d3cdb16ebba9abd57d6836f76c59441e86e88db6f5a848adf04f36af84e7">
   <ac:parameter ac:name="groups">GroupB</ac:parameter>
