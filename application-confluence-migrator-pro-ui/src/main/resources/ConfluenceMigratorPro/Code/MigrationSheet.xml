@@ -386,7 +386,7 @@
   #getJSON($obj, 'problems')
   #filterCurrentRevision()
   #if (!$jsonObject.isEmpty())
-    #displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.keySet().size()])
+    #displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.size()])
     #displayJson('problems')
   #end
 
@@ -394,7 +394,7 @@
   #getJSON($obj, 'skipped')
   #filterCurrentRevision()
   #if (!$jsonObject.isEmpty())
-    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.keySet().size()])
+    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.size()])
     #displayJson('skipped')
   #end
 
@@ -402,7 +402,7 @@
   #getJSON($obj, 'confluenceRefWarnings')
   #filterCurrentRevision()
   #if (!$jsonObject.isEmpty())
-    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.confluencerefs.title', '', [$jsonObject.keySet().size()])
+    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.confluencerefs.title', '', [$jsonObject.size()])
     &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
     #displayFixLinks
     #displayJson('confluenceRefWarnings')
@@ -441,7 +441,7 @@
   ## Legacy broken links section
   #getJSON($obj, 'brokenLinksPages')
   #if (!$jsonObject.isEmpty())
-    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.brokenLinks.title', '', [$jsonObject.keySet().size()])
+    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.brokenLinks.title', '', [$jsonObject.size()])
     &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
     #displayFixLinks
     #displayJson('brokenLinksPages')
@@ -466,6 +466,83 @@
         &lt;/details&gt;
       #end
     #end
+  #end
+
+  ## Unhandled parameters
+  #macro (addUnknownParameterWithValue $macroName, $parameterName, $parameterValue)
+    #set ($byMacro = $problematicParameters.get($macroName))
+    #if ($objecttool.isNull($byMacro))
+      #set ($byMacro = {})
+      #set ($discard = $problematicParameters.put($macroName, $byMacro))
+    #end
+    #set ($byParam = $byMacro.get($parameterName))
+    #if ($objecttool.isNull($byParam))
+      #set ($byParam = $collectiontool.getSortedSet())
+      #set ($discard = $byMacro.put($parameterName, $byParam))
+    #end
+    #set ($discard = $byParam.add($parameterValue))
+  #end
+  #getJSON($obj, 'unhandledParameters')
+  #filterCurrentRevision()
+  #set ($unhandledParameters = $jsonObject)
+  #getJSON($obj, 'unhandledParameterValues')
+  #filterCurrentRevision()
+  #set ($unhandledParameterValues = $jsonObject)
+  #if (!$unhandledParameters.isEmpty() || !$unhandledParameterValues.isEmpty())
+    #set ($size = $unhandledParameters.size() + $unhandledParameterValues.size())
+    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.unhandledParameters.title', '', [$size])
+    #if (!$unhandledParameters.isEmpty())
+      #set ($jsonObject = $unhandledParameters)
+      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.unhandledParameters.info')&lt;/p&gt;
+      #displayJson('unhandledParameters')
+    #end
+    #if (!$unhandledParameterValues.isEmpty())
+      #set ($jsonObject = $unhandledParameterValues)
+      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.unhandledParameterValues.info')&lt;/p&gt;
+      #displayJson('unhandledParameterValues')
+    #end
+    #set ($problematicParameters = {})
+    #foreach ($entry in $unhandledParameters.entrySet())
+      #foreach ($log in $entry.getValue())
+        #set ($args = $log.get("args"))
+        #if ($args.size() == 3)
+          #set ($parameterName = $args.get(0))
+          #set ($parameterValue = $args.get(1))
+          #set ($macroName = $args.get(2))
+          #addUnknownParameterWithValue($macroName, $parameterName, $parameterValue)
+        #end
+      #end
+    #end
+    #foreach ($entry in $unhandledParameterValues.entrySet())
+      #foreach ($log in $entry.getValue())
+        #set ($args = $log.get("args"))
+        #if ($args.size() == 3)
+          #set ($parameterValue = $args.get(0))
+          #set ($parameterName = $args.get(1))
+          #set ($macroName = $args.get(2))
+          #addUnknownParameterWithValue($macroName, $parameterName, $parameterValue)
+        #end
+      #end
+    #end
+    &lt;details class="cfm-details"&gt;
+      &lt;summary&gt;$services.localization.render('confluencepro.migration.raport.problems.unhandledParameters.list')&lt;/summary&gt;
+      &lt;table&gt;
+        &lt;tr&gt;
+          &lt;th&gt;$services.localization.render('confluencepro.migration.raport.macroName')&lt;/th&gt;
+          &lt;th&gt;$services.localization.render('confluencepro.migration.raport.parameterName')&lt;/th&gt;
+          &lt;th&gt;$services.localization.render('confluencepro.migration.raport.parameterValues')&lt;/th&gt;
+        &lt;/tr&gt;
+      #foreach ($macroEntry in $problematicParameters.entrySet())
+        #foreach ($paramEntry in $macroEntry.getValue().entrySet())
+          &lt;tr&gt;
+            &lt;td&gt;$escapetool.xml($macroEntry.getKey())&lt;/td&gt;
+            &lt;td&gt;$escapetool.xml($paramEntry.getKey())&lt;/td&gt;
+            &lt;td&gt;$escapetool.xml($paramEntry.getValue().toString())&lt;/td&gt;
+          &lt;/tr&gt;
+        #end
+      #end
+      &lt;/table&gt;
+    &lt;/details&gt;
   #end
 
   ## Missing users and groups section

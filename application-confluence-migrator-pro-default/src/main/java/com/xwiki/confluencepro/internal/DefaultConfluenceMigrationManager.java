@@ -53,6 +53,7 @@ import org.slf4j.MarkerFactory;
 import org.xwiki.bridge.event.DocumentUpdatedEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.ConfluenceFilter;
+import org.xwiki.logging.LogLevel;
 import org.xwiki.logging.event.LogEvent;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
@@ -115,6 +116,16 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     private static final Marker SEND_PAGE_MARKER = MarkerFactory.getMarker("ConfluenceSendingPage");
 
     private static final Marker SEND_TEMPLATE_MARKER = MarkerFactory.getMarker("ConfluenceSendingTemplate");
+
+    private static final Marker UNHANDLED_PARAMETER_MARKER = MarkerFactory.getMarker("unhandledConfluenceParameter");
+    private static final Marker UNHANDLED_PARAMETER_VALUE_MARKER =
+        MarkerFactory.getMarker("unhandledConfluenceParameterValue");
+
+    private static final String OTHER_ISSUES = "otherIssues";
+    private static final String SKIPPED = "skipped";
+    private static final String CONFLUENCE_REF_WARNINGS = "confluenceRefWarnings";
+    private static final String UNHANDLED_PARAMETERS = "unhandledParameters";
+    private static final String UNHANDLED_PARAMETER_VALUES = "unhandledParameterValues";
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -299,66 +310,91 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return false;
     }
 
+    private static final class DocCounts
+    {
+        private long templateCount;
+        private long docCount;
+        private long revisionCount;
+    }
+
     Map<String, Map<String, Integer>> analyseLogs(ConfluenceMigrationJobStatus jobStatus,
         BaseObject object, XWikiDocument document, String root)
     {
-        Map<String, List<LogLine<SimpleLog>>> otherIssues = new TreeMap<>();
-        Map<String, List<LogLine<SimpleLog>>> skipped = new TreeMap<>();
-        Map<String, List<LogLine<SimpleLog>>> problematic = new TreeMap<>();
-        Map<String, List<LogLine<SimpleLog>>> confluenceRefWarnings = new TreeMap<>();
+        Map<String, Map<String, List<LogLine<SimpleLog>>>> logCategories = Map.of(
+            OTHER_ISSUES, new TreeMap<>(),
+            SKIPPED, new TreeMap<>(),
+            CONFLUENCE_REF_WARNINGS, new TreeMap<>(),
+            UNHANDLED_PARAMETERS, new TreeMap<>(),
+            UNHANDLED_PARAMETER_VALUES, new TreeMap<>()
+        );
         Map<String, Map<String, Integer>> macroPages = new HashMap<>();
         Map<String, Map<String, List<String>>> collisions = new HashMap<>();
 
         CurrentPage currentPage = new CurrentPage();
-        long templateCount = 0;
-        long docCount = 0;
-        long revisionCount = 0;
+        DocCounts counts = new DocCounts();
         Collection<String> docs = new HashSet<>();
+
         for (LogEvent event : jobStatus.getLogTail()) {
             if (event == null) {
                 logger.warn("Found a null event. This is unexpected.");
                 continue;
             }
-            switch (event.getLevel()) {
-                case ERROR:
-                    updateErrors(event, skipped, collisions, currentPage);
-                    break;
-                case WARN:
-                    updateWarnings(event, confluenceRefWarnings, otherIssues, currentPage);
-                    break;
-                case INFO:
-                    Object[] args = event.getArgumentArray();
-                    if (ConfluenceFilter.LOG_MACROS_FOUND.equals(event.getMarker())) {
-                        addMacros(currentPage, args, macroPages);
-                    } else if (isADocumentOutputFilterEvent(event.getMarker())) {
-                        updateCurrentDocument(currentPage, otherIssues, skipped, problematic,
-                            confluenceRefWarnings, docs, args);
-                    } else if (SEND_PAGE_MARKER.equals(event.getMarker())) {
-                        currentPage.ref = null;
-                        revisionCount++;
-                        if (tryUpdateCurrentPage(currentPage, args)) {
-                            docCount++;
-                        }
-                    } else if (SEND_TEMPLATE_MARKER.equals(event.getMarker())) {
-                        templateCount++;
-                    }
 
-                    break;
-                default:
-                    // ignore
-            }
+            analyseLogEvent(event, currentPage, docs, logCategories, macroPages, counts, collisions);
         }
 
-        addAttachment("skipped.json", skipped, document);
-        addAttachment("problems.json", problematic, document);
-        addAttachment("otherIssues.json", otherIssues, document);
-        addAttachment("confluenceRefWarnings.json", confluenceRefWarnings, document);
+        for (Map.Entry<String, Map<String, List<LogLine<SimpleLog>>>> catEntry : logCategories.entrySet()) {
+            addAttachment(catEntry.getKey() + ".json", catEntry.getValue(), document);
+        }
+
         addAttachment("missingUsersGroups.json", getPermissionIssues(root, docs), document);
         addAttachment("collisions.json", collisions, document);
-        object.setLongValue("imported", docCount);
-        object.setLongValue("templates", templateCount);
-        object.setLongValue("revisions", revisionCount);
+        object.setLongValue("imported", counts.docCount);
+        object.setLongValue("templates", counts.templateCount);
+        object.setLongValue("revisions", counts.revisionCount);
         return macroPages;
+    }
+
+    private void analyseLogEvent(LogEvent event, CurrentPage currentPage, Collection<String> docs,
+        Map<String, Map<String, List<LogLine<SimpleLog>>>> logCategories, Map<String, Map<String, Integer>> macroPages,
+        DocCounts counts, Map<String, Map<String, List<String>>> collisions)
+    {
+        Marker marker = event.getMarker();
+        if (isADocumentOutputFilterEvent(marker)) {
+            updateCurrentPage(event, currentPage, docs, logCategories);
+        } else if (ConfluenceFilter.LOG_MACROS_FOUND.equals(marker)) {
+            addMacros(currentPage, event.getArgumentArray(), macroPages);
+        } else if (SEND_PAGE_MARKER.equals(marker)) {
+            updateCountsAndRef(event, currentPage, counts);
+        } else if (SEND_TEMPLATE_MARKER.equals(marker)) {
+            counts.templateCount++;
+        } else if (UNHANDLED_PARAMETER_MARKER.equals(marker)) {
+            addEventToCat(event, logCategories.get(UNHANDLED_PARAMETERS), currentPage);
+        } else if (UNHANDLED_PARAMETER_VALUE_MARKER.equals(marker)) {
+            addEventToCat(event, logCategories.get(UNHANDLED_PARAMETER_VALUES), currentPage);
+        } else if (CONFLUENCE_REF_MARKER.equals(event.getMarker())) {
+            addEventToCat(event, logCategories.get(CONFLUENCE_REF_WARNINGS), currentPage);
+        } else if (LogLevel.WARN.equals(event.getLevel())) {
+            addEventToCat(event, logCategories.get(OTHER_ISSUES), currentPage);
+        } else if (LogLevel.ERROR.equals(event.getLevel())) {
+            updateErrors(event, logCategories.get(SKIPPED), collisions, currentPage);
+        }
+    }
+
+    private void updateCurrentPage(LogEvent event, CurrentPage currentPage, Collection<String> docs,
+        Map<String, Map<String, List<LogLine<SimpleLog>>>> logCategories)
+    {
+        Object[] args = event.getArgumentArray();
+        if (args.length > 0 && (args[0] instanceof DocumentReference)) {
+            DocumentReference docRef = (DocumentReference) args[0];
+            currentPage.ref = serializer.serialize(docRef);
+            docs.add(localSerializer.serialize(docRef));
+            if (currentPage.id != null) {
+                for (Map<String, List<LogLine<SimpleLog>>> cat : logCategories.values()) {
+                    replaceKey(cat, currentPage);
+                }
+            }
+        }
     }
 
     private void updateErrors(LogEvent event, Map<String, List<LogLine<SimpleLog>>> skipped,
@@ -397,7 +433,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static boolean isADocumentOutputFilterEvent(Marker marker)
     {
-        String markerName = marker != null && marker.getName() != null ? marker.getName() : "";
+        String markerName = (marker == null || marker.getName() == null) ? "" : marker.getName();
         return markerName.equals("filter.instance.log.document.updated")
             || markerName.equals("filter.instance.log.document.created");
     }
@@ -412,6 +448,15 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return null;
     }
 
+    private static void updateCountsAndRef(LogEvent event, CurrentPage currentPage, DocCounts counts)
+    {
+        currentPage.ref = null;
+        counts.revisionCount++;
+        if (tryUpdateCurrentPage(currentPage, event.getArgumentArray())) {
+            counts.docCount++;
+        }
+    }
+
     private static boolean tryUpdateCurrentPage(CurrentPage currentPage, Object[] args)
     {
         if (args.length > 0 && args[0] instanceof Map) {
@@ -420,9 +465,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             currentPage.originalVersion = getPageIdentifierField(pageIdentifier, "originalVersion", Long.class);
             currentPage.spaceKey = getPageIdentifierField(pageIdentifier, "spaceKey", String.class);
             currentPage.pageTitle = getPageIdentifierField(pageIdentifier, "pageTitle", String.class);
-            if (currentPage.originalVersion == null || currentPage.originalVersion.equals(currentPage.id)) {
-                return true;
-            }
+            return currentPage.originalVersion == null || currentPage.originalVersion.equals(currentPage.id);
         }
         return false;
     }
@@ -436,34 +479,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                 logLines.add(currentPage.toLogLine(e));
             }
         }
-    }
-
-    private void updateCurrentDocument(CurrentPage currentPage,
-        Map<String, List<LogLine<SimpleLog>>> otherIssues,
-        Map<String, List<LogLine<SimpleLog>>> skipped, Map<String, List<LogLine<SimpleLog>>> problematic,
-        Map<String, List<LogLine<SimpleLog>>> confluenceRefWarnings, Collection<String> docs, Object[] args)
-    {
-        if (args.length == 0 || !(args[0] instanceof DocumentReference)) {
-            return;
-        }
-
-        DocumentReference docRef = (DocumentReference) args[0];
-        currentPage.ref = serializer.serialize(docRef);
-        docs.add(localSerializer.serialize(docRef));
-        if (currentPage.id != null) {
-            replaceKey(otherIssues, currentPage);
-            replaceKey(skipped, currentPage);
-            replaceKey(problematic, currentPage);
-            replaceKey(confluenceRefWarnings, currentPage);
-        }
-    }
-
-    private static void updateWarnings(LogEvent event, Map<String, List<LogLine<SimpleLog>>> confluenceRefWarnings,
-        Map<String, List<LogLine<SimpleLog>>> otherIssues, CurrentPage currentPage)
-    {
-        addEventToCat(event, CONFLUENCE_REF_MARKER.equals(event.getMarker())
-            ? confluenceRefWarnings
-            : otherIssues, currentPage);
     }
 
     private Map<String, List<String>> getPermissionIssues(String root, Collection<String> docs)
