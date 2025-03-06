@@ -130,6 +130,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.List;
 import java.util.Date;
+import java.util.HashMap
 
 @Component
 @Singleton
@@ -264,11 +265,11 @@ public class BatchStatsScriptService implements ScriptService
     private long countReferenceIssues(XWikiDocument doc)
     {
         long referenceIssues = 0;
-        def atachmentWarnings = getJSON(doc, "confluenceRefWarnings.json", REF_WARNING_TYPE_REF);
-        if (atachmentWarnings == null) {
+        def attachmentWarnings = getJSON(doc, "confluenceRefWarnings.json", REF_WARNING_TYPE_REF);
+        if (attachmentWarnings == null) {
             return -1;
         }
-        for (def warningList : atachmentWarnings.values()) {
+        for (def warningList : attachmentWarnings.values()) {
             for (def entry : warningList) {
                 def originalVersion = entry.get("originalVersion");
                 if (originalVersion == null || originalVersion.equals(entry.get("pageId"))) {
@@ -326,6 +327,192 @@ public class BatchStatsScriptService implements ScriptService
     private static String s(Object o)
     {
         return o.toString();
+    }
+
+    private final class UnhandledParameterInfo
+    {
+        public int count;
+        public final Collection&lt;String&gt; migrations;
+
+        private UnhandledParameterInfo()
+        {
+            this.count = 0;
+            this.migrations = new HashSet&lt;&gt;();
+        }
+    }
+
+    private final class UnhandledParameters
+    {
+        private final Map&lt;String, Map&lt;String, Collection&lt;String&gt;&gt;&gt; ignoredMap;
+
+        public long total;
+        public final String ignored;
+        public Map&lt;String, Map&lt;String, UnhandledParameterInfo&gt;&gt; parameterNames;
+        public Map&lt;String, Map&lt;String, Map&lt;String, UnhandledParameterInfo&gt;&gt;&gt; parameterValues;
+
+        public UnhandledParameters(String ignored)
+        {
+            this.ignored = ignored;
+            this.ignoredMap = parse(ignored);
+            this.parameterNames = new HashMap&lt;&gt;();
+            this.parameterValues = new HashMap&lt;&gt;();
+        }
+
+        private Map&lt;String, Map&lt;String, Collection&lt;String&gt;&gt;&gt; parse(String ignored) {
+            Map&lt;String, Map&lt;String, Collection&lt;String&gt;&gt;&gt; r = new HashMap&lt;&gt;();
+            for (String element : ignored.split("\\|")) {
+                if (element.isEmpty()) {
+                    continue;
+                }
+                String[] macroParam = element.split(":");
+                Map&lt;String, UnhandledParameterInfo&gt; macroInfo = r.get(macroParam[0]);
+                boolean alreadyIgnoreAnythingAboutThisMacro = r.containsKey(macroParam[0]) &amp;&amp; macroInfo == null;
+                if (!alreadyIgnoreAnythingAboutThisMacro) {
+                    if (macroParam.length == 1) {
+                        // ignore anything about this macro
+                        r.put(element, null);
+                    } else {
+                        String[] pv = macroParam[1].split('=');
+                        if (macroInfo == null) {
+                            macroInfo = new HashMap&lt;&gt;();
+                            r.put(macroParam[0], macroInfo);
+                        }
+                        Collection&lt;String&gt; paramInfo = macroInfo.get(pv[0]);
+                        boolean alreadyIgnoreAnythingAboutThisParam = macroInfo.containsKey(pv[0]) &amp;&amp; paramInfo == null;
+                        if (!alreadyIgnoreAnythingAboutThisParam) {
+                            if (pv.length == 1) {
+                                // ignore anything about this parameter
+                                macroInfo.put(pv[0], null);
+                            } else {
+                                if (paramInfo == null) {
+                                    paramInfo = new HashSet&lt;&gt;();
+                                    macroInfo.put(pv[0], paramInfo);
+                                }
+                                paramInfo.add(pv[1]);
+                            }
+                        }
+                    }
+                }
+            }
+            return r;
+        }
+
+        private void addUnhandledValue(String migration, String macroName, String paramName, String value)
+        {
+            if (isIgnoredValue(macroName, paramName, value)) {
+                return;
+            }
+            def paramNames = parameterValues.computeIfAbsent(macroName, k -&gt; new HashMap&lt;&gt;());
+            def paramValues = paramNames.computeIfAbsent(paramName, k -&gt; new HashMap&lt;&gt;());
+            def valueInfo = paramValues.computeIfAbsent(value, k -&gt; new UnhandledParameterInfo());
+            valueInfo.count++;
+            valueInfo.migrations.add(migration);
+            total++;
+        }
+
+        private void addUnhandledParameter(String migration, String macroName, String paramName, String value)
+        {
+            if (isIgnoredValue(macroName, paramName, value)) {
+                return;
+            }
+            def paramNames = parameterNames.computeIfAbsent(macroName, k -&gt; new HashMap&lt;&gt;());
+            def paramInfo = paramNames.computeIfAbsent(paramName, k -&gt; new UnhandledParameterInfo());
+            paramInfo.count++;
+            paramInfo.migrations.add(migration);
+            total++;
+        }
+
+        private boolean isIgnoredValue(String macroName, String paramName, String value)
+        {
+            Map&lt;String, Collection&lt;String&gt;&gt; macroInfo = ignoredMap.get(macroName);
+            if (macroInfo == null) {
+                if (ignoredMap.containsKey(macroName)) {
+                    // this macro is ignored
+                    return true;
+                }
+            } else {
+                Collection&lt;String&gt; paramInfo = macroInfo.get(paramName);
+                if (paramInfo == null) {
+                    if (macroInfo.containsKey(paramName)) {
+                        // This parameter is ignored
+                        return true;
+                    }
+                } else if (paramInfo.contains(value)) {
+                    // This parameter value is ignored
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    private void addUnhandledParameters(UnhandledParameters unhandledParameters, String migration)
+    {
+        addUnhandledParameters(unhandledParameters, migration, false);
+        addUnhandledParameters(unhandledParameters, migration, true);
+    }
+
+    private void addUnhandledParameters(UnhandledParameters unhandledParameters, String migration, boolean unhandledValues)
+    {
+        DocumentReference migrationDoc = new DocumentReference(resolver.resolve(migration, EntityType.DOCUMENT));
+        XWikiContext xcontext = contextProvider.get();
+        XWikiDocument doc = xcontext.getWiki().getDocument(migrationDoc, xcontext);
+        String filename = unhandledValues ? "unhandledParameterValues.json" : "unhandledParameters.json";
+        def unhandledParametersJSON = getJSON(doc, filename, REF_WARNING_TYPE_REF);
+        if (unhandledParametersJSON != null) {
+            for (def parameterValuesEntry : unhandledParametersJSON.entrySet()) {
+                String docName = parameterValuesEntry.getKey();
+                for (def entry : parameterValuesEntry.getValue()) {
+                    def originalVersion = entry.get("originalVersion");
+                    if (originalVersion == null || originalVersion.equals(entry.get("pageId"))) {
+                        def data = entry.get("data");
+                        if (data != null) {
+                            def args = data.get("args");
+                            if (args != null &amp;&amp; args.size() == 3) {
+                                String macroName = args.get(2);
+                                if (unhandledValues) {
+                                    String value = args.get(0);
+                                    String paramName = args.get(1);
+                                    unhandledParameters.addUnhandledValue(migration, macroName, paramName, value);
+                                } else {
+                                    String paramName = args.get(0);
+                                    String value = args.get(1);
+                                    unhandledParameters.addUnhandledParameter(migration, macroName, paramName, value);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public String computeUnhandledParameters(Document batchDoc, String ignored)
+    {
+        List&lt;String&gt; migrations = (List&lt;String&gt;) batchDoc.getValue("migrations");
+        progressManager.pushLevelProgress(migrations.size(), this);
+        UnhandledParameters unhandledParameters = new UnhandledParameters(ignored);
+        int migrationCount = 0;
+        for (String migration : migrations) {
+            progressManager.startStep(this);
+            migrationCount++;
+            logger.info("Getting unhandled parameters for migration [{}] ({}/{})", migration, migrationCount, migrations.size());
+            addUnhandledParameters(unhandledParameters, migration);
+            progressManager.endStep(this);
+        }
+        progressManager.popLevelProgress(this);
+        return new ObjectMapper().writeValueAsString(unhandledParameters);
+    }
+
+    public void computeAndSaveUnhandledParameters(Document batchDoc, String ignored)
+    {
+        logger.info("Computing the JSON");
+        String json = computeUnhandledParameters(batchDoc, ignored);
+        logger.info("Saving the JSON in unhandledParameters.json");
+        batchDoc.addAttachment("unhandledParameters.json", json.getBytes());
+        batchDoc.save("Add unhandledParameters.json");
+        logger.info("Done");
     }
 }</script_content>
     </property>

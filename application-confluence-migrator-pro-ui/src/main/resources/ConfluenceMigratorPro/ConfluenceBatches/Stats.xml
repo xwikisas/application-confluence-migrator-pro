@@ -40,7 +40,11 @@
 
 {{velocity}}
   #if ($request.confirm)
-    #set ($jobId = "confluence.batches.computetimestats.${request.batch}")
+    #if ($request.computeunhandledparameters)
+      #set ($jobId = "confluence/batches/computetimestats/$request.batch")
+    #else
+      #set ($jobId = "confluence/batches/computeunhandledparameters/$request.batch")
+    #end
   #else
     #set ($jobId = "")
   #end
@@ -55,9 +59,13 @@
   def batchDoc = xwiki.getDocument("ConfluenceMigratorPro.ConfluenceBatches.Batches." + request.batch);
   if (batchDoc != null) {
     try {
-      services.get("ConfluenceMigratorPro.ConfluenceBatches.stats").computeAndSaveTimeAnalysis(batchDoc);
+      if (request.computeunhandledparameters) {
+        services.get("ConfluenceMigratorPro.ConfluenceBatches.stats").computeAndSaveUnhandledParameters(batchDoc, request.ignore);
+      } else {
+        services.get("ConfluenceMigratorPro.ConfluenceBatches.stats").computeAndSaveTimeAnalysis(batchDoc);
+      }
     } catch (Exception e) {
-      services.logger.error("Failed to compute the stats", e);
+      services.logger.error("Failed to compute", e);
     }
   }
 {{/groovy}}
@@ -72,6 +80,9 @@
   #else
     #set ($batchDoc = $xwiki.getDocument("ConfluenceMigratorPro.ConfluenceBatches.Batches.${request.batch}"))
     Batch [[$batchDoc]]:
+
+    = Analyse errors and time
+
     #set ($computeURL = "$doc.fullName||queryString='batch=${escapetool.url($request.batch)}&amp;jobId=$!{escapetool.url($jobId)}&amp;confirm=true' class='btn btn-primary'")
     #set ($timecsv = $batchDoc.getAttachment("time.csv"))
     #if ($objecttool.isNull($timecsv))
@@ -81,7 +92,7 @@
     #else
       #set ($discard = $xwiki.ssfx.use("js/xwiki/table/table.css"))
       #set ($discard = $xwiki.jsfx.use("js/xwiki/table/tablefilterNsort.js", true))
-      (% class="grid sortable filterable doOddEven" id="tableid" %)
+      (% class="grid sortable filterable doOddEven" id="statstable" %)
       (% class="sortHeader" %)#foreach ($line in $timecsv.getContentAsString().split("\n"))
         #if ($foreach.first)
           #set ($sep = "|=")
@@ -102,6 +113,83 @@
 
       [[Force recompute&gt;&gt;$computeURL]]
     #end
+
+    = Analyse unhandled macro parameters
+
+    #if ($request.computeunhandledparameters)
+    
+    #end
+
+    #macro(esc $v)
+      $services.rendering.escape($v.toString(), $xwiki.currentContentSyntaxId)##
+    #end
+    #macro(listMigrations $migrations)
+      #foreach ($migration in $migrations)[[$migration]]#if (!$foreach.last),{ }#end#end##
+    #end
+    #set ($showMigrations = $request.showMigrations)
+    #set ($parametersJSONFile = $batchDoc.getAttachment("unhandledParameters.json"))
+    #if ($objecttool.isNotNull($parametersJSONFile))
+      #if ($showMigrations)
+        [[Don't show affected migrations&gt;&gt;$doc.fullName||queryString='batch=${escapetool.url($request.batch)}']]
+      #else
+        [[Show affected migrations&gt;&gt;$doc.fullName||queryString='batch=${escapetool.url($request.batch)}&amp;showMigrations=true']]
+      #end
+      #set ($parametersJSON = $jsontool.fromString($parametersJSONFile.getContentAsString()))
+
+      Total: $parametersJSON.total
+
+      Ignored parameters: #if($parametersJSON.ignored.isEmpty())None#else{{code language=none}}$parametersJSON.ignored{{/code}}#end
+
+      #set ($discard = $xwiki.ssfx.use("js/xwiki/table/table.css"))
+      #set ($discard = $xwiki.jsfx.use("js/xwiki/table/tablefilterNsort.js", true))
+      (% class="grid sortable filterable doOddEven" id="unhandledparamstable" %)
+      (% class="sortHeader" %)|=Macro|=Parameter|=Value|=Migration count|=Total count#if($showMigrations)|=Migrations#end
+
+      #foreach($macroEntry in $parametersJSON.parameterNames.entrySet())
+        #set ($macroName = $macroEntry.getKey())
+        #foreach ($parameterEntry in $macroEntry.getValue().entrySet())
+          #set ($parameterName = $parameterEntry.getKey())
+          #set ($info = $parameterEntry.getValue())
+          |#esc($macroName)|#esc($parameterName)||$info.migrations.size()|$info.count#if ($showMigrations)|#listMigrations($info.migrations)#end
+
+        #end
+      #end
+      #foreach ($macroEntry in $parametersJSON.parameterValues.entrySet())
+        #set ($macroName = $macroEntry.getKey())
+        #foreach ($parameterEntry in $macroEntry.getValue().entrySet())
+          #set ($parameterName = $parameterEntry.getKey())
+          #foreach ($valueEntry in $parameterEntry.getValue().entrySet())
+            #set ($valueName = $valueEntry.getKey())
+            #set ($info = $valueEntry.getValue())
+            |#esc($macroName)|#esc($parameterName)|#esc($valueName)|$info.migrations.size()|$info.count#if ($showMigrations)|#listMigrations($info.migrations)#end
+
+          #end
+        #end
+      #end
+
+      Direct link to the JSON file: [[attach:${batchDoc.fullName}@unhandledParameters.json]]
+
+    #end
+
+    {{html}}
+    &lt;form method="get" class="xform"&gt;
+      &lt;dl&gt;
+        &lt;dt&gt;
+          &lt;label for="ignore"&gt;Ignore parameters and values&lt;/label&gt;
+          &lt;span class="xHint"&gt;Pipe-separated list of parameters or parameter values to ignore. Write the name  of a macro if all unhandled parameters of this macro are to be ignored. Ignored parameters are shaped like &lt;code&gt;macroName:parameterName&lt;/code&gt;, ignored values like &lt;code&gt;macroName:parameterName=value&lt;/code&gt;. No escaping or quoting is supported yet.&lt;br /&gt;For example, &lt;code&gt;multiexcerpt-fast-include-inline-macro|livesearch:type=spacedesc|multiexcerpt-include-macro:macro_uuid&lt;/code&gt; will ignore all unhandled parameters of multiexcerpt-fast-include-inline-macro, the spacedesc value of the type parameter of livesearch and the macro_uuid parameter of multiexcerpt-include-macro.&lt;/span&gt;
+        &lt;/dt&gt;
+        &lt;dd&gt;&lt;input type="text" name="ignore" id="ignore"#if($parametersJSON.ignored){ }value="$escapetool.xml($parametersJSON.ignored)"#end&gt;&lt;/dd&gt;
+      &lt;/dl&gt;
+      &lt;p&gt;&lt;button class="btn btn-primary" name="confirm" value="true"&gt;
+        #if ($objecttool.isNull($parametersJSONFile))
+          Compute
+        #else
+          Recompute
+        #end
+      &lt;/button&gt;&lt;/p&gt;
+      &lt;input type="hidden" name="batch" value="$escapetool.xml($request.batch)" /&gt;
+      &lt;input type="hidden" name="computeunhandledparameters" value="true" /&gt;
+    &lt;/form&gt;
   #end
 #else
 
