@@ -747,7 +747,7 @@ public class ConfluenceReferenceFixer
         if (serializedEntity == null) {
             logger.warn(FAILED_REFERENCE_CONVERSION_MARKER,
                 "Document [{}]: Failed to convert Confluence URL [{}]", migratedDocRef, maybeURL);
-            s.incFailedRefs();
+            s.addFailedRef(maybeURL);
             return null;
         }
 
@@ -767,7 +767,7 @@ public class ConfluenceReferenceFixer
             mappers = componentManager.getInstanceList(ConfluenceURLMapper.class);
         } catch (ComponentLookupException e) {
             logger.error(EXCEPTION_WHILE_RESOLVING, migratedDocRef, maybeURL, e);
-            s.incFailedRefs();
+            s.addFailedRef(maybeURL);
         }
         return mappers;
     }
@@ -871,7 +871,7 @@ public class ConfluenceReferenceFixer
         if (newRef == null) {
             logger.warn(FAILED_REFERENCE_CONVERSION_MARKER, "Document [{}]: Failed to convert broken link [{}]",
                 migratedDocRef, oldRef);
-            s.incFailedRefs();
+            s.addFailedRef(oldRef);
             return null;
         }
 
@@ -1046,10 +1046,10 @@ public class ConfluenceReferenceFixer
             }
         } catch (ConfluenceResolverException e) {
             logger.error(FAILED_REFERENCE_CONVERSION_MARKER,
-                "Document [{}]: Failed to convert Confluence reference [{}] because of an exception",
-                migratedDocRef, reference, e);
+                "Document [{}]: Failed to convert Confluence reference [{}:{}] because of an exception",
+                migratedDocRef, type.getId(), reference, e);
         }
-        s.incFailedRefs();
+        s.addFailedRef(type.getId() + ':' + reference);
         return null;
     }
 

@@ -41,10 +41,18 @@
 * Dry run: $doc.display("dryRun")
 * Update in place: $doc.display("updateInPlace")
 
+#set ($tabChar = $jsontool.fromString('"\t"'))
+#macro (tsv $m)
+failed_reference${tabChar}count
+#foreach ($e in $m.entrySet())
+${e.getKey()}${tabChar}${e.getValue()}
+#end
+#end
 #if ($request.run != "1")
   #if ("$!doc.getValue('executed')" == "1")
     Already executed. [[Compute statistics&gt;&gt;$doc||queryString="computeStats=1" class="btn btn-primary"]]
     #if ($request.computeStats)
+      #set ($failedReferences = {})
       #set ($stats = {})
       #foreach ($session in $doc.getValue("sessions"))
         #set ($sessionDoc = $xwiki.getDocument($session))
@@ -60,9 +68,27 @@
         #else
           * {{warning}}Missing stats for [[$session]]{{/warning}}
         #end
-        #set ($discard = $doc.addAttachment("stats.json", $jsontool.serialize($stats).getBytes()))
-        #set ($discard = $doc.save("Add statistics"))
+        #set ($failedReferenceAttach = $sessionDoc.getAttachment("failedReferences.tsv"))
+        #if ($objecttool.isNotNull($failedReferenceAttach))
+          #set ($sessionFailedReferences = $failedReferenceAttach.getContentAsString())
+          #foreach ($line in $sessionFailedReferences.split("\n"))
+            #if (!$line.isEmpty())
+              #set($kv = $line.split("\t"))
+              #set ($failedRef = $kv[0])
+              #set ($currentCount = $failedReferences.get($failedRef))
+              #if (!$currentCount)
+                #set ($currentCount = 0)
+              #end
+              #set ($currentCount = $currentCount + $numbertool.toNumber($kv[1]))
+              #set ($discard = $failedReferences.put($failedRef, $currentCount))
+            #end
+          #end
+        #end
       #end
+      #set ($failedReferencesTSV = "#tsv($failedReferences)")
+      #set ($discard = $doc.addAttachment("failedReferences.tsv", $failedReferencesTSV.getBytes()))
+      #set ($discard = $doc.addAttachment("stats.json", $jsontool.serialize($stats).getBytes()))
+      #set ($discard = $doc.save("Add statistics"))
     #end
     #set ($stats = $doc.getAttachment("stats.json").getContentAsString())
     #if ($stats)

@@ -19,6 +19,10 @@
  */
 package com.xwiki.confluencepro.referencefixer.internal;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 /**
  * Reference fixing session statistics.
  * @since 1.29.0
@@ -31,6 +35,15 @@ public final class Stats
     private long successfulRefs;
     private long successfulDocs;
     private long unchangedDocs;
+    private Map<String, Integer> failedReferences;
+
+    /**
+     * Contructor.
+     */
+    Stats()
+    {
+        this.failedReferences = new HashMap<>();
+    }
 
     String toJSON()
     {
@@ -43,13 +56,23 @@ public final class Stats
             + "}";
     }
 
+    String getFailedReferencesTSV()
+    {
+        return failedReferences.entrySet()
+            .stream()
+            .map(e -> e.getKey() + "\t" + e.getValue())
+            .collect(Collectors.joining("\n"));
+    }
+
     void incFailedDocs()
     {
         this.failedDocs++;
     }
 
-    void incFailedRefs()
+    void addFailedRef(String reference)
     {
+        int count = failedReferences.getOrDefault(reference, 0);
+        failedReferences.put(reference, count + 1);
         this.failedRefs++;
     }
 

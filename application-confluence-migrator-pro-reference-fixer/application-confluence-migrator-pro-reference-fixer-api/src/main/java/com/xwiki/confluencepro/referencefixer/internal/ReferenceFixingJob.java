@@ -103,6 +103,7 @@ public class ReferenceFixingJob
             document.setIntValue(REFERENCE_FIXING_CLASS, EXECUTED, 1);
             if (s != null) {
                 addAttachment("stats.json", s.toJSON(), document);
+                addAttachment("failedReferences.tsv", s.getFailedReferencesTSV(), document);
             }
             wiki.saveDocument(document, "End session", context);
         }
