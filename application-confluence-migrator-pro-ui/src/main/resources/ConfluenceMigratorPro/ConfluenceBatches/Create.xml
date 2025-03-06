@@ -38,138 +38,31 @@
   <hidden>true</hidden>
   <content>{{include reference="ConfluenceMigratorPro.Code.CommonCode" /}}
 
-{{groovy}}
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.util.stream.Collectors;
-
-import groovy.json.JsonOutput;
-import groovy.json.JsonSlurper;
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.objects.BaseObject;
-import org.xwiki.model.reference.LocalDocumentReference;
-
-import org.xwiki.model.reference.DocumentReference;
-
-import com.xpn.xwiki.api.Object;
-import com.xpn.xwiki.api.Document;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.fasterxml.jackson.databind.ObjectMapper
-
-MIGRATION_BASENAME_PATTERN = Pattern.compile('(?:.*/)?([^/]+?)(?:\\.zip)?$', Pattern.CASE_INSENSITIVE);
-migrationDocs = new ArrayList&lt;Document&gt;();
-
-Document getMigrationDoc(String batchName, String migrationBasename, XWikiContext context)
-{
-    int migrationIndex = 0;
-    XWikiDocument migrationDoc = null;
-    while (migrationDoc == null || !migrationDoc.isNew()) {
-        DocumentReference migrationReference = new DocumentReference(
-            xcontext.getDatabase(),
-            ["ConfluenceMigratorPro", "Migrations"],
-            "Batch_" + batchName + "__CONTENT__" + migrationBasename + migrationIndex
-        );
-        migrationDoc = new XWikiDocument(migrationReference);
-        migrationIndex = migrationIndex + 1;
-    }
-    return new Document(migrationDoc, context);
-}
-
-static String ensureFilePrefix(String source)
-{
-    if (source.startsWith("file:")) {
-        return source;
-    }
-
-    return "file://" + source;
-}
-
-void createMigrations(String batchName, String[] sources, Map&lt;String, String&gt; inputPropertiesMap, String outputProperties, boolean dryRun)
-{
-    def messageList = new LinkedList()
-    for (String source : sources) {
-        Matcher m = MIGRATION_BASENAME_PATTERN.matcher(source);
-        if (m.matches()) {
-            String migrationBasename = m.group(1);
-            XWikiContext context = xcontext.getContext();
-            Document migrationDoc = getMigrationDoc(batchName, migrationBasename, context);
-            Object migrationObject = migrationDoc.getObject("ConfluenceMigratorPro.Code.MigrationClass", true);
-            Map&lt;String, String&gt; ownInputPropertiesMap = new HashMap&lt;&gt;(inputPropertiesMap);
-            ownInputPropertiesMap.put("source", ensureFilePrefix(source));
-            migrationObject.set("inputProperties", new JsonOutput().toJson(ownInputPropertiesMap));
-            migrationObject.set("outputProperties", outputProperties);
-            if (dryRun) {
-               messageList.add("Would create " + migrationDoc.getDocumentReference() + "\n")
-            }
-            else {
-              migrationDoc.save();
-              messageList.add("Creating " + migrationDoc.getDocumentReference() + "\n")
-              migrationDocs.add(migrationDoc)
-            }
-        } else {
-            println("Could not create a migration basename for package " + source);
-        }
-    }
-    xcontext.put('pageThatCouldBeCreated', messageList)
-}
-
-static String getPropertiesAsJSON(request, String type)
-{
-    String[] properties = request.getParameterMap().get("ConfluenceMigratorPro.Code.MigrationClass_0_" + type + "Properties")
-    if (properties == null || properties.length == 0) {
-        return null;
-    }
-    return properties[0];
-}
-
-batchName = request.batchName;
-
-String inputProperties = getPropertiesAsJSON(request, "input");
-String outputProperties = getPropertiesAsJSON(request, "output");
-String[] sources = request.getParameterMap().get("source");
-boolean linkMappingPass = request.linkMappingPass &amp;&amp; request.linkMappingPass != "off" &amp;&amp; request.linkMappingPass != "0";
-boolean dryRun = request.dryRun &amp;&amp; request.dryRun != "0" &amp;&amp; request.dryRun != "off";
-
-def mapper = new ObjectMapper()
-xcontext.put('batchName', batchName);
-xcontext.put('sources', sources);
-xcontext.put('inputProperties', mapper.readValue(inputProperties, Map));
-xcontext.put('outputProperties', mapper.readValue(outputProperties, Map));
-xcontext.put('linkMappingPass', linkMappingPass);
-xcontext.put('dryRun', dryRun);
-
-if (batchName &amp;&amp; sources &amp;&amp; sources.length &amp;&amp; inputProperties &amp;&amp; outputProperties) {
-    Map&lt;String, String&gt; inputPropertiesMap = new JsonSlurper().parseText(inputProperties);
-    Map&lt;String, String&gt; outputPropertiesMap = new JsonSlurper().parseText(outputProperties);
-    if (linkMappingPass) {
-        outputPropertiesMap.put("onlyLinkMapping", "false");
-        outputPropertiesMap.put("saveLinkMapping", "false");
-        outputPropertiesMap.put("useLinkMapping", "true");
-        outputProperties = new JsonOutput().toJson(outputPropertiesMap);
-    }
-    createMigrations(batchName, sources, inputPropertiesMap, outputProperties, dryRun);
-
-    LocalDocumentReference batchReference = new LocalDocumentReference(List.of("ConfluenceMigratorPro", "ConfluenceBatches", "Batches"), batchName);
-    if (dryRun) {
-      xcontext.put('batchPage', "Would create " + batchReference)
-    } else {
-        Document batchPage = xwiki.getDocument(batchReference)
-        Object b = batchPage.getObject("ConfluenceMigratorPro.ConfluenceBatches.Code.ConfluenceBatchClass", true)
-        b.set("sources", Arrays.asList(sources));
-        b.set("migrations", migrationDocs.stream()
-            .map(d -&gt; services.model.serialize(d.getDocumentReference()))
-            .collect(Collectors.toList()));
-        batchPage.save();
-        xcontext.put('batchPage', services.model.serialize(batchReference))
-    }
-} else {
-    xcontext.put('warning', true)
-}
-
-{{/groovy}}
-
 {{velocity}}
+#set ($batchName = $request.batchName)
+#set ($inputProperties = $request.getParameterMap().get("ConfluenceMigratorPro.Code.MigrationClass_0_inputProperties"))
+#set ($outputProperties = $request.getParameterMap().get("ConfluenceMigratorPro.Code.MigrationClass_0_outputProperties"))
+#set ($sources = $request.getParameterMap().get("source"))
+## Get the actual value.
+#if ($inputProperties &amp;&amp; $inputProperties.length != 0)
+  #set ($inputProperties = $inputProperties[0])
+#end
+#if ($outputProperties &amp;&amp; $outputProperties.length != 0)
+  #set ($outputProperties = $outputProperties[0])
+#end
+#set ($linkMappingPass = $request.linkMappingPass &amp;&amp; $request.linkMappingPass != "off" &amp;&amp; $request.linkMappingPass != "0")
+#set ($dryRun = $request.dryRun &amp;&amp; $request.dryRun != "0" &amp;&amp; $request.dryRun != "off")
+
+#if($batchName &amp;&amp; $sources &amp;&amp; $sources.size() &amp;&amp; $inputProperties &amp;&amp; $outputProperties &amp;&amp; !$dryRun)
+  #set ($extraParams = {})
+  #set ($logs =  $services.confluenceBatches.createBatch($batchName, $sources, $inputProperties, $outputProperties, $dryRun, $extraParams))
+#elseif($dryRun)
+  #set ($logs =  $services.confluenceBatches.createBatch($batchName, $sources, $inputProperties, $outputProperties, $dryRun, $extraParams))
+#else
+  #set ($warning = 'true')
+#end
+
+
 #macro (renderProperty $propertyNameTranslationKey, $valueDisplay, $overflow)
   &lt;div&gt;
     &lt;span class="cmpBatchCreateTitle"&gt;$escapetool.xml("$services.localization.render($propertyNameTranslationKey)")&lt;/span&gt; #if($overflow) &lt;div class='cmpBatchCreateOverflow'&gt; #end&lt;span&gt;$valueDisplay&lt;/span&gt;#if($overflow)&lt;/div&gt;#end
@@ -191,8 +84,8 @@ if (batchName &amp;&amp; sources &amp;&amp; sources.length &amp;&amp; inputPrope
 
 
       {{code}}
-      #foreach ($key in $json.keySet())
-        $key: $json.get($key)
+      #foreach ($key in $json.fieldNames())
+        $key: $json.get($key).toString()
       #end
       {{/code}}
 
@@ -217,22 +110,23 @@ if (batchName &amp;&amp; sources &amp;&amp; sources.length &amp;&amp; inputPrope
 
 {{html wiki='true'}}
 &lt;div&gt;
-  #renderProperty('confluencemigratorpro.batches.create.batchName', "$!xcontext.get('batchName')")
-  #prepareSourcesDisplay($!xcontext.get('sources'))
+  #renderProperty('confluencemigratorpro.batches.create.batchName', "$!batchName")
+  #prepareSourcesDisplay($!sources)
   #renderProperty('confluencemigratorpro.batches.create.sources', $sourceDisplayer, true)
   &lt;span&gt;&lt;br/&lt;/span&gt;
-  #renderJson('confluencemigratorpro.batches.create.inputProperties', $!xcontext.get('inputProperties'), true)
-  #renderJson('confluencemigratorpro.batches.create.outputProperties', $!xcontext.get('outputProperties'), true)
-  #renderProperty('confluencemigratorpro.batches.create.linkMappingPass', "$!xcontext.get('linkMappingPass')")
-  #renderProperty('confluencemigratorpro.batches.create.dryRun', "$!xcontext.get('dryRun')")
-  #if ("$!xcontext.get('dryRun')" == 'true')
-    #set ($batchPage  = "$!xcontext.get('batchPage')")
+  #renderJson('confluencemigratorpro.batches.create.inputProperties', $services.confluenceBatches.resolveJson($!inputProperties), true)
+  #renderJson('confluencemigratorpro.batches.create.outputProperties', $services.confluenceBatches.resolveJson($!outputProperties), true)
+  #renderProperty('confluencemigratorpro.batches.create.linkMappingPass', "$!linkMappingPass")
+  #renderProperty('confluencemigratorpro.batches.create.dryRun', "$!dryRun")
+
+  #if ("$!dryRun" == 'true')
+    #set ($batchPage  = "$!logs.get('batchPage')[0]")
   #else
-    #set ($batchPage = "[[$!xcontext.get('batchPage')]]")
+    #set ($batchPage = "[[$!logs.get('batchPage')[0]]]")
   #end
   #renderProperty('confluencemigratorpro.batches.create.batchPage', $batchPage)
-  #renderFiles('confluencemigratorpro.batches.create.filesThatCouldBeCreated', $!xcontext.get('pageThatCouldBeCreated') , true)
-  #if($!xcontext.get('warning'))
+  #renderFiles('confluencemigratorpro.batches.create.filesThatCouldBeCreated', $!logs.get('messageList') , true)
+  #if($warning == "true")
     &lt;br/&gt;
       {{warning}}$escapetool.xml($services.localization.render('confluencemigratorpro.batches.create.warn.missingParameters')){{/warning}}
     &lt;br/&gt;
