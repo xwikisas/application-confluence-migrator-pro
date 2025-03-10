@@ -59,6 +59,16 @@ public class ViewFileMacroConverter extends AbstractMacroConverter
         }
 
         if (StringUtils.isEmpty(filename)) {
+            filename = confluenceParameters.get("file");
+            if (filename != null && filename.startsWith("^")) {
+                filename = filename.substring(1);
+            } else {
+                throw new RuntimeException("view-file like macro [" + confluenceId + "]'s file parameter doesn't start "
+                    + "with the '^' character, don't know how to convert this. Killing the macro conversion.");
+            }
+        }
+
+        if (StringUtils.isEmpty(filename)) {
             throw new RuntimeException("Missing file name in viewfile-like macro [" + confluenceId + "],"
                 + " killing the macro conversion.");
         }

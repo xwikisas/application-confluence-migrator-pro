@@ -47,7 +47,13 @@
   <object class="BodyContent" package="com.atlassian.confluence.core">
     <id name="id">156868656</id>
     <property name="body"><![CDATA[
-<p><ac:structured-macro ac:name="excel" ac:schema-version="2" ac:macro-id="0d4db909-975c-41fc-9c48-9af22e019b72"><ac:parameter ac:name="name"><ri:attachment ri:filename="tests-example.xls" /></ac:parameter><ac:parameter ac:name="page"><ac:link /></ac:parameter><ac:parameter ac:name="exportFileDelimiter">%2C</ac:parameter></ac:structured-macro></p>]]></property>
+<p><ac:structured-macro ac:name="excel" ac:schema-version="2" ac:macro-id="0d4db909-975c-41fc-9c48-9af22e019b72"><ac:parameter ac:name="name"><ri:attachment ri:filename="tests-example.xls" /></ac:parameter><ac:parameter ac:name="page"><ac:link /></ac:parameter><ac:parameter ac:name="exportFileDelimiter">%2C</ac:parameter></ac:structured-macro></p>
+<p>
+    <ac:structured-macro ac:name="excel" ac:schema-version="1" ac:macro-id="7a4df461-3c3d-4353-8dd4-47c02a783aed">
+        <ac:parameter ac:name="file">^filename.xlsx</ac:parameter>
+    </ac:structured-macro>
+</p>
+]]></property>
     <property name="content" class="Page" package="com.atlassian.confluence.pages"><id name="id">45809845</id></property>
     <property name="bodyType">2</property>
   </object>
