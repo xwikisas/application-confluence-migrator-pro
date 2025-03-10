@@ -23,6 +23,8 @@ import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.test.junit5.mockito.OldcoreTest;
+
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -33,6 +35,7 @@ import org.xwiki.contrib.confluence.internal.parser.reference.type.ConfluenceSpa
 import org.xwiki.contrib.confluence.resolvers.internal.DefaultConfluencePageResolver;
 import org.xwiki.contrib.confluence.resolvers.internal.DefaultConfluenceSpaceResolver;
 import org.xwiki.model.EntityType;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.query.internal.DefaultQueryManager;
 import org.xwiki.search.solr.internal.EmbeddedSolr;
@@ -42,6 +45,7 @@ import org.xwiki.test.junit5.mockito.ComponentTest;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -469,5 +473,36 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
         for (String testDoc : docsWithoutReferenceIssues) {
             assertEquals(content + ' ' + testDoc, getContent(testDoc));
         }
+    }
+
+    @Test
+    void testDiagram() throws ComponentLookupException, XWikiException, IOException
+    {
+        File diagramFile = new File("src/test/resources/diagram/diagram.json");
+
+        XWikiDocument doc = addDoc("Diagram.WebHome", "", false);
+        doc.setAttachment("diagram", new FileInputStream(diagramFile), context);
+        doc.setAttachment("diagram.png", new ByteArrayInputStream(new byte[] {}), context);
+        wiki.saveDocument(doc, context);
+
+        fixer.fixDocuments(
+            null,
+            List.of(new EntityReference("Diagram", EntityType.SPACE)),
+            null, null, true, false
+        );
+
+        String actual = new String(
+            wiki.getDocument(new DocumentReference("xwiki", "Diagram", "WebHome"), context)
+                .getAttachment("diagram")
+                .getAttachment_content()
+                .getContentInputStream()
+                .readAllBytes(),
+            StandardCharsets.UTF_8
+        ).trim();
+
+        File fixedDiagramFile = new File("src/test/resources/diagram/expected.json");
+        String expected = FileUtils.readFileToString(fixedDiagramFile, StandardCharsets.UTF_8).trim();
+
+        assertEquals(expected, actual);
     }
 }

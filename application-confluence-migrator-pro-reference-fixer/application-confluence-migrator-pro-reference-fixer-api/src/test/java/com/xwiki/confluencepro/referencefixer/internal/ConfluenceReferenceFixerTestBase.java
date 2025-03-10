@@ -24,6 +24,8 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.web.XWikiDefaultURLFactory;
+import com.xpn.xwiki.web.XWikiURLFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrDocument;
@@ -55,11 +57,14 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -117,6 +122,10 @@ class ConfluenceReferenceFixerTestBase
     {
         when(confluencePageIdResolver.getDocumentById(anyLong())).thenAnswer(i -> {
             long id = i.getArgument(0);
+            if (id == 43 || id == 522012960621L) {
+                // That big number is "/x/badlink" converted
+                return null;
+            }
             if (id == 42) {
                 return new EntityReference(WEB_HOME, EntityType.DOCUMENT,
                     new EntityReference("MyAnswer", EntityType.SPACE, WIKI_REFERENCE));
@@ -125,7 +134,10 @@ class ConfluenceReferenceFixerTestBase
                 return new EntityReference(WEB_HOME, EntityType.DOCUMENT,
                     new EntityReference("Ok2EkGOQ", EntityType.SPACE, WIKI_REFERENCE));
             }
-            return null;
+
+            return new EntityReference(WEB_HOME, EntityType.DOCUMENT,
+                new EntityReference("ID" + id, EntityType.SPACE,
+                    new EntityReference(MIGRATED, EntityType.SPACE, WIKI_REFERENCE)));
         });
         when(confluencePageTitleResolver.getDocumentByTitle("Sandbox", WEB_HOME)).thenReturn(
             new EntityReference("ShouldNotHaveTriedResolvingSandbox", EntityType.DOCUMENT, WIKI_REFERENCE)
@@ -151,12 +163,55 @@ class ConfluenceReferenceFixerTestBase
             EntityType.SPACE, WIKI_REFERENCE));
     }
 
+    private String maybeQueryString(String q)
+    {
+        if (StringUtils.isEmpty(q)) {
+            return "";
+        }
+
+        if (q.startsWith("?")) {
+            return q;
+        }
+
+        return "?" + q;
+    }
+
+    private String maybeAnchor(String anchor)
+    {
+        if (StringUtils.isEmpty(anchor)) {
+            return "";
+        }
+
+        if (anchor.startsWith("#")) {
+            return anchor;
+        }
+
+        return "#" + anchor;
+    }
+
     @BeforeEach
     void beforeEach() throws ComponentLookupException, QueryException
     {
         Provider<XWikiContext> contextProvider = componentManager.getInstance(XWikiContext.TYPE_PROVIDER);
         context = contextProvider.get();
         wiki = context.getWiki();
+        XWikiURLFactory urlFactory = mock(XWikiURLFactory.class);
+        when(urlFactory.createURL(any(), any(), any())).thenAnswer(i ->
+            urlFactory.createURL(i.getArgument(0), i.getArgument(1), "view", i.getArgument(2)));
+        when(urlFactory.createURL(any(), any(), any(), any())).thenAnswer(i ->
+            urlFactory.createURL(i.getArgument(0), i.getArgument(1), i.getArgument(2), false, i.getArgument(3)));
+        when(urlFactory.createURL(any(), any(), any(), any(), any(), any())).thenAnswer(i ->
+            urlFactory.createURL(i.getArgument(0), i.getArgument(1), i.getArgument(2), "", "",
+                "xwiki", i.getArgument(3)));
+        when(urlFactory.createURL(any(), any(), any(), anyBoolean(), any())).thenAnswer(i ->
+            urlFactory.createURL(i.getArgument(0), i.getArgument(1), i.getArgument(2), "", "xwiki", i.getArgument(3)));
+        when(urlFactory.createURL(any(), any(), any(), any(), any(), any(), any())).thenAnswer(
+            i ->  new URL("http://localhost:8080/xwiki/wiki/" + i.getArgument(5) + "/" + i.getArgument(2) + "/" + i.getArgument(0) +
+                "/" + i.getArgument(1) +
+                maybeQueryString(i.getArgument(3)) + maybeAnchor(i.getArgument(4))));
+        when(urlFactory.getURL(any(), any())).thenAnswer(i -> i.getArgument(0).toString());
+
+        context.setURLFactory(urlFactory);
 
         docs = new ArrayList<>();
 

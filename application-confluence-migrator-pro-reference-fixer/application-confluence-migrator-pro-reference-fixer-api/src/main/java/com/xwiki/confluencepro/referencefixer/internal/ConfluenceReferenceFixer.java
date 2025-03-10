@@ -21,7 +21,9 @@ package com.xwiki.confluencepro.referencefixer.internal;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiAttachment;
@@ -30,6 +32,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xwiki.confluencepro.referencefixer.BrokenRefType;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
@@ -82,6 +85,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -148,6 +153,8 @@ public class ConfluenceReferenceFixer
     private static final String DOCUMENT_COL = "document:";
 
     private static final String COMMENT = "comment";
+
+    private static final String SLASH = "/";
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -494,7 +501,7 @@ public class ConfluenceReferenceFixer
         if ((baseURLsString instanceof String) && !StringUtils.isEmpty((String) baseURLsString)) {
             return Arrays.stream(((String) baseURLsString)
                 .split(","))
-                .map(baseURL -> StringUtils.removeEnd(baseURL, "/"))
+                .map(baseURL -> StringUtils.removeEnd(baseURL, SLASH))
                 .toArray(String[]::new);
         } else {
             logger.warn("Base URLs are not set for migration [{}], will not use them",
@@ -557,10 +564,104 @@ public class ConfluenceReferenceFixer
             String[] baseURLsNotNull = baseURLs == null ? new String[0] : baseURLs;
             boolean updated = visitXDOMToFixRefs(s, xdom, syntax, migratedDocRef, baseURLsNotNull, brokenRefType);
             updated = updateComments(s, migratedDoc, syntax, migratedDocRef, baseURLsNotNull, brokenRefType) || updated;
+            updated = updateGliffyDiagrams(s, migratedDoc, migratedDocRef, baseURLsNotNull) || updated;
             maybeUpdateDocument(s, migratedDoc, xdom, oldContent, updateInPlace, updated, dryRun);
         } catch (Exception e) {
             logger.error("Failed to fix document [{}]", migratedDocRef, e);
         }
+    }
+
+    private boolean convertGliffyDiagramNode(Stats s, JsonNode jsonNode, EntityReference migratedDocRef,
+        String[] baseURLsNotNull)
+    {
+        if (jsonNode.isArray()) {
+            boolean updated = false;
+            for (JsonNode node : jsonNode) {
+                updated = convertGliffyDiagramNode(s, node, migratedDocRef, baseURLsNotNull) || updated;
+            }
+            return updated;
+        }
+
+        if (jsonNode.isObject()) {
+            return convertGliffyDiagramObject(s, jsonNode, migratedDocRef, baseURLsNotNull);
+        }
+
+        return false;
+    }
+
+    private boolean convertGliffyDiagramObject(Stats s, JsonNode jsonNode, EntityReference migratedDocRef,
+        String[] baseURLsNotNull)
+    {
+        boolean updated = false;
+        List<Map.Entry<String, JsonNode>> fieldsCopy = IteratorUtils.toList(jsonNode.fields());
+        for (Map.Entry<String, JsonNode> field : fieldsCopy) {
+            String key = field.getKey();
+            JsonNode value = field.getValue();
+            if ("url".equals(key) || "href".equals(key) && value.isValueNode() && value.isTextual()) {
+                String url = value.asText();
+                if (StringUtils.startsWith(url, "data:")) {
+                    continue;
+                }
+                ResourceReference resourceReference =
+                    maybeConvertURLAsResourceRef(s, url, migratedDocRef, baseURLsNotNull, true);
+                if (resourceReference != null && resourceReference.getType() == ResourceType.URL) {
+                    ((ObjectNode) jsonNode).put(key, resourceReference.getReference());
+                    updated = true;
+                }
+            } else  {
+                updated = convertGliffyDiagramNode(s, value, migratedDocRef, baseURLsNotNull) || updated;
+            }
+        }
+        return updated;
+    }
+
+    private boolean updateGliffyDiagrams(Stats s, XWikiDocument migratedDoc, EntityReference migratedDocRef,
+        String[] baseURLsNotNull) throws XWikiException
+    {
+        boolean updated = false;
+        for (XWikiAttachment a : migratedDoc.getAttachmentList()) {
+            String filename = a.getFilename();
+            if (migratedDoc.getAttachment(filename + ".png") != null) {
+                // The current attachment is likely a Gliffy diagram because it has an associated .png file
+                updated = convertGliffyDiagram(s, migratedDocRef, baseURLsNotNull, a, filename) || updated;
+            }
+        }
+
+        return updated;
+    }
+
+    private boolean convertGliffyDiagram(Stats s, EntityReference migratedDocRef, String[] baseURLsNotNull,
+        XWikiAttachment a, String filename) throws XWikiException
+    {
+        XWikiAttachmentContent attachmentContent = a.getAttachmentContent(contextProvider.get());
+        if (attachmentContent == null) {
+            logger.error("Document [{}]: could not convert Gliffy diagram: Content of attachment [{}] is null",
+                migratedDocRef, filename);
+            return false;
+        }
+
+        JsonNode jsonRoot;
+        try {
+            jsonRoot = new ObjectMapper().readTree(attachmentContent.getContentInputStream());
+        } catch (IOException e) {
+            logger.warn("Document [{}]: could not convert Gliffy diagram: Could not parse JSON of "
+                    + "attachment [{}]. Maybe this is not a Gliffy diagram after all",
+                migratedDocRef, filename, e);
+            return false;
+        }
+
+        if (convertGliffyDiagramNode(s, jsonRoot, migratedDocRef, baseURLsNotNull)) {
+            try {
+                attachmentContent.setContent(
+                    new ByteArrayInputStream(new ObjectMapper().writeValueAsBytes(jsonRoot)));
+            } catch (IOException e) {
+                logger.error("Document [{}]: could not update the Gliffy diagram (attachment [{}])",
+                    migratedDocRef, filename, e);
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
     private boolean updateComments(Stats s, XWikiDocument migratedDoc, String syntaxId, EntityReference migratedDocRef,
@@ -704,14 +805,19 @@ public class ConfluenceReferenceFixer
     }
 
     private ResourceReference maybeConvertURLAsResourceRef(Stats s, String maybeURL, EntityReference migratedDocRef,
-        String[] baseURLs)
+        String[] baseURLs, boolean asURL)
     {
-        if (baseURLs.length == 0 || StringUtils.isEmpty(maybeURL)) {
+        List<ConfluenceURLMapper> mappers = getConfluenceURLMappers(s, maybeURL, migratedDocRef);
+        if (StringUtils.isEmpty(maybeURL) || mappers == null) {
             return null;
         }
 
-        List<ConfluenceURLMapper> mappers = getConfluenceURLMappers(s, maybeURL, migratedDocRef);
-        if (mappers == null) {
+        if (maybeURL.startsWith("/x/")) {
+            String urlWithoutExtraSlashes = maybeURL.replaceAll("/+", SLASH);
+            return maybeConvertURLAsResourceRef(s, urlWithoutExtraSlashes, migratedDocRef, "", mappers, asURL);
+        }
+
+        if (baseURLs.length == 0) {
             return null;
         }
 
@@ -721,7 +827,7 @@ public class ConfluenceReferenceFixer
                     continue;
                 }
 
-                return maybeConvertURLAsResourceRef(s, maybeURL, migratedDocRef, baseURL, mappers);
+                return maybeConvertURLAsResourceRef(s, maybeURL, migratedDocRef, baseURL, mappers, asURL);
             }
         } catch (Exception e) {
             logger.error(FAILED_REFERENCE_CONVERSION_MARKER,
@@ -733,7 +839,7 @@ public class ConfluenceReferenceFixer
     }
 
     private ResourceReference maybeConvertURLAsResourceRef(Stats s, String maybeURL, EntityReference migratedDocRef,
-        String baseURL, List<ConfluenceURLMapper> mappers)
+        String baseURL, List<ConfluenceURLMapper> mappers, boolean asURL)
     {
         String url = StringUtils.removeStart(maybeURL, baseURL).replaceAll("^/+", "");
         String anchor = null;
@@ -743,7 +849,7 @@ public class ConfluenceReferenceFixer
             url = url.substring(0, anchorPos);
         }
 
-        ResourceReference serializedEntity = maybeConvertURLAsResourceRef(url, migratedDocRef, mappers);
+        ResourceReference serializedEntity = maybeConvertURLAsResourceRef(url, migratedDocRef, mappers, asURL);
         if (serializedEntity == null) {
             logger.warn(FAILED_REFERENCE_CONVERSION_MARKER,
                 "Document [{}]: Failed to convert Confluence URL [{}]", migratedDocRef, maybeURL);
@@ -773,7 +879,7 @@ public class ConfluenceReferenceFixer
     }
 
     private ResourceReference maybeConvertURLAsResourceRef(String url, EntityReference migratedDocRef,
-        List<ConfluenceURLMapper> mappers)
+        List<ConfluenceURLMapper> mappers, boolean asURL)
     {
         for (ConfluenceURLMapper mapper : mappers) {
             Matcher m = null;
@@ -788,7 +894,8 @@ public class ConfluenceReferenceFixer
             }
 
             if (!notFound) {
-                ResourceReference serializedEntity = convertConvertURLAsResourceRef(url, migratedDocRef, mapper, m);
+                ResourceReference serializedEntity = convertConvertURLAsResourceRef(url, migratedDocRef, mapper, m,
+                    asURL);
                 if (serializedEntity != null) {
                     return serializedEntity;
                 }
@@ -798,7 +905,7 @@ public class ConfluenceReferenceFixer
     }
 
     private ResourceReference convertConvertURLAsResourceRef(String url, EntityReference ref,
-        ConfluenceURLMapper mapper, Matcher m)
+        ConfluenceURLMapper mapper, Matcher m, boolean asURL)
     {
         Object resultObj = mapper.convert(new DefaultURLMappingMatch(url, "get", m, null));
         org.xwiki.resource.ResourceReference resourceReference = null;
@@ -812,6 +919,12 @@ public class ConfluenceReferenceFixer
         }
         if (resourceReference instanceof EntityResourceReference) {
             EntityResourceReference rr = (EntityResourceReference) resourceReference;
+            if (asURL) {
+                XWikiContext context = contextProvider.get();
+                String convertedURL = context.getWiki().getURL(rr.getEntityReference(), context);
+                return new ResourceReference(convertedURL, ResourceType.URL);
+            }
+
             String serializedEntity = serializer.serialize(rr.getEntityReference(), ref);
             String type = rr.getEntityReference().getType().getLowerCase();
             if (DOCUMENT.equals(type)) {
@@ -956,7 +1069,7 @@ public class ConfluenceReferenceFixer
         ResourceType type = reference.getType();
 
         if (type.equals(ResourceType.URL)) {
-            return maybeConvertURLAsResourceRef(s, reference.getReference(), migratedDocRef, baseURLs);
+            return maybeConvertURLAsResourceRef(s, reference.getReference(), migratedDocRef, baseURLs, false);
         }
 
         String scheme = type.getScheme();
@@ -983,10 +1096,10 @@ public class ConfluenceReferenceFixer
         }
 
         if (reference.startsWith("url:")) {
-            return maybeConvertURLAsResourceRef(s, reference.substring(4), migratedDocRef, baseURLs);
+            return maybeConvertURLAsResourceRef(s, reference.substring(4), migratedDocRef, baseURLs, false);
         }
 
-        ResourceReference res = maybeConvertURLAsResourceRef(s, reference, migratedDocRef, baseURLs);
+        ResourceReference res = maybeConvertURLAsResourceRef(s, reference, migratedDocRef, baseURLs, false);
         if (res != null) {
             return res;
         }
@@ -1152,6 +1265,7 @@ public class ConfluenceReferenceFixer
         if (b instanceof MacroBlock) {
             return visitMacroBlockToFixRefs(s, syntaxId, migratedDocRef, baseURLs, brokenRefType, (MacroBlock) b);
         }
+
         if (b instanceof LinkBlock) {
             return updateLinkBlockToFixRef(s, (LinkBlock) b, migratedDocRef, baseURLs, brokenRefType);
         }
