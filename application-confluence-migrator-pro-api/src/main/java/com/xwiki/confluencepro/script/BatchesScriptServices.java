@@ -82,16 +82,6 @@ public class BatchesScriptServices implements ScriptService
     }
 
     /**
-     * Returns the file separator used by the operating system.
-     *
-     * @return the system-dependent file separator string
-     */
-    public String getSystemFileSeparator()
-    {
-        return File.separator;
-    }
-
-    /**
      * Returns the files present in the specified directory or {@code null} if the given path is not a directory.
      *
      * @param path the source directory path

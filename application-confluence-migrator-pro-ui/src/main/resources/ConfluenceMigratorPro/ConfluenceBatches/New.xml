@@ -65,12 +65,13 @@
 
 #if ($request.path)
 #set ($batchPath = $request.path)
-#set ($fileSeparator = $services.confluenceBatches.getSystemFileSeparator())
+## Java file API handles the normalization of the path.
+#set ($fileSeparator = "/")
 #set ($files = $services.confluenceBatches.getZips($batchPath))
 #if (!$files)
   #set ($absPath = $services.confluenceBatches.getServerAbsolutePath())
   {{warning}}
-    $escapetool.xml($services.localization.render("cfm.batches.create.invalidPathHint")): $absPath
+    $escapetool.xml($services.localization.render("confluencemigratorpro.batches.create.invalidPathHint")): $absPath
   {{/warning}}
 #end
 

@@ -135,7 +135,7 @@ public class DefaultBatchCreator extends AbstractBatchCreator
     }
 
     /**
-     * Creates the actual batch page.
+     * Create the actual batch page.
      */
     private List<String> createBatchPage(String batchName, List<String> sources, List<Document> migrationDocs,
         boolean dryRun) throws XWikiException
