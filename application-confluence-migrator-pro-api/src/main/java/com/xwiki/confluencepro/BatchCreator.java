@@ -43,7 +43,6 @@ public interface BatchCreator
      * @param sources The sources of the migration packages.
      * @param inputProperties The input properties of the migration.
      * @param outputProperties The output properties of the migration.
-     * @param dryRun Whether the batch should actually be created or just log what would be created.
      * @param extraParams A map containing extra parameters for custom implementations that may require additional
      * data.
      * @return A map containing logs of the creation process.
@@ -51,7 +50,7 @@ public interface BatchCreator
      * @throws XWikiException If an XWiki-related error occurs.
      */
     Map<String, List<String>> createBatch(String batchName, List<String> sources, String inputProperties,
-        String outputProperties, boolean dryRun, Map<String, String> extraParams) throws JsonProcessingException,
+        String outputProperties, Map<String, String> extraParams) throws JsonProcessingException,
         XWikiException;
 }
 

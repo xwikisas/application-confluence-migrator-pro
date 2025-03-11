@@ -81,8 +81,7 @@ public class DefaultBatchCreator extends AbstractBatchCreator
 
     @Override
     public Map<String, List<String>> createBatch(String batchName, List<String> sources, String inputProperties,
-        String outputProperties, boolean dryRun, Map<String, String> extraParams)
-        throws JsonProcessingException, XWikiException
+        String outputProperties, Map<String, String> extraParams) throws JsonProcessingException, XWikiException
     {
         Map<String, List<String>> logs = new HashMap<>();
         List<Document> migrationDocs = new ArrayList<>();
@@ -92,10 +91,10 @@ public class DefaultBatchCreator extends AbstractBatchCreator
         ObjectNode ownOutputProperties = (ObjectNode) OBJECT_MAPPER.readTree(outputProperties);
         prepareOutputProprties(ownOutputProperties);
 
-        processSources(batchName, sources, ownInputProperties, ownOutputProperties, dryRun, messageList, migrationDocs);
+        processSources(batchName, sources, ownInputProperties, ownOutputProperties, messageList, migrationDocs);
 
         logs.put("messageList", messageList);
-        logs.put("batchPage", createBatchPage(batchName, sources, migrationDocs, dryRun));
+        logs.put("batchPage", createBatchPage(batchName, sources, migrationDocs));
 
         return logs;
     }
@@ -104,8 +103,7 @@ public class DefaultBatchCreator extends AbstractBatchCreator
      * Processes the sources and creates the migration pages.
      */
     private void processSources(String batchName, List<String> sources, ObjectNode ownInputProperties,
-        ObjectNode ownOutputProperties, boolean dryRun, List<String> messageList, List<Document> migrationDocs)
-        throws XWikiException
+        ObjectNode ownOutputProperties, List<String> messageList, List<Document> migrationDocs) throws XWikiException
     {
         XWikiContext context = contextProvider.get();
 
@@ -120,14 +118,9 @@ public class DefaultBatchCreator extends AbstractBatchCreator
                 ownInputProperties.put("source", ensureFilePrefix(source));
                 migrationObject.set("inputProperties", ownInputProperties.toString());
                 migrationObject.set("outputProperties", ownOutputProperties.toString());
-
-                if (dryRun) {
-                    messageList.add(WOULD_CREATE + migrationDoc.getDocumentReference());
-                } else {
-                    migrationDoc.save();
-                    messageList.add("Creating " + migrationDoc.getDocumentReference());
-                    migrationDocs.add(migrationDoc);
-                }
+                migrationDoc.save();
+                messageList.add("Creating " + migrationDoc.getDocumentReference());
+                migrationDocs.add(migrationDoc);
             } else {
                 logger.error("Could not create a migration basename for package [{}]", source);
             }
@@ -137,15 +130,11 @@ public class DefaultBatchCreator extends AbstractBatchCreator
     /**
      * Create the actual batch page.
      */
-    private List<String> createBatchPage(String batchName, List<String> sources, List<Document> migrationDocs,
-        boolean dryRun) throws XWikiException
+    private List<String> createBatchPage(String batchName, List<String> sources, List<Document> migrationDocs)
+        throws XWikiException
     {
         LocalDocumentReference batchReference =
             new LocalDocumentReference(List.of(CONFLUENCE_MIGRATOR_PRO, "ConfluenceBatches", "Batches"), batchName);
-
-        if (dryRun) {
-            return List.of(WOULD_CREATE + batchReference);
-        }
 
         XWikiContext context = contextProvider.get();
         XWikiDocument batchPage = context.getWiki().getDocument(batchReference, context);
