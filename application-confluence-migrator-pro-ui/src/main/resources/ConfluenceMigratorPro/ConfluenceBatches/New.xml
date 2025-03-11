@@ -103,15 +103,6 @@
         $escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.linkMapping.hint'))
       &lt;/span&gt;
     &lt;/dd&gt;
-    &lt;dt&gt;
-      &lt;label for="dryRun"&gt;$escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.dryRun.title'))&lt;/label&gt;
-    &lt;/dt&gt;
-    &lt;dd class="checkbox-input-span"&gt;
-      &lt;input class="cmpInputAccentBlue" type="checkbox" name="dryRun" id="dryRun" /&gt;
-      &lt;span class="xHint"&gt;
-        $escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.dryRun.hint'))
-      &lt;/span&gt;
-    &lt;/dd&gt;
   &lt;/dl&gt;
 
   &lt;div class="cfm-batches-create-button-containers"&gt;

@@ -51,13 +51,9 @@
   #set ($outputProperties = $outputProperties[0])
 #end
 #set ($linkMappingPass = $request.linkMappingPass &amp;&amp; $request.linkMappingPass != "off" &amp;&amp; $request.linkMappingPass != "0")
-#set ($dryRun = $request.dryRun &amp;&amp; $request.dryRun != "0" &amp;&amp; $request.dryRun != "off")
-
-#if($batchName &amp;&amp; $sources &amp;&amp; $sources.size() &amp;&amp; $inputProperties &amp;&amp; $outputProperties &amp;&amp; !$dryRun)
+#if($batchName &amp;&amp; $sources &amp;&amp; $sources.size() &amp;&amp; $inputProperties &amp;&amp; $outputProperties)
   #set ($extraParams = {})
-  #set ($logs =  $services.confluenceBatches.createBatch($batchName, $sources, $inputProperties, $outputProperties, $dryRun, $extraParams))
-#elseif($dryRun)
-  #set ($logs =  $services.confluenceBatches.createBatch($batchName, $sources, $inputProperties, $outputProperties, $dryRun, $extraParams))
+  #set ($logs =  $services.confluenceBatches.createBatch($batchName, $sources, $inputProperties, $outputProperties, $extraParams))
 #else
   #set ($warning = 'true')
 #end
@@ -94,7 +90,7 @@
   &lt;/div&gt;
 #end
 ##
-## Render the files that could/are(depending on the dryRun parameter) be created when running the batch.
+## Render the files that are created when running the batch.
 ##
 #macro (renderFiles $translationKey, $files, $overflow)
   &lt;div #if($overflow) class='cmpBatchCreateOverflow' #end&gt;
@@ -117,13 +113,8 @@
   #renderJson('confluencemigratorpro.batches.create.inputProperties', $services.confluenceBatches.resolveJson($!inputProperties), true)
   #renderJson('confluencemigratorpro.batches.create.outputProperties', $services.confluenceBatches.resolveJson($!outputProperties), true)
   #renderProperty('confluencemigratorpro.batches.create.linkMappingPass', "$!linkMappingPass")
-  #renderProperty('confluencemigratorpro.batches.create.dryRun', "$!dryRun")
 
-  #if ("$!dryRun" == 'true')
-    #set ($batchPage  = "$!logs.get('batchPage')[0]")
-  #else
-    #set ($batchPage = "[[$!logs.get('batchPage')[0]]]")
-  #end
+  #set ($batchPage = "[[$!logs.get('batchPage')[0]]]")
   #renderProperty('confluencemigratorpro.batches.create.batchPage', $batchPage)
   #renderFiles('confluencemigratorpro.batches.create.filesThatCouldBeCreated', $!logs.get('messageList') , true)
   #if($warning == "true")
