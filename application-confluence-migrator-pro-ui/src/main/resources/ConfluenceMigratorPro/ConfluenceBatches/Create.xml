@@ -68,8 +68,8 @@
 #macro (prepareSourcesDisplay $sources)
   #set ($sourceDisplayer = "")
   #foreach($source in $sources)
-    #set ($sourceDisplayer =$sourceDisplayer + "&lt;span class='cmpBatchCreateBold' &gt;#$foreach.index &lt;/span&gt;
-     $escapetool.xml($services.rendering.escape($source, 'xwiki/2.1'))&lt;br/&gt;")
+    #set ($sourceDisplayer = $sourceDisplayer + "&lt;span class='cmpBatchCreateBold' &gt;#$foreach.index &lt;/span&gt;
+      $escapetool.xml($services.rendering.escape($source, 'xwiki/2.1'))&lt;br/&gt;")
   #end
 #end
 
