@@ -68,8 +68,8 @@
 #macro (prepareSourcesDisplay $sources)
   #set ($sourceDisplayer = "")
   #foreach($source in $sources)
-    #set ($sourceDisplayer =$sourceDisplayer + "&lt;span class='cmpBatchCreateBold' &gt;#$foreach.index &lt;/span&gt;
-    $escapetool.xml($source)&lt;br/&gt;")
+    #set ($sourceDisplayer = $sourceDisplayer + "&lt;span class='cmpBatchCreateBold' &gt;#$foreach.index &lt;/span&gt;
+      $escapetool.xml($services.rendering.escape($source, 'xwiki/2.1'))&lt;br/&gt;")
   #end
 #end
 
@@ -97,7 +97,7 @@
     &lt;span class="cmpBatchCreateTitle"&gt;$escapetool.xml("$services.localization.render($translationKey)")&lt;/span&gt;
     &lt;div #if($overflow) class='cmpBatchCreateOverflow' #end&gt;
       #foreach ($file in $files)
-        &lt;span&gt;$services.rendering.escape($file, 'xwiki/2.1') &lt;br/&gt;&lt;/span&gt;
+        &lt;span&gt;$escapetool.xml($services.rendering.escape($file, 'xwiki/2.1'))&lt;br/&gt;&lt;/span&gt;
       #end
     &lt;/div&gt;
   &lt;/div&gt;
