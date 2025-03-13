@@ -71,7 +71,7 @@
         #end
         #set ($sessionNumber = $reFixesCount + 1)
         #set ($batchRefFixSessionName = "${sessionNumber}_Batch_${batchName}")
-        #set ($batchRefFixSessionRef = $services.model.createDocumentReference($xcontext.getDatabase(), ["ConfluenceBatches", "ReferenceFixes"], $batchRefFixSessionName))
+        #set ($batchRefFixSessionRef = $services.model.createDocumentReference($xcontext.getDatabase(), ["ConfluenceMigratorPro", "ConfluenceBatches", "ReferenceFixes"], $batchRefFixSessionName))
         #set ($batchRefFixSession = $xwiki.getDocument($batchRefFixSessionRef))
         #set ($migrations = $batchDoc.getValue('migrations'))
         #set ($sessions = [])
