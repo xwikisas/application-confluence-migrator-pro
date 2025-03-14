@@ -114,28 +114,31 @@
  *#
 #macro(docView)
   ## Handle the upload and selection of a package using the attachment picker.
-  #if ("$!request.package" != '' &amp;&amp; $services.csrf.isTokenValid($request.form_token))
+  #if ("$!request.package" != '' &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $hasAdmin)
     #set ($discard = $doc.set('package', $request.package))
     #set ($discard = $doc.save("Set the package field"))
   #end
   ## End of upload handling.
   #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
   #if ("$!obj.getValue('executed')" == "" || "$obj.getValue('executed')" == "0")
-    #if ($request.run || !($doc.documentReference.name.contains("__LM__") ||
-    $doc.documentReference.name.contains("__CONTENT__")))
-      #runMigrationJob($doc, true)
-      #displayJob($obj)
-    #else
-      ## FIXME The following form cannot be post because the migrator refreshes the page at the end of the migration.
-      {{html}}
-        &lt;form method="get"&gt;
-          &lt;button type="submit" class="btn btn-primary" name="run" value="1"&gt;Run&lt;/button&gt;
-        &lt;/form&gt;
-      {{/html}}
+    #if ($hasAdmin)
+      #if ($request.run || !($doc.name.contains("__LM__") || $doc.name.contains("__CONTENT__")))
+        #runMigrationJob($doc, true)
+        #displayJob($obj)
+      #else
+        ## FIXME The following form cannot be post because the migrator refreshes the page at the end of the migration.
+        {{html}}
+          &lt;form method="get"&gt;
+            &lt;button type="submit" class="btn btn-primary" name="run" value="1"&gt;Run&lt;/button&gt;
+          &lt;/form&gt;
+        {{/html}}
+      #end
     #end
   #elseif ("$obj.getValue('executed')" == "2" &amp;&amp; $objecttool.isNotNull($services.confluenceMigration.getLastJob($doc.documentReference)))
-    #runMigrationJob($doc, false)
-    #displayJob($obj)
+    #if ($hasAdmin)
+      #runMigrationJob($doc, false)
+      #displayJob($obj)
+    #end
   #else
     #displayRaport($obj)
   #end
@@ -985,22 +988,31 @@
 #if (!$xcontext.isMainWiki())
   #displayMainWikiInfoBox
 #elseif ($xcontext.action == 'edit' || $xcontext.action == 'admin')
-  #if ($doc.isNew())
-    #newDocView
+  #if ($hasAdmin)
+    #if ($doc.isNew())
+      #newDocView
+    #end
   #else
+
+   {{error}}
+   {{translation key="confluencepro.norights" /}}
+   {{/error}}
+
   #end
-#elseif ($hasAdmin)
-  #if ($request.migrateprops == 1)
+#elseif ($request.migrateprops == 1)
+  #if ($hasAdmin)
     #migrateProps
-  #elseif ($request.text == 1)
-    #textReport
   #else
-    #docView
+
+   {{error}}
+   {{translation key="confluencepro.norights" /}}
+   {{/error}}
+
   #end
+#elseif ($request.text == 1)
+  #textReport
 #else
-  {{error}}
-  {{translation key="confluencepro.norights" /}}
-  {{/error}}
+  #docView
 #end
 {{/velocity}}</content>
   <object>
