@@ -157,7 +157,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         BaseObject object = null;
         XWiki wiki = context.getWiki();
         DocumentReference statusDocumentReference = jobStatus.getRequest().getStatusDocumentReference();
-        Map<String, Map<String, Object>> macroMap = null;
         try {
             document = wiki.getDocument(statusDocumentReference, context).clone();
             object = document.getXObject(MIGRATION_OBJECT);
@@ -166,8 +165,15 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             String root = updateMigrationPropertiesAndGetRoot(object);
             Map<String, Map<String, Integer>> macroPages = analyseLogs(jobStatus, object, document, root);
             if (!isTrue(jobStatus.getRequest().getOutputProperties().getOrDefault(ONLY_LINK_MAPPING, "0").toString())) {
-                macroMap = computeMacroMap(macroPages);
-                object.setLargeStringValue("macros", new ObjectMapper().writeValueAsString(macroMap.keySet()));
+                Map<String, Integer> macroCounts = new HashMap<>();
+                for (Map<String, Integer> entries : macroPages.values()) {
+                    for (Map.Entry<String, Integer> entry : entries.entrySet()) {
+                        String macroName = entry.getKey();
+                        macroCounts.put(macroName, entry.getValue() + macroCounts.computeIfAbsent(macroName, k -> 0));
+                    }
+                }
+                object.setLargeStringValue("macros", new ObjectMapper().writeValueAsString(macroCounts));
+                persistMacroMap(macroPages);
             }
 
             if (StringUtils.isEmpty(document.getTitle())) {
@@ -186,9 +192,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                         statusDocumentReference, err);
                 }
             }
-        }
-        if (macroMap != null) {
-            persistMacroMap(macroMap);
         }
     }
 
@@ -245,11 +248,6 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         public String spaceKey;
         public String pageTitle;
         public T data;
-
-        private boolean isCurrentRevision()
-        {
-            return originalVersion == null || (originalVersion.equals(pageId));
-        }
     }
 
     private static final class SimpleLog
@@ -349,6 +347,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
         addAttachment("missingUsersGroups.json", getPermissionIssues(root, docs), document);
         addAttachment("collisions.json", collisions, document);
+        addAttachment("macroPages.json", macroPages, document);
         object.setLongValue("imported", counts.docCount);
         object.setLongValue("templates", counts.templateCount);
         object.setLongValue("revisions", counts.revisionCount);
@@ -626,8 +625,9 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         return currentPage.ref;
     }
 
-    private void persistMacroMap(Map<String, Map<String, Object>> macroMap)
+    private void persistMacroMap(Map<String, Map<String, Integer>> macroPages)
     {
+        Map<String, Map<String, Object>> macroMap = computeMacroMap(macroPages);
         XWikiContext context = contextProvider.get();
         DocumentReference migratedMacrosCountJSONDocRef = new DocumentReference(
             context.getWikiId(), CONFLUENCE_MIGRATOR_SPACE, "MigratedMacrosCountJSON");

@@ -116,10 +116,12 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.job.JobStatusStore;
 import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.job.event.status.JobStatus;
+import org.xwiki.component.manager.ComponentManager;
 import com.xwiki.confluencepro.ConfluenceMigrationJobRequest;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
+import org.xwiki.rendering.macro.Macro;
 import org.xwiki.script.service.ScriptService;
 
 import javax.inject.Inject;
@@ -138,15 +140,20 @@ import java.util.HashMap
 public class BatchStatsScriptService implements ScriptService
 {
     private static final TypeReference&lt;Map&lt;String, Object&gt;&gt; MAP_TYPE_REF = new TypeReference&lt;Map&lt;String, Object&gt;&gt;() {};
+    private static final TypeReference&lt;Map&lt;String, Integer&gt;&gt; MAPCOUNT_TYPE_REF = new TypeReference&lt;Map&lt;String, Integer&gt;&gt;() {};
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-    private static final TypeReference&lt;Map&lt;String, List&lt;Map&lt;String, Object&gt;&gt;&gt;&gt; REF_WARNING_TYPE_REF = new TypeReference&lt;Map&lt;String, List&lt;Map&lt;String, Object&gt;&gt;&gt;&gt;() { }
-    private static final TypeReference&lt;Map&lt;String, List&lt;Object&gt;&gt;&gt; CRITICAL_TYPE_REF = new TypeReference&lt;Map&lt;String, List&lt;Object&gt;&gt;&gt;() { }
+    private static final TypeReference&lt;Map&lt;String, List&lt;Map&lt;String, Object&gt;&gt;&gt;&gt; REF_WARNING_TYPE_REF = new TypeReference&lt;Map&lt;String, List&lt;Map&lt;String, Object&gt;&gt;&gt;&gt;() { };
+    private static final TypeReference&lt;Map&lt;String, List&lt;Object&gt;&gt;&gt; CRITICAL_TYPE_REF = new TypeReference&lt;Map&lt;String, List&lt;Object&gt;&gt;&gt;() { };
+    private static final TypeReference&lt;Map&lt;String, Map&lt;String, Integer&gt;&gt;&gt; MACROPAGE_TYPE_REF = new TypeReference&lt;Map&lt;String, Map&lt;String, Integer&gt;&gt;&gt;() { };
 
     @Inject
     private JobStatusStore jobStatusStore;
 
     @Inject
     private Provider&lt;XWikiContext&gt; contextProvider;
+
+    @Inject
+    private Provider&lt;ComponentManager&gt; componentManagerProvider;
 
     @Inject
     private Logger logger;
@@ -171,6 +178,8 @@ public class BatchStatsScriptService implements ScriptService
                 "revisionCount," +
                 "duration_per_doc," +
                 "duration_per_revision," +
+                "unhandled_macros," +
+                "unhandled_macros_distincts," +
                 "reference_issues," +
                 "critical_issues," +
                 "executed," +
@@ -199,6 +208,19 @@ public class BatchStatsScriptService implements ScriptService
         batchDoc.addAttachment("time.csv", csv.getBytes());
         batchDoc.save("Add time.csv");
         logger.info("Done");
+    }
+
+    private Map&lt;String, Integer&gt; getMacrosJSON(XWikiDocument doc)
+    {
+        String macros = doc.getStringValue("macros");
+        def macrosJSON = null;
+        if (macros.startsWith('{')) {
+            macrosJSON = new ObjectMapper().readValue(macros, MAPCOUNT_TYPE_REF);
+            if (macrosJSON == null) {
+                logger.info("Macro counts are not available");
+            }
+        }
+        return macrosJSON;
     }
 
     private String getCSVLine(String migration)
@@ -233,6 +255,22 @@ public class BatchStatsScriptService implements ScriptService
 
         extraBad = extraBad || (imported == 0);
 
+        int unhandledMacros = -1;
+        int unhandledMacrosDistinct = -1;
+        def macrosJSON = getMacrosJSON(doc);
+        if (macrosJSON != null) {
+            unhandledMacros = 0;
+            unhandledMacrosDistinct = 0;
+            for (Map&lt;String, Integer&gt; macro : macrosJSON) {
+                String macroName = macro.getKey();
+                Integer count = macro.getValue();
+                if (!componentManagerProvider.get().hasComponent(Macro.class, macroName)) {
+                    unhandledMacrosDistinct += 1;
+                    unhandledMacros += count;
+                }
+            }
+        }
+
         return (
             migration + ',' +
             source + ',' +
@@ -244,6 +282,8 @@ public class BatchStatsScriptService implements ScriptService
             s(revisions) + ',' +
             s(Math.round(durationMs / Math.max(1, imported))) + ',' +
             s(Math.round(durationMs / Math.max(1, revisions))) + ',' +
+            s(unhandledMacros) + ',' +
+            s(unhandledMacrosDistinct) + ',' +
             s(referenceIssues) + ',' +
             s(criticalIssues) + ',' +
             s(executed) + ',' +
@@ -327,6 +367,20 @@ public class BatchStatsScriptService implements ScriptService
     private static String s(Object o)
     {
         return o.toString();
+    }
+
+    private final class UnhandledMacroInfo
+    {
+        public int count;
+        public int pages;
+        public final Collection&lt;String&gt; migrations;
+
+        private UnhandledMacroInfo()
+        {
+            this.count = 0;
+            this.pages = 0;
+            this.migrations = new HashSet&lt;&gt;();
+        }
     }
 
     private final class UnhandledParameterInfo
@@ -488,6 +542,28 @@ public class BatchStatsScriptService implements ScriptService
         }
     }
 
+    private void addUnhandledMacros(Map&lt;String, UnhandledMacroInfo&gt; unhandledMacros, String migration)
+    {
+        DocumentReference migrationDoc = new DocumentReference(resolver.resolve(migration, EntityType.DOCUMENT));
+        XWikiContext xcontext = contextProvider.get();
+        XWikiDocument doc = xcontext.getWiki().getDocument(migrationDoc, xcontext);
+        def macroPagesJSON = getJSON(doc, "macroPages.json", MACROPAGE_TYPE_REF);
+        if (macroPagesJSON != null) {
+            for (Map&lt;String, Integer&gt; entries : macroPagesJSON.values()) {
+                for (Map.Entry&lt;String, Integer&gt; entry : entries.entrySet()) {
+                    String macroName = entry.getKey();
+                    if (!componentManagerProvider.get().hasComponent(Macro.class, macroName)) {
+                        def info = unhandledMacros.computeIfAbsent(macroName, k -&gt; new UnhandledMacroInfo());
+                        info.pages += 1;
+                        info.migrations.add(migration);
+                        info.count += entry.getValue();
+                        unhandledMacros.put(macroName, info);
+                    }
+                }
+            }
+        }
+    }
+
     public String computeUnhandledParameters(Document batchDoc, String ignored)
     {
         List&lt;String&gt; migrations = (List&lt;String&gt;) batchDoc.getValue("migrations");
@@ -507,12 +583,35 @@ public class BatchStatsScriptService implements ScriptService
 
     public void computeAndSaveUnhandledParameters(Document batchDoc, String ignored)
     {
-        logger.info("Computing the JSON");
+        progressManager.pushLevelProgress(2, this);
+        logger.info("Aggregating the unhandled parameters");
         String json = computeUnhandledParameters(batchDoc, ignored);
         logger.info("Saving the JSON in unhandledParameters.json");
         batchDoc.addAttachment("unhandledParameters.json", json.getBytes());
-        batchDoc.save("Add unhandledParameters.json");
+        logger.info("Aggregating the unhandled macros");
+        json = computeUnhandledMacros(batchDoc);
+        logger.info("Saving the JSON in unhandledMacros.json");
+        batchDoc.addAttachment("unhandledMacros.json", json.getBytes());
+        batchDoc.save("Add unhandledMacros.json and unhandledParameters.json");
+        progressManager.popLevelProgress(this);
         logger.info("Done");
+    }
+
+    public String computeUnhandledMacros(Document batchDoc)
+    {
+        List&lt;String&gt; migrations = (List&lt;String&gt;) batchDoc.getValue("migrations");
+        progressManager.pushLevelProgress(migrations.size(), this);
+        Map&lt;String, UnhandledMacroInfo&gt; unhandledMacros = new HashMap&lt;&gt;();
+        int migrationCount = 0;
+        for (String migration : migrations) {
+            progressManager.startStep(this);
+            migrationCount++;
+            logger.info("Getting unhandled macros for migration [{}] ({}/{})", migration, migrationCount, migrations.size());
+            addUnhandledMacros(unhandledMacros, migration);
+            progressManager.endStep(this);
+        }
+        progressManager.popLevelProgress(this);
+        return new ObjectMapper().writeValueAsString(unhandledMacros);
     }
 }</script_content>
     </property>

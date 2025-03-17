@@ -326,15 +326,7 @@
   &lt;div class="imported-macros-section"&gt;
     #displaySubtitle('list', 'confluencepro.migration.raport.macros.title', '', [])
     &lt;div class="imported-macros"&gt;
-      #set ($supportedMacros = [])
-      #set ($notSupportedMacros = [])
-      #foreach ($macro in $jsontool.fromString($obj.getProperty('macros').value))
-        #if ($componentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
-          #set ($discard = $supportedMacros.add($macro))
-        #else
-          #set ($discard = $notSupportedMacros.add($macro))
-        #end
-      #end
+      #fillSupportedAndUnsupportedMacros
       #if (!$supportedMacros.isEmpty())
         &lt;div class="imported-macros-title"&gt;
           &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported'))&lt;/span&gt;
@@ -875,6 +867,30 @@
   #end
 #end
 
+#macro(fillSupportedAndUnsupportedMacros)
+  #set ($supportedMacros = [])
+  #set ($notSupportedMacros = [])
+  #set ($macroEntries = $jsontool.fromString($obj.getProperty('macros').value))
+  #set ($macroKeys = $macroEntries.keySet())
+  #if ($objecttool.isNotNull($macroKeys))
+    ## Older versions output a list, newer versions a map with the count
+    #set ($macros = $macroKeys)
+  #else
+    #set ($macros = $macroEntries)
+  #end
+  #foreach ($macro in $macros)
+    #set ($supported = $componentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
+    #if ($objecttool.isNotNull($macroKeys))
+      #set ($macro = "${macro} (${macroEntries.get($macro)})")
+    #end
+    #if ($supported)
+      #set ($discard = $supportedMacros.add($macro))
+    #else
+      #set ($discard = $notSupportedMacros.add($macro))
+    #end
+  #end
+#end
+
 #macro(textReport)
   $xcontext.setFinished(true)
   #computeRootSpace
@@ -929,15 +945,7 @@
       $os.print(" - $inputProp.key: $inputProp.value$escapetool.N")
     #end
   #end
-  #set ($supportedMacros = [])
-  #set ($notSupportedMacros = [])
-  #foreach ($macro in $jsontool.fromString($obj.getProperty('macros').value))
-    #if ($componentManager.hasComponent('org.xwiki.rendering.macro.Macro', $macro))
-      #set ($discard = $supportedMacros.add($macro))
-    #else
-      #set ($discard = $notSupportedMacros.add($macro))
-    #end
-  #end
+  #fillSupportedAndUnsupportedMacros
   $os.print("Supported macros: $supportedMacros$escapetool.N")
   $os.print("Unsupported macros: $notSupportedMacros$escapetool.N")
 

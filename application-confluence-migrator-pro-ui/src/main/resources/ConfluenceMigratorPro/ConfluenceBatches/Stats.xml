@@ -81,7 +81,7 @@
     #set ($batchDoc = $xwiki.getDocument("ConfluenceMigratorPro.ConfluenceBatches.Batches.${request.batch}"))
     Batch [[$batchDoc]]:
 
-    = Analyse errors and time
+    = Time and issues stats
 
     #set ($computeURL = "$doc.fullName||queryString='batch=${escapetool.url($request.batch)}&amp;jobId=$!{escapetool.url($jobId)}&amp;confirm=true' class='btn btn-primary'")
     #set ($timecsv = $batchDoc.getAttachment("time.csv"))
@@ -114,11 +114,7 @@
       [[Force recompute&gt;&gt;$computeURL]]
     #end
 
-    = Analyse unhandled macro parameters
-
-    #if ($request.computeunhandledparameters)
-    
-    #end
+    = Unhandled macros and macro parameters
 
     #macro(esc $v)
       $services.rendering.escape($v.toString(), $xwiki.currentContentSyntaxId)##
@@ -128,13 +124,46 @@
     #end
     #set ($showMigrations = $request.showMigrations)
     #set ($parametersJSONFile = $batchDoc.getAttachment("unhandledParameters.json"))
-    #if ($objecttool.isNotNull($parametersJSONFile))
+    #set ($macrosJSONFile = $batchDoc.getAttachment("unhandledMacros.json"))
+    #if ($objecttool.isNotNull($macrosJSONFile) || $objecttool.isNotNull($parametersJSONFile))
       #if ($showMigrations)
         [[Don't show affected migrations&gt;&gt;$doc.fullName||queryString='batch=${escapetool.url($request.batch)}']]
       #else
         [[Show affected migrations&gt;&gt;$doc.fullName||queryString='batch=${escapetool.url($request.batch)}&amp;showMigrations=true']]
       #end
+    #end
+    #if ($objecttool.isNotNull($macrosJSONFile))
+      #set ($macrosJSON = $jsontool.fromString($macrosJSONFile.getContentAsString()))
+
+      == Macros
+
+      #if ($macrosJSON.isEmpty())
+       No macros to show.
+      #else
+
+        {{info}}
+        In this section, the macro names are those after conversion. A macro is considered unhandled if the converted macro doesn't have an implementation installed in this wiki.
+        {{/info}}
+
+        #set ($discard = $xwiki.ssfx.use("js/xwiki/table/table.css"))
+        #set ($discard = $xwiki.jsfx.use("js/xwiki/table/tablefilterNsort.js", true))
+        (% class="grid sortable filterable doOddEven" id="unhandledmacrostable" %)
+        (% class="sortHeader" %)|=Macro|=Migration count|=Page count|=Total count#if($showMigrations)|=Migrations#end
+
+        #foreach($macroEntry in $macrosJSON.entrySet())
+          #set ($macroName = $macroEntry.getKey())
+          #set ($info = $macroEntry.getValue())
+            |#esc($macroName)|$info.migrations.size()|$info.pages|$info.count#if ($showMigrations)|#listMigrations($info.migrations)#end
+
+        #end
+      #end
+
+      Direct link to the JSON file: [[attach:${batchDoc.fullName}@unhandledMacros.json]]
+    #end
+    #if ($objecttool.isNotNull($parametersJSONFile))
       #set ($parametersJSON = $jsontool.fromString($parametersJSONFile.getContentAsString()))
+
+      == Parameters
 
       Total: $parametersJSON.total
 
