@@ -129,6 +129,10 @@
       &lt;/div&gt;
       &lt;/form&gt;
     #end
+
+    {{html}}
+      #displayPrefillForm("cmpUploadPackageMigrationSettingsForm")
+    {{/html}}
   &lt;/div&gt;
 &lt;/div&gt;
 #end
@@ -154,7 +158,8 @@
         &lt;p&gt;$escapedMessage&lt;/p&gt;
 
         {{html}}
-          #displayPrefillForm
+          ## In this case, the class is here only to make the DOM easier to read, since these fields are already in the form and are submitted when the select from server is pressed.
+          #displayPrefillForm("cmpServerMigrationSettingsForm")
         {{/html}}
 
       &lt;/form&gt;

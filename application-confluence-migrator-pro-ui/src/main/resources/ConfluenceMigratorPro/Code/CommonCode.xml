@@ -277,7 +277,7 @@
   #set ($migrations = $services.query.xwql("select doc.fullName, doc.name, doc.title from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.creationDate desc").execute())
 #end
 #macro (displaySelectMigrations $fieldName $allowEmpty)
-  &lt;select name="$fieldName" id="$fieldName" autocomplete="off"&gt;
+  &lt;select name="$fieldName" class="$fieldName" autocomplete="off"&gt;
     #if ($allowEmpty)
       &lt;option value="" #if ($specifiedMigration == "") selected="selected"#end&gt;&lt;/option&gt;
     #end
@@ -299,7 +299,7 @@
 #**
  * Display form fields to choose a migration from which to prefill parameters.
  *#
-#macro (displayPrefillForm)
+#macro (displayPrefillForm $class)
   #getMigrations
   #if (!$migrations.isEmpty())
     #set ($prefillConfigDoc = $xwiki.getDocument("ConfluenceMigratorPro.Code.PrefillConfig"))
@@ -313,17 +313,17 @@
         #set ($configSource = "default")
       #end
     #end
-    &lt;div class="cmpServerParametersForm"&gt;
+    &lt;div class="migrationSettings $class"&gt;
       &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.packages.prefillUsing'))&lt;/p&gt;
       &lt;p&gt;
         &lt;label&gt;
-          &lt;input type="radio" name="config-source" value="default" id="config-source-default" autocomplete="off" #if ($configSource == "default") checked="checked" #end/&gt;
+          &lt;input type="radio" name="config-source" value="default" autocomplete="off" #if ($configSource == "default") checked="checked" #end/&gt;
           $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingDefaults'))
         &lt;/label&gt;
       &lt;/p&gt;
       &lt;p&gt;
         &lt;label&gt;
-          &lt;input type="radio" name="config-source" value="specified" id="config-source-specified" autocomplete="off" #if ($configSource == "specified") checked="specified" #end/&gt;
+          &lt;input type="radio" name="config-source" value="specified" autocomplete="off" #if ($configSource == "specified") checked="specified" #end/&gt;
           $escapetool.xml($services.localization.render('confluencepro.packages.prefillUsingSpecified'))
         &lt;/label&gt;
         #displaySelectMigrations("specified-migration", true)
