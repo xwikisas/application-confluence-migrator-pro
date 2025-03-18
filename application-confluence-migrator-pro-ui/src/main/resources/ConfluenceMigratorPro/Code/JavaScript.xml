@@ -161,7 +161,6 @@
 
 
   $(document).on("change", ".specified-migration", function () {
-    console.log('test')
     let parent = $(this).closest(".migrationSettings");
     if (this.value) {
       parent.find("input[value='specified']").prop("checked", true);
