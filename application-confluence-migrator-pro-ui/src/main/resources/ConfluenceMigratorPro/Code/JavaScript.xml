@@ -128,36 +128,45 @@
       <code>require(['jquery', 'xwiki-meta'], function ($, xcontext) {
   $(document).on('click', '.startMigration', function (event) {
     event.preventDefault();
-    let jobDocumentRef = XWiki.Model.resolve('ConfluenceMigratorPro.Migrations.Migration' + Date.now(), XWiki.EntityType.DOCUMENT, XWiki.currentDocument.documentReference);
+    
+    let jobDocumentRef = XWiki.Model.resolve(
+      'ConfluenceMigratorPro.Migrations.Migration' + Date.now(),
+      XWiki.EntityType.DOCUMENT,
+      XWiki.currentDocument.documentReference
+    );
+    
     let jobDocument = new XWiki.Document(jobDocumentRef);
     let packageName = $(this).data('package');
-    let configSource = "default";
-    let specifiedMigration = "";
-    if (document.getElementById("config-source-last")?.checked) {
-      configSource = "last";
-    } else if (document.getElementById("config-source-specified")?.checked) {
-      configSource = "specified";
-      specifiedMigration = document.getElementById("specified-migration")?.value;
+    let configSource = 'default';
+    let specifiedMigration = '';
+
+    // Find migration settings input if linked via data attribute
+    let migrationSettingsClass = $(this).data('linkedMigrationSettingsForm');
+    let $migrationSettings = $('.' + migrationSettingsClass);
+
+    if ($migrationSettings.length &amp;&amp; $migrationSettings.find('input[value="specified"]').is(':checked')) {
+      configSource = 'specified';
+      specifiedMigration = $('.specified-migration').val() || '';
     }
     window.location.href = jobDocument.getURL('edit', $.param({
       template: 'ConfluenceMigratorPro.Code.MigrationTemplate',
       parent: 'ConfluenceMigratorPro.WebHome',
-      "config-source": configSource,
-      "specified-migration": specifiedMigration,
-      "save-prefill-choices": document.getElementById("save-prefill-choices")?.checked,
+      'config-source': configSource,
+      'specified-migration': specifiedMigration,
+      'save-prefill-choices': $('#save-prefill-choices').prop('checked'),
       package: packageName,
       form_token: xcontext.form_token
     }));
   });
 
-  window.addEventListener("DOMContentLoaded", () =&gt; {
-    document.getElementById("specified-migration").addEventListener("change", function () {
-      if (this.value) {
-        document.getElementById("config-source-specified").checked = true;
-      } else if (document.getElementById("config-source-specified").checked) {
-        document.getElementById("config-source-default").checked = true;
-      }
-    });
+
+  $(document).on("change", ".specified-migration", function () {
+    let parent = $(this).closest(".migrationSettings");
+    if (this.value) {
+      parent.find("input[value='specified']").prop("checked", true);
+    }else if (parent.find("input[value='specified']").is(":checked")) {
+      parent.find("input[value='default']").prop("checked", true);
+    }
   });
 });</code>
     </property>
@@ -301,7 +310,7 @@
 {{html clean="false"}}
 #set ($isPackageStore = $doc.documentReference.equals($services.model.resolveDocument('ConfluenceMigratorPro.Code.PackagesStore')))
 #if ($isPackageStore &amp;&amp; $services.security.authorization.hasAccess('admin', $xcontext.user) &amp;&amp; $attachment.getFilename().contains(".zip"))
-&lt;a class="startMigration action" data-package="$escapetool.xml($services.model.serialize($attachment.getReference(), 'default'))" title="$services.localization.render('confluencepro.migration.livetable._actions.select')" href="#"&gt;
+&lt;a class="startMigration action" data-linked-migration-settings-form="cmpUploadPackageMigrationSettingsForm" data-package="$escapetool.xml($services.model.serialize($attachment.getReference(), 'default'))" title="$services.localization.render('confluencepro.migration.livetable._actions.select')" href="#"&gt;
   &lt;span class="action-icon"&gt;$services.icon.renderHTML('play')&lt;/span&gt;&lt;span class="action-label"&gt;$services.localization.render('confluencepro.migration.livetable._actions.select')
   &lt;/span&gt;
 &lt;/a&gt;
