@@ -777,7 +777,7 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>.cmpServerParametersForm input[type="radio"] {
+      <code>.migrationSettings input[type="radio"] {
   accent-color: @btn-primary-bg;
 }</code>
     </property>
