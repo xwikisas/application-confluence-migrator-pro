@@ -88,12 +88,12 @@ There are **$linkMappingCount** link mapping entries.
   &lt;/p&gt;
 &lt;/form&gt;
 {{/html}}
+
 #end
 #getRequiredSkinExtensions($requiredSkinExtensions)
 ## We use the X-XWIKI-HTML-HEAD custom HTTP header to return the required JavaScript and CSS resources. Note that the
 ## HTML of the UI element is returned in the response body.
 #set ($discard = $response.setHeader('X-XWIKI-HTML-HEAD', $requiredSkinExtensions))
 {{/velocity}}
-
 </content>
 </xwikidoc>
