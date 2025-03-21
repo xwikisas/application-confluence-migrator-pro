@@ -1,3 +1,4 @@
+com.xwiki.confluencepro.converters.internal.AUIButtonMacroConverter
 com.xwiki.confluencepro.converters.internal.CardMacroConverter
 com.xwiki.confluencepro.converters.internal.DateMacroConverter
 com.xwiki.confluencepro.converters.internal.DeckMacroConverter
