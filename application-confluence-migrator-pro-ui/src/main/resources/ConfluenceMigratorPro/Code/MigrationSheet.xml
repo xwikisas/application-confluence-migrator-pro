@@ -475,6 +475,9 @@
       #set ($byParam = $collectiontool.getSortedSet())
       #set ($discard = $byMacro.put($parameterName, $byParam))
     #end
+    #if ($objecttool.isNull($parameterValue))
+      #set ($parameterValue = 'null')
+    #end
     #set ($discard = $byParam.add($parameterValue))
   #end
   #getJSON($obj, 'unhandledParameters')
