@@ -47,6 +47,7 @@
     <listeneradmin.version>1.0.2</listeneradmin.version>
     <xwiki.extension.category>application</xwiki.extension.category>
     <confluence.version>9.82.1</confluence.version>
+    <diagram.version>1.22.1</diagram.version>
     <xwiki.enforcer.enforce-javase-dependencies.skip>true</xwiki.enforcer.enforce-javase-dependencies.skip>
   </properties>
   <modules>

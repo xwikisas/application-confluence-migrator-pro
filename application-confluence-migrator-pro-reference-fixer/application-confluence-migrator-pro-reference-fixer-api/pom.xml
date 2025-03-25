@@ -84,7 +84,13 @@
     <dependency>
       <groupId>com.xwiki.confluencepro</groupId>
       <artifactId>application-confluence-migrator-pro-api</artifactId>
-      <version>1.32.6-SNAPSHOT</version>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.xwiki.confluencepro</groupId>
+      <artifactId>application-confluence-migrator-pro-api</artifactId>
+      <version>1.33.2-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
