@@ -69,7 +69,7 @@ public class ReferenceFixingJobRequest extends AbstractRequest
     }
 
     /**
-     * @return the job id of a reference fixing document
+     * @return the job id of a reference fixing status document
      * @param statusDocumentReference the migration document for which to get the job id
      */
     public static List<String> getJobId(EntityReference statusDocumentReference)

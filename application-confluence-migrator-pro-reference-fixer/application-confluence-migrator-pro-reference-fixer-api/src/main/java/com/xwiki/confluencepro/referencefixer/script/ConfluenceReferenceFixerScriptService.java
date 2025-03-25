@@ -154,7 +154,7 @@ public class ConfluenceReferenceFixerScriptService implements ScriptService
 
     /**
      * @param statusDocument the reference fixing status document
-     * @return the job id corresponding to the the reference fixing status document
+     * @return the job id corresponding to the reference fixing status document
      */
     public List<String> getReferenceFixingJobId(EntityReference statusDocument)
     {

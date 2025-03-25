@@ -23,12 +23,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.xwiki.confluencepro.internal.MigrationFixingStats;
+
 /**
  * Reference fixing session statistics.
  * @since 1.29.0
  * @version $Id$
  */
-public final class Stats
+public final class Stats implements MigrationFixingStats
 {
     private long failedDocs;
     private long failedRefs;
@@ -45,7 +47,8 @@ public final class Stats
         this.failedReferences = new HashMap<>();
     }
 
-    String toJSON()
+    @Override
+    public String toJSON()
     {
         return "{"
             + "\"successfulDocs\": " + successfulDocs + ','
@@ -64,7 +67,8 @@ public final class Stats
             .collect(Collectors.joining("\n"));
     }
 
-    void incFailedDocs()
+    @Override
+    public void incFailedDocs()
     {
         this.failedDocs++;
     }
@@ -76,12 +80,14 @@ public final class Stats
         this.failedRefs++;
     }
 
-    void incSuccessfulDocs()
+    @Override
+    public void incSuccessfulDocs()
     {
         this.successfulDocs++;
     }
 
-    void incUnchangedDocs()
+    @Override
+    public void incUnchangedDocs()
     {
         this.unchangedDocs++;
     }
