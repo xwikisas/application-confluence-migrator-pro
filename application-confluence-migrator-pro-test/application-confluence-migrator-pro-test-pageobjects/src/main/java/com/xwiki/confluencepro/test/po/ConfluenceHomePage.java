@@ -20,12 +20,13 @@
 package com.xwiki.confluencepro.test.po;
 
 import java.io.File;
+import java.util.List;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.xwiki.livedata.test.po.LiveDataElement;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.ui.po.ViewPage;
@@ -59,72 +60,77 @@ public class ConfluenceHomePage extends ViewPage
         return new LiveDataElement("confluenceMigrations");
     }
 
+    public String migrationStatus(int migrationIndex)
+    {
+        List<WebElement> statuses = getDriver().findElements(
+            By.cssSelector("#confluenceMigrations tbody " + "td[data-title=\"Migration status\"]"));
+        return statuses.get(migrationIndex).getText().trim();
+    }
+
+    public MigrationRunningPage getMigrationRunningPage(int migrationIndex)
+    {
+        List<WebElement> statuses =
+            getDriver().findElements(By.cssSelector("#confluenceMigrations tbody " + "td[data-title=\"Migration\"] a"));
+        statuses.get(migrationIndex).click();
+        return new MigrationRunningPage();
+    }
+
     public MigrationCreationPage selectPackage(int number)
     {
         getPackageLiveTable().getTableLayout().findElementInRow(number, By.className("startMigration")).click();
         return new MigrationCreationPage();
     }
 
-    private void loadingSection()
-    {
-        getDriver().waitUntilCondition(
-            ExpectedConditions.not(
-                ExpectedConditions.attributeContains(By.cssSelector(".confluence-pro-section-containers"),
-                    "class",
-                    "loading"
-                )
-            )
-        );
-    }
-
-    public void  openHowToMigrateSubsection(String subsectionClass)
+    public void openHowToMigrateSubsection(String subsectionClass)
     {
         getDriver().setDriverImplicitWait();
         WebElement subsections = getDriver().findElement(By.cssSelector(subsectionClass + " .cfmTitleIcon"));
         subsections.click();
     }
 
-    public void lazyLoadSection(String contentContainer){
+    public void selectMigrationOptions(String selector, String value)
+    {
+        getDriver().findElement(By.cssSelector(String.format("%s input[value=%s]", selector, value))).click();
+    }
+
+    public void lazyLoadSection(String contentContainer)
+    {
         getDriver().findElement(By.cssSelector(String.format("li[data-content-container=%s]", contentContainer)))
             .click();
         loadingSection();
     }
 
-    public boolean checkIfSectionWasLoaded(String sectionClass){
+    public boolean checkIfSectionWasLoaded(String sectionClass)
+    {
         try {
             getDriver().findElement(By.cssSelector(sectionClass));
             return true;
-        }
-        catch (TimeoutException e)
-        {
+        } catch (TimeoutException e) {
             return false;
         }
     }
 
-    public CreateBatchPage createNewBatch(){
+    public CreateBatchPage createNewBatch()
+    {
         getDriver().findElement(By.cssSelector("#createNewBatchButton")).click();
         return new CreateBatchPage();
     }
 
-    public void attachFile(String testResourcePath, String file)
+    public void attachFiles(String testResourcePath, List<String> files)
     {
 
         WebElement input = getDriver().findElement(By.id("confluenceUploadFile"));
-        String filePath = getFileToUpload(testResourcePath, file).getAbsolutePath();
         // Normally js will work in the frontend, but we can't send the keys via selenium.
         if (!input.isDisplayed()) {
-            JavascriptExecutor js = (JavascriptExecutor) getDriver();
+            JavascriptExecutor js = getDriver();
             js.executeScript("arguments[0].classList.remove('hidden');", input);
         }
-        input.clear();
-        input.sendKeys(getFileToUpload(testResourcePath, file).getAbsolutePath());
-        this.waitForNotificationSuccessMessage("Attachment uploaded: " + file);
+        for (String file : files) {
+            input.clear();
+            input.sendKeys(getFileToUpload(testResourcePath, file).getAbsolutePath());
+            this.waitForNotificationSuccessMessage("Attachment uploaded: " + file);
+        }
         getDriver().navigate().refresh();
-    }
-
-    private File getFileToUpload(String testResourcePath, String filename)
-    {
-        return new File(testResourcePath, "ConfluenceMigratorIT/" + filename);
     }
 
     public int countBatches()
@@ -132,4 +138,15 @@ public class ConfluenceHomePage extends ViewPage
         return getDriver().findElements(By.cssSelector("#confluenceMigratorProBatches table tbody tr")).size();
     }
 
+    private void loadingSection()
+    {
+        getDriver().waitUntilCondition(ExpectedConditions.not(
+            ExpectedConditions.attributeContains(By.cssSelector(".confluence-pro-section-containers"), "class",
+                "loading")));
+    }
+
+    private File getFileToUpload(String testResourcePath, String filename)
+    {
+        return new File(testResourcePath, "ConfluenceMigratorIT/" + filename);
+    }
 }

@@ -122,7 +122,7 @@
   #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
   #if ("$!obj.getValue('executed')" == "" || "$obj.getValue('executed')" == "0")
     #if ($hasAdmin)
-      #if ($request.run || !($doc.name.contains("__LM__") || $doc.name.contains("__CONTENT__")))
+      #if ($request.run || !($doc.documentReference.name.contains("__LM__") || $doc.documentReference.name.contains("__CONTENT__")))
         #runMigrationJob($doc, true)
         #displayJob($obj)
       #else

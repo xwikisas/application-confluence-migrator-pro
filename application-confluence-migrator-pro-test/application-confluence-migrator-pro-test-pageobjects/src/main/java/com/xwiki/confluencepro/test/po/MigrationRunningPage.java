@@ -40,8 +40,14 @@ import org.xwiki.test.ui.po.ViewPage;
 public class MigrationRunningPage extends ViewPage
 {
     public MigrationRunningPage() {
-        getDriver().waitUntilElementIsVisible(By.cssSelector(".available-spaces .available-space:nth-child(2) input"));
+        getDriver().waitUntilElementIsVisible(By.cssSelector("." + getString() + " .available-space:nth-child(2) input"));
     }
+
+    private static String getString()
+    {
+        return "available-spaces";
+    }
+
     public static MigrationRunningPage goToPage(String migrationName)
     {
         DocumentReference reference =
