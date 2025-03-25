@@ -58,7 +58,9 @@
   &lt;div class="empty-batch"&gt;
     #displayPrefillForm
   &lt;/div&gt;
-  &lt;p&gt;&lt;input id="refreshButton" type="submit" value="Refresh" class="button primary" /&gt;&lt;/p&gt;
+  &lt;p&gt;&lt;input id="refreshButton" type="submit"
+    value="$services.localization.render("confluencemigratorpro.batches.create.confirmButton")" class="button primary"/&gt;
+  &lt;/p&gt;
 &lt;/form&gt;
 &lt;hr /&gt;
 {{/html}}
