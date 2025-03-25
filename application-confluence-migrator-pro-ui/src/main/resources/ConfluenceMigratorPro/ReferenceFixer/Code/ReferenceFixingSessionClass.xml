@@ -127,7 +127,7 @@
     </executed>
     <migrations>
       <cache>0</cache>
-      <classname/>
+      <classname>ConfluenceMigratorPro.Code.MigrationClass</classname>
       <customDisplay/>
       <defaultValue/>
       <disabled>0</disabled>
