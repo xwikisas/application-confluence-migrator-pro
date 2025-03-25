@@ -469,6 +469,16 @@
     </property>
     <property>
       <code>require(['jquery'], function ($) {
+
+  $(document).on("change", ".specified-migration", function () {
+    let parent = $(this).closest(".migrationSettings");
+    if (this.value) {
+      parent.find("input[value='specified']").prop("checked", true);
+    }else if (parent.find("input[value='specified']").is(":checked")) {
+      parent.find("input[value='default']").prop("checked", true);
+    }
+  });
+
   $('.collapse').on('show.bs.collapse', function () {
     if ($(this).attr('id')) {
       $('a[href$="#' + $(this).attr('id') + '"]').find('.cfmTitleIcon').addClass('active');
