@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
     <artifactId>application-confluence-migrator-pro-reference-fixer-parent</artifactId>
-    <version>1.33.1</version>
+    <version>1.33.2-SNAPSHOT</version>
   </parent>
   <artifactId>application-confluence-migrator-pro-reference-fixer-api</artifactId>
   <name>Confluence Migrator Pro - Reference Fixer API</name>
