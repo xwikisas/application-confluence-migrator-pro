@@ -1,0 +1,214 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.6" reference="ConfluenceMigratorPro.DiagramConverter.Code.DiagramConversionSheet" locale="">
+  <web>ConfluenceMigratorPro.DiagramConverter.Code</web>
+  <name>DiagramConversionSheet</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity output="false"}}
+#template('job_macros.vm')
+
+#macro(getJobInfo $job)
+    #if ($job)
+        #set ($jobId = $job.request.id)
+        #set ($jobStatus = $job.status)
+    #else
+        #set ($jobId = $services.get("confluencepro.diagramconversion").getDiagramConversionJobId($doc.documentReference))
+        #if ($jobId)
+            #set ($jobStatus = $services.job.getJobStatus($jobId))
+        #end
+    #end
+    #if ($jobId &amp;&amp; $jobStatus)
+        #set ($jobState = $jobStatus.state)
+        #set ($finished = $jobState == 'FINISHED')
+    #else
+
+        {{error}}
+        Could not get the job id.
+        {{/error}}
+
+    #end
+#end
+
+#macro(maybeShowJob)
+    #getJobInfo
+    #set ($discard = $xwiki.jsfx.use('uicomponents/job/job.js', true))
+    #set ($jobStatusURL = $doc.getURL('get', $escapetool.url({
+        'xpage': 'job_status_json',
+        'outputSyntax': 'plain',
+        'jobId': $jobId,
+        'translationPrefix': $translationPrefix
+    })))
+    #if ($finished)
+
+        {{html}}
+        #jobFinishedMessage($status, $translationPrefix)
+        {{/html}}
+
+        #if ("$!request.showLogs" == "1")
+        [[Hide logs&gt;&gt;||queryString="showLogs=0"]]
+        #else
+        [[Display logs&gt;&gt;||queryString="showLogs=1"]]
+        #end
+    #end
+    #if (!$finished || "$!request.showLogs" == "1")
+
+        {{html}}
+        #if (!$finished)
+            &lt;div class="xcontent job-status" data-url="$escapetool.xml($jobStatusURL)"&gt;
+                #displayJobProgressBar($jobStatus)
+        #end
+        #displayJobStatusLog($jobStatus, false)
+        #if (!$finished)
+            &lt;/div&gt;
+        #end
+        {{/html}}
+
+    #end
+#end
+{{/velocity}}
+
+{{velocity}}
+#set ($obj = $doc.getObject('ConfluenceMigratorPro.DiagramConverter.Code.DiagramConversionClass'))
+#if ($doc.isNew())
+    #if ($request.migration)
+        #set ($discard = $obj.set("migrations", [$request.migration]))
+    #end
+    #set ($discard = $doc.setTitle($doc.getDocumentReference().getName()))
+#elseif ("$!obj.getValue('executed')" == "" || "$!obj.getValue('dryRun')" == "1")
+
+    {{html}}
+        &lt;div style="float:right;padding-left:1em"&gt;
+            &lt;form method="post" action="?"&gt;
+                &lt;button name="dryRun" class="btn btn-primary" value="1"&gt;Dry run&lt;/button&gt;
+                &lt;button name="run" class="btn btn-danger" value="1"&gt;Run&lt;/button&gt;
+            &lt;/form&gt;
+        &lt;/div&gt;
+    {{/html}}
+
+#end
+#set ($dryRun = $request.dryRun == "1")
+#if ($request.run == "1" || $dryRun)
+    #if ($dryRun)
+        #set ($dryRunInt = 1)
+    #else
+        #set ($dryRunInt = 0)
+    #end
+    #if ($dog.getValue("dryRun") != $dryRunInt)
+       #set ($discard = $doc.set("dryRun", $dryRunInt))
+       #set ($discard = $doc.save("Update dryRun status to $dryRunInt"))
+   #end
+    #set ($job =  $services.get("confluencepro.diagramconversion").createAndRunDiagramConversionJob($doc))
+    #maybeShowJob($job)
+#elseif ("$!obj.getValue('executed')" == "")
+    #if (!$doc.isNew())
+        {{info}}
+        This conversion has not run yet.
+        {{/info}}
+
+        {{warning}}
+        Remember, this hidden feature is experimental and not supported. Use at your own risk.
+        {{/warning}}
+    #end
+#else
+    #maybeShowJob
+    #if ("$obj.getValue('executed')" == "2" &amp;&amp; !$jobStatus)
+
+        {{error}}
+        This conversion failed.
+        {{/error}}
+
+    #elseif ("$obj.getValue('executed')" == "2" &amp;&amp; $jobStatus)
+
+        {{info}}
+        This conversion is running.
+        {{/info}}
+
+    #elseif ("$obj.getValue('executed')" == "1")
+
+        {{info}}
+        This conversion is done.
+        {{/info}}
+
+    #elseif ("$obj.getValue('executed')" == "3")
+
+        {{error}}
+        This conversion failed.
+        {{/error}}
+
+    #end
+#end
+
+{{html clean=false}}
+&lt;div class="xform"&gt;
+    &lt;dl&gt;
+    #if ($doc.isNew() &amp;&amp; $request.migration)
+        #set ($discard = $obj.set("migration", [$request.migration]))
+    #end
+    #set ($class = $obj.xWikiClass)
+    #foreach ($property in $class.properties)
+        #if (!($xcontext.action == "edit" &amp;&amp; $property.name == "dryRun") &amp;&amp; $property.name != "executed")
+            &lt;dt&gt;
+                &lt;label for="ConfluenceMigratorPro.DiagramConverter.Code.ReferenceFixingSessionClass_0_$property.name"&gt;
+                  $property.prettyName
+                  &lt;span class="xHint"&gt;$property.hint&lt;/span&gt;
+                &lt;/label&gt;
+            &lt;/dt&gt;
+            &lt;dd&gt;
+            {{/html}}
+
+            $doc.display($property.getName())
+
+            {{html clean=false}}
+           &lt;/dd&gt;
+        #end
+    #end
+    &lt;/dl&gt;
+&lt;/div&gt;
+{{/html}}
+
+#set ($stats = $doc.getAttachment("stats.json").getContentAsString())
+#if ($stats)
+    #set ($stats = $jsontool.fromString($stats))
+
+    == Statistics
+
+    * Unchanged documents: $stats['unchangedDocs']
+    * Changed documents: $stats['successfulDocs']
+    * Failed documents: $stats['failedDocs']
+    * Successful conversions: $stats['successfulDiagrams']
+    * Failed conversions: $stats['failedDiagrams']
+#end
+{{/velocity}}</content>
+</xwikidoc>

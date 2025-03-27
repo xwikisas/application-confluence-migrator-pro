@@ -71,7 +71,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 })
 class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixerTestBase
 {
-
     private static final String INPUT_PROPERTIES = "inputProperties";
     private static final String SPACE_A = "SpaceA";
     private static final String SPACE_B = "SpaceB";

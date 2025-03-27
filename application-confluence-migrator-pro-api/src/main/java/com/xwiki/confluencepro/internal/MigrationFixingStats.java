@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<!--
+/*
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  *
@@ -18,20 +16,33 @@
  * License along with this software; if not, write to the Free
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
--->
+ */
+package com.xwiki.confluencepro.internal;
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.xwiki.confluencepro</groupId>
-    <artifactId>application-confluence-migrator-pro</artifactId>
-    <version>1.34.0-rc-2-SNAPSHOT</version>
-  </parent>
-  <packaging>pom</packaging>
-  <artifactId>application-confluence-migrator-pro-reference-fixer-parent</artifactId>
-  <name>Confluence Migrator Pro - Reference Fixer Parent POM</name>
-  <modules>
-    <module>application-confluence-migrator-pro-reference-fixer-api</module>
-    <module>application-confluence-migrator-pro-reference-fixer-ui</module>
-  </modules>
-</project>
+/**
+ * Statistics for migration fixes.
+ * @version $Id$
+ * @since 1.33.0
+ */
+public interface MigrationFixingStats
+{
+    /**
+     * Increment the number of failed documents.
+     */
+    void incFailedDocs();
+
+    /**
+     * Increment the number of successfully fixed documents.
+     */
+    void incSuccessfulDocs();
+
+    /**
+     * Increment the number of unchanged documents.
+     */
+    void incUnchangedDocs();
+
+    /**
+     * @return the statistics object converted to JSON
+     */
+    String toJSON();
+}

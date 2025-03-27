@@ -261,7 +261,7 @@ public class BatchStatsScriptService implements ScriptService
         if (macrosJSON != null) {
             unhandledMacros = 0;
             unhandledMacrosDistinct = 0;
-            for (Map&lt;String, Integer&gt; macro : macrosJSON) {
+            for (Map.Entry&lt;String, Integer&gt; macro : macrosJSON.entrySet()) {
                 String macroName = macro.getKey();
                 Integer count = macro.getValue();
                 if (!componentManagerProvider.get().hasComponent(Macro.class, macroName)) {
