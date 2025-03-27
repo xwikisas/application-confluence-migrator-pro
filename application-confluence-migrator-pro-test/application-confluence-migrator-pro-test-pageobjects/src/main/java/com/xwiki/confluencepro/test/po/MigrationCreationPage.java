@@ -37,7 +37,9 @@ public class MigrationCreationPage extends EditPage
         getDriver().findElement(By.className("advanced-fields")).click();
     }
     public void setTitle(String title) {
-        getDriver().findElement(By.id("xwikidoctitleinput")).sendKeys(title);
+        WebElement webElement =  getDriver().findElement(By.id("xwikidoctitleinput"));
+        webElement.clear();
+        webElement.sendKeys(title);
     }
 
     public List<WebElement> getAdvancedInputFilterProperties() {
@@ -46,5 +48,20 @@ public class MigrationCreationPage extends EditPage
 
     public List<WebElement> getAdvancedOutputProperties() {
         return getDriver().findElements(By.className("cfm-output-filter-property"));
+    }
+
+    public void fillOption(String optionName, String value)
+    {
+       WebElement option = getDriver().findElement(By.cssSelector(String.format(".cfm-input-filter-property[data-key"
+           + "='%s']", optionName)));
+       option.clear();;
+       option.sendKeys(value);
+    }
+
+    public String getOptionValue(String optionName)
+    {
+        WebElement option = getDriver().findElement(By.cssSelector(String.format(".cfm-input-filter-property[data-key"
+            + "='%s']", optionName)));
+        return option.getAttribute("value").trim();
     }
 }
