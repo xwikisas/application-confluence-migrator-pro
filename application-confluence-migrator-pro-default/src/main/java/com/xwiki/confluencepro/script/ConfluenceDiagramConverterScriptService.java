@@ -17,11 +17,16 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package com.xwiki.confluencepro.referencefixer.script;
+package com.xwiki.confluencepro.script;
 
-import com.xpn.xwiki.api.Document;
-import com.xwiki.confluencepro.referencefixer.BrokenRefType;
-import com.xwiki.confluencepro.referencefixer.internal.ReferenceFixingJobRequest;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -36,22 +41,18 @@ import org.xwiki.script.service.ScriptService;
 import org.xwiki.security.authorization.ContextualAuthorizationManager;
 import org.xwiki.security.authorization.Right;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.xpn.xwiki.api.Document;
+import com.xwiki.confluencepro.internal.DiagramConversionJobRequest;
 
 /**
- * Confluence Migrator Pro Reference Fixer.
- * @since 1.29.0
+ * Confluence Migrator Pro Diagram Converter.
+ * @since 1.33.0
  * @version $Id$
  */
 @Component
-@Named("confluencepro.referencefixer")
+@Named("confluencepro.diagramconversion")
 @Singleton
-public class ConfluenceReferenceFixerScriptService implements ScriptService
+public class ConfluenceDiagramConverterScriptService implements ScriptService
 {
     @Inject
     private ContextualAuthorizationManager authorization;
@@ -67,10 +68,10 @@ public class ConfluenceReferenceFixerScriptService implements ScriptService
 
     /**
      * Fix links in the migrated documents specified by the parameters.
-     * @param statusDocument the confluence reference fixing session status document
-     * @return the Job in which links are fixed
+     * @param statusDocument the confluence diagram conversion status document
+     * @return the Job in which diagrams are converted
      */
-    public Job createAndRunReferenceFixingJob(Document statusDocument)
+    public Job createAndRunDiagramConversionJob(Document statusDocument)
     {
         if (!authorization.hasAccess(Right.ADMIN)) {
             return null;
@@ -78,43 +79,18 @@ public class ConfluenceReferenceFixerScriptService implements ScriptService
 
         List<EntityReference> migrationReferences = getMigrations(statusDocument);
         List<EntityReference> spaceReferences = getSpaces(statusDocument);
-        BrokenRefType brokenRefType = getBrokenRefType(statusDocument);
-        String[] baseURLs = getBaseURLs(statusDocument);
         boolean updateInPlace = ((Integer) statusDocument.getValue("updateInPlace")) == 1;
         boolean dryRun = ((Integer) statusDocument.getValue("dryRun")) == 1;
 
-        ReferenceFixingJobRequest jobRequest = new ReferenceFixingJobRequest(statusDocument.getDocumentReference(),
-            migrationReferences, spaceReferences, baseURLs, brokenRefType, updateInPlace, dryRun);
+        DiagramConversionJobRequest jobRequest = new DiagramConversionJobRequest(statusDocument.getDocumentReference(),
+            migrationReferences, spaceReferences, updateInPlace, dryRun);
 
         try {
-            return jobExecutor.execute("confluence.referencefixing", jobRequest);
+            return jobExecutor.execute("confluence.diagramconversion", jobRequest);
         } catch (JobException e) {
             logger.error("Failed to execute the migration job for [{}].", statusDocument, e);
         }
         return null;
-    }
-
-    private static String[] getBaseURLs(Document statusDocument)
-    {
-        List<String> baseURLs = (List<String>) statusDocument.getValue("baseURLs");
-        if (baseURLs == null) {
-            return new String[0];
-        }
-        return baseURLs.toArray(String[]::new);
-    }
-
-    private static BrokenRefType getBrokenRefType(Document statusDocument)
-    {
-        BrokenRefType brokenRefType = BrokenRefType.UNKNOWN;
-        String brokenRefTypeStr = (String) statusDocument.getValue("brokenRefType");
-        if (StringUtils.isNotEmpty(brokenRefTypeStr)) {
-            try {
-                brokenRefType = BrokenRefType.valueOf(brokenRefTypeStr);
-            } catch (IllegalArgumentException ignored) {
-                // UNKNOWN will be used, which is quite safe as a fallback
-            }
-        }
-        return brokenRefType;
     }
 
     private List<EntityReference> getSpaces(Document statusDocument)
@@ -153,12 +129,12 @@ public class ConfluenceReferenceFixerScriptService implements ScriptService
     }
 
     /**
-     * @param statusDocument the reference fixing status document
-     * @return the job id corresponding to the reference fixing status document
+     * @param statusDocument the diagram conversion status document
+     * @return the job id corresponding to the diagram conversion status document
      */
-    public List<String> getReferenceFixingJobId(EntityReference statusDocument)
+    public List<String> getDiagramConversionJobId(EntityReference statusDocument)
     {
-        return ReferenceFixingJobRequest.getJobId(statusDocument);
+        return DiagramConversionJobRequest.getJobId(statusDocument);
     }
 }
 

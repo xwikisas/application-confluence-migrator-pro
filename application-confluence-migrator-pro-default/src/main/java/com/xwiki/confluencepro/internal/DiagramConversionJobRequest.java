@@ -17,50 +17,43 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package com.xwiki.confluencepro.referencefixer.internal;
-
-import com.xwiki.confluencepro.referencefixer.BrokenRefType;
-import org.xwiki.job.AbstractRequest;
-import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
+package com.xwiki.confluencepro.internal;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.xwiki.job.AbstractRequest;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
+
 /**
- * Reference Fixing Job Request.
- * @since 1.29.0
+ * Diagram Conversion Job Request.
+ * @since 1.33.0
  * @version $Id$
  */
-public class ReferenceFixingJobRequest extends AbstractRequest
+public class DiagramConversionJobRequest extends AbstractRequest
 {
     private static final long serialVersionUID = 1L;
 
     private final List<EntityReference> migrationReferences;
     private final List<EntityReference> spaceReferences;
-    private final String[] baseURLs;
-    private final BrokenRefType brokenRefType;
     private final boolean updateInPlace;
     private final boolean dryRun;
     private final DocumentReference statusDocumentReference;
 
     /**
-     * @param statusDocumentReference the document "owning" the reference fixing job
+     * @param statusDocumentReference the document "owning" the diagram conversion job
      * @param migrationReferences fix the documents migrated during these migrations
      * @param spaceReferences fix the documents in these spaces
-     * @param baseURLs the base URLs to fix absolute links to the old Confluence instance
-     * @param brokenRefType the type of broken references to fix
      * @param updateInPlace whether to update the document in place instead of creating a new revision
      * @param dryRun whether to simulate the fixing instead of actually updating the documents
      */
-    public ReferenceFixingJobRequest(DocumentReference statusDocumentReference,
-        List<EntityReference> migrationReferences, List<EntityReference> spaceReferences, String[] baseURLs,
-        BrokenRefType brokenRefType, boolean updateInPlace, boolean dryRun)
+    public DiagramConversionJobRequest(DocumentReference statusDocumentReference,
+        List<EntityReference> migrationReferences, List<EntityReference> spaceReferences, boolean updateInPlace,
+        boolean dryRun)
     {
         this.migrationReferences = migrationReferences;
         this.spaceReferences = spaceReferences;
-        this.baseURLs = baseURLs;
-        this.brokenRefType = brokenRefType;
         this.updateInPlace = updateInPlace;
         this.dryRun = dryRun;
         this.statusDocumentReference = statusDocumentReference;
@@ -69,23 +62,18 @@ public class ReferenceFixingJobRequest extends AbstractRequest
     }
 
     /**
-     * @return the job id of a reference fixing status document
+     * @return the job id of a diagram conversion status document
      * @param statusDocumentReference the migration document for which to get the job id
      */
     public static List<String> getJobId(EntityReference statusDocumentReference)
     {
         List<String> jobId = new ArrayList<>();
         jobId.add("confluence");
-        jobId.add("referencefixing");
+        jobId.add("diagramconversion");
         for (EntityReference er : statusDocumentReference.getReversedReferenceChain()) {
             jobId.add(er.getName());
         }
         return jobId;
-    }
-
-    BrokenRefType getBrokenRefType()
-    {
-        return brokenRefType;
     }
 
     List<EntityReference> getMigrationReferences()
@@ -96,11 +84,6 @@ public class ReferenceFixingJobRequest extends AbstractRequest
     List<EntityReference> getSpaceReferences()
     {
         return spaceReferences;
-    }
-
-    String[] getBaseURLs()
-    {
-        return baseURLs;
     }
 
     boolean isUpdateInPlace()

@@ -19,7 +19,6 @@
  */
 package com.xwiki.confluencepro.referencefixer.internal;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,8 +29,8 @@ import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiAttachmentContent;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
+import com.xwiki.confluencepro.internal.MigrationFixingTools;
 import com.xwiki.confluencepro.referencefixer.BrokenRefType;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -49,18 +48,10 @@ import org.xwiki.contrib.confluence.resolvers.resource.ConfluenceResourceReferen
 import org.xwiki.contrib.confluence.urlmapping.ConfluenceURLMapper;
 import org.xwiki.contrib.urlmapping.DefaultURLMappingMatch;
 import org.xwiki.contrib.urlmapping.URLMappingResult;
-import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
-import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
-import org.xwiki.model.reference.WikiReference;
-import org.xwiki.model.validation.EntityNameValidation;
-import org.xwiki.model.validation.EntityNameValidationManager;
-import org.xwiki.query.Query;
-import org.xwiki.query.QueryException;
-import org.xwiki.query.QueryManager;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.ImageBlock;
 import org.xwiki.rendering.block.LinkBlock;
@@ -108,7 +99,6 @@ import java.util.stream.Collectors;
 @Singleton
 public class ConfluenceReferenceFixer
 {
-
     private static final String DOCUMENT = "document";
     private static final Pattern BROKEN_LINK_PATTERN = Pattern.compile(
         "(?<space>[a-zA-Z0-9_~-]+)"
@@ -123,24 +113,19 @@ public class ConfluenceReferenceFixer
         new TypeReference<Map<String, List<Map<String, Object>>>>() { };
     private static final TypeReference<Map<String, Object>> CONFLUENCE_BROKEN_LINK_PAGES_REF =
         new TypeReference<Map<String, Object>>() { };
-    private static final TypeReference<Map<String, Object>> INPUT_PROPERTIES_TYPE_REF =
-        new TypeReference<Map<String, Object>>() { };
     private static final String WEB_HOME = "WebHome";
 
-    private static final Marker UPDATED_MARKER = MarkerFactory.getMarker("confluencereferencefixer.updated");
-    private static final Marker UNCHANGED_MARKER = MarkerFactory.getMarker("confluencereferencefixer.unchanged");
     private static final Marker FAILED_REFERENCE_CONVERSION_MARKER =
         MarkerFactory.getMarker("confluencereferencefixer.failedrefconversion");
     private static final Marker SUCCESSFUL_REFERENCE_CONVERSION_MARKER =
         MarkerFactory.getMarker("confluencereferencefixer.successfulrefconversion");
     private static final Marker CHANGED_AT_PARSE_TIME_MARKER
         = MarkerFactory.getMarker("confluencereferencefixer.changedatparsetime");
-    private static final String SPACE = "space";
+
     private static final String UPDATE_PARAM_LOG = "Document [{}]: Updating macro [{}]'s parameter [{}]: [{}] -> [{}]";
     private static final String CONFLUENCE = "confluence";
     private static final String EXCEPTION_WHILE_RESOLVING
         = "Document [{}]: Failed to resolve [{}] because of an exception";
-    private static final String DOT_WEB_HOME = ".WebHome";
     private static final List<String> ALLOWED_BROKEN_LINK_MACROS = List.of("include",
         "display",
         "locationsearch",
@@ -160,9 +145,6 @@ public class ConfluenceReferenceFixer
     private Provider<XWikiContext> contextProvider;
 
     @Inject
-    private QueryManager queryManager;
-
-    @Inject
     private ConfluencePageTitleResolver pageTitleResolver;
 
     @Inject
@@ -170,9 +152,6 @@ public class ConfluenceReferenceFixer
 
     @Inject
     private ConfluenceSpaceResolver spaceResolver;
-
-    @Inject
-    private EntityReferenceResolver<String> resolver;
 
     @Inject
     @Named("compactwiki")
@@ -188,10 +167,7 @@ public class ConfluenceReferenceFixer
     private ConfluenceResourceReferenceResolver confluenceResourceReferenceResolver;
 
     @Inject
-    private Provider<EntityNameValidationManager> entityNameValidationManagerProvider;
-
-    @Inject
-    private JobProgressManager progressManager;
+    private MigrationFixingTools migrationFixingTools;
 
     /**
      * Fix broken references in all documents of the given space.
@@ -209,77 +185,25 @@ public class ConfluenceReferenceFixer
         String[] baseURLs, BrokenRefType brokenRefType, boolean updateInPlace, boolean dryRun)
     {
         logConfluenceReferenceParserPresence();
-        Stats s = new Stats();
-        int steps = ((migrationReferences == null ? 0 : migrationReferences.size())
-                + (spaceReferences == null ? 0 : spaceReferences.size()));
-        if (steps == 0) {
-            logger.warn("There is nothing to fix");
-            return s;
-        }
-        progressManager.pushLevelProgress(steps, this);
-        fixDocumentsOfMigrations(s, migrationReferences, baseURLs, updateInPlace, dryRun);
         BrokenRefType b = brokenRefType == null ? BrokenRefType.UNKNOWN : brokenRefType;
-        fixDocumentsOfSpaces(s, spaceReferences, baseURLs, b, updateInPlace, dryRun);
-        progressManager.popLevelProgress(this);
+        Stats s = new Stats();
+        String[] baseURLsNotNull = baseURLs == null ? new String[0] : baseURLs;
+        migrationFixingTools.fixDocuments(
+            s,
+            migrationReferences,
+            spaceReferences,
+            migratedDoc -> fixDocument(s, migratedDoc, baseURLsNotNull, updateInPlace, b, dryRun),
+            migrationDoc -> fixDocumentsOfMigration(s, migrationDoc, baseURLs, updateInPlace, dryRun)
+        );
         return s;
     }
 
-    private void fixDocumentsOfSpaces(Stats s, List<EntityReference> spaceReferences, String[] baseURLs,
-        BrokenRefType brokenRefType, boolean updateInPlace, boolean dryRun)
-    {
-        if (CollectionUtils.isNotEmpty(spaceReferences)) {
-            int size = spaceReferences.size();
-            int n = 0;
-            for (EntityReference spaceReference : spaceReferences) {
-                progressManager.startStep(this);
-                logger.info("Browsing documents of space [{}] ({}/{})", spaceReference, ++n, size);
-                fixDocumentsInSpace(s, spaceReference, baseURLs, brokenRefType, updateInPlace, dryRun);
-                progressManager.endStep(this);
-            }
-        }
-    }
-
-    private void fixDocumentsOfMigrations(Stats s, List<EntityReference> migrationReferences, String[] baseURLs,
+    private void fixDocumentsOfMigration(Stats s, XWikiDocument migrationDoc, String[] baseURLs,
         boolean updateInPlace, boolean dryRun)
     {
-        if (CollectionUtils.isEmpty(migrationReferences)) {
-            logger.warn("There are no migrations to fix");
-            return;
-        }
-        int size = migrationReferences.size();
-        int n = 0;
-        for (EntityReference migrationReference : migrationReferences) {
-            progressManager.startStep(this);
-            logger.info("Browsing documents of migration [{}] ({}/{})", migrationReference, ++n, size);
-            fixDocumentsOfMigration(s, migrationReference, baseURLs, updateInPlace, dryRun);
-            progressManager.endStep(this);
-        }
-    }
-
-    private void fixDocumentsOfMigration(Stats s, EntityReference migrationReference, String[] baseURLs,
-        boolean updateInPlace, boolean dryRun)
-    {
-        XWikiContext context = contextProvider.get();
-        XWikiDocument migrationDoc;
-        try {
-            migrationDoc = context.getWiki().getDocument(migrationReference, context);
-        } catch (XWikiException e) {
-            logger.error("Failed to get the migration document [{}], skipping.", migrationReference, e);
-            s.incFailedDocs();
-            return;
-        }
-
-        if (migrationDoc.isNew()) {
-            logger.warn("Failed to find migration document [{}], skipping", migrationReference);
-            s.incFailedDocs();
-            return;
-        }
-
-        Map<String, Object> inputProperties = null;
         String[] actualBaseURLs;
         if (baseURLs == null || baseURLs.length == 0) {
-            inputProperties = getInputProperties(migrationDoc);
-            actualBaseURLs = getBaseURLs(migrationDoc, inputProperties);
+            actualBaseURLs = getBaseURLs(migrationDoc, migrationFixingTools.getInputProperties(migrationDoc));
         } else {
             actualBaseURLs = baseURLs;
         }
@@ -292,124 +216,10 @@ public class ConfluenceReferenceFixer
 
         if (!foundShortcut) {
             logger.warn("Failed to find a strategy to find only affected documents, will browse all the documents");
-            if (inputProperties == null) {
-                inputProperties = getInputProperties(migrationDoc);
-            }
-            fixDocumentsInSpace(s, updateInPlace, migrationDoc, actualBaseURLs, inputProperties, dryRun);
+            migrationFixingTools.fixDocumentsOfMigration(migrationDoc,
+                migratedDoc -> fixDocument(s, migratedDoc, actualBaseURLs, updateInPlace, BrokenRefType.UNKNOWN,
+                    dryRun));
         }
-    }
-
-    private void fixDocumentsInSpace(Stats s, boolean updateInPlace, XWikiDocument migrationDoc,
-        String[] baseURLs, Map<String, Object> props, boolean dryRun)
-    {
-        EntityReference root;
-        boolean guess;
-        if (props == null) {
-            guess = true;
-            logger.warn("Missing input properties means we could not determine the root space of the migration [{}], "
-                + "will attempt to guess.", migrationDoc.getDocumentReference());
-            root = contextProvider.get().getWikiReference();
-        } else {
-            guess = false;
-            root = computeRootSpace(props);
-        }
-        EntityNameValidation nameStrategy = entityNameValidationManagerProvider.get().getEntityReferenceNameStrategy();
-        List<String> spaces = migrationDoc.getListValue("spaces");
-        if (CollectionUtils.isEmpty(spaces)) {
-            logger.warn("Migration document [{}]: Could not find any space to handle",
-                migrationDoc.getDocumentReference());
-        }
-
-        for (String space : spaces) {
-            logger.info("Browsing documents in space [{}]", space);
-            EntityReference spaceReference = computeSpaceReference(space, nameStrategy, guess, root);
-            if (spaceReference == null) {
-                continue;
-            }
-
-            fixDocumentsInSpace(s, spaceReference, baseURLs, BrokenRefType.UNKNOWN, updateInPlace, dryRun);
-        }
-    }
-
-    private EntityReference computeRootSpace(Map<String, Object> inputProperties)
-    {
-        String rootSpaceStr = (String) inputProperties.get("root");
-        if (StringUtils.isEmpty(rootSpaceStr)) {
-            // Gracefully handle the deprecated property
-            rootSpaceStr = (String) inputProperties.get("rootSpace");
-        }
-
-        if (StringUtils.isEmpty(rootSpaceStr)) {
-            return contextProvider.get().getWikiReference();
-        }
-
-        if (rootSpaceStr.startsWith("wiki:")) {
-            return new WikiReference(rootSpaceStr.substring(5));
-        }
-
-        if (rootSpaceStr.startsWith("space:")) {
-            return resolver.resolve(rootSpaceStr.substring(6), EntityType.SPACE);
-        }
-
-        if (rootSpaceStr.endsWith(DOT_WEB_HOME)) {
-            rootSpaceStr = rootSpaceStr.substring(0, rootSpaceStr.length() - 8);
-        }
-
-        return resolver.resolve(rootSpaceStr, EntityType.SPACE);
-    }
-
-    private void fixDocumentsInSpace(Stats s, EntityReference spaceReference, String[] baseURLs,
-        BrokenRefType brokenRefType, boolean updateInPlace, boolean dryRun)
-    {
-        String wiki;
-        String spaceRef;
-        EntityReference spaceRoot = spaceReference.getRoot();
-        if (spaceRoot != null && spaceRoot.getType() == EntityType.WIKI) {
-            spaceRef = serializer.serialize(spaceReference, spaceRoot);
-            wiki = spaceRoot.getName();
-        } else {
-            XWikiContext context = contextProvider.get();
-            wiki = context.getWikiId();
-            spaceRef = serializer.serialize(spaceReference, context.getWikiReference());
-        }
-
-        // FIXME: escape :space in the like clause (the space reference could theoretically contain a '%' sign)
-        List<String> docFullNames;
-        try {
-            docFullNames = queryManager
-                .createQuery(
-                    "select doc.fullName from Document doc where doc.fullName like concat(:space, '.%')",
-                    Query.XWQL)
-                .setWiki(wiki)
-                .bindValue(SPACE, spaceRef)
-                .execute();
-        } catch (QueryException e) {
-            logger.error("Failed to list the documents in space [{}], skipping.", spaceRef, e);
-            return;
-        }
-
-        String[] baseURLsNotNull = baseURLs == null ? new String[0] : baseURLs;
-        List<String> docs =
-            docFullNames.stream().map(fullName -> wiki + ':' + fullName).collect(Collectors.toList());
-        fixDocumentsInternal(s, docs, baseURLsNotNull, updateInPlace, brokenRefType, dryRun);
-    }
-
-    private EntityReference computeSpaceReference(String space, EntityNameValidation nameStrategy, boolean guess,
-        EntityReference root)
-    {
-        EntityReference spaceReference = null;
-        String validatedSpace = nameStrategy == null ? space : nameStrategy.transform(space);
-        if (guess) {
-            try {
-                spaceReference = spaceKeyResolver.getSpaceByKey(space);
-            } catch (ConfluenceResolverException e) {
-                logger.error("Failed to resolve space [{}] using Confluence resolvers", e);
-            }
-        } else {
-            spaceReference = new EntityReference(validatedSpace, EntityType.SPACE, root);
-        }
-
-        return spaceReference;
     }
 
     private boolean fixDocumentsListedInRefWarnings(Stats s, XWikiDocument migrationDoc, String[] baseURLs,
@@ -439,7 +249,8 @@ public class ConfluenceReferenceFixer
             });
         }).map(Map.Entry::getKey).collect(Collectors.toList());
 
-        fixDocumentsInternal(s, docRefs, baseURLs, updateInPlace, BrokenRefType.CONFLUENCE_REFS, dryRun);
+        migrationFixingTools.fixDocuments(docRefs,
+            migratedDoc -> fixDocument(s, migratedDoc, baseURLs, updateInPlace, BrokenRefType.CONFLUENCE_REFS, dryRun));
         return true;
     }
 
@@ -469,24 +280,9 @@ public class ConfluenceReferenceFixer
         }
 
         Set<String> docRefs = brokenLinksPages.keySet();
-        fixDocumentsInternal(s, docRefs, baseURLs, updateInPlace, BrokenRefType.BROKEN_LINKS, dryRun);
+        migrationFixingTools.fixDocuments(docRefs,
+            migratedDoc -> fixDocument(s, migratedDoc, baseURLs, updateInPlace, BrokenRefType.BROKEN_LINKS, dryRun));
         return true;
-    }
-
-    private Map<String, Object> getInputProperties(XWikiDocument migrationDoc)
-    {
-        String inputPropertiesString = migrationDoc.getStringValue("inputProperties");
-
-        if (StringUtils.isEmpty(inputPropertiesString)) {
-            logger.warn("Failed to find input properties for migration [{}]", migrationDoc.getDocumentReference());
-            return null;
-        }
-        try {
-            return new ObjectMapper().readValue(inputPropertiesString, INPUT_PROPERTIES_TYPE_REF);
-        } catch (JsonProcessingException e) {
-            logger.error("Failed to read input properties for migration [{}]", migrationDoc.getDocumentReference(), e);
-        }
-        return null;
     }
 
     private String[] getBaseURLs(XWikiDocument migrationDoc, Map<String, Object> props)
@@ -510,27 +306,6 @@ public class ConfluenceReferenceFixer
         return new String[0];
     }
 
-    private void fixDocumentsInternal(Stats s, Collection<String> docRefs, String[] baseURLs, boolean updateInPlace,
-        BrokenRefType brokenRefType, boolean dryRun)
-    {
-        if (CollectionUtils.isEmpty(docRefs)) {
-            logger.warn("There are no documents to fix");
-            return;
-        }
-
-        progressManager.pushLevelProgress(docRefs.size(), this);
-        int size = docRefs.size();
-        int n = 0;
-        for (String migratedDocRefStr : docRefs) {
-            progressManager.startStep(this);
-            EntityReference migratedDocRef = resolver.resolve(migratedDocRefStr, EntityType.DOCUMENT);
-            logger.info("Handling document [{}] ({}/{})", migratedDocRef, ++n, size);
-            fixDocument(s, migratedDocRef, baseURLs, updateInPlace, brokenRefType, dryRun);
-            progressManager.endStep(this);
-        }
-        progressManager.popLevelProgress(this);
-    }
-
     private void logConfluenceReferenceParserPresence()
     {
         boolean present;
@@ -550,13 +325,10 @@ public class ConfluenceReferenceFixer
         }
     }
 
-    private void fixDocument(Stats s, EntityReference migratedDocRef, String[] baseURLs, boolean updateInPlace,
+    private void fixDocument(Stats s, XWikiDocument migratedDoc, String[] baseURLs, boolean updateInPlace,
         BrokenRefType brokenRefType, boolean dryRun)
     {
-        XWikiDocument migratedDoc = getDocument(migratedDocRef);
-        if (migratedDoc == null) {
-            return;
-        }
+        DocumentReference migratedDocRef = migratedDoc.getDocumentReference();
         try {
             String oldContent = migratedDoc.getContent();
             XDOM xdom = migratedDoc.getXDOM();
@@ -701,23 +473,6 @@ public class ConfluenceReferenceFixer
         return xdom;
     }
 
-    private XWikiDocument getDocument(EntityReference migratedDocRef)
-    {
-        XWikiDocument migratedDoc;
-        try {
-            XWikiContext context = contextProvider.get();
-            migratedDoc = context.getWiki().getDocument(migratedDocRef, context).clone();
-        } catch (XWikiException e) {
-            logger.error("Failed to get the migrated document [{}], skipping.", migratedDocRef, e);
-            return null;
-        }
-        if (migratedDoc.isNew()) {
-            logger.error("The migrated document [{}] doesn't exist, skipping.", migratedDocRef);
-            return null;
-        }
-        return migratedDoc;
-    }
-
     private void maybeUpdateDocument(Stats s, XWikiDocument migratedDoc, XDOM xdom, String oldContent,
         boolean updateInPlace, boolean updated, boolean dryRun)
     {
@@ -742,39 +497,8 @@ public class ConfluenceReferenceFixer
 
         String newContent = migratedDoc.getContent();
 
-        if (hasXDOMChangedAtParseTime(s, migratedDocRef, oldContent, newContent, false) || upd) {
-            if (dryRun) {
-                logger.info("Would update document [{}]", migratedDocRef);
-                s.incSuccessfulDocs();
-                return;
-            }
-            updateDocument(s, migratedDoc, updateInPlace, migratedDocRef);
-        } else {
-            logger.info(UNCHANGED_MARKER, "Document [{}] is left unchanged", migratedDocRef);
-            s.incUnchangedDocs();
-        }
-    }
-
-    private void updateDocument(Stats s, XWikiDocument migratedDoc, boolean updateInPlace,
-        DocumentReference migratedDocRef)
-    {
-        try {
-            if (updateInPlace) {
-                logger.info(UPDATED_MARKER, "Updating document [{}] without adding a revision",
-                    migratedDocRef);
-                migratedDoc.setMetaDataDirty(false);
-                migratedDoc.setContentDirty(false);
-            } else {
-                logger.info(UPDATED_MARKER, "Updating document [{}], adding a new revision",
-                    migratedDocRef);
-            }
-            XWikiContext context = contextProvider.get();
-            context.getWiki().saveDocument(migratedDoc, "Fix broken links", context);
-            s.incSuccessfulDocs();
-        } catch (XWikiException e) {
-            logger.error("Failed to save document [{}]", migratedDocRef, e);
-            s.incFailedDocs();
-        }
+        upd = hasXDOMChangedAtParseTime(s, migratedDocRef, oldContent, newContent, false) || upd;
+        migrationFixingTools.handleDocumentUpdate(s, migratedDoc, upd, updateInPlace, dryRun, "Fix broken links");
     }
 
     private boolean hasXDOMChangedAtParseTime(Stats s, EntityReference migratedDocRef, String oldContent,
@@ -971,13 +695,13 @@ public class ConfluenceReferenceFixer
             return null;
         }
 
-        String space = m.group(SPACE);
+        String space = m.group("space");
         String attachment = m.group("attachment");
 
         EntityReference newRef = null;
         try {
             newRef = tryResolvingBrokenLinkDoc(nameValidatedTitle, space);
-        } catch (ConfluenceResolverException | QueryException e) {
+        } catch (ConfluenceResolverException e) {
             logger.error(EXCEPTION_WHILE_RESOLVING, migratedDocRef, oldRef, e);
         }
 
@@ -1035,7 +759,7 @@ public class ConfluenceReferenceFixer
     }
 
     private EntityReference tryResolvingBrokenLinkDoc(String nameValidatedTitle, String space)
-        throws ConfluenceResolverException, QueryException
+        throws ConfluenceResolverException
     {
         if ("@home".equals(nameValidatedTitle)) {
             EntityReference spaceRef = spaceKeyResolver.getSpaceByKey(space);

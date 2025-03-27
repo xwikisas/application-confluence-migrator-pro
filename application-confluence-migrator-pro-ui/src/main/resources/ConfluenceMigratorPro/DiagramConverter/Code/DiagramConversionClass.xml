@@ -20,9 +20,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="ConfluenceMigratorPro.ReferenceFixer.Code.ReferenceFixingSessionClass" locale="">
-  <web>ConfluenceMigratorPro.ReferenceFixer.Code</web>
-  <name>ReferenceFixingSessionClass</name>
+<xwikidoc version="1.6" reference="ConfluenceMigratorPro.DiagramConverter.Code.DiagramConversionClass" locale="">
+  <web>ConfluenceMigratorPro.DiagramConverter.Code</web>
+  <name>DiagramConversionClass</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
@@ -31,14 +31,14 @@
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <version>1.1</version>
-  <title/>
+  <title>DiagramConversionClass</title>
   <comment/>
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content/>
   <class>
-    <name>ConfluenceMigratorPro.ReferenceFixer.Code.ReferenceFixingSessionClass</name>
+    <name>ConfluenceMigratorPro.DiagramConverter.Code.DiagramConversionClass</name>
     <customClass/>
     <customMapping/>
     <defaultViewSheet/>
@@ -46,56 +46,6 @@
     <defaultWeb/>
     <nameField/>
     <validationScript/>
-    <baseURLs>
-      <cache>0</cache>
-      <customDisplay/>
-      <defaultValue/>
-      <disabled>0</disabled>
-      <displayType>input</displayType>
-      <freeText>allowed</freeText>
-      <hint>The comma-separated base URL(s) of the Confluence original server. If you specified a migration, you can leave this empty to get this value from the information present in the migration.</hint>
-      <largeStorage>0</largeStorage>
-      <multiSelect>1</multiSelect>
-      <name>baseURLs</name>
-      <number>3</number>
-      <picker>0</picker>
-      <prettyName>Base URLs</prettyName>
-      <relationalStorage>0</relationalStorage>
-      <separator> </separator>
-      <separators>|, </separators>
-      <size>1</size>
-      <sort/>
-      <unmodifiable>0</unmodifiable>
-      <validationMessage/>
-      <validationRegExp/>
-      <values/>
-      <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
-    </baseURLs>
-    <brokenRefType>
-      <cache>0</cache>
-      <customDisplay/>
-      <defaultValue/>
-      <disabled>0</disabled>
-      <displayType>select</displayType>
-      <freeText>forbidden</freeText>
-      <hint>The type of broken reference to fix. If you specified a migration, you can leave this empty to guess this from the information present in the migration.</hint>
-      <largeStorage>0</largeStorage>
-      <multiSelect>0</multiSelect>
-      <name>brokenRefType</name>
-      <number>4</number>
-      <picker>0</picker>
-      <prettyName>Broken Reference Type</prettyName>
-      <relationalStorage>0</relationalStorage>
-      <separator> </separator>
-      <separators>|, </separators>
-      <size>1</size>
-      <sort/>
-      <unmodifiable>0</unmodifiable>
-      <validationMessage/>
-      <validationRegExp/>
-      <values>CONFLUENCE_REFS=Confluence references - appropriate for migrations done with Confluence Migrator Pro version 1.27.11 and higher|Broken links - appropriate for old migrations done before Confluence Migrator Pro version|UNKNOWN=both (pick this in doubt)|=-</values>
-      <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
-    </brokenRefType>
     <dryRun>
       <customDisplay/>
       <defaultValue>0</defaultValue>
@@ -198,10 +148,10 @@
     </updateInPlace>
   </class>
   <object>
-    <name>ConfluenceMigratorPro.ReferenceFixer.Code.ReferenceFixingSessionClass</name>
+    <name>ConfluenceMigratorPro.DiagramConverter.Code.DiagramConversionClass</name>
     <number>0</number>
     <className>XWiki.ClassSheetBinding</className>
-    <guid>bc71d408-2d73-4354-8b20-f6bdf1f4f52b</guid>
+    <guid>c14b9029-31ac-474c-838f-3bc6e21e02c1</guid>
     <class>
       <name>XWiki.ClassSheetBinding</name>
       <customClass/>
@@ -238,7 +188,7 @@
       </sheet>
     </class>
     <property>
-      <sheet>ConfluenceMigratorPro.ReferenceFixer.Code.ReferenceFixingSessionSheet</sheet>
+      <sheet>ConfluenceMigratorPro.DiagramConverter.Code.DiagramConversionSheet</sheet>
     </property>
   </object>
 </xwikidoc>
