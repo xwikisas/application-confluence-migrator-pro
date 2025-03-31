@@ -200,7 +200,12 @@ confluencemigratorpro.homepage.tab.postMigrationFixes.title=Post migration fixes
 confluencepro.howToMigrate.upload.title=Upload a Confluence export (or use an already uploaded one)
 confluencepro.howToMigrate.server.title=Select from your server a Confluence export
 confluencepro.uploadFacadeButton=Upload export
-confluencepro.lastMigration=Last migration</content>
+confluencepro.lastMigration=Last migration
+
+## Screen reader
+cfm.sr-only.newBatch.packages=Select confluence packages.
+cfm.sr-only.migrationSheet.missingReferences=Click to expand a list of pages that have missing references.
+cfm.sr-only.migrationSheet.expandMigratedSpaces=Click to expand a list with all the migrated spaces.</content>
   <object>
     <name>ConfluenceMigratorPro.Code.Translations</name>
     <number>0</number>
