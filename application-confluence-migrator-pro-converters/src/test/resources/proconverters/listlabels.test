@@ -1,8 +1,4 @@
-.#------------------------------------------------------------------------------
-.expect|filter+xml
-.# Content conversions
-.#------------------------------------------------------------------------------
-<wikiSpace name="MySpace">
+<wikiSpace name="JustAnotherSpace">
   <wikiDocument name="WebHome">
     <wikiDocumentLocale>
       <p>
@@ -38,23 +34,19 @@
             </entry>
             <entry>
               <string>title</string>
-              <string>My Space</string>
+              <string>Just Another Space</string>
             </entry>
             <entry>
               <string>content</string>
-              <string>{{tagList spaces="confluenceSpace:TEOS" excludedTags="aa,aaa,aaaaa"/}}
+              <string>{{tagList spaces="confluenceSpace:TEOS " excludedTags="aa,aaa,aaaaa"/}}
 
-{{tagList spaces="MySpace" excludedTags="aaa"/}}
+{{tagList spaces="JustAnotherSpace " excludedTags="aaa"/}}
 
+{{tagList spaces="confluenceSpace:FOS "/}}
 
+{{tagList spaces="JustAnotherSpace" excludedTags="aa,aaa,aaaaa"/}}
 
-{{tagList spaces="confluenceSpace:FOS"/}}
-
-
-
-{{tagList/}}
-
-</string>
+{{tagList spaces="JustAnotherSpace"/}}</string>
             </entry>
             <entry>
               <string>syntax</string>
@@ -73,8 +65,3 @@
     </wikiDocumentLocale>
   </wikiDocument>
 </wikiSpace>
-.#------------------------------------------------------------------------------
-.input|confluence+xml
-.configuration.source=listlabels
-.configuration.storeConfluenceDetailsEnabled=false
-.#------------------------------------------------------------------------------

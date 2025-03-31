@@ -19,18 +19,18 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.confluence.filter.input.ConfluenceInputContext;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
 import org.xwiki.rendering.listener.Listener;
-
-import javax.inject.Named;
 
 /**
  * Convert the confluence listlabels macro into a tagList macro.
@@ -43,9 +43,15 @@ import javax.inject.Named;
 @Named("listlabels")
 public class ListLabelsMacroConverter extends AbstractMacroConverter
 {
+
     private static final String SPACE_KEY = "spaceKey";
 
     private static final String EXCLUDED_LABELS = "excludedLabels";
+
+    private static final String SPACES = "spaces";
+
+    @Inject
+    private ConfluenceInputContext context;
 
     @Override
     public void toXWiki(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -58,14 +64,12 @@ public class ListLabelsMacroConverter extends AbstractMacroConverter
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
         String content)
     {
-        if (confluenceParameters.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
         Map<String, String> xwikiParameters = new HashMap<>(2);
         String spaceKey = confluenceParameters.get(SPACE_KEY);
         if (StringUtils.isNotEmpty(spaceKey)) {
-            xwikiParameters.put("spaces", spaceKey);
+            xwikiParameters.put(SPACES, spaceKey);
+        } else {
+            xwikiParameters.put(SPACES, context.getCurrentSpace());
         }
         String excludedLabels = confluenceParameters.get(EXCLUDED_LABELS);
         if (StringUtils.isNotEmpty(excludedLabels)) {
