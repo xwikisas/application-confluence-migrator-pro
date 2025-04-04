@@ -52,22 +52,22 @@
   &lt;div class="floatcontainer" id="confluence-pro-tab-root"&gt;
     &lt;ul class="xwikitabbar"&gt;
       &lt;li class="active" data-content-container="confluence-pro-tab-container-new-migration" data-page-reference="ConfluenceMigratorPro.Code.Tabs.NewMigration"&gt;
-        &lt;a href="#NewMigration" rel="nofollow"&gt;
+        &lt;a rel="nofollow"&gt;
           $escapetool.xml($services.localization.render('confluencemigratorpro.homepage.tab.newMigration.title'))
         &lt;/a&gt;
       &lt;/li&gt;
       &lt;li class="" data-content-container="confluence-pro-tab-container-all-migrations" data-page-reference="ConfluenceMigratorPro.Code.Tabs.AllMigrations"&gt;
-        &lt;a href="#AllMigrations" rel="nofollow"&gt;
+        &lt;a rel="nofollow"&gt;
           $escapetool.xml($services.localization.render('confluencemigratorpro.homepage.tab.allMigrations.title'))
         &lt;/a&gt;
       &lt;/li&gt;
       &lt;li class="" data-content-container="confluence-pro-tab-container-imported-macros" data-page-reference="ConfluenceMigratorPro.Code.Tabs.ImportedMacros"&gt;
-        &lt;a href="#ImportedMacros" rel="nofollow"&gt;
+        &lt;a rel="nofollow"&gt;
           $escapetool.xml($services.localization.render('confluencemigratorpro.homepage.tab.importedMacros.title'))
         &lt;/a&gt;
       &lt;/li&gt;
       &lt;li class="" data-content-container="confluence-pro-tab-container-post-migration-fixes" data-page-reference="ConfluenceMigratorPro.Code.Tabs.PostMigrationFixes"&gt;
-        &lt;a href="#PostMigrationFixes" rel="nofollow"&gt;
+        &lt;a rel="nofollow"&gt;
           $escapetool.xml($services.localization.render('confluencemigratorpro.homepage.tab.postMigrationFixes.title'))
         &lt;/a&gt;
       &lt;/li&gt;

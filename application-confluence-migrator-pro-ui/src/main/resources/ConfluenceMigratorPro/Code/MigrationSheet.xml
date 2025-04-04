@@ -309,6 +309,7 @@
       &lt;li&gt;
         &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
           $services.icon.renderHTML('caret-down')
+          &lt;p class="sr-only"&gt;$services.localization.render("cfm.sr-only.migrationSheet.expandMigratedSpaces")&lt;p&gt;
         &lt;/a&gt;
         [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$services.rendering.escape($spaceHomeRef, $xwiki.currentContentSyntaxId)]]
         #set ($discard = $options.put('root', "document:$spaceHomeRef"))
@@ -683,6 +684,7 @@
         &lt;a role="button" data-toggle="collapse" href="#cfmPage-${category}-${foreach.count}" aria-expanded="false" aria-controls="cfmPage-${category}-${foreach.count}"&gt;
           &lt;div class="cfmTitleIcon"&gt;
             $services.icon.renderHTML('caret-down')
+            &lt;span class="sr-only"&gt;$services.localization.render("cfm.sr-only.migrationSheet.missingReferences")&lt;span&gt;
           &lt;/div&gt;
         &lt;/a&gt;
         #if ($entry.key.contains("."))
