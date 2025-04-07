@@ -19,6 +19,8 @@
  */
 package com.xwiki.confluencepro;
 
+import java.util.List;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import org.junit.runner.RunWith;
@@ -33,6 +35,7 @@ import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceKeyResolver;
 import org.xwiki.environment.Environment;
 import org.xwiki.filter.input.InputFilterStreamFactory;
 import org.xwiki.filter.test.integration.FilterTestSuite;
+import org.xwiki.icon.IconManager;
 import org.xwiki.model.validation.EntityNameValidation;
 import org.xwiki.model.validation.EntityNameValidationManager;
 import org.xwiki.observation.ObservationManager;
@@ -85,6 +88,8 @@ public class IntegrationTests
         componentManager.registerMockComponent(ConfluencePageIdResolver.class);
         componentManager.registerMockComponent(ConfluencePageTitleResolver.class);
         componentManager.registerMockComponent(ConfluenceSpaceKeyResolver.class);
+        IconManager iconManager = componentManager.registerMockComponent(IconManager.class);
+        when(iconManager.getIconNames()).thenReturn(List.of("add", "remove"));
 
         // Unregister all listeners since they are not needed for testing
         componentManager.registerMockComponent(ObservationManager.class);
