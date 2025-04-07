@@ -44,10 +44,10 @@
               <string>content</string>
               <string>(% class="confluence_auibuttongroup_content" %)
 (((
-{{button label="Test 2" url="confluencePage:page:Discovery.Hoho" color="#386da7" newTab="true" icon="appswitcher"/}}{{button label="Test 3" url="confluencePage:page:PANDA.Hello world" color="#ffffff"/}}
+{{button label="Test 2" url="confluencePage:page:Discovery.Hoho" type="PRIMARY" newTab="true"/}}{{button label="Test 3" url="confluencePage:page:PANDA.Hello world" type="DEFAULT"/}}
 )))
 
-{{button label="my test 1" url="https://xwiki.com" color="#ffffff" icon="add" id="my_id" class="customcssclass"/}}</string>
+{{button label="my test 1" url="https://xwiki.com" type="DEFAULT" icon="add" id="my_id" class="customcssclass"/}}</string>
             </entry>
             <entry>
               <string>syntax</string>
