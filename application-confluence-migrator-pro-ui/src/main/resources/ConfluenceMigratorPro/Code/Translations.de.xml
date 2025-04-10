@@ -23,7 +23,7 @@
 <xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.Translations" locale="">
   <web>ConfluenceMigratorPro.Code</web>
   <name>Translations</name>
-  <language/>
+  <language>de</language>
   <defaultLanguage>en</defaultLanguage>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
