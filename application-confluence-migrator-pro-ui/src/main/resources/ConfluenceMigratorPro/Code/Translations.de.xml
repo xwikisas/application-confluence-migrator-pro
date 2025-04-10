@@ -159,7 +159,7 @@
 ### Missing: confluencepro.job.question.advanced.input=Properties of the input filter stream (Confluence XML)
 ### Missing: confluencepro.job.question.advanced.output=Properties of the output filter stream (XWiki instance)
 ### Missing: confluencepro.job.question.advanced.source=The source package
-### Missing: confluencepro.job.question.advanced.source.description=The path to the package that will be migrated e.g. file://home/user/Downloads/confluencePackage.zip. You can also give the path to a directory containing the unzipped package (an entity.xml file and an attachments folder). the protocol part ("file://") is important and needs to be there.
+### Missing: confluencepro.job.question.advanced.source.description=The path to the package that will be migrated e.g. file://home/user/Downloads/confluencePackage.zip. You can also give the path to a directory containing the unzipped package (an entity.xml file and an attachments folder).
 ### Missing: confluencepro.job.general.title=General parameters
 ### Missing: confluencepro.job.skipquestions.question.title=Skip the space selection screen
 ### Missing: confluencepro.job.skipquestions.question.hint=If you check this, all spaces will be imported. Note: the screen will always be skipped if the Confluence package contains only one space, regardless the value of this parameter.
