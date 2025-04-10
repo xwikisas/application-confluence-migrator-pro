@@ -89,7 +89,7 @@
           &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render("confluencepro.job.question.advanced.source.description"))&lt;/span&gt;
         &lt;/dt&gt;
         &lt;dd&gt;
-          &lt;input type="text" class="cfm-input-filter-property" value="$prefilledValues['input'].getOrDefault('source', '')" data-key="source"&gt;
+          &lt;input type="text" class="cfm-input-filter-property" value="$prefilledValues['input'].getOrDefault('source', '')" data-key="source" name="source" id="source"&gt;
         &lt;/dd&gt;
       &lt;/dl&gt;
     #end
