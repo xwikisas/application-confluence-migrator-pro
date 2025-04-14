@@ -147,7 +147,7 @@ public class ConfluenceMigrationJob
             outputStreamRoleHint = XWIKI_INSTANCE_ROLEHINT;
         }
 
-        maybeReducePageCount(request);
+        maybeReducePageCount(inputProperties);
 
         FilterStreamConverterJobRequest filterJobRequest = new FilterStreamConverterJobRequest(
             FilterStreamType.unserialize(CONFLUENCE_XML_ROLEHINT), inputProperties,
@@ -179,7 +179,7 @@ public class ConfluenceMigrationJob
         }
     }
 
-    private void maybeReducePageCount(ConfluenceMigrationJobRequest request)
+    private void maybeReducePageCount(Map<String, Object> inputProperties)
     {
         int maxPageCount = getMaxPageCount(request);
 
@@ -208,7 +208,7 @@ public class ConfluenceMigrationJob
         if (!licensor.hasLicensure(mainRef) || licensor.getLicense(mainRef) == null
             || licensor.getLicense(mainRef).getType().equals(LicenseType.TRIAL)
         ) {
-            request.getInputProperties().put(MAX_PAGE_COUNT, TRIAL_PAGE_COUNT);
+            inputProperties.put(MAX_PAGE_COUNT, TRIAL_PAGE_COUNT);
         }
     }
 
