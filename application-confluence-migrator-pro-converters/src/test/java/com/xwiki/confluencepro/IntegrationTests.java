@@ -45,6 +45,7 @@ import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.mockito.MockitoComponentManager;
 
 import com.xwiki.date.DateMacroConfiguration;
+import com.xwiki.task.TaskConfiguration;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -70,6 +71,8 @@ public class IntegrationTests
 
         DateMacroConfiguration dateConfig = componentManager.registerMockComponent(DateMacroConfiguration.class);
         when(dateConfig.getStorageDateFormat()).thenReturn("yyyy/MM/dd HH:mm");
+        TaskConfiguration taskConfiguration = componentManager.registerMockComponent(TaskConfiguration.class);
+        when(taskConfiguration.getDefaultInlineStatus()).thenReturn("InProgress");
 
         EntityNameValidationManager validationManager =
             componentManager.registerMockComponent(EntityNameValidationManager.class);
