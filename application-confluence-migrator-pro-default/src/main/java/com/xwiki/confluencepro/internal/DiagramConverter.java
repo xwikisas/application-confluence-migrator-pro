@@ -278,11 +278,6 @@ public class DiagramConverter
             diagramName = macroBlock.getParameter(DIAGRAM_NAME);
         }
 
-        String diagramPreview = macroBlock.getParameter("tempPreview");
-        if (StringUtils.isEmpty(diagramPreview)) {
-            diagramPreview = diagramName + ".png";
-        }
-
         String diagramContent = getDiagramContent(migratedDoc, diagramName, macroBlock.getId());
         if (StringUtils.isEmpty(diagramContent)) {
             if (dryRun) {
