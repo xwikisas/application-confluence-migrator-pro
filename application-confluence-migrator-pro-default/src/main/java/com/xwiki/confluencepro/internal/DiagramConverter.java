@@ -137,7 +137,12 @@ public class DiagramConverter
         Map<String, Map<String, Integer>> macroPages = null;
         XWikiAttachment macroPagesAttachment = migrationDoc.getAttachment("macroPages.json");
         if (macroPagesAttachment != null) {
-            XWikiAttachmentContent attachmentContent = macroPagesAttachment.getAttachment_content();
+            XWikiAttachmentContent attachmentContent = null;
+            try {
+                attachmentContent = macroPagesAttachment.getAttachmentContent(contextProvider.get());
+            } catch (XWikiException e) {
+                logger.error("Failed get macro pages data", e);
+            }
             if (attachmentContent != null) {
                 try {
                     InputStream contentInputStream = attachmentContent.getContentInputStream();
@@ -333,7 +338,8 @@ public class DiagramConverter
         return diagramReference;
     }
 
-    private String getDiagramContent(XWikiDocument migratedDoc, String diagramName, String macroName) throws IOException
+    private String getDiagramContent(XWikiDocument migratedDoc, String diagramName, String macroName)
+        throws IOException, XWikiException
     {
         String diagramContent = "";
         XWikiAttachment diagramAttach = migratedDoc.getAttachment(diagramName);
@@ -341,8 +347,9 @@ public class DiagramConverter
             logger.error("Document [{}]: diagram attachment [{}] is missing",
                 migratedDoc.getDocumentReference(), diagramName);
         } else {
-            diagramContent = new String(diagramAttach.getAttachment_content().getContentInputStream().readAllBytes(),
-                    StandardCharsets.UTF_8);
+            XWikiAttachmentContent attachmentContent = diagramAttach.getAttachmentContent(contextProvider.get());
+            InputStream attachmentInputStream = attachmentContent.getContentInputStream();
+            diagramContent = new String(attachmentInputStream.readAllBytes(), StandardCharsets.UTF_8);
             if (diagramContent.isEmpty()) {
                 logger.error("Document [{}]: diagram attachment [{}] is empty",
                     migratedDoc.getDocumentReference(), diagramName);
