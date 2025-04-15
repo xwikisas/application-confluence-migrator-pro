@@ -22,12 +22,14 @@ package com.xwiki.confluencepro.converters.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
 
+import com.xwiki.task.TaskConfiguration;
 import com.xwiki.task.model.Task;
 
 /**
@@ -48,6 +50,9 @@ public class TaskMacroConverter extends AbstractMacroConverter
     private static final String TASK_REFERENCE_PARAMETER = "reference";
 
     private static final String TASK_REFERENCE_PREFIX = "/Tasks/Task_";
+
+    @Inject
+    private TaskConfiguration taskConfiguration;
 
     @Override
     protected String toXWikiContent(String confluenceId, Map<String, String> parameters, String confluenceContent)
@@ -74,7 +79,7 @@ public class TaskMacroConverter extends AbstractMacroConverter
         String confluenceStatus = confluenceParameters.get(TASK_STATUS_PARAMETER);
         String xwikiStatus = confluenceStatus.equals("complete") || confluenceStatus.equals(Task.STATUS_DONE)
             ? Task.STATUS_DONE
-            : Task.STATUS_IN_PROGRESS;
+            : taskConfiguration.getDefaultInlineStatus();
         String confluenceTaskId = confluenceParameters.get(TASK_ID_PARAMETER);
         String reference = confluenceParameters.get(TASK_REFERENCE_PARAMETER);
         String xwikiIdParam = confluenceTaskId != null

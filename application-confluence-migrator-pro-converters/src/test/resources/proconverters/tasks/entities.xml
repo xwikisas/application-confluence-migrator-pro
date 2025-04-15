@@ -92,6 +92,27 @@
     </ac:task-body>
   </ac:task>
 </ac:task-list>
+
+<ac:structured-macro ac:macro-id="3f8c46da-81a6-4e0d-a1a5-b8bd80032c07" ac:name="tasklist" ac:schema-version="1">
+  <ac:parameter ac:name="width">80%</ac:parameter>
+  <ac:parameter ac:name="title">Task list title</ac:parameter>
+  <ac:plain-text-body><![CDATA[||Completed||Priority||Locked||CreatedDate||CompletedDate||Assignee||Name||
+|F|M|F|1744620516591|          |jtille|my first task|
+|F|M|F|1744620525970|          |jtille|my second task|
+]]]]><![CDATA[></ac:plain-text-body>
+</ac:structured-macro>
+
+<ac:structured-macro ac:macro-id="2437bd87-b48a-431f-a2a8-a5c77ae5b95e" ac:name="tasklist" ac:schema-version="1">
+  <ac:parameter ac:name="width">80%</ac:parameter>
+  <ac:parameter ac:name="title">Task list title</ac:parameter>
+  <ac:parameter ac:name="enableLocking">true</ac:parameter>
+  <ac:parameter ac:name="promptOnDelete">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[||Completed||Priority||Locked||CreatedDate||CompletedDate||Assignee||Name||
+|F|M|F|1744620516591|          |jtille|my first task2|
+|T|M|F|1744620525970|1745620525970|jtille|my second task2|
+]]]]><![CDATA[></ac:plain-text-body>
+</ac:structured-macro>
+
 ]]></property>
     <property name="content" class="Page" package="com.atlassian.confluence.pages"><id name="id">45809845</id></property>
     <property name="bodyType">2</property>

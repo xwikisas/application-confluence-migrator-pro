@@ -87,6 +87,32 @@ Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed
 {{/task}}
 )))
 {{/task}}
+)))
+
+(% width="80%" %)
+(((
+**Task list title**
+
+{{task reference="/Tasks/Task_Legacy_0" status="InProgress" createDate="2025/04/14 08:48"}}
+my first task {{mention reference="XWiki.jtille" anchor="XWiki-jtille-legacy-0" style="FULL_NAME"/}}
+{{/task}}
+
+{{task reference="/Tasks/Task_Legacy_1" status="InProgress" createDate="2025/04/14 08:48"}}
+my second task {{mention reference="XWiki.jtille" anchor="XWiki-jtille-legacy-1" style="FULL_NAME"/}}
+{{/task}}
+)))
+
+(% width="80%" %)
+(((
+**Task list title**
+
+{{task reference="/Tasks/Task_Legacy_2" status="InProgress" createDate="2025/04/14 08:48"}}
+my first task2 {{mention reference="XWiki.jtille" anchor="XWiki-jtille-legacy-2" style="FULL_NAME"/}}
+{{/task}}
+
+{{task reference="/Tasks/Task_Legacy_3" status="Done" createDate="2025/04/14 08:48" completeDate="2025/04/25 22:35"}}
+my second task2 {{mention reference="XWiki.jtille" anchor="XWiki-jtille-legacy-3" style="FULL_NAME"/}}
+{{/task}}
 )))</string>
             </entry>
             <entry>
