@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
     <artifactId>application-confluence-migrator-pro-test</artifactId>
-    <version>1.34.2</version>
+    <version>1.34.3-SNAPSHOT</version>
   </parent>
   <artifactId>application-confluence-migrator-pro-test-docker</artifactId>
   <properties>
