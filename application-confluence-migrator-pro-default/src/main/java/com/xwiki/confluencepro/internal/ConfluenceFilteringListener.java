@@ -35,6 +35,8 @@ import javax.inject.Singleton;
 
 import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
 import com.xwiki.pro.internal.resolvers.LinkMappingStore;
+
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.hibernate.Session;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
@@ -52,7 +54,6 @@ import org.slf4j.Logger;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.observation.AbstractEventListener;
-import org.xwiki.observation.event.CancelableEvent;
 import org.xwiki.observation.event.Event;
 import org.xwiki.refactoring.job.question.EntitySelection;
 
@@ -108,19 +109,27 @@ public class ConfluenceFilteringListener extends AbstractEventListener
 
         ConfluenceXMLPackage confluencePackage = (ConfluenceXMLPackage) data;
 
-        Collection<String> spaces = new HashSet<>(confluencePackage.getSpacesByKey().keySet());
+        ConfluenceFilteringEvent ev = (ConfluenceFilteringEvent) event;
+        Collection<String> spaces = new ArrayList<>(confluencePackage.getSpaceKeys(false));
+        for (Long spaceId : ev.getDisabledSpaces()) {
+            try {
+                spaces.remove(confluencePackage.getSpaceKey(spaceId));
+            } catch (ConfigurationException e) {
+                logger.error("Failed to disable import for space id [{}]. This is unexpected.", spaceId, e);
+            }
+        }
         status.setSpaces(spaces);
 
         if (shouldAskQuestions(status, job, spaces)) {
-            askSpacesQuestion((ConfluenceFilteringEvent) event, confluencePackage, status, spaces);
+            askSpacesQuestion(ev, confluencePackage, status, spaces);
         }
 
         if (status.isCanceled()) {
-            ((CancelableEvent) event).cancel();
+            ev.cancel();
         } else if (isPropertyEnabled(status, ONLY_LINK_MAPPING)) {
             // This is a link mapping only phase, let's store the link mapping and cancel the import
             updateLinkMappingAndLookForCollisions(linkMappingStore);
-            ((CancelableEvent) event).cancel();
+            ev.cancel();
         } else if (isInputPropertyEnabled(status, "storeConfluenceDetailsEnabled")) {
             // This is the happy path / normal situation.
             // The data on the imported spaces should be in the wiki. Except if someone has imported a partial space and
@@ -182,7 +191,7 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         for (EntitySelection entitySelection : question.getConfluenceSpaces().keySet()) {
             if (!entitySelection.isSelected()) {
                 String spaceKey = entitySelection.getEntityReference().getName();
-                Long spaceId = confluencePackage.getSpacesByKey().get(spaceKey);
+                Long spaceId = confluencePackage.getSpaceId(spaceKey);
                 event.disableSpace(spaceId);
                 spaces.remove(spaceKey);
             }
