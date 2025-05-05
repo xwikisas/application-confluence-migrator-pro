@@ -78,7 +78,7 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
         confluenceHomePage.attachFiles(testConfiguration.getBrowser().getTestResourcesPath(),
             List.of(SINGLE_SPACE_PACKAGE, MULTI_SPACE_PACKAGE));
@@ -91,7 +91,7 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
 
         MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(1);
@@ -107,7 +107,7 @@ public class ConfluenceMigratorIT
 
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
 
         MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(1);
@@ -116,7 +116,7 @@ public class ConfluenceMigratorIT
         MigrationRunningPage runningPage = new MigrationRunningPage();
         assertEquals(MIGRATION_TITLE, runningPage.getDocumentTitle());
         ConfluenceHomePage.goToPage();
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-all-migrations");
+        confluenceHomePage.openSection("confluence-pro-tab-container-all-migrations");
         // The latest migration will always be the one with index 0 because the livedata is sorted by date.
         String migrationStatus = confluenceHomePage.migrationStatus(0);
         assertEquals("Running", migrationStatus);
@@ -136,7 +136,7 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
         MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(2);
         migrationCreationPage.setTitle(MIGRATION_TITLE + "2");
@@ -152,7 +152,7 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
         MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(2);
         migrationCreationPage.setTitle(MIGRATION_TITLE + "3");
@@ -183,13 +183,13 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         assertTrue(confluenceHomePage.checkIfSectionWasLoaded(".confluence-pro-tab-container-new-migration"));
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-all-migrations");
+        confluenceHomePage.openSection("confluence-pro-tab-container-all-migrations");
         assertTrue(confluenceHomePage.checkIfSectionWasLoaded(".confluence-pro-tab-container-all-migrations"));
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-imported-macros");
+        confluenceHomePage.openSection("confluence-pro-tab-container-imported-macros");
         assertTrue(confluenceHomePage.checkIfSectionWasLoaded(".confluence-pro-tab-container-imported-macros"));
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-post-migration-fixes");
+        confluenceHomePage.openSection("confluence-pro-tab-container-post-migration-fixes");
         assertTrue(confluenceHomePage.checkIfSectionWasLoaded(".confluence-pro-tab-container-post-migration-fixes"));
     }
 
@@ -202,7 +202,7 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".batchSubsection");
         CreateBatchPage createBatchPage = confluenceHomePage.createNewBatch();
         createBatchPage.completePath(new File(testConfiguration.getBrowser().getTestResourcesPath()).getAbsolutePath())
@@ -224,7 +224,7 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".batchSubsection");
         CreateBatchPage createBatchPage = confluenceHomePage.createNewBatch();
         createBatchPage.completePath(new File(testConfiguration.getBrowser().getTestResourcesPath()).getAbsolutePath())
@@ -232,7 +232,7 @@ public class ConfluenceMigratorIT
         createBatchPage.selectAll();
         createBatchPage.createBatch();
         ConfluenceHomePage.goToPage();
-        confluenceHomePage.lazyLoadSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".batchSubsection");
         //Check that the batch was created.
         assertTrue(confluenceHomePage.countBatches() >= 1);
@@ -243,7 +243,7 @@ public class ConfluenceMigratorIT
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
-        confluenceHomePage.lazyLoadSection(sectionId);
+        confluenceHomePage.openSection(sectionId);
         confluenceHomePage.openHowToMigrateSubsection(subsectionClass);
         confluenceHomePage.selectMigrationOptions(formSelector, option);
         MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(2);

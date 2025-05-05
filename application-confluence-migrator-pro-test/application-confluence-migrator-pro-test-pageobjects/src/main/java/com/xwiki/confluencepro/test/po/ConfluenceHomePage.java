@@ -60,6 +60,12 @@ public class ConfluenceHomePage extends ViewPage
         return new LiveDataElement("confluenceMigrations");
     }
 
+    /**
+     *
+     * @param migrationIndex the index of the migration in the livedata.
+     * @return the status of the migration
+     * @since 1.34.3
+     */
     public String migrationStatus(int migrationIndex)
     {
         List<WebElement> statuses = getDriver().findElements(
@@ -93,7 +99,7 @@ public class ConfluenceHomePage extends ViewPage
         getDriver().findElement(By.cssSelector(String.format("%s input[value=%s]", selector, value))).click();
     }
 
-    public void lazyLoadSection(String contentContainer)
+    public void openSection(String contentContainer)
     {
         getDriver().findElement(By.cssSelector(String.format("li[data-content-container=%s]", contentContainer)))
             .click();
