@@ -277,7 +277,8 @@
   #set ($migrations = $services.query.xwql("select doc.fullName, doc.name, doc.title from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.creationDate desc").execute())
 #end
 #macro (displaySelectMigrations $fieldName $allowEmpty)
-  &lt;select name="$fieldName" class="$fieldName migrationOptionsSelect" autocomplete="off" aria-label="$fieldName-select-migration-options"&gt;
+  &lt;select name="$fieldName" class="$fieldName migrationOptionsSelect" autocomplete="off"
+    aria-label="$services.localization.render("cmpMigrationOptionField", [$fieldName])"&gt;
     #if ($allowEmpty)
       &lt;option value="" #if ($specifiedMigration == "") selected="selected"#end&gt;&lt;/option&gt;
     #end

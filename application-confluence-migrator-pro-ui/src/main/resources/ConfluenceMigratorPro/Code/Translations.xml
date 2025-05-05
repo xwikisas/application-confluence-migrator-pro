@@ -202,6 +202,9 @@ confluencepro.howToMigrate.server.title=Select from your server a Confluence exp
 confluencepro.uploadFacadeButton=Upload export
 confluencepro.lastMigration=Last migration
 
+## Accessibility
+cmpMigrationOptionField={0} migration option
+
 ## Screen reader
 cfm.sr-only.newBatch.packages=Select confluence packages.
 cfm.sr-only.migrationSheet.missingReferences=Click to expand a list of pages that have missing references.
