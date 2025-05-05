@@ -69,14 +69,14 @@ public class ConfluenceHomePage extends ViewPage
     public String migrationStatus(int migrationIndex)
     {
         List<WebElement> statuses = getDriver().findElements(
-            By.cssSelector("#confluenceMigrations tbody " + "td[data-title=\"Migration status\"]"));
+            By.cssSelector("#confluenceMigrations tbody tr td:nth-child(2)"));
         return statuses.get(migrationIndex).getText().trim();
     }
 
     public MigrationRunningPage getMigrationRunningPage(int migrationIndex)
     {
         List<WebElement> statuses =
-            getDriver().findElements(By.cssSelector("#confluenceMigrations tbody " + "td[data-title=\"Migration\"] a"));
+            getDriver().findElements(By.cssSelector("#confluenceMigrations tbody tr td:nth-child(1) a"));
         statuses.get(migrationIndex).click();
         return new MigrationRunningPage();
     }
