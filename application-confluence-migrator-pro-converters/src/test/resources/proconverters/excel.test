@@ -42,7 +42,7 @@
             </entry>
             <entry>
               <string>content</string>
-              <string>{{view-file name="tests-example.xls" display="full" exportFileDelimiter="%2C"/}}
+              <string>{{view-file name="tests-example.xls" page="WebHome" display="full" exportFileDelimiter="%2C"/}}
 
 {{view-file name="filename.xlsx" display="full"/}}</string>
             </entry>
