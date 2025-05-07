@@ -20,12 +20,12 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.6" reference="ConfluenceMigratorPro.DiagramConverter.Code.Translations" locale="">
+<xwikidoc version="1.6" reference="ConfluenceMigratorPro.DiagramConverter.Code.Translations" locale="fr">
   <web>ConfluenceMigratorPro.DiagramConverter.Code</web>
   <name>Translations</name>
   <language>fr</language>
   <defaultLanguage>en</defaultLanguage>
-  <translation>0</translation>
+  <translation>1</translation>
   <creator>xwiki:XWiki.Admin</creator>
   <parent>WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
@@ -46,41 +46,4 @@ confluencepro.diagramconverter.livedata.dryRun=Essai à blanc
 ### Missing: confluencepro.diagramconverter.livedata.doc.creationDate=Created
 ### Missing: confluencepro.diagramconverter.livedata.doc.date=Updated
 </content>
-  <object>
-    <name>ConfluenceMigratorPro.DiagramConverter.Code.Translations</name>
-    <number>0</number>
-    <className>XWiki.TranslationDocumentClass</className>
-    <guid>a5f7c683-161f-4e37-a49b-1b487228c4e7</guid>
-    <class>
-      <name>XWiki.TranslationDocumentClass</name>
-      <customClass/>
-      <customMapping/>
-      <defaultViewSheet/>
-      <defaultEditSheet/>
-      <defaultWeb/>
-      <nameField/>
-      <validationScript/>
-      <scope>
-        <cache>0</cache>
-        <disabled>0</disabled>
-        <displayType>select</displayType>
-        <freeText>forbidden</freeText>
-        <largeStorage>0</largeStorage>
-        <multiSelect>0</multiSelect>
-        <name>scope</name>
-        <number>1</number>
-        <prettyName>Scope</prettyName>
-        <relationalStorage>0</relationalStorage>
-        <separator> </separator>
-        <separators>|, </separators>
-        <size>1</size>
-        <unmodifiable>0</unmodifiable>
-        <values>GLOBAL|WIKI|USER|ON_DEMAND</values>
-        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
-      </scope>
-    </class>
-    <property>
-      <scope>WIKI</scope>
-    </property>
-  </object>
 </xwikidoc>
