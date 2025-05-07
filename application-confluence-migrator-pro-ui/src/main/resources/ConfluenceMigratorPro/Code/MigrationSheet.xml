@@ -403,6 +403,7 @@
     #displayFixLinks
     #displayJson('confluenceRefWarnings')
     #set ($missingPages = $collectiontool.getSortedSet())
+    #set ($missingPagesIds = $collectiontool.getSortedSet())
     #foreach ($entry in $jsonObject.entrySet())
       #foreach ($log in $entry.getValue())
         #set ($args = $log.get("args"))
@@ -413,11 +414,16 @@
           #set ($spaceKey = $args.get(1))
           #set ($pageTitle = $args.get(0))
         #end
-        #set ($discard = $missingPages.add("${spaceKey}.${pageTitle}"))
+        #if ($spaceKey.class.name != "java.lang.String")
+          #set ($discard = $missingPagesIds.add($spaceKey))
+        #else
+          #set ($discard = $missingPages.add("${spaceKey}.${pageTitle}"))
+        #end
       #end
     #end
     &lt;details class="cfm-details"&gt;
       &lt;summary&gt;$services.localization.render('confluencepro.migration.raport.problems.confluencerefs.list')&lt;/summary&gt;
+      #if (!$missingPages.isEmpty())
       &lt;table&gt;
         &lt;tr&gt;
           &lt;th&gt;$services.localization.render('confluencepro.migration.raport.confluencespace')&lt;/th&gt;
@@ -431,6 +437,10 @@
         &lt;/tr&gt;
       #end
       &lt;/table&gt;
+      #end
+      #if (!$missingPagesIds.isEmpty())
+        $services.localization.render('confluencepro.migration.raport.problems.confluencerefids.list') $missingPagesIds
+      #end
     &lt;/details&gt;
   #end
 

@@ -107,6 +107,7 @@ confluencepro.migration.raport.problems.missingUsersGroups.groups=Missing groups
 confluencepro.migration.raport.problems.done.title={0} page(s) have encountered issues during the import
 confluencepro.migration.raport.problems.other.title=Other issue were encountered during the import
 confluencepro.migration.raport.problems.confluencerefs.list=List of targeted but missing pages
+confluencepro.migration.raport.problems.confluencerefids.list=List of targeted but missing page IDs:
 confluencepro.migration.raport.problems.brokenLinks.list=List of pages targeted by potentially broken links
 confluencepro.migration.raport.problems.unhandledParameters.title=There are {0} unhandled macro parameters or parameter values
 confluencepro.migration.raport.problems.unhandledParameters.info=Unhandled parameter warnings:
