@@ -90,6 +90,7 @@ public class ReferenceFixingJob
                 request.getSpaceReferences(),
                 request.getBaseURLs(),
                 request.getBrokenRefType(),
+                request.isExhaustive(),
                 request.isUpdateInPlace(),
                 request.isDryRun()
             );

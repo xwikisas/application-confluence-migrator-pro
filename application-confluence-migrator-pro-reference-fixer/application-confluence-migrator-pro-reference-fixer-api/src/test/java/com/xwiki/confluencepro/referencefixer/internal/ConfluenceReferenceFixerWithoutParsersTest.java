@@ -71,6 +71,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 })
 class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixerTestBase
 {
+    private static final String[] B_BASE_URL = new String[] { "http://b.url/" };
     private static final String INPUT_PROPERTIES = "inputProperties";
     private static final String SPACE_A = "SpaceA";
     private static final String SPACE_B = "SpaceB";
@@ -93,7 +94,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
         fixer.fixDocuments(
             null,
             List.of(MY_SPACE),
-            new String[] {"http://base.url/", "http://base2.url/"}, null, true, false
+            new String[] {"http://base.url/", "http://base2.url/"}, null, false, true, false
         );
         for (XWikiDocument doc : docs) {
             assertEquals(
@@ -134,7 +135,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
                 new EntityReference(SPACE_B, EntityType.SPACE,
                     new EntityReference(MIGRATED, EntityType.SPACE, WIKI_REFERENCE))
             ),
-            null, null, true, false
+            null, null, false, true, false
         );
 
         for (String testDoc : convertedTestDocs) {
@@ -164,7 +165,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
                 new EntityReference(SPACE_A, EntityType.SPACE,
                     new EntityReference(MIGRATED, EntityType.SPACE, WIKI_REFERENCE))
             ),
-            null, null, true, dryRun
+            null, null, false, true, dryRun
         );
 
         for (String testDoc : convertedTestDocs) {
@@ -189,7 +190,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
                 new EntityReference(SPACE_A, EntityType.SPACE,
                     new EntityReference(MIGRATED, EntityType.SPACE, WIKI_REFERENCE))
             ),
-            null, null, true, true
+            null, null, false, true, true
         );
 
         for (String testDoc : convertedTestDocs) {
@@ -215,7 +216,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
                 new EntityReference(SPACE_A, EntityType.SPACE,
                     new EntityReference(MIGRATED, EntityType.SPACE, WIKI_REFERENCE))
             ),
-            null, null, updateInPlace, false
+            null, null, false, updateInPlace, false
         );
 
         for (String testDoc : convertedTestDocs) {
@@ -230,6 +231,34 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
 
     @Test
     void testBrowseMigrationsConfluenceRefs() throws ComponentLookupException, XWikiException, IOException
+    {
+        ReferenceMissingTestData d = getReferenceMissingTestData(false);
+
+        for (String testDoc : d.docsWithReferenceIssues) {
+            assertEquals(CONVERTED + ' ' + testDoc, getContent(testDoc));
+        }
+
+        for (String testDoc : d.docsWithoutReferenceIssues) {
+            assertEquals(CONTENT + ' ' + testDoc, getContent(testDoc));
+        }
+    }
+
+    @Test
+    void testBrowseMigrationsConfluenceRefsExhaustive() throws ComponentLookupException, XWikiException, IOException
+    {
+        ReferenceMissingTestData d = getReferenceMissingTestData(true);
+
+        for (String testDoc : d.docsWithReferenceIssues) {
+            assertEquals(CONVERTED + ' ' + testDoc, getContent(testDoc));
+        }
+
+        for (String testDoc : d.docsWithoutReferenceIssues) {
+            assertEquals(CONVERTED + ' ' + testDoc, getContent(testDoc));
+        }
+    }
+
+    private ReferenceMissingTestData getReferenceMissingTestData(boolean exhaustive)
+        throws ComponentLookupException, XWikiException, IOException
     {
         List<String> docsWithReferenceIssues = List.of(
             "MySpace.Doc1.WebHome",
@@ -263,6 +292,9 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
                 + "\"xwiki:MySpace.Doc3.WebHome\":["
                 + "   {\"pageId\":6}]}").getBytes(StandardCharsets.UTF_8)
         ), context);
+        migration1Doc.setStringListValue(MIGRATION_CLASS, SPACES, List.of(MY_SPACE_STR));
+        migration1Doc.setStringValue(MIGRATION_CLASS, INPUT_PROPERTIES,
+            "{\"baseURLs\":\"http://base.url/\"}");
 
         wiki.saveDocument(migration1Doc, context);
 
@@ -275,15 +307,21 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
 
         fixer.fixDocuments(
             List.of(migration1Doc.getDocumentReference(), migration2Doc.getDocumentReference()),
-            null, new String[] {"http://b.url/"}, null, true, false
+            null, B_BASE_URL, null, exhaustive, true, false
         );
 
-        for (String testDoc : docsWithReferenceIssues) {
-            assertEquals(CONVERTED + ' ' + testDoc, getContent(testDoc));
-        }
+        return new ReferenceMissingTestData(docsWithReferenceIssues, docsWithoutReferenceIssues
+        );
+    }
 
-        for (String testDoc : docsWithoutReferenceIssues) {
-            assertEquals(CONTENT + ' ' + testDoc, getContent(testDoc));
+    private static class ReferenceMissingTestData
+    {
+        private final List<String> docsWithReferenceIssues;
+        private final List<String> docsWithoutReferenceIssues;
+        private ReferenceMissingTestData(List<String> docsWithReferenceIssues, List<String> docsWithoutReferenceIssues)
+        {
+            this.docsWithReferenceIssues = docsWithReferenceIssues;
+            this.docsWithoutReferenceIssues = docsWithoutReferenceIssues;
         }
     }
 
@@ -322,7 +360,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
 
         fixer.fixDocuments(
             List.of(migrationDoc.getDocumentReference()),
-            null, new String[] {"http://BASE.URL/"}, null, true, false
+            null, new String[] {"http://BASE.URL/"}, null, false, true, false
         );
 
         for (String testDoc : docsWithReferenceIssues) {
@@ -366,7 +404,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
 
         fixer.fixDocuments(
             List.of(migrationDoc.getDocumentReference()),
-            null, null, null, true, false
+            null, null, null, false, true, false
         );
 
         for (String testDoc : docsWithReferenceIssues) {
@@ -413,7 +451,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
 
         fixer.fixDocuments(
             List.of(migrationDoc.getDocumentReference()),
-            null, null, null, true, false
+            null, null, null, false, true, false
         );
 
         for (String testDoc : docsWithReferenceIssues) {
@@ -462,7 +500,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
 
         fixer.fixDocuments(
             List.of(migrationDoc.getDocumentReference()),
-            null, null, null, true, false
+            null, null, null, false, true, false
         );
 
         for (String testDoc : docsWithReferenceIssues) {
@@ -487,7 +525,7 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
         fixer.fixDocuments(
             null,
             List.of(new EntityReference("Diagram", EntityType.SPACE)),
-            null, null, true, false
+            null, null, false, true, false
         );
 
         String actual = new String(

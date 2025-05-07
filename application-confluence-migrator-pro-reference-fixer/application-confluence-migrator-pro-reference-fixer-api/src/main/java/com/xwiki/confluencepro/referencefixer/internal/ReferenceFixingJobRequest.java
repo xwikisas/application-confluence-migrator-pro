@@ -40,6 +40,7 @@ public class ReferenceFixingJobRequest extends AbstractRequest
     private final List<EntityReference> spaceReferences;
     private final String[] baseURLs;
     private final BrokenRefType brokenRefType;
+    private final boolean exhaustive;
     private final boolean updateInPlace;
     private final boolean dryRun;
     private final DocumentReference statusDocumentReference;
@@ -50,17 +51,19 @@ public class ReferenceFixingJobRequest extends AbstractRequest
      * @param spaceReferences fix the documents in these spaces
      * @param baseURLs the base URLs to fix absolute links to the old Confluence instance
      * @param brokenRefType the type of broken references to fix
+     * @param exhaustive whether to ignore information about page containing missing references in migrations
      * @param updateInPlace whether to update the document in place instead of creating a new revision
      * @param dryRun whether to simulate the fixing instead of actually updating the documents
      */
     public ReferenceFixingJobRequest(DocumentReference statusDocumentReference,
         List<EntityReference> migrationReferences, List<EntityReference> spaceReferences, String[] baseURLs,
-        BrokenRefType brokenRefType, boolean updateInPlace, boolean dryRun)
+        BrokenRefType brokenRefType, boolean exhaustive, boolean updateInPlace, boolean dryRun)
     {
         this.migrationReferences = migrationReferences;
         this.spaceReferences = spaceReferences;
         this.baseURLs = baseURLs;
         this.brokenRefType = brokenRefType;
+        this.exhaustive = exhaustive;
         this.updateInPlace = updateInPlace;
         this.dryRun = dryRun;
         this.statusDocumentReference = statusDocumentReference;
@@ -81,6 +84,11 @@ public class ReferenceFixingJobRequest extends AbstractRequest
             jobId.add(er.getName());
         }
         return jobId;
+    }
+
+    boolean isExhaustive()
+    {
+        return exhaustive;
     }
 
     BrokenRefType getBrokenRefType()

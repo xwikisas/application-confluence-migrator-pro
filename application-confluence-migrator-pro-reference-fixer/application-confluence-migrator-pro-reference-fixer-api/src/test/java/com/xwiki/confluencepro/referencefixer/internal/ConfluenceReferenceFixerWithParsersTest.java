@@ -83,7 +83,7 @@ class ConfluenceReferenceFixerWithParsersTest extends ConfluenceReferenceFixerTe
 
         fixer.fixDocuments(
             List.of(migrationDoc.getDocumentReference()),
-            null, null, BrokenRefType.BROKEN_LINKS, true, false
+            null, null, BrokenRefType.BROKEN_LINKS, false, true, false
         );
 
         for (String testDoc : docsWithReferenceIssues) {

@@ -176,13 +176,14 @@ public class ConfluenceReferenceFixer
      * @param migrationReferences the migration documents
      * @param spaceReferences the spaces in which to fix the references
      * @param brokenRefType the type of the broken references
+     * @param exhaustive whether to ignore information about page containing missing references in migrations
      * @param updateInPlace whether to update migrated documents with the fixed references in place instead of
      *                      creating a new revision.
      * @param dryRun true to simulate only (the fixed documents will not be saved)
      * @return the statistics of the reference fixing sessions
      */
     public Stats fixDocuments(List<EntityReference> migrationReferences, List<EntityReference> spaceReferences,
-        String[] baseURLs, BrokenRefType brokenRefType, boolean updateInPlace, boolean dryRun)
+        String[] baseURLs, BrokenRefType brokenRefType, boolean exhaustive, boolean updateInPlace, boolean dryRun)
     {
         logConfluenceReferenceParserPresence();
         BrokenRefType b = brokenRefType == null ? BrokenRefType.UNKNOWN : brokenRefType;
@@ -193,12 +194,12 @@ public class ConfluenceReferenceFixer
             migrationReferences,
             spaceReferences,
             migratedDoc -> fixDocument(s, migratedDoc, baseURLsNotNull, updateInPlace, b, dryRun),
-            migrationDoc -> fixDocumentsOfMigration(s, migrationDoc, baseURLs, updateInPlace, dryRun)
+            migrationDoc -> fixDocumentsOfMigration(s, migrationDoc, baseURLs, exhaustive, updateInPlace, dryRun)
         );
         return s;
     }
 
-    private void fixDocumentsOfMigration(Stats s, XWikiDocument migrationDoc, String[] baseURLs,
+    private void fixDocumentsOfMigration(Stats s, XWikiDocument migrationDoc, String[] baseURLs, boolean exhaustive,
         boolean updateInPlace, boolean dryRun)
     {
         String[] actualBaseURLs;
@@ -208,14 +209,20 @@ public class ConfluenceReferenceFixer
             actualBaseURLs = baseURLs;
         }
 
-        boolean foundShortcut = fixDocumentsListedInRefWarnings(s, migrationDoc, actualBaseURLs, updateInPlace, dryRun);
+        boolean foundShortcut = false;
 
-        if (!foundShortcut) {
-            foundShortcut = fixDocumentsListedInBrokenLinks(s, migrationDoc, actualBaseURLs, updateInPlace, dryRun);
+        if (!exhaustive) {
+            foundShortcut = fixDocumentsListedInRefWarnings(s, migrationDoc, actualBaseURLs, updateInPlace, dryRun);
+
+            if (!foundShortcut) {
+                foundShortcut = fixDocumentsListedInBrokenLinks(s, migrationDoc, actualBaseURLs, updateInPlace, dryRun);
+            }
         }
 
         if (!foundShortcut) {
-            logger.warn("Failed to find a strategy to find only affected documents, will browse all the documents");
+            if (!exhaustive) {
+                logger.warn("Failed to find a strategy to find only affected documents, will browse all the documents");
+            }
             migrationFixingTools.fixDocumentsOfMigration(migrationDoc,
                 migratedDoc -> fixDocument(s, migratedDoc, actualBaseURLs, updateInPlace, BrokenRefType.UNKNOWN,
                     dryRun));
