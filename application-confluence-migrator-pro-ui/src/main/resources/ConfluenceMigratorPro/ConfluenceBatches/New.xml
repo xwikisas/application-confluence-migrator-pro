@@ -126,23 +126,26 @@
     &lt;input id="export-filterer" type="text" aria-label="Filter"  placeholder="$escapetool.xml($services.localization.render('confluencemigratorpro.batches.createForm.filterPlaceholder'))" /&gt;
     &lt;br/&gt;
   &lt;/div&gt;
-  &lt;div style="max-height: 400px; overflow: scroll; "&gt;
-    &lt;hr&gt;
-    &lt;ul id="confluence-exports"&gt;
-      #set ($escapedBatchPath = $escapetool.xml($batchPath))
-      #foreach ($fileEntry in $files)
-      #set ($escapedFilename = $escapetool.xml($fileEntry.name))
-      &lt;li&gt;
-        &lt;label&gt;
-          &lt;input class="confluence-export-checkbox cmpInputAccentBlue" type="checkbox" name="source"
-            value="$escapedBatchPath$fileSeparator$escapedFilename" /&gt;
-          $escapedFilename
-        &lt;/label&gt;
-      &lt;/li&gt;
-      #end
-    &lt;/ul&gt;
-    &lt;hr&gt;
-  &lt;/div&gt;
+  &lt;fieldset&gt;
+    &lt;legend class="sr-only"&gt;$services.localization.render("cfm.sr-only.newBatch.packages")&lt;/legend&gt;
+    &lt;div style="max-height: 400px; overflow: scroll;"&gt;
+      &lt;hr&gt;
+      &lt;ul id="confluence-exports"&gt;
+        #set ($escapedBatchPath = $escapetool.xml($batchPath))
+        #foreach ($fileEntry in $files)
+        #set ($escapedFilename = $escapetool.xml($fileEntry.name))
+        &lt;li&gt;
+          &lt;label&gt;
+            &lt;input class="confluence-export-checkbox cmpInputAccentBlue" type="checkbox" name="source"
+              value="$escapedBatchPath$fileSeparator$escapedFilename" /&gt;
+            $escapedFilename
+          &lt;/label&gt;
+        &lt;/li&gt;
+        #end
+      &lt;/ul&gt;
+      &lt;hr&gt;
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
   &lt;a class="collapsed uploadSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateUploadCollapse"
       aria-expanded="false" aria-controls="cfmHowToMigrateUploadCollapse"&gt;
     $services.icon.renderHTML('caret-down') $escapetool.xml($services.localization.render('confluencepro.job.question.advanced.link'))
