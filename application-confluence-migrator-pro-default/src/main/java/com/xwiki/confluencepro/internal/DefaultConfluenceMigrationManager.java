@@ -68,6 +68,8 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
 import com.xwiki.confluencepro.ConfluenceMigrationManager;
+import com.xwiki.confluencepro.MigrationExtraDetails;
+
 import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
 
@@ -148,7 +150,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     @Inject
     private EntityReferenceResolver<String> referenceResolver;
-
+    @Inject
+    private MigrationExtraDetails migrationExtraDetails;
     @Override
     public void updateAndSaveMigration(ConfluenceMigrationJobStatus jobStatus)
     {
@@ -162,6 +165,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             object = document.getXObject(MIGRATION_OBJECT);
             object.set(EXECUTED, jobStatus.isCanceled() ? 3 : 1, context);
             object.setStringListValue("spaces", new ArrayList<>(jobStatus.getSpaces()));
+            completeExtraDetails(object, context);
             String root = updateMigrationPropertiesAndGetRoot(object);
             Map<String, Map<String, Integer>> macroPages = analyseLogs(jobStatus, object, document, root);
             if (!isTrue(jobStatus.getRequest().getOutputProperties().getOrDefault(ONLY_LINK_MAPPING, "0").toString())) {
@@ -193,6 +197,12 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                 }
             }
         }
+    }
+
+    private void completeExtraDetails(BaseObject object, XWikiContext context) throws JsonProcessingException
+    {
+        object.set("extensions", migrationExtraDetails.identifyDependencyVersions(), context);
+        object.set("licenseType", migrationExtraDetails.identifyLicenseType(), context);
     }
 
     private String updateMigrationPropertiesAndGetRoot(BaseObject object)

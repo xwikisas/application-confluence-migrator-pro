@@ -1,3 +1,4 @@
 com.xwiki.confluencepro.internal.MigrationFixingTools
 com.xwiki.confluencepro.script.ConfluenceMigrationScriptService
 com.xwiki.confluencepro.script.BatchesScriptServices
+com.xwiki.confluencepro.MigrationExtraDetails

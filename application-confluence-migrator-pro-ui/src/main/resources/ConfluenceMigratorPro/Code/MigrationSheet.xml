@@ -259,6 +259,14 @@
   #else
     #displayMigrationInfo
   #end
+  ----
+  {{info}}
+    ===$services.localization.render('cmp.extraDetails.title')==
+      * $services.localization.render('cmp.extraDetails.licenseType'): $obj.getValue('licenseType')
+      * $services.localization.render('cmp.extraDetails.extensionsVersions'):
+       $obj.get('extensions').replace(",", "&lt;br/&gt;")
+  {{/info}}
+
   #displayFullLogSection
 #end
 
@@ -931,6 +939,8 @@
     #set ($status = $obj.getValue('executed'))
   #end
   $os.print("Status: $status$escapetool.N")
+  $os.println("LicenseType $obj.getValue('licenseType')")
+  $os.println("Extensions $obj.getValue('extensions')")
 
   #if ($obj.getValue('imported'))
     $os.print("Number of imported pages: $obj.getValue('imported')$escapetool.N")
