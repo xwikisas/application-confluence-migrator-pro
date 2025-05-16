@@ -35,7 +35,8 @@
     <xwiki.extension.licensing.publicDocuments>
       ConfluenceMigratorPro.WebHome,
       ConfluenceMigratorPro.Migrations.WebHome,
-      ConfluenceMigratorPro.Code.CommonCode
+      ConfluenceMigratorPro.Code.CommonCode,
+      ConfluenceMigratorPro.Code.Configuration
     </xwiki.extension.licensing.publicDocuments>
     <xwiki.extension.name>Confluence Migrator Application (Pro)</xwiki.extension.name>
   </properties>

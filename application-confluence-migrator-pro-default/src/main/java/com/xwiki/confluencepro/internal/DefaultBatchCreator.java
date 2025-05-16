@@ -45,6 +45,7 @@ import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.api.Document;
 import com.xpn.xwiki.api.Object;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xwiki.confluencepro.MigrationExtraDetails;
 
 /**
  * Default implementation of the {@BatchCreator}.
@@ -72,6 +73,8 @@ public class DefaultBatchCreator extends AbstractBatchCreator
 
     private static final String WOULD_CREATE = "Would create ";
 
+    @Inject
+    private MigrationExtraDetails migrationExtraDetails;
     @Inject
     @Named("compactwiki")
     private EntityReferenceSerializer<String> serializer;
@@ -103,7 +106,8 @@ public class DefaultBatchCreator extends AbstractBatchCreator
      * Processes the sources and creates the migration pages.
      */
     private void processSources(String batchName, List<String> sources, ObjectNode ownInputProperties,
-        ObjectNode ownOutputProperties, List<String> messageList, List<Document> migrationDocs) throws XWikiException
+        ObjectNode ownOutputProperties, List<String> messageList, List<Document> migrationDocs)
+        throws XWikiException, JsonProcessingException
     {
         XWikiContext context = contextProvider.get();
 
@@ -114,7 +118,8 @@ public class DefaultBatchCreator extends AbstractBatchCreator
                 Document migrationDoc =
                     getMigrationDocument(buildMigrationBaseName(batchName, migrationBaseName), SPACE);
                 Object migrationObject = migrationDoc.getObject("ConfluenceMigratorPro.Code.MigrationClass", true);
-
+                migrationObject.set("extensions", migrationExtraDetails.identifyDependencyVersions());
+                migrationObject.set("licenseType", migrationExtraDetails.identifyLicenseType());
                 ownInputProperties.put("source", ensureFilePrefix(source));
                 migrationObject.set("inputProperties", ownInputProperties.toString());
                 migrationObject.set("outputProperties", ownOutputProperties.toString());

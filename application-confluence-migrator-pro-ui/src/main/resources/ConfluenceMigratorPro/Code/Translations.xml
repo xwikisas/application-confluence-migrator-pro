@@ -201,7 +201,18 @@ confluencemigratorpro.homepage.tab.postMigrationFixes.title=Post migration fixes
 confluencepro.howToMigrate.upload.title=Upload a Confluence export (or use an already uploaded one)
 confluencepro.howToMigrate.server.title=Select from your server a Confluence export
 confluencepro.uploadFacadeButton=Upload export
-confluencepro.lastMigration=Last migration</content>
+confluencepro.lastMigration=Last migration
+
+##Confluence Pro extra details.
+cmp.extraDetails.extensionsVersions=Extensions Versions
+cmp.extraDetails.licenseType=License Type
+cmp.extraDetails.title=Extra Details
+
+##Confluence Pro configs
+ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=Extension IDs
+ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs.hint=List of extension ids separated by a comma.
+admin.cmp.section.title=Confluence Migrator Pro
+</content>
   <object>
     <name>ConfluenceMigratorPro.Code.Translations</name>
     <number>0</number>
