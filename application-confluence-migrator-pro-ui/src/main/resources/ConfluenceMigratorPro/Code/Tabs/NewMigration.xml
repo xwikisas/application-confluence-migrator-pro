@@ -97,6 +97,33 @@
 &lt;/div&gt;
 {{/html}}
 #end
+##
+#macro (deleteConfluenceAttachmentModal)
+  ## Copied from the attachments tab code. The original macro cannot be used, since it will interfere with some js
+  ## specific to attachments tab. Precisely, if the attachments tab is already opened, everything is working correctly.
+  ## If it is not opened, we need to load the attachments.js code anyway, to use it's listeners, but there are parts
+  ## that rightfully assume that some elements are present on the page and errors will occur.
+  &lt;div id="confluenceMigratorDeleteAttachment" class="modal fade deleteConfluenceAttachment" tabindex="-1" role="dialog"&gt;
+    &lt;div class="modal-dialog"&gt;
+      &lt;div class="modal-content"&gt;
+        &lt;div class="modal-header"&gt;
+          &lt;button type="button" class="close" data-dismiss="modal"&gt;&amp;times;&lt;/button&gt;
+          &lt;div class="modal-title"&gt;$services.localization.render('core.viewers.attachments.delete')&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="modal-body"&gt;
+          &lt;div&gt;$services.localization.render('core.viewers.attachments.delete.confirm')&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="modal-footer"&gt;
+          &lt;input type="button" class="btn btn-danger"  data-dismiss="modal"
+            value="$escapetool.xml($services.localization.render('core.viewers.attachments.delete'))"&gt;
+          &lt;input type="button" class="btn btn-default" data-dismiss="modal"
+            value="$escapetool.xml($services.localization.render('cancel'))"&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+#end
+##
 #macro (howToMigrateUploadSubsection)
 &lt;div class="howToMigrateSubsection"&gt;
   &lt;a class="collapsed uploadSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateUploadCollapse"
@@ -108,9 +135,38 @@
       &lt;button id="facade-upload-button" class="btn btn-primary"&gt;$services.icon.renderHTML('add') $escapetool.xml($services.localization.render('confluencepro.uploadFacadeButton'))&lt;/button&gt;
       &lt;div id='facade-upload-progress'&gt;&lt;/div&gt;
     &lt;/div&gt;
-
     #set ($storeDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.PackagesStore'))
-    #showAttachmentsLiveData($storeDoc 'confluencePackages')
+    #set ($liveDataConfig = {
+      'meta': {
+        'propertyDescriptors': [
+          { 'id': 'mimeType', 'displayer': 'html'},
+          { 'id': 'filename', 'displayer': 'html' },
+          { 'id': 'filesize', 'displayer': 'html' },
+          { 'id': 'date', 'filter': 'date'},
+          { 'id': 'author', 'displayer': 'html' },
+          { 'id': 'actions', 'displayer': 'html' }
+        ],
+        'entryDescriptor': {
+          'idProperty': 'id'
+        }
+      }
+    })
+    #set ($sourceParams = {
+      'translationPrefix': 'core.viewers.attachments.livetable.',
+      'className': 'XWiki.AllAttachments',
+      "\$doc": "$storeDoc"
+    })
+    #set ($discard = $sourceParams.put('template', 'xpart.vm'))
+    #set ($discard = $sourceParams.put('vm', 'attachmentsjson.vm'))
+
+    {{liveData
+      id="confluencePackages"
+      properties="mimeType,filename,filesize,date,author,actions"
+      source='liveTable'
+      sourceParameters="$escapetool.url($sourceParams)"
+      sort="filename:desc"
+      limit=5
+    }}$jsontool.serialize($liveDataConfig){{/liveData}}
 
     #if ($hasEdit || $hasAdmin)
       ## Hide the form because it comes from the platform, and we cannot customize its appearance. We are using a 'facade' button to trigger the upload via JS.
@@ -128,6 +184,7 @@
       &lt;/fieldset&gt;
       &lt;/div&gt;
       &lt;/form&gt;
+      #deleteConfluenceAttachmentModal()
     #end
 
     {{html}}
@@ -214,9 +271,8 @@
     sort='creationDate:desc'
   	limit="10"}}$jsontool.serialize($liveDataConfig){{/liveData}}
 
-    &lt;/div&gt;
+  &lt;/div&gt;
 &lt;/div&gt;
-
 #end
 
 #macro (howToMigrate)
@@ -246,19 +302,20 @@
   #set ($label = $services.localization.render('confluencepro.extension.missingLicense.label', 'xwiki/2.1'))
   #set ($translation = $services.localization.render('confluencepro.extension.missingLicense', 'xwiki/2.1', ['ADMIN_URL']))
   #set ($licensePageLink = "[[${label}&gt;&gt;path:${licenseHomeURL}]]")
+
   {{warning}}$translation.replace('ADMIN_URL', $licensePageLink){{/warning}}
+
 #end
 ## JS/CSS needed for the new section to work.
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.Tabs.NewMigration'))
-## Prerequisites Section ##
+#set ($discard = $xwiki.ssfx.use('js/xwiki/viewers/attachments.css', true))
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
 #set ($discard = $xwiki.ssfx.use('uicomponents/widgets/upload.css', true))
 #set ($discard = $xwiki.jsfx.use('uicomponents/widgets/upload.js', {
   'forceSkinAction': true,
   'language': $xcontext.locale
 }))
-## Reuse Attachments tab delete action events for the uploaded packages livedata.
-$xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'language': ${xcontext.locale}})
+
 #prerequisitesSection()
 
 #howToMigrate()
@@ -358,7 +415,15 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery'], function($){
+      <code>define('xwiki-confluence-attachments-messages', {
+  prefix: 'core.viewers.attachments.delete.',
+  keys: [
+    'inProgress',
+    'done',
+    'error'
+  ]
+});
+require(['jquery', 'xwiki-l10n!xwiki-confluence-attachments-messages'], function($, l10n){
   $('#facade-upload-button').on('click', function(){
     $('#confluenceUploadFile').click();
   })
@@ -389,6 +454,69 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
   $('.howToMigrateSubsection &gt; a').each(function() {
     console.info('Observer registred');
     observer.observe(this, { attributes: true });
+  });
+
+  var enhanceUploadInputs = function(liveDataElems) {
+    console.log(liveDataElems.find('input[type=file]'))
+    $.each(liveDataElems.find('input[type=file]'), function() {
+      console.log('enchanced')
+      // Since the attachments liveData is refreshed on file upload, there is no need for a response container.
+      new XWiki.FileUploader(this, {
+        'progressAutohide': true,
+        'responseContainer' : document.createElement('div'),
+        'maxFilesize' : parseInt(this.readAttribute('data-max-file-size'))
+      });
+    })
+  };
+
+  $(function() {
+    enhanceUploadInputs($('#addConfluencePackage'));
+  })
+
+  $(document).on('xwiki:html5upload:done', function(e) {
+    if ($(e.target).prop('id').startsWith('confluenceUploadFile')) {
+      // Select the livedata above the upload form.
+      const uploadForm = $(e.target).closest('form');
+      let associatedLivedata = uploadForm.prevAll('.liveData').first();
+      associatedLivedata.data('liveData').updateEntries();
+    }
+  });
+
+
+    /**
+   * Open the delete confirmation modal on liveData attachment delete button.
+   */
+  $(document).on('click', '#confluencePackages .attachmentActions .actiondelete', function(e) {
+    e.preventDefault();
+    let liveData = $(e.currentTarget).closest('.liveData');
+    var modal = $('#confluenceMigratorDeleteAttachment');
+    modal.data('relatedTarget', e.currentTarget);
+    modal.modal('show');
+  });
+
+  /**
+   * On delete confirmation, delete attachment and refresh liveData.
+   */
+  $(document).on('click', '#confluenceMigratorDeleteAttachment input.btn-danger', function(e) {
+    e.preventDefault();
+    var modal = $('#confluenceMigratorDeleteAttachment');
+    var button = $(modal.data('relatedTarget'));
+    let liveData = button.closest('.liveData');
+    var notification;
+
+    $.ajax({
+      url : button.prop('href'),
+      beforeSend : function() {
+        notification = new XWiki.widgets.Notification(l10n['inProgress'], 'inprogress');
+      },
+      success : function() {
+        liveData.data('liveData').updateEntries();
+        notification.replace(new XWiki.widgets.Notification(l10n['done'], 'done'));
+      },
+      error: function() {
+        notification.replace(new XWiki.widgets.Notification(l10n['failed'], 'error'));
+      }
+    });
   });
 });</code>
     </property>
