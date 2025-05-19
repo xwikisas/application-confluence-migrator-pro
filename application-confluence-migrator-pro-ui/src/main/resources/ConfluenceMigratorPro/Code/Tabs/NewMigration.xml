@@ -72,6 +72,7 @@
 #set ($prerequisitesComplete = 'completed')
 #set ($prerequisites = [])
 #addPrerequisiteToList($prerequisites, $services.confluenceMigration.checkMemory(), 'memory', 'https://www.xwiki.org/xwiki/bin/view/Documentation/AdminGuide/Performances/#HMemory', [$services.confluenceMigration.xmx, $services.confluenceMigration.xms, $mathtool.div($services.confluenceMigration.memory, 2), $services.confluenceMigration.memory])
+
 {{html}}
 &lt;a role="button" data-toggle="collapse" href="#cfmPrerequisitesCollapse" aria-expanded="false" aria-controls="cfmPrerequisitesCollapse"&gt;
 #displaySubtitle('caret-down', 'confluencepro.prerequisites.title', $prerequisitesComplete, {})
@@ -137,7 +138,6 @@
   &lt;/div&gt;
 &lt;/div&gt;
 #end
-
 #macro (howToMigrateServerSection)
 &lt;div class="howToMigrateSubsection"&gt;
   &lt;a class="collapsed serverSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateServerCollapse"
@@ -167,7 +167,6 @@
     &lt;/div&gt;
 &lt;/div&gt;
 #end
-
 #macro (howToMigrateBatches)
 &lt;div class="howToMigrateSubsection"&gt;
   &lt;a class="collapsed batchSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateBatchesCollapse"
@@ -190,7 +189,6 @@
     'resultPage': 'ConfluenceMigratorPro.ConfluenceBatches.Code.BatchesLiveDataSource',
     'translationPrefix': 'confluencemigratorpro.batches.header.'
   }))
-
   #set ($liveDataConfig= {
     'meta': {
       'propertyDescriptors': [
@@ -216,9 +214,7 @@
 
     &lt;/div&gt;
 &lt;/div&gt;
-
 #end
-
 #macro (howToMigrate)
 {{html wiki="true"}}
   #displaySubtitle('cube', 'confluencepro.packages.title', '', {})
@@ -227,27 +223,10 @@
   #howToMigrateBatches()
 {{/html}}
 #end
-
 #set ($mainReference = $services.model.createDocumentReference('', ['ConfluenceMigratorPro', 'Code'], 'MigrationClass'))
 #if (!$services.licensing.licensor.hasLicensureForEntity($mainReference))
   {{missingLicenseMessage extensionName="confluencepro.extension.name"/}}
 #else
-#set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
-#if ($license.type == 'TRIAL')
-  #if ($xwiki.exists($services.model.createDocumentReference($xcontext.mainWikiName, 'XWiki', 'ConfigurableClass')))
-  #set ($licenseHomeURL = $xwiki.getURL(
-    $services.model.createDocumentReference($xcontext.mainWikiName, 'XWiki', 'XWikiPreferences'),
-    'admin', 'editor=globaladmin&amp;section=Licenses'))
-  #else
-    ## Fall-back in case the Administration Application is not installed.
-    #set ($licenseHomeURL =
-      $xwiki.getURL($services.model.createDocumentReference($xcontext.mainWikiName, 'Licenses', 'WebHome')))
-  #end
-  #set ($label = $services.localization.render('confluencepro.extension.missingLicense.label', 'xwiki/2.1'))
-  #set ($translation = $services.localization.render('confluencepro.extension.missingLicense', 'xwiki/2.1', ['ADMIN_URL']))
-  #set ($licensePageLink = "[[${label}&gt;&gt;path:${licenseHomeURL}]]")
-  {{warning}}$translation.replace('ADMIN_URL', $licensePageLink){{/warning}}
-#end
 ## JS/CSS needed for the new section to work.
 #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.Tabs.NewMigration'))
 ## Prerequisites Section ##
@@ -259,6 +238,7 @@
 }))
 ## Reuse Attachments tab delete action events for the uploaded packages livedata.
 $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'language': ${xcontext.locale}})
+
 #prerequisitesSection()
 
 #howToMigrate()
