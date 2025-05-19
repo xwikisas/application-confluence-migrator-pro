@@ -47,18 +47,22 @@
     <nameField/>
     <validationScript/>
     <extensionIDs>
+      <contenttype>PureText</contenttype>
       <customDisplay/>
       <disabled>0</disabled>
+      <editor>PureText</editor>
       <hint/>
       <name>extensionIDs</name>
       <number>1</number>
       <picker>1</picker>
       <prettyName>extensionIDs</prettyName>
-      <size>30</size>
+      <restricted>0</restricted>
+      <rows>5</rows>
+      <size>40</size>
       <unmodifiable>0</unmodifiable>
       <validationMessage/>
       <validationRegExp/>
-      <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </extensionIDs>
   </class>
 </xwikidoc>

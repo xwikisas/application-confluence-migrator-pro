@@ -11,5 +11,3 @@ com.xwiki.confluencepro.internal.DiagramConverter
 com.xwiki.confluencepro.internal.DocumentFilterOverrideListener
 com.xwiki.confluencepro.internal.LinkMappingConverter
 com.xwiki.confluencepro.script.ConfluenceDiagramConverterScriptService
-com.xwiki.confluencepro.internal.configuration.ConfluenceMigratorConfigurationSource
-com.xwiki.confluencepro.internal.configuration.DefaultConfluenceMigratorProConfiguration

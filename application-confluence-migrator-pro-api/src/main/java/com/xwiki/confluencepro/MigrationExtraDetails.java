@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -37,7 +36,7 @@ import org.xwiki.stability.Unstable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xpn.xwiki.XWikiContext;
-import com.xwiki.confluencepro.internal.configuration.ConfluenceMigratorProConfiguration;
+import com.xwiki.confluencepro.internal.configuration.DefaultConfluenceMigratorProConfiguration;
 import com.xwiki.licensing.Licensor;
 
 /**
@@ -54,8 +53,7 @@ public class MigrationExtraDetails
     private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
     @Inject
-    @Named("testt")
-    private ConfluenceMigratorProConfiguration migratorProConfiguration;
+    private DefaultConfluenceMigratorProConfiguration migratorProConfiguration;
 
     @Inject
     private InstalledExtensionRepository installedExtensionRepository;

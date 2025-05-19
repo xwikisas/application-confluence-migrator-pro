@@ -61,18 +61,22 @@
       <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
     </executed>
     <extensions>
+      <contenttype>PureText</contenttype>
       <customDisplay/>
       <disabled>0</disabled>
+      <editor>PureText</editor>
       <hint/>
       <name>extensions</name>
       <number>10</number>
       <picker>1</picker>
       <prettyName>extensions</prettyName>
-      <size>30</size>
+      <restricted>0</restricted>
+      <rows>5</rows>
+      <size>40</size>
       <unmodifiable>0</unmodifiable>
       <validationMessage/>
       <validationRegExp/>
-      <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </extensions>
     <imported>
       <customDisplay/>

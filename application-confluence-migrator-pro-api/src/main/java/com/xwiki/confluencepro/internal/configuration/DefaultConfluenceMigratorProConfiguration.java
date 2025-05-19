@@ -30,22 +30,24 @@ import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.stability.Unstable;
 
 /**
- * Default implementation of {@link ConfluenceMigratorProConfiguration}.
+ * Configuration of the confluence migrator pro.
  *
  * @version $Id$
  * @since 1.34.5
  */
-@Component
+@Component(roles = DefaultConfluenceMigratorProConfiguration.class)
 @Singleton
-@Named("testt")
 @Unstable
-public class DefaultConfluenceMigratorProConfiguration implements ConfluenceMigratorProConfiguration
+public class DefaultConfluenceMigratorProConfiguration
 {
+
     @Inject
     @Named(ConfluenceMigratorConfigurationSource.HINT)
     private ConfigurationSource configDocument;
 
-    @Override
+    /**
+     * @return list of extension IDs.
+     */
     public List<String> getExtensionIDs()
     {
         String value = this.configDocument.getProperty("extensionIDs");

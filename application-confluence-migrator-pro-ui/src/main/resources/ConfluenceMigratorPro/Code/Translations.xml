@@ -204,7 +204,7 @@ confluencepro.uploadFacadeButton=Upload export
 confluencepro.lastMigration=Last migration
 
 ##Confluence Pro extra details.
-cmp.extraDetails.extensionsVersions=Extensions Versions
+cmp.extraDetails.extensionVersions=Extension Versions
 cmp.extraDetails.licenseType=License Type
 cmp.extraDetails.title=Extra Details
 
