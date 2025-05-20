@@ -141,6 +141,12 @@ public class ConfluenceReferenceFixer
 
     private static final String SLASH = "/";
 
+    private static final String BROKEN_LINKS_PAGES_JSON = "brokenLinksPages.json";
+
+    private static final String CONFLUENCE_REF_WARNINGS_JSON = "confluenceRefWarnings.json";
+
+    private static final String BROKEN_LINKS_PAGES = "brokenLinksPages";
+
     @Inject
     private Provider<XWikiContext> contextProvider;
 
@@ -223,17 +229,32 @@ public class ConfluenceReferenceFixer
             if (!exhaustive) {
                 logger.warn("Failed to find a strategy to find only affected documents, will browse all the documents");
             }
+            BrokenRefType b = getBrokenRefType(migrationDoc);
             migrationFixingTools.fixDocumentsOfMigration(migrationDoc,
-                migratedDoc -> fixDocument(s, migratedDoc, actualBaseURLs, updateInPlace, BrokenRefType.UNKNOWN,
-                    dryRun));
+                migratedDoc -> fixDocument(s, migratedDoc, actualBaseURLs, updateInPlace, b, dryRun));
         }
+    }
+
+    private static BrokenRefType getBrokenRefType(XWikiDocument migrationDoc)
+    {
+        if (migrationDoc.getAttachment(CONFLUENCE_REF_WARNINGS_JSON) != null) {
+            return BrokenRefType.CONFLUENCE_REFS;
+        }
+
+        if (migrationDoc.getAttachment(BROKEN_LINKS_PAGES_JSON) != null
+            || StringUtils.isNotEmpty(migrationDoc.getStringValue(BROKEN_LINKS_PAGES))
+        ) {
+            return BrokenRefType.BROKEN_LINKS;
+        }
+
+        return BrokenRefType.UNKNOWN;
     }
 
     private boolean fixDocumentsListedInRefWarnings(Stats s, XWikiDocument migrationDoc, String[] baseURLs,
         boolean updateInPlace, boolean dryRun)
     {
         XWikiContext context = contextProvider.get();
-        XWikiAttachment refWarningsAttachment = migrationDoc.getAttachment("confluenceRefWarnings.json");
+        XWikiAttachment refWarningsAttachment = migrationDoc.getAttachment(CONFLUENCE_REF_WARNINGS_JSON);
         if (refWarningsAttachment == null) {
             return false;
         }
@@ -267,11 +288,11 @@ public class ConfluenceReferenceFixer
         XWikiContext context = contextProvider.get();
         // Older migrations had a brokenLinksPages.json object listing affected pages
         Map<String, Object> brokenLinksPages;
-        XWikiAttachment brokenLinksPageAttachment = migrationDoc.getAttachment("brokenLinksPages.json");
+        XWikiAttachment brokenLinksPageAttachment = migrationDoc.getAttachment(BROKEN_LINKS_PAGES_JSON);
         try {
             if (brokenLinksPageAttachment == null) {
                 // Even older migrations stored them in a brokenLinksPages field
-                String brokenLinksPageJSON = migrationDoc.getStringValue("brokenLinksPages");
+                String brokenLinksPageJSON = migrationDoc.getStringValue(BROKEN_LINKS_PAGES);
                 if (StringUtils.isEmpty(brokenLinksPageJSON)) {
                     return false;
                 }
