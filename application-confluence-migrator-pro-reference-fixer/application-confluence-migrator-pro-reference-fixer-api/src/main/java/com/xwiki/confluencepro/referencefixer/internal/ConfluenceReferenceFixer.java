@@ -820,6 +820,13 @@ public class ConfluenceReferenceFixer
 
         ResourceType type = reference.getType();
 
+        if (type.equals(ResourceType.ATTACHMENT)
+            || type.equals(ResourceType.MAILTO)
+            || type.equals(ResourceType.DATA)
+        ) {
+            return null;
+        }
+
         if (type.equals(ResourceType.URL)) {
             return maybeConvertURLAsResourceRef(s, reference.getReference(), migratedDocRef, baseURLs, false);
         }
