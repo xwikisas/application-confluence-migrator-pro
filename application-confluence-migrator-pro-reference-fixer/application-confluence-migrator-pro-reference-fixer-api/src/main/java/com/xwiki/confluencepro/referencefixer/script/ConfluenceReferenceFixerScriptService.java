@@ -80,9 +80,9 @@ public class ConfluenceReferenceFixerScriptService implements ScriptService
         List<EntityReference> spaceReferences = getSpaces(statusDocument);
         BrokenRefType brokenRefType = getBrokenRefType(statusDocument);
         String[] baseURLs = getBaseURLs(statusDocument);
-        boolean exhaustive = ((Integer) statusDocument.getValue("exhaustive")) == 1;
-        boolean updateInPlace = ((Integer) statusDocument.getValue("updateInPlace")) == 1;
-        boolean dryRun = ((Integer) statusDocument.getValue("dryRun")) == 1;
+        boolean exhaustive = isTrue(statusDocument, "exhaustive");
+        boolean updateInPlace = isTrue(statusDocument, "updateInPlace");
+        boolean dryRun = isTrue(statusDocument, "dryRun");
 
         ReferenceFixingJobRequest jobRequest = new ReferenceFixingJobRequest(statusDocument.getDocumentReference(),
             migrationReferences, spaceReferences, baseURLs, brokenRefType, exhaustive, updateInPlace, dryRun);
@@ -93,6 +93,15 @@ public class ConfluenceReferenceFixerScriptService implements ScriptService
             logger.error("Failed to execute the migration job for [{}].", statusDocument, e);
         }
         return null;
+    }
+
+    private static boolean isTrue(Document statusDocument, String fieldName)
+    {
+        Object value = statusDocument.getValue(fieldName);
+        if (value == null) {
+            return false;
+        }
+        return value.equals(1);
     }
 
     private static String[] getBaseURLs(Document statusDocument)
