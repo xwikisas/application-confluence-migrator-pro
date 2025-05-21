@@ -271,7 +271,7 @@
     sort='creationDate:desc'
   	limit="10"}}$jsontool.serialize($liveDataConfig){{/liveData}}
 
-  &lt;/div&gt;
+    &lt;/div&gt;
 &lt;/div&gt;
 #end
 
