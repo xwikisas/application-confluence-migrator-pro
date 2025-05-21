@@ -77,7 +77,9 @@ public class MigrationExtraDetails
         for (String extensionID : migratorProConfiguration.getExtensionIDs()) {
             InstalledExtension extension =
                 installedExtensionRepository.getInstalledExtension(extensionID, "wiki:" + wikiName);
-            versions.put(extensionID, String.valueOf(extension.getId().getVersion()));
+            if (extension != null) {
+                versions.put(extensionID, String.valueOf(extension.getId().getVersion()));
+            }
         }
         return JSON_MAPPER.writeValueAsString(versions);
     }
