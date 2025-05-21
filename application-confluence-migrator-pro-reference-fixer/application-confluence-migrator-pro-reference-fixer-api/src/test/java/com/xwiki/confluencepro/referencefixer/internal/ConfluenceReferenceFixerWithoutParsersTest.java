@@ -19,6 +19,8 @@
  */
 package com.xwiki.confluencepro.referencefixer.internal;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
@@ -52,6 +54,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Vector;
 
@@ -91,17 +94,25 @@ class ConfluenceReferenceFixerWithoutParsersTest extends ConfluenceReferenceFixe
             addDoc(fullName, content, false);
         }
 
-        fixer.fixDocuments(
+        Stats stats = fixer.fixDocuments(
             null,
             List.of(MY_SPACE),
             new String[] {"http://base.url/", "http://base2.url/"}, null, false, true, false
         );
+
         for (XWikiDocument doc : docs) {
             assertEquals(
                 getExpected(doc.getDocumentReference()).trim(),
                 getContent(doc.getDocumentReference())
             );
         }
+
+        Map<String, Integer> s = (new ObjectMapper()).readValue(
+            stats.toJSON(),
+            new TypeReference<Map<String, Integer>>() { });
+
+        // This checks that we don't attempt to convert [[attach:filename.ext]] links.
+        assertEquals( 7, s.get("failedRefs"));
     }
 
     @Test

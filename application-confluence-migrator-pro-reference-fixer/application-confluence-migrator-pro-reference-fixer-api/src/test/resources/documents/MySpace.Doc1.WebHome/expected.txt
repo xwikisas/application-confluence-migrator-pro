@@ -1,3 +1,5 @@
+An attachment that should not be converted: [[attach:test.png]].
+
 Confluence reference in a simple paragraph: [[doc:MyAnswer.WebHome]]
 
 Broken link in a simple paragraph: [[doc:Migrated.MySpace.My Answer.WebHome]], [[attach:Migrated.MySpace.My Answer.WebHome@image.png]] [[attach:Migrated.MySpace.My Other Answer.WebHome@image.png]] [[attach:MySpace.My Wrong Answer@image.png]]

@@ -687,7 +687,8 @@ public class ConfluenceReferenceFixer
         return null;
     }
 
-    private ResourceReference maybeConvertUnprefixedBrokenLink(Stats s, String oldRef, EntityReference migratedDocRef)
+    private ResourceReference maybeConvertUnprefixedBrokenLink(Stats s, String oldRef, EntityReference migratedDocRef,
+        boolean isAttachment)
     {
         int dot = oldRef.indexOf('.');
         if (dot == -1) {
@@ -709,7 +710,11 @@ public class ConfluenceReferenceFixer
         // let's play safe here.
 
         String nameValidatedTitle = m.group("nameValidatedTitle");
-        if (containsUnescapedChar(nameValidatedTitle, '.') || WEB_HOME.equals(nameValidatedTitle)) {
+        String attachment = m.group("attachment");
+        if (containsUnescapedChar(nameValidatedTitle, '.')
+            || WEB_HOME.equals(nameValidatedTitle)
+            || (isAttachment && StringUtils.isEmpty(attachment))
+        ) {
             // Links we handle here should not contain dots, as they should be of the shape SPACE.page title, where
             // page title does not contain a dot. But the regular expression we use is to limited to check that the
             // title doesn't contain an unescaped dot.
@@ -720,11 +725,13 @@ public class ConfluenceReferenceFixer
             // database.
             // Worst case, it shouldn't be too hard to handle these hypothetical broken links with a custom script for
             // the odd page titled "WebHome" hanging around, or maybe the few affected links can even be fixed manually.
+
+            // The isAttachment check is there to ignore attach:filename.ext references, which would match the broken
+            // links regex but are not to be converted.
             return null;
         }
 
         String space = m.group("space");
-        String attachment = m.group("attachment");
 
         EntityReference newRef = null;
         try {
@@ -758,12 +765,8 @@ public class ConfluenceReferenceFixer
         int prefixLength = getReferencePrefixLength(str);
         String oldRef = str.substring(prefixLength);
         String prefix = str.substring(0, prefixLength);
-        if (prefix.equals(ATTACH) && !containsUnescapedChar(oldRef, '@')) {
-            // This reference doesn't contain an '@' character, it should not be converted.
-            return null;
-        }
-
-        ResourceReference newRef = maybeConvertUnprefixedBrokenLink(s, oldRef, ref);
+        boolean attachment = prefix.equals(ATTACH);
+        ResourceReference newRef = maybeConvertUnprefixedBrokenLink(s, oldRef, ref, attachment);
         if (newRef == null) {
             return null;
         }
@@ -803,7 +806,8 @@ public class ConfluenceReferenceFixer
 
     private String maybeConvertMacroParameter(Stats s, String str, EntityReference migratedDocRef, String[] baseURLs)
     {
-        ResourceReference rr = maybeConvertReference(s, str, migratedDocRef, baseURLs, BrokenRefType.CONFLUENCE_REFS);
+        ResourceReference rr = maybeConvertReference(s, str, migratedDocRef, baseURLs, BrokenRefType.CONFLUENCE_REFS,
+            false);
         if (rr == null) {
             return null;
         }
@@ -820,10 +824,7 @@ public class ConfluenceReferenceFixer
 
         ResourceType type = reference.getType();
 
-        if (type.equals(ResourceType.ATTACHMENT)
-            || type.equals(ResourceType.MAILTO)
-            || type.equals(ResourceType.DATA)
-        ) {
+        if (type.equals(ResourceType.MAILTO) || type.equals(ResourceType.DATA)) {
             return null;
         }
 
@@ -840,16 +841,20 @@ public class ConfluenceReferenceFixer
                 }
             }
 
-            logger.warn("Docuemnt [{}]: unrecognized Confluence resource reference type [{}] for reference [{}]",
+            logger.warn("Document [{}]: unrecognized Confluence resource reference type [{}] for reference [{}]",
                 migratedDocRef, scheme, reference);
         }
 
-        return maybeConvertReference(s, reference.getReference(), migratedDocRef, baseURLs, brokenRefType);
+        boolean attachment = type.equals(ResourceType.ATTACHMENT);
+        return maybeConvertReference(s, reference.getReference(), migratedDocRef, baseURLs, brokenRefType, attachment);
     }
 
     private ResourceReference maybeConvertReference(Stats s, String reference, EntityReference migratedDocRef,
-        String[] baseURLs, BrokenRefType brokenRefType)
+        String[] baseURLs, BrokenRefType brokenRefType, boolean attachment)
     {
+        // the attachment boolean is only relevent for BROKEN_LINKS BrokenRefType and should not be used for
+        // CONFLUENCE_REFS
+
         if (StringUtils.isEmpty(reference)) {
             return null;
         }
@@ -865,7 +870,7 @@ public class ConfluenceReferenceFixer
 
         if (brokenRefType == BrokenRefType.BROKEN_LINKS || brokenRefType == BrokenRefType.UNKNOWN) {
             String unprefixedRef = reference.substring(getReferencePrefixLength(reference));
-            res = maybeConvertUnprefixedBrokenLink(s, unprefixedRef, migratedDocRef);
+            res = maybeConvertUnprefixedBrokenLink(s, unprefixedRef, migratedDocRef, attachment);
             if (res != null) {
                 return res;
             }
