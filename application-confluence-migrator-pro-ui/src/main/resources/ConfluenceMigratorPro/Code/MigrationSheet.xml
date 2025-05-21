@@ -931,6 +931,8 @@
     #set ($status = $obj.getValue('executed'))
   #end
   $os.print("Status: $status$escapetool.N")
+  $os.println("LicenseType: $obj.getValue('licenseType')")
+  $os.println("Extensions: $obj.getValue('extensions')")
 
   #if ($obj.getValue('imported'))
     $os.print("Number of imported pages: $obj.getValue('imported')$escapetool.N")
