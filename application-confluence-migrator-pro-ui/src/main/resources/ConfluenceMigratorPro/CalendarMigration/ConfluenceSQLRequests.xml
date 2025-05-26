@@ -1,0 +1,147 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.6" reference="ConfluenceMigratorPro.CalendarMigration.ConfluenceSQLRequests" locale="">
+  <web>ConfluenceMigratorPro.CalendarMigration</web>
+  <name>ConfluenceSQLRequests</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ConfluenceMigratorPro.CalendarMigration.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>ConfluenceSQLRequests</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>== SQL requests ==
+
+Here are the list of SQL request to retrive the CSV file used for the Calendar import.
+
+{{warning}}
+Note that theses request are written for Postgresql. Depending fo the database the request might need to be adapted.
+{{/warning}}
+
+For {{code language="none"}}parentCalendars.csv{{/code}}:
+
+{{code language="sql"}}
+SELECT t."ID"
+     , t."CREATED"
+     , t."CREATOR"
+     , t."DESCRIPTION"
+     , t."LAST_MODIFIED"
+     , t."NAME"
+     , t."SPACE_KEY"
+     , t."TIME_ZONE_ID"
+FROM confluence."AO_950DC3_TC_SUBCALS" t
+WHERE t."STORE_KEY" = 'com.atlassian.confluence.extra.calendar3.calendarstore.generic.GenericSubCalendarDataStore'
+-- needed because we can have multiple calendar with same name on the same space and we need to handle the conflict allways in the same way
+ORDER BY t."CREATED"
+{{/code}}
+
+For {{code language="none"}}subCalendars.csv{{/code}}:
+
+{{code language="sql"}}
+SELECT t."ID"
+     , t."COLOUR"
+     , t."CREATED"
+     , t."CREATOR"
+     , t."DESCRIPTION"
+     , t."LAST_MODIFIED"
+     , t."NAME"
+     , p."SPACE_KEY"
+     , t."PARENT_ID"
+     , t."STORE_KEY"
+     , c."TITLE"
+FROM confluence."AO_950DC3_TC_SUBCALS" t
+JOIN confluence."AO_950DC3_TC_SUBCALS" p ON t."PARENT_ID" = p."ID"
+LEFT JOIN confluence."AO_950DC3_TC_CUSTOM_EV_TYPES" c ON t."USING_CUSTOM_EVENT_TYPE_ID" = c."ID"
+WHERE t."STORE_KEY" != 'com.atlassian.confluence.extra.calendar3.calendarstore.generic.GenericSubCalendarDataStore'
+AND t."STORE_KEY" != 'com.atlassian.confluence.extra.calendar3.calendarstore.InternalSubscriptionCalendarDataStore'
+AND t."STORE_KEY" != 'AGILE_SPRINTS_SUB_CALENDAR_STORE'
+AND t."STORE_KEY" != 'JIRA_ISSUE_DATES_SUB_CALENDAR_STORE'
+AND t."STORE_KEY" != 'JIRA_PROJECT_RELEASES_SUB_CALENDAR_STORE'
+-- needed because we can have multiple calendar with same name on the same space and we need to handle the conflict allways in the same way
+ORDER BY t."CREATED"
+{{/code}}
+
+For {{code language="none"}}events.csv{{/code}}:
+
+{{code language="sql"}}
+SELECT t."ID"
+     , t."SUB_CALENDAR_ID"
+     , t."CREATED"
+     , t."LAST_MODIFIED"
+     , t."ORGANISER"
+     , t."SUMMARY"
+     , t."DESCRIPTION"
+     , t."URL"
+     , t."LOCATION"
+     , t."ALL_DAY"
+     , t."START"
+     , t."END"
+     , t."UTC_END"
+     , t."UTC_START"
+     , t."RECURRENCE_ID_TIMESTAMP"
+     , t."RECURRENCE_RULE"
+     , t."VEVENT_UID"
+FROM confluence."AO_950DC3_TC_EVENTS" t
+{{/code}}
+
+For {{code language="none"}}eventExclusion.csv{{/code}}:
+
+{{code language="sql"}}
+-- TODO
+{{/code}}
+
+For {{code language="none"}}eventInvitee.csv{{/code}}:
+
+{{code language="sql"}}
+SELECT t."EVENT_ID"
+     , t."INVITEE_ID"
+     , u."username"
+FROM confluence."AO_950DC3_TC_EVENTS_INVITEES" t
+JOIN confluence."user_mapping" u ON t."INVITEE_ID" = u."user_key"
+{{/code}}
+
+For {{code language="none"}}calendarGroupRights.csv{{/code}}
+
+{{code language="sql"}}
+SELECT t."GROUP_NAME"
+     , t."SUB_CALENDAR_ID"
+     , t."TYPE"
+FROM confluence."AO_950DC3_TC_SUBCALS_PRIV_GRP" t
+{{/code}}
+
+For {{code language="none"}}calendarUserRights.csv{{/code}}
+
+{{code language="sql"}}
+SELECT t."SUB_CALENDAR_ID"
+     , t."TYPE"
+     , u."username"
+FROM confluence."AO_950DC3_TC_SUBCALS_PRIV_USR" t
+JOIN confluence."user_mapping" u ON t."USER_KEY" = u."user_key"
+{{/code}}</content>
+</xwikidoc>
