@@ -57,7 +57,7 @@ eventsAndCalendarsFieldsMap = calendarsFieldsMap + eventsFieldsMap
 {{/groovy }}
 
 {{info}}
-To get the CSV file you will need to do some request on the Confluence Database. See [[the SQL request page&gt;&gt;ConfluenceMigratorPro.CalendarMigration.ConfluenceSQLRequests]] for more details.
+See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMigratorPro.CalendarMigration.ConfluenceSQLRequests]] to get the required CSV files. 
 {{/info}}
 
 {{velocity}}
@@ -66,8 +66,8 @@ To get the CSV file you will need to do some request on the Confluence Database.
 &lt;form class="xform" method="post" action="#"&gt;
   &lt;dl&gt;
     &lt;dt&gt;
-      &lt;label for="sourcePageName"&gt;Page reference of sources attachments&lt;/label&gt;
-      &lt;span class="xHint"&gt;The reference of the page in which all attachment are provided.&lt;/span&gt;
+      &lt;label for="sourcePageName"&gt;Reference of the page containing the required attachments&lt;/label&gt;
+      &lt;span class="xHint"&gt;The reference of the page in which all attachments are provided.&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
       #set ($pagePickerParams = {
@@ -87,21 +87,21 @@ To get the CSV file you will need to do some request on the Confluence Database.
     #end
     &lt;dt&gt;
       &lt;label for="cleanevents"&gt;Clean calendars events&lt;/label&gt;
-      &lt;span class="xHint"&gt;Whether calendar events content should be reset before running this, if they already exist.&lt;/span&gt;
+      &lt;span class="xHint"&gt;Whether the content of the existing calendar events should be reset before running the migration.&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
       &lt;input type="checkbox" id="cleanevents" name="cleanevents" #if($request.cleanevents)checked#end/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
       &lt;label for="cleanrights"&gt;Clean calendars rights&lt;/label&gt;
-      &lt;span class="xHint"&gt;Whether calendar right should be cleaned before setting the new rights.&lt;/span&gt;
+      &lt;span class="xHint"&gt;Whether the calendar rights should be cleaned before setting the new rights.&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
       &lt;input type="checkbox" id="cleanrights" name="cleanrights" #if($request.cleanrights)checked#end/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
       &lt;label for="importType"&gt;Select the type of import:&lt;/label&gt;
-      &lt;span class="xHint"&gt;Chose between page or space for the import&lt;/span&gt;
+      &lt;span class="xHint"&gt;Choose between page or space for the import&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
       &lt;fieldset&gt;
@@ -128,14 +128,14 @@ To get the CSV file you will need to do some request on the Confluence Database.
 #if($request.confirm == 'true')
   #set($jobStatusURL = "$!{request.contextPath}/rest/jobstatus/$!{escapetool.url($request.jobId)}")
   #set($jobLogURL = "$!{request.contextPath}/rest/joblog/$!{escapetool.url($request.jobId)}")
-  This import job is running with the ID **$!{request.jobId}**.
+  The ID of this import job is **$!{request.jobId}**.
 
-  Access information about the job execution using the following REST endpoints :
+  Access information about the job execution using the following REST endpoints:
 
   * ${escapetool.h}${escapetool.h}[[$!{jobStatusURL}&gt;&gt;path:$!{jobStatusURL}||target="_blank"]]${escapetool.h}${escapetool.h}
   * ${escapetool.h}${escapetool.h}[[$!{jobLogURL}&gt;&gt;path:$!{jobLogURL}||target="_blank"]]${escapetool.h}${escapetool.h}
 #else
-  The import job will be triggered with the ID **$!{jobId}**.
+  The import job will run with ID **$!{jobId}**.
 #end
 {{/velocity}}
 
@@ -167,7 +167,7 @@ try {
         }
         def attachement = sourceDoc.getAttachment(fileName)
         if (attachement == null) {
-            logger.error("Could not find the files {} attached to this page", "${i}.csv");
+            logger.error("Could not find attachment [{}] in [{}]", filename, request.sourcePageName);
             return
         } else {
             calendarsAttachements[i] = attachement
@@ -181,7 +181,7 @@ try {
             }
             def attachement = sourceDoc.getAttachment(fileName)
             if (attachement == null) {
-                logger.error("Could not find the files {} attached to this page", "${i}.csv");
+            logger.error("Could not find attachment [{}] in [{}]", filename, request.sourcePageName);
                 return
             } else {
                 eventsAttachements[i] = attachement

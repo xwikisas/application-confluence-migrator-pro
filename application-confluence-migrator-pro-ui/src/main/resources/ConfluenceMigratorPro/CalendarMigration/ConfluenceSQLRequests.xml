@@ -38,10 +38,10 @@
   <hidden>true</hidden>
   <content>== SQL requests ==
 
-Here are the list of SQL request to retrive the CSV file used for the Calendar import.
+Here are the SQL requests to run on the Confluence database to retrieve the CSV files used for the [[Calendar import&gt;&gt;ConfluenceMigratorPro.CalendarMigration.WebHome]].
 
 {{warning}}
-Note that theses request are written for Postgresql. Depending fo the database the request might need to be adapted.
+Note that these requests are written for PostgreSQL. For other database engines, they might require adjustments.
 {{/warning}}
 
 For {{code language="none"}}parentCalendars.csv{{/code}}:
