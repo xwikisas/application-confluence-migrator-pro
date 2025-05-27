@@ -299,6 +299,7 @@ import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceKeyResolver
 import org.xwiki.job.script.ProgressScripService
 import org.xwiki.model.EntityType
 import org.xwiki.model.reference.*
+import org.xwiki.model.validation.EntityNameValidationManager
 import org.xwiki.query.Query
 import org.xwiki.query.QueryManager
 import org.xwiki.rendering.block.MacroBlock
@@ -379,8 +380,7 @@ public class CalendarMigratorScriptService implements ScriptService
     private ContentParser contentParser
 
     @Inject
-    @Named("modelvalidation")
-    private ScriptService modelValidationScriptService
+    private Provider&lt;EntityNameValidationManager&gt; entityNameValidationManagerProvider;
 
     @Inject
     private Logger logger;
@@ -997,7 +997,13 @@ public class CalendarMigratorScriptService implements ScriptService
 
     private String normalizeNameForReference(String name)
     {
-        return modelValidationScriptService.transformName(name)
+        String r = entityNameValidationManagerProvider.get().getEntityReferenceNameStrategy().transform(entitnameyName);
+        if (StringUtils.isEmpty(r)) {
+            logger.warn("The name strategy transformed [{}] to an empty name, will use the original name instead of"
+                + " following the name strategy", name);
+            return name;
+        }
+        return r;
     }
 
     private DocumentReference getUserRefFromConfluence(String userKey)
