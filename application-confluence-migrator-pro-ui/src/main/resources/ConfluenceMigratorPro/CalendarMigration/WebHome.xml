@@ -93,11 +93,11 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
       &lt;input type="checkbox" id="cleanevents" name="cleanevents" #if($request.cleanevents)checked#end/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
-      &lt;label for="cleanrights"&gt;Clean calendars rights&lt;/label&gt;
-      &lt;span class="xHint"&gt;Whether the calendar rights should be cleaned before setting the new rights.&lt;/span&gt;
+      &lt;label for="dontCleanrights"&gt;Don't clean up existing rights before the migration&lt;/label&gt;
+      &lt;span class="xHint"&gt;Whether the calendar rights should not be cleaned before setting the new rights.&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
-      &lt;input type="checkbox" id="cleanrights" name="cleanrights" #if($request.cleanrights)checked#end/&gt;
+      &lt;input type="checkbox" id="dontCleanrights" name="dontCleanrights" #if($request.dontCleanrights)checked#end/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
       &lt;label for="importType"&gt;Select the type of import:&lt;/label&gt;
@@ -181,7 +181,7 @@ try {
             }
             def attachement = sourceDoc.getAttachment(fileName)
             if (attachement == null) {
-            logger.error("Could not find attachment [{}] in [{}]", filename, request.sourcePageName);
+                logger.error("Could not find attachment [{}] in [{}]", filename, request.sourcePageName);
                 return
             } else {
                 eventsAttachements[i] = attachement
@@ -190,13 +190,13 @@ try {
     }
 
     def cleanEvents = request.cleanevents == "on"
-    def cleanRights = request.cleanrights == "on"
+    def dontCleanRights = request.dontCleanrights == "on"
 
-    if (hasProgramming &amp;&amp; 'true' == request.confirm) {
+    if (hasProgramming &amp;&amp; hasAdmin &amp;&amp; 'true' == request.confirm) {
         start = new Date();
 
         if (request.importType == "calendars") {
-            services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, cleanRights)
+            services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, dontCleanRights)
         } else if (request.importType == "events") {
             services.calendarmigrator.migrateEvents(services.progress, calendarsAttachements, eventsAttachements, cleanEvents)
         } else {
@@ -394,7 +394,7 @@ public class CalendarMigratorScriptService implements ScriptService
     @Inject
     private EntityReferenceSerializer&lt;String&gt; serializer;
 
-    void migrateCalendars(ProgressScripService progress, Map&lt;String, Attachment&gt; attachments, boolean cleanRights)
+    void migrateCalendars(ProgressScripService progress, Map&lt;String, Attachment&gt; attachments, boolean dontCleanRights)
     {
         XWikiContext context = contextProvider.get()
         XWiki xwiki = context.getWiki()
@@ -444,7 +444,7 @@ public class CalendarMigratorScriptService implements ScriptService
             DocumentReference prefDocRef = new DocumentReference("WebPreferences",
                 parentCalendar.reference().lastSpaceReference)
             XWikiDocument prefDoc = xwiki.getDocument(prefDocRef, context).clone()
-            if (cleanRights) {
+            if (!dontCleanRights) {
                 prefDoc.removeXObjects(GLOBAL_RIGHTS_CLASS)
             }
             List&lt;BaseObject&gt; rightsObjects = prefDoc.getXObjects(GLOBAL_RIGHTS_CLASS)
