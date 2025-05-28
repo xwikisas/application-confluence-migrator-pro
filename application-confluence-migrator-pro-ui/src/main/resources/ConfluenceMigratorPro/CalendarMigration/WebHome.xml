@@ -507,7 +507,7 @@ public class CalendarMigratorScriptService implements ScriptService
             logger.info("Parent for calendar named [{}] created at reference [{}]", parentCalendar.name(),
                 parentCalendar.reference())
 
-            logger.info("Adding right for calendar ID [{}] at reference [{}]",
+            logger.info("Adding rights for calendar ID [{}] at reference [{}]",
                 calendarId, parentCalendar.reference())
 
             DocumentReference prefDocRef = new DocumentReference("WebPreferences",
@@ -518,7 +518,7 @@ public class CalendarMigratorScriptService implements ScriptService
             }
             List&lt;BaseObject&gt; rightsObjects = prefDoc.getXObjects(GLOBAL_RIGHTS_CLASS)
 
-            logger.info("Adding group right for calendar ID [{}] at reference [{}]",
+            logger.info("Adding group rights for calendar ID [{}] at reference [{}]",
                 calendarId, parentCalendar.reference())
 
             List&lt;String&gt; groupRef = rightsObjects.collect {
@@ -549,7 +549,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 rightObj.set("levels", right.value, context)
             }
 
-            logger.info("Adding user right for calendar ID [{}] at reference [{}]",
+            logger.info("Adding user rights for calendar ID [{}] at reference [{}]",
                 calendarId, parentCalendar.reference())
 
             List&lt;String&gt; userRef = rightsObjects.collect {
@@ -573,14 +573,14 @@ public class CalendarMigratorScriptService implements ScriptService
                     rightObj = rightsObjects.get(matchingObjectIndex)
                 } else {
                     rightObj = prefDoc.newXObject(GLOBAL_RIGHTS_CLASS, context)
-                    // TODO ensure that edit right imply view right -&gt; not sure that between confluence and XWiki it's handled the same way
+                    // TODO ensure that edit rights imply view rights -&gt; not sure that between confluence and XWiki it's handled the same way
                     rightObj.set("users", userReferenceStr, context)
                 }
                 rightObj.set("allow", 1, context)
                 rightObj.set("levels", right.value, context)
             }
 
-            logger.info("User right for calendar at reference [{}] done", parentCalendar.reference())
+            logger.info("User rights for calendar at reference [{}] done", parentCalendar.reference())
 
             xwiki.saveDocument(prefDoc, context)
             logger.info("Right for calendar ID [{}] at reference [{}] Done",
@@ -776,7 +776,7 @@ public class CalendarMigratorScriptService implements ScriptService
         }
         isr.close()
 
-        logger.info("Creating events override")
+        logger.info("Creating event overrides")
 
         eventOverrides.each { entry -&gt;
             progress.startStep()
@@ -1258,8 +1258,8 @@ record UserGroupMappingContext(
 {}
 
 /**
- * FIXME code copied from https://github.com/xwiki-contrib/confluence/blob/41658372197b3890e2b71ece14deb876897cb318/confluence-xml/src/main/java/org/xwiki/contrib/confluence/filter/internal/input/UsernameCleaner.java
- * We should use a shared code instead of a full copy past of this class
+ * Code past from https://github.com/xwiki-contrib/confluence/blob/41658372197b3890e2b71ece14deb876897cb318/confluence-xml/src/main/java/org/xwiki/contrib/confluence/filter/internal/input/UsernameCleaner.java
+ * FIXME We should use a shared code instead of a full copy past of this class
  */
 final class UsernameCleaner
 {
