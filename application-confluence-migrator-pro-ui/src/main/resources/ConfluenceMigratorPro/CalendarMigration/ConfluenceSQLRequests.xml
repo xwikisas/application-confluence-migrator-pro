@@ -113,7 +113,10 @@ FROM confluence."AO_950DC3_TC_EVENTS" t
 For {{code language="none"}}eventExclusion.csv{{/code}}:
 
 {{code language="sql"}}
--- TODO
+SELECT t."ALL_DAY"
+     , t."EVENT_ID"
+     , t."EXCLUSION"
+FROM confluence."AO_950DC3_TC_EVENTS_EXCL" t
 {{/code}}
 
 For {{code language="none"}}eventInvitee.csv{{/code}}:

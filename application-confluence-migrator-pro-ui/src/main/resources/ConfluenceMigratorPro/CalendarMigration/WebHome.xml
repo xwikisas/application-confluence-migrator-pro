@@ -106,7 +106,7 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
       &lt;span class="xHint"&gt;$spanXHint&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
-      &lt;input type="text" id="groupFormat" name="groupFormat" value="$!escapetool.xml($request.parameterMap.getOrDefault("groupFormat", '${group._clean}'))" placeholder='$escapetool.d{group._clean}'/&gt;
+      &lt;input type="text" id="groupFormat" name="groupFormat" value="$!escapetool.xml($request.get("groupFormat"))" placeholder='$escapetool.d{group._clean}'/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
       &lt;label for="groupMapping"&gt;Group name mapping&lt;/label&gt;
@@ -190,6 +190,13 @@ try {
     def calendarsAttachements = [:]
     def eventsAttachements = [:]
 
+    String groupFormat
+    if (StringUtils.isEmpty(request.groupFormat)) {
+        groupFormat = '${group._clean}'
+    } else {
+        groupFormat = request.groupFormat
+    }
+
     for (String i in calendarsFieldsMap.keySet()) {
         def fileName = request.get(i)
         if (StringUtils.isEmpty(fileName)) {
@@ -225,7 +232,7 @@ try {
     if (hasProgramming &amp;&amp; hasAdmin &amp;&amp; 'true' == request.confirm) {
         start = new Date();
 
-        def userGroupMappingContext = services.calendarmigrator.getUserGroupMappingContext(request.parameterMap)
+        def userGroupMappingContext = services.calendarmigrator.getUserGroupMappingContext(request.parameterMap, groupFormat)
 
         if (request.importType == "calendars") {
             services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, dontCleanRights, userGroupMappingContext)
@@ -352,6 +359,8 @@ import javax.inject.Named
 import javax.inject.Provider
 import javax.inject.Singleton
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
 import java.util.regex.Pattern
 
 @Component
@@ -384,11 +393,28 @@ public class CalendarMigratorScriptService implements ScriptService
 
     private final static SimpleDateFormat RECURRENT_DATE_FORMATTER = new SimpleDateFormat("yyyyMMdd");
 
-    private final static Map&lt;String, String&gt; COLORS_MAP = Map.of(
-        // TODO it seem that in confluence we have about 21 color, we should add the mapping for this
-        "subcalendar-blue", "#0052cc",
-        "subcalendar-yellow", "#ffc400"
-    )
+    private final static Map&lt;String, String&gt; COLORS_MAP = Map.ofEntries(
+        Map.entry("subcalendar-gray", "#091E42"),
+        Map.entry("subcalendar-green2", "#00875A"),
+        Map.entry("subcalendar-purple", "#5243AA"),
+        Map.entry("subcalendar-green3", "#36B37E"),
+        Map.entry("subcalendar-yellow", "#FFC400"),
+        Map.entry("subcalendar-orange2", "#FF5630"),
+        Map.entry("subcalendar-turquoise", "#00A3BF"),
+        Map.entry("subcalendar-green", "#006644"),
+        Map.entry("subcalendar-bronze", "#FFAB00"),
+        Map.entry("subcalendar-pink", "#DE350B"),
+        Map.entry("subcalendar-purple2", "#403294"),
+        Map.entry("subcalendar-blue", "#0052CC"),
+        Map.entry("subcalendar-blue2", "#0049B0"),
+        Map.entry("subcalendar-gray2", "#0065FF"),
+        Map.entry("subcalendar-purple3", "#253858"),
+        Map.entry("subcalendar-green4", "#008DA6"),
+        Map.entry("subcalendar-red", "#BF2600"),
+        Map.entry("subcalendar-purple4", "#8777D9"),
+        Map.entry("subcalendar-green5", "#00B8D9"),
+        Map.entry("subcalendar-green6", "#42526E"),
+        Map.entry("subcalendar-orange", "#FF8B00"))
 
     private final static Map&lt;String, String&gt; RIGHTS_MAP = Map.of(
         "VIEW", "view",
@@ -445,12 +471,11 @@ public class CalendarMigratorScriptService implements ScriptService
     @Inject
     private Converter&lt;Mapping&gt; mappingConverter
 
-    UserGroupMappingContext getUserGroupMappingContext(Map&lt;String, String&gt; requestParameters)
+    UserGroupMappingContext getUserGroupMappingContext(Map&lt;String, String[]&gt; requestParameters, String groupFormat)
     {
-        String userFormat = requestParameters.get("userFormat")
-        String groupFormat = requestParameters.get("groupFormat")
-        String userMappingStr = requestParameters.get("userMapping")
-        String groupMappingStr = requestParameters.get("groupMapping")
+        String userFormat = requestParameters.get("userFormat")[0]
+        String userMappingStr = requestParameters.get("userMapping")[0]
+        String groupMappingStr = requestParameters.get("groupMapping")[0]
 
         Mapping userMapping = mappingConverter.convert(Mapping.class, userMappingStr)
         Mapping groupMapping
@@ -616,8 +641,7 @@ public class CalendarMigratorScriptService implements ScriptService
             doc.setTitle(title)
             doc.setContent("{{moccacalendar filter=\"page\"/}}")
             calendarObj.setStringValue("title", title)
-            // TODO clean default value as soon as the map is complete
-            calendarObj.set("color", COLORS_MAP.getOrDefault(entry.get("COLOUR"), "#0052cc"), context)
+            calendarObj.set("color", COLORS_MAP.get(entry.get("COLOUR")), context)
             calendarObj.set("description", parent.description(), context)
 
             // TODO
@@ -645,7 +669,13 @@ public class CalendarMigratorScriptService implements ScriptService
         List&lt;Event&gt; events =
             loadEvents(eventsAttachments['events'], eventsAttachments['eventInvitee'], parents, userGroupMappingContext)
 
-        progress.pushLevel(events.size())
+        InputStream is = eventsAttachments['eventExclusion'].getContentInputStream()
+        InputStreamReader isr = new InputStreamReader(is)
+        int lineCount = 0
+        isr.eachLine { it -&gt; lineCount++ }
+        isr.close()
+
+        progress.pushLevel(events.size() + lineCount)
 
         if (cleanEvents) {
             logger.info("Cleaning existing events")
@@ -669,7 +699,7 @@ public class CalendarMigratorScriptService implements ScriptService
 
         logger.info("Creating events")
 
-        InputStreamReader isr = new InputStreamReader(eventsAttachments['events'].getContentInputStream())
+        isr = new InputStreamReader(eventsAttachments['events'].getContentInputStream())
         getCsvParser(isr).each { entry -&gt;
             progress.startStep()
 
@@ -696,18 +726,17 @@ public class CalendarMigratorScriptService implements ScriptService
             XWikiDocument doc = xwiki.getDocument(event.reference(), context).clone()
 
             String title = entry.get("SUMMARY")
-            Date startDate = new Date(Long.parseLong(entry.get("START")))
-            Date endDate = new Date(Long.parseLong(entry.get("END")))
-            boolean allDay = "TRUE".equalsIgnoreCase(entry.get("ALL_DAY"))
+            Date startDate = getDateFromConfuence(entry.get("START"), event.allDay())
+            Date endDate = getDateFromConfuence(entry.get("END"), event.allDay())
             String description = getEventDescription(entry.toMap(), doc.syntax, event)
             BaseObject eventObj = doc.getXObject(CALENDAR_EVENT_CLASS_REF, true, context)
             doc.setTitle(title)
             // We need to set the parent because it's what moccacalendar use to refer to the calendar
             doc.setParent(serializer.serialize(subCalendar.reference()))
-            eventObj.setIntValue("allDay", allDay ? 1 : 0)
+            eventObj.setIntValue("allDay", event.allDay() ? 1 : 0)
             eventObj.set("description", description, context)
 
-            if (allDay) {
+            if (event.allDay()) {
                 // In confluence a "all day event" will end at the end of the day so in confluence will have by example for a one day event:
                 // - start_date: 2025-01-02 00:00:00
                 // - end_date: 2025-01-03 00:00:00
@@ -719,7 +748,7 @@ public class CalendarMigratorScriptService implements ScriptService
             }
 
             if (StringUtils.isNotEmpty(entry.get("RECURRENCE_RULE"))) {
-                RecurrentEventInfo recurrentRules = parseAndDecodeRecurrentEvent(entry)
+                RecurrentEventInfo recurrentRules = parseAndDecodeRecurrentEvent(entry, event)
                 if (recurrentRules.recurrentEventFrequency() == RecurrentEventInfo.EventFrequency.WEEKLY
                     &amp;&amp; recurrentRules.byDay() != null)
                 {
@@ -796,9 +825,10 @@ public class CalendarMigratorScriptService implements ScriptService
                 Event eventOverride = events.find { it.confluenceId() == event.get("ID") }
                 String title = event.get("SUMMARY")
                 String description = getEventDescription(event, doc.syntax, eventOverride)
-                Date startDate = new Date(Long.parseLong(event.get("START")))
-                Date endDate = new Date(Long.parseLong(event.get("END")))
-                Date eventOrigStartDate = new Date(Long.parseLong(event.get("RECURRENCE_ID_TIMESTAMP")))
+                Date startDate = getDateFromConfuence(event.get("START"), eventOverride.allDay())
+                Date endDate = getDateFromConfuence(event.get("END"), eventOverride.allDay())
+                Date eventOrigStartDate =
+                    getDateFromConfuence(event.get("RECURRENCE_ID_TIMESTAMP"), eventOverride.allDay())
 
                 BaseObject eventOverrideObj = doc.newXObject(CALENDAR_EVENT_MODIFICATION_CLASS_REF, context)
                 eventOverrideObj.set("title", title, context)
@@ -813,11 +843,70 @@ public class CalendarMigratorScriptService implements ScriptService
             progress.endStep()
         }
 
-        logger.info("Creating events exclusions")
+        logger.info("Loading events exclusion data")
 
-        // TODO
+        Map&lt;String, List&lt;String&gt;&gt; eventExclusion = [:]
+        isr = new InputStreamReader(eventsAttachments['eventExclusion'].getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            String eventId = entry.get("EVENT_ID")
+            String timestamp = entry.get("EXCLUSION")
+            if (!eventExclusion.containsKey(eventId)) {
+                eventExclusion[eventId] = []
+            }
+            eventExclusion[eventId].add(timestamp)
+        }
+        isr.close()
+
+        logger.info("Creating event exclusion")
+
+        eventExclusion.each { entry -&gt;
+            progress.startStep()
+
+            Event event = events.find { it.confluenceId() == entry.getKey() }
+            if (event == null) {
+                logger.error("Can't base event with ID [{}]", entry.getKey())
+                return
+            }
+            logger.info("Adding event exclusion for event ID [{}]", entry.getKey())
+
+            XWikiDocument doc = xwiki.getDocument(event.reference(), context).clone()
+            // Cleanup all objects so we are sure that we start from a clean state
+            doc.removeXObjects(CALENDAR_EVENT_DELETION_CLASS_REF)
+
+            entry.value.each { exclusion -&gt;
+                Date eventOrigStartDate = getDateFromConfuence(exclusion, event.allDay())
+
+                BaseObject eventOverrideObj = doc.newXObject(CALENDAR_EVENT_DELETION_CLASS_REF, context)
+                eventOverrideObj.setDateValue("eventOrigStartDate", eventOrigStartDate)
+            }
+
+            xwiki.saveDocument(doc, context)
+            logger.info("Event exclusion done for event ID [{}]", entry.getKey())
+            progress.endStep()
+        }
+
+        logger.info("Event exclusion done")
 
         progress.popLevel()
+    }
+
+    private static Date getDateFromConfuence(String dateStr, boolean allDay)
+    {
+        long epochDate = Long.parseLong(dateStr)
+        if (allDay) {
+            // In case of all day event we want to have the start date which correspond to the local start date
+            // by example if the start date is 2025-05-02 00:00:00 UTC we want to convert it to
+            // 2025-05-02 00:00:00 based on the configured system timezone
+            // so it will be 2025-05-02 00:00:00 UTC+2 if the server is located in Paris which mean 2025-04-01 22:00:00 UTC
+            def instant = Instant.ofEpochMilli(epochDate).atZone(ZoneId.of("UTC"))
+            Calendar c = Calendar.getInstance()
+            c.set(instant.year, instant.monthValue - 1, instant.dayOfMonth, instant.hour, instant.minute,
+                instant.second)
+            return c.getTime()
+        } else {
+            // The date from confluence is stored as long in epoch, so we just create a locale date from a epoch date.
+            return new Date(epochDate)
+        }
     }
 
     private String getEventDescription(Map&lt;String, String&gt; entry, Syntax docSyntax, Event event)
@@ -840,7 +929,7 @@ public class CalendarMigratorScriptService implements ScriptService
         return description.toString()
     }
 
-    private RecurrentEventInfo parseAndDecodeRecurrentEvent(CSVRecord entry)
+    private RecurrentEventInfo parseAndDecodeRecurrentEvent(CSVRecord entry, Event event)
     {
         Map&lt;String, String&gt; rawParams = entry.get("RECURRENCE_RULE")
             .split(';').
@@ -853,7 +942,7 @@ public class CalendarMigratorScriptService implements ScriptService
         RecurrentEventInfo.EventFrequency eventFrequency
         int count = 0
 
-        Date startDate = new Date(Long.parseLong(entry.get("START")))
+        Date startDate = getDateFromConfuence(entry.get("START"), event.allDay())
 
         Date untilDate = null
         if (StringUtils.isNotEmpty(rawParams.get("UNTIL"))) {
@@ -1088,7 +1177,8 @@ public class CalendarMigratorScriptService implements ScriptService
             result.add(
                 new Event(entry.get("ID"), entry.get("VEVENT_UID"),
                     StringUtils.isNotEmpty(entry.get("RECURRENCE_ID_TIMESTAMP")),
-                    name, eventReference, inviteeMap.get(entry.get("ID"), [])))
+                    name, "TRUE".equalsIgnoreCase(entry.get("ALL_DAY")),
+                    eventReference, inviteeMap.get(entry.get("ID"), [])))
         }
         isr.close()
 
@@ -1147,7 +1237,7 @@ public class CalendarMigratorScriptService implements ScriptService
         String username = mappingContext.userMapping().get(rawUsername)
         if (username == null) {
             // code inspired from https://github.com/xwiki-contrib/confluence/blob/933ccec7f941b04bed3f69f53e1e5c22e4e46414/confluence-xml/src/main/java/org/xwiki/contrib/confluence/filter/internal/input/ConfluenceConverter.java#L219
-            String userFormat = mappingContext.groupFormat()
+            String userFormat = mappingContext.userFormat()
             if (StringUtils.isEmpty(userFormat)) {
                 // Do some minimal cleanup which is backward compatible with older versions of the filter.
                 username = FORBIDDEN_USER_CHARACTERS.matcher(rawUsername).replaceAll("_");
@@ -1197,6 +1287,7 @@ record Event(
     String veventUid,
     boolean isEventOverride,
     String name,
+    boolean allDay,
     DocumentReference reference,
     List&lt;DocumentReference&gt; invitee
 )
