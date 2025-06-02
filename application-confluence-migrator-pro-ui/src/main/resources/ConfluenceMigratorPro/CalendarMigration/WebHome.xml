@@ -900,6 +900,7 @@ public class CalendarMigratorScriptService implements ScriptService
             // so it will be 2025-05-02 00:00:00 UTC+2 if the server is located in Paris which mean 2025-04-01 22:00:00 UTC
             def instant = Instant.ofEpochMilli(epochDate).atZone(ZoneId.of("UTC"))
             Calendar c = Calendar.getInstance()
+            c.setTimeInMillis(0)
             c.set(instant.year, instant.monthValue - 1, instant.dayOfMonth, instant.hour, instant.minute,
                 instant.second)
             return c.getTime()
@@ -954,6 +955,9 @@ public class CalendarMigratorScriptService implements ScriptService
             }
         } else if (StringUtils.isNotEmpty(rawParams.get("COUNT"))) {
             count = Integer.parseInt(rawParams.get("COUNT"))
+            // Need to subtract one event because we need to keep into account the first event
+            // so for instance, if we have count=2 we just need to add one more event in addition to the original one
+            count -= 1
         }
 
         switch (rawParams.get("FREQ")) {
