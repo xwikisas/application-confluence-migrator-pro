@@ -339,7 +339,6 @@ import org.xwiki.component.annotation.Component
 import org.xwiki.contrib.confluence.filter.Mapping
 import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceKeyResolver
 import org.xwiki.job.script.ProgressScripService
-import org.xwiki.localization.LocalizationContext
 import org.xwiki.localization.LocalizationManager
 import org.xwiki.model.EntityType
 import org.xwiki.model.reference.*
@@ -486,9 +485,6 @@ public class CalendarMigratorScriptService implements ScriptService
 
     @Inject
     private LocalizationManager localization
-
-    @Inject
-    private LocalizationContext localizationContext;
 
     UserGroupMappingContext getUserGroupMappingContext(Map&lt;String, String[]&gt; requestParameters, String groupFormat)
     {
@@ -653,7 +649,8 @@ public class CalendarMigratorScriptService implements ScriptService
 
             logger.info("Creating sub calendar in reference [{}]", subCalendar.reference())
 
-            String title = getSubCalendarFromType(entry.get("STORE_KEY"), entry.get("TITLE"))
+            String title = getSubCalendarNameFromType(entry.get("STORE_KEY"), entry.get("TITLE"),
+                getLocaleFromReference(subCalendar.reference()))
 
             XWikiDocument doc = xwiki.getDocument(subCalendar.reference(), context).clone()
             BaseObject calendarObj = doc.getXObject(CALENDAR_CLASS_REF, true, context)
@@ -747,7 +744,8 @@ public class CalendarMigratorScriptService implements ScriptService
             String title = entry.get("SUMMARY")
             Date startDate = getDateFromConfuence(entry.get("START"), event.allDay())
             Date endDate = getDateFromConfuence(entry.get("END"), event.allDay())
-            String description = getEventDescription(entry.toMap(), doc.syntax, event)
+            String description =
+                getEventDescription(entry.toMap(), doc.syntax, event, getLocaleFromReference(event.reference()))
             BaseObject eventObj = doc.getXObject(CALENDAR_EVENT_CLASS_REF, true, context)
             doc.setTitle(title)
             // We need to set the parent because it's what moccacalendar use to refer to the calendar
@@ -840,10 +838,12 @@ public class CalendarMigratorScriptService implements ScriptService
             // Cleanup all objects so we are sure that we start from a clean state
             doc.removeXObjects(CALENDAR_EVENT_MODIFICATION_CLASS_REF)
 
+            Locale locale = getLocaleFromReference(baseEvent.reference())
+
             entry.value.each { event -&gt;
                 Event eventOverride = events.find { it.confluenceId() == event.get("ID") }
                 String title = event.get("SUMMARY")
-                String description = getEventDescription(event, doc.syntax, eventOverride)
+                String description = getEventDescription(event, doc.syntax, eventOverride, locale)
                 Date startDate = getDateFromConfuence(event.get("START"), eventOverride.allDay())
                 Date endDate = getDateFromConfuence(event.get("END"), eventOverride.allDay())
                 Date eventOrigStartDate =
@@ -929,17 +929,16 @@ public class CalendarMigratorScriptService implements ScriptService
         }
     }
 
-    private String getEventDescription(Map&lt;String, String&gt; entry, Syntax docSyntax, Event event)
+    private String getEventDescription(Map&lt;String, String&gt; entry, Syntax docSyntax, Event event, Locale locale)
     {
         StringBuilder description = new StringBuilder(entry.get("DESCRIPTION"))
         String location = entry.get("LOCATION")
         String url = entry.get("URL")
-        // TODO get the correct lang from the user preference...
         if (StringUtils.isNotEmpty(location)) {
             description.append("\n")
             description.append(localization.getTranslation(
                 "confluencepro.calendarmigrator.eventdescription.location",
-                localizationContext.currentLocale, docSyntax))
+                locale, docSyntax))
             description.append(":\n")
             description.append(escaper.escape(location, docSyntax))
         }
@@ -947,7 +946,7 @@ public class CalendarMigratorScriptService implements ScriptService
             description.append("\n")
             description.append(localization.getTranslation(
                 "confluencepro.calendarmigrator.eventdescription.url",
-                localizationContext.currentLocale, docSyntax))
+                locale, docSyntax))
             description.append(":\n")
             description.append(escaper.escape(url, docSyntax))
         }
@@ -955,7 +954,7 @@ public class CalendarMigratorScriptService implements ScriptService
             description.append("\n")
             description.append(localization.getTranslation(
                 "confluencepro.calendarmigrator.eventdescription.invitee",
-                localizationContext.currentLocale, docSyntax))
+                locale, docSyntax))
             description.append(":\n\n")
             description.append(
                 "{{userList users=\"${String.join(",", event.invitee().collect { serializer.serialize(it) })}\"/}}")
@@ -1085,13 +1084,13 @@ public class CalendarMigratorScriptService implements ScriptService
 
         isr = new InputStreamReader(children.getContentInputStream())
         getCsvParser(isr).each { entry -&gt;
-            String name = getSubCalendarFromType(entry.get("STORE_KEY"), entry.get("TITLE"))
-
             ParentCalendar parent = result.find { it.confluenceId() == entry.get("PARENT_ID") }
             if (parent == null) {
                 logger.error("Can't get parent calendar for calendar ID [{}]", entry.get("ID"))
                 return
             }
+            String name = getSubCalendarNameFromType(entry.get("STORE_KEY"), entry.get("TITLE"),
+                getLocaleFromReference(parent.reference()))
 
             DocumentReference subCalReference = new DocumentReference("WebHome",
                 new SpaceReference(normalizeNameForReference(name), parent.reference().lastSpaceReference))
@@ -1223,15 +1222,14 @@ public class CalendarMigratorScriptService implements ScriptService
         return result
     }
 
-    private getSubCalendarFromType(String type, String customTitle)
+    private getSubCalendarNameFromType(String type, String customTitle, Locale locale)
     {
         if (type == "com.atlassian.confluence.extra.calendar3.calendarstore.generic.CustomSubCalendarDataStore") {
             return customTitle
         } else {
             String translationKey = SUB_CALENDAR_TYPE_TRANSLATION_MAP.get(type)
             if (translationKey != null) {
-                // TODO need to define how to get the correct locale ??
-                return localization.getTranslation(translationKey, localizationContext.getCurrentLocale())
+                return localization.getTranslation(translationKey, locale)
             } else {
                 throw new RuntimeException("Unsupported type : " + type)
             }
@@ -1262,6 +1260,14 @@ public class CalendarMigratorScriptService implements ScriptService
             return name;
         }
         return r;
+    }
+
+    private Locale getLocaleFromReference(DocumentReference reference)
+    {
+        def context = contextProvider.get()
+        context.setWikiId(reference.wikiReference.name)
+        def wiki = context.getWiki()
+        return wiki.getDefaultLocale(context)
     }
 
     private static DocumentReference getUserRefFromConfluence(String rawUsername,
