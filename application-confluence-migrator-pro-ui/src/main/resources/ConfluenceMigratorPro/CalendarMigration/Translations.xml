@@ -34,7 +34,7 @@
   <title>Translations</title>
   <comment/>
   <minorEdit>false</minorEdit>
-  <syntaxId>xwiki/2.1</syntaxId>
+  <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
   <content>confluencepro.calendarmigrator.eventtypes.event=Event
 confluencepro.calendarmigrator.eventtypes.birthday=Birthday
@@ -43,4 +43,41 @@ confluencepro.calendarmigrator.eventtypes.travel=Travel
 confluencepro.calendarmigrator.eventdescription.location=Location
 confluencepro.calendarmigrator.eventdescription.url=URL
 confluencepro.calendarmigrator.eventdescription.invitee=Invitee</content>
+  <object>
+    <name>ConfluenceMigratorPro.CalendarMigration.Translations</name>
+    <number>0</number>
+    <className>XWiki.TranslationDocumentClass</className>
+    <guid>c753e826-48e1-40d1-b7e3-1bbdfe67234f</guid>
+    <class>
+      <name>XWiki.TranslationDocumentClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <scope>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>scope</name>
+        <number>1</number>
+        <prettyName>Scope</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>GLOBAL|WIKI|USER|ON_DEMAND</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </scope>
+    </class>
+    <property>
+      <scope>WIKI</scope>
+    </property>
+  </object>
 </xwikidoc>
