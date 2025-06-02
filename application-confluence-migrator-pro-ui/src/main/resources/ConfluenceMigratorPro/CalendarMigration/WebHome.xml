@@ -339,6 +339,8 @@ import org.xwiki.component.annotation.Component
 import org.xwiki.contrib.confluence.filter.Mapping
 import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceKeyResolver
 import org.xwiki.job.script.ProgressScripService
+import org.xwiki.localization.LocalizationContext
+import org.xwiki.localization.LocalizationManager
 import org.xwiki.model.EntityType
 import org.xwiki.model.reference.*
 import org.xwiki.model.validation.EntityNameValidationManager
@@ -431,6 +433,17 @@ public class CalendarMigratorScriptService implements ScriptService
         "SU", RecurrentEventInfo.WeekDay.SUN
     )
 
+    private static final Map&lt;String, String&gt; SUB_CALENDAR_TYPE_TRANSLATION_MAP = Map.of(
+        "com.atlassian.confluence.extra.calendar3.calendarstore.generic.GenericLocalSubCalendarDataStore",
+        "confluencepro.calendarmigrator.eventtypes.event",
+        "com.atlassian.confluence.extra.calendar3.calendarstore.generic.BirthdaySubCalendarDataStore",
+        "confluencepro.calendarmigrator.eventtypes.birthday",
+        "com.atlassian.confluence.extra.calendar3.calendarstore.generic.LeaveSubCalendarDataStore",
+        "confluencepro.calendarmigrator.eventtypes.leave",
+        "com.atlassian.confluence.extra.calendar3.calendarstore.generic.TravelSubCalendarDataStore",
+        "confluencepro.calendarmigrator.eventtypes.travel"
+    )
+
     private static final String XWIKI_ADMIN_GROUP_NAME = "XWikiAdminGroup";
 
     private static final String XWIKI_ALL_GROUP_NAME = "XWikiAllGroup";
@@ -470,6 +483,12 @@ public class CalendarMigratorScriptService implements ScriptService
 
     @Inject
     private Converter&lt;Mapping&gt; mappingConverter
+
+    @Inject
+    private LocalizationManager localization
+
+    @Inject
+    private LocalizationContext localizationContext;
 
     UserGroupMappingContext getUserGroupMappingContext(Map&lt;String, String[]&gt; requestParameters, String groupFormat)
     {
@@ -915,15 +934,29 @@ public class CalendarMigratorScriptService implements ScriptService
         StringBuilder description = new StringBuilder(entry.get("DESCRIPTION"))
         String location = entry.get("LOCATION")
         String url = entry.get("URL")
-        // TODO should we handle translations
+        // TODO get the correct lang from the user preference...
         if (StringUtils.isNotEmpty(location)) {
-            description.append("\nlocation: \n").append(escaper.escape(location, docSyntax))
+            description.append("\n")
+            description.append(localization.getTranslation(
+                "confluencepro.calendarmigrator.eventdescription.location",
+                localizationContext.currentLocale, docSyntax))
+            description.append(":\n")
+            description.append(escaper.escape(location, docSyntax))
         }
         if (StringUtils.isNotEmpty(url)) {
-            description.append("\nurl: \n").append(escaper.escape(url, docSyntax))
+            description.append("\n")
+            description.append(localization.getTranslation(
+                "confluencepro.calendarmigrator.eventdescription.url",
+                localizationContext.currentLocale, docSyntax))
+            description.append(":\n")
+            description.append(escaper.escape(url, docSyntax))
         }
         if (!event.invitee().empty) {
-            description.append("\nInvitee: \n\n")
+            description.append("\n")
+            description.append(localization.getTranslation(
+                "confluencepro.calendarmigrator.eventdescription.invitee",
+                localizationContext.currentLocale, docSyntax))
+            description.append(":\n\n")
             description.append(
                 "{{userList users=\"${String.join(",", event.invitee().collect { serializer.serialize(it) })}\"/}}")
         }
@@ -1190,22 +1223,18 @@ public class CalendarMigratorScriptService implements ScriptService
         return result
     }
 
-    private static getSubCalendarFromType(String type, String customTitle)
+    private getSubCalendarFromType(String type, String customTitle)
     {
-        // TODO should we handle Translations ?
-        switch (type) {
-            case "com.atlassian.confluence.extra.calendar3.calendarstore.generic.GenericLocalSubCalendarDataStore":
-                return "Event"
-            case "com.atlassian.confluence.extra.calendar3.calendarstore.generic.BirthdaySubCalendarDataStore":
-                return "Birthday"
-            case "com.atlassian.confluence.extra.calendar3.calendarstore.generic.LeaveSubCalendarDataStore":
-                return "Leave"
-            case "com.atlassian.confluence.extra.calendar3.calendarstore.generic.TravelSubCalendarDataStore":
-                return "Travel"
-            case "com.atlassian.confluence.extra.calendar3.calendarstore.generic.CustomSubCalendarDataStore":
-                return customTitle
-            default:
+        if (type == "com.atlassian.confluence.extra.calendar3.calendarstore.generic.CustomSubCalendarDataStore") {
+            return customTitle
+        } else {
+            String translationKey = SUB_CALENDAR_TYPE_TRANSLATION_MAP.get(type)
+            if (translationKey != null) {
+                // TODO need to define how to get the correct locale ??
+                return localization.getTranslation(translationKey, localizationContext.getCurrentLocale())
+            } else {
                 throw new RuntimeException("Unsupported type : " + type)
+            }
         }
     }
 
