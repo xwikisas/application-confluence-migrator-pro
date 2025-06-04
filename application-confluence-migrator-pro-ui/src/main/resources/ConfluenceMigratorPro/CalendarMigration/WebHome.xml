@@ -1040,16 +1040,30 @@ public class CalendarMigratorScriptService implements ScriptService
             String spaceKey = entry.get("SPACE_KEY")
             String name = entry.get("NAME")
 
-            EntityReference spaceReference = confluenceSpaceKeyResolver.getSpaceByKey(spaceKey)
-            logger.debug("space ref {}", spaceReference)
-            if (spaceReference != null) {
-                if (spaceReference.type == EntityType.SPACE) {
-                    spaceReference = new SpaceReference(spaceReference)
-                } else {
-                    logger.error("Unexpected type of reference [{}] for space key [{}]",
-                        spaceKey, spaceReference.type)
-                    return
+            if (StringUtils.isEmpty(spaceKey)) {
+                // Some old calendar don't have the space key value set
+                // https://confluence.atlassian.com/teamcal/team-calendars-5-3-release-notes-776814122.html
+                // TODO find an other way to retrieve the space key for theses calendar
+                logger.error("Space Key empty for calendar name [{}]", name)
+                return
+            }
+            EntityReference spaceReference
+            try {
+                logger.debug("Resolve space with key [{}]", spaceKey)
+                spaceReference = confluenceSpaceKeyResolver.getSpaceByKey(spaceKey)
+                logger.debug("Resolved space reference [{}]", spaceReference)
+                if (spaceReference != null) {
+                    if (spaceReference.type == EntityType.SPACE) {
+                        spaceReference = new SpaceReference(spaceReference)
+                    } else {
+                        logger.error("Unexpected type of reference [{}] for space key [{}]",
+                            spaceKey, spaceReference.type)
+                        return
+                    }
                 }
+            } catch (Exception e) {
+                logger.error("Erro while getting space reference for space key [${spaceKey}]", e)
+                return
             }
             if (spaceReference == null) {
                 logger.error("Can't get space reference for space key [{}]", spaceKey)

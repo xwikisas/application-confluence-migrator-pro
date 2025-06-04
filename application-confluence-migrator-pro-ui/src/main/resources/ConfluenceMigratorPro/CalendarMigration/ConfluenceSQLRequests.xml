@@ -40,6 +40,8 @@
 
 All dates are expected to be provided in milliseconds since the Epoch of 1970-01-01T00:00:00Z. So by example {{code}}1747062480020{{/code}} will mean {{code}}Mon May 12 15:08:00 UTC 2025{{/code}}. Note it's the date format used in Java when we create a date with {{code language="java"}}new Date(&lt;value&gt;){{/code}}
 
+All {{code}}NULL{{/code}} value are expected to be just an empty field so by example if the column is empty we will have something like {{code}};value;;{{/code}} when the second column is null or empty. Some database export could sometime set explicitly {{code}}NULL{{/code}} in the CSV export, in this case this must be fixed before beeing imported in XWiki.
+
 == SQL requests ==
 
 Here are the SQL requests to run on the Confluence database to retrieve the CSV files used for the [[Calendar import&gt;&gt;ConfluenceMigratorPro.CalendarMigration.WebHome]].
