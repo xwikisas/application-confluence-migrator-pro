@@ -176,7 +176,8 @@ public class LegacyTaskListMacroConverter extends AbstractMacroConverter
         } catch (IndexOutOfBoundsException e) {
             // If the data is consistent with the example, it shouldn't happen.
             logger.warn(
-                "There is no property at index [{}] in array [{}] when trying to extract tasks from a tasklist confluence macro.",
+                "There is no property at index [{}] in array [{}] when trying to extract tasks from a tasklist"
+                    + " confluence macro.",
                 index, Arrays.toString(properties));
         }
     }
