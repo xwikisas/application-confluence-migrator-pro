@@ -75,6 +75,13 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
       })
       #pagePicker($pagePickerParams)
     &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="spaceFilter"&gt;Space filter&lt;/label&gt;
+      &lt;span class="xHint"&gt;A list of space to import delimited by coma. If not set all all calendar related to all spaces will be imported. If set only the calendar linked to this list of spaces will be imported. For instance: XWIKI,~toto,EXAMPLE,Hello&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="spaceFilter" name="spaceFilter" value="$!escapetool.xml($!request.get("spaceFilter"))"/&gt;
+    &lt;/dd&gt;
     #foreach ($i in $eventsAndCalendarsFieldsMap.entrySet())
       &lt;dt&gt;
         &lt;label for="${i.key}Filename"&gt;Attachment name for $i.value&lt;/label&gt;
@@ -188,6 +195,7 @@ try {
     def sourceDoc = xwiki.getDocument(request.sourcePageName)
     def calendarsAttachements = [:]
     def eventsAttachements = [:]
+    List&lt;String&gt; spaceFilter = null
 
     String groupFormat
     if (StringUtils.isEmpty(request.groupFormat)) {
@@ -224,6 +232,9 @@ try {
             }
         }
     }
+    if (request.spaceFilter != null) {
+        spaceFilter = request.spaceFilter.split(",").toList()
+    }
 
     def cleanEvents = request.cleanevents == "on"
     def dontCleanRights = request.dontCleanrights == "on"
@@ -234,9 +245,9 @@ try {
         def userGroupMappingContext = services.calendarmigrator.getUserGroupMappingContext(request.parameterMap, groupFormat)
 
         if (request.importType == "calendars") {
-            services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, dontCleanRights, userGroupMappingContext)
+            services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, dontCleanRights, userGroupMappingContext, spaceFilter)
         } else if (request.importType == "events") {
-            services.calendarmigrator.migrateEvents(services.progress, calendarsAttachements, eventsAttachements, cleanEvents, userGroupMappingContext)
+            services.calendarmigrator.migrateEvents(services.progress, calendarsAttachements, eventsAttachements, cleanEvents, userGroupMappingContext, spaceFilter)
         } else {
             logger.error("Invalid import type [{}]", request.importType)
             throw new Exception("Invalid import type " + request.importType)
@@ -502,11 +513,15 @@ public class CalendarMigratorScriptService implements ScriptService
     }
 
     void migrateCalendars(ProgressScripService progress, Map&lt;String, Attachment&gt; attachments, boolean dontCleanRights,
-        UserGroupMappingContext userGroupMappingContext)
+        UserGroupMappingContext userGroupMappingContext, List&lt;String&gt; spaceFilter)
     {
         XWikiContext context = contextProvider.get()
         XWiki xwiki = context.getWiki()
-        List&lt;ParentCalendar&gt; parents = loadCalendars(attachments['parentCalendars'], attachments['subCalendars'])
+
+        def load = loadCalendars(attachments['parentCalendars'], attachments['subCalendars'], spaceFilter)
+        List&lt;ParentCalendar&gt; parents = load.result()
+        Set&lt;String&gt; ignoredParentCalendars = load.ignoredParentCalendars()
+        Set&lt;String&gt; ignoredSubCalendars = load.ignoredSubCalendars()
         Map&lt;String, Map&lt;String, Set&lt;String&gt;&gt;&gt; groupsRights = loadGroupsRights(attachments['calendarGroupRights'])
         Map&lt;String, Map&lt;String, Set&lt;String&gt;&gt;&gt; usersRights = loadUsersRights(attachments['calendarUserRights'])
 
@@ -522,7 +537,9 @@ public class CalendarMigratorScriptService implements ScriptService
             def calendarId = entry.get("ID")
             ParentCalendar parentCalendar = parents.find { it.confluenceId() == calendarId }
             if (parentCalendar == null) {
-                logger.error("Can't find parent calendar by ID [{}]", calendarId)
+                if (!ignoredParentCalendars.contains(calendarId)) {
+                    logger.error("Can't find parent calendar by ID [{}]", calendarId)
+                }
                 return
             }
 
@@ -637,12 +654,16 @@ public class CalendarMigratorScriptService implements ScriptService
 
             ParentCalendar parent = parents.find { it.confluenceId() == entry.get("PARENT_ID") }
             if (parent == null) {
-                logger.error("Can't find parent calendar by ID [{}]", entry.get("PARENT_ID"))
+                if (!ignoredParentCalendars.contains(entry.get("PARENT_ID"))) {
+                    logger.error("Can't find parent calendar by ID [{}]", entry.get("PARENT_ID"))
+                }
                 return
             }
             SubCalendar subCalendar = parent.subCalendars().find { it.confluenceId() == entry.get("ID") }
             if (subCalendar == null) {
-                logger.error("Can't find sub-calendar by ID [{}]", entry.get("ID"))
+                if (!ignoredSubCalendars.contains(entry.get("ID"))) {
+                    logger.error("Can't find sub-calendar by ID [{}]", entry.get("ID"))
+                }
                 return
             }
 
@@ -675,15 +696,22 @@ public class CalendarMigratorScriptService implements ScriptService
 
     void migrateEvents(ProgressScripService progress, Map&lt;String, Attachment&gt; calendarsAttachments,
         Map&lt;String, Attachment&gt; eventsAttachments, boolean cleanEvents,
-        UserGroupMappingContext userGroupMappingContext)
+        UserGroupMappingContext userGroupMappingContext, List&lt;String&gt; spaceFilter)
     {
         XWikiContext context = contextProvider.get()
         XWiki xwiki = context.getWiki()
-        List&lt;ParentCalendar&gt; parents =
-            loadCalendars(calendarsAttachments['parentCalendars'], calendarsAttachments['subCalendars'])
+
+        def loadCal =
+            loadCalendars(calendarsAttachments['parentCalendars'], calendarsAttachments['subCalendars'], spaceFilter)
+        def loadEv = loadEvents(eventsAttachments['events'], eventsAttachments['eventInvitee'], loadCal,
+            userGroupMappingContext)
+
+        List&lt;ParentCalendar&gt; parents = loadCal.result()
+        Set&lt;String&gt; ignoredSubCalendars = loadCal.ignoredSubCalendars()
+        HashMap&lt;String, Event&gt; events = loadEv.result()
+        Set&lt;String&gt; ignoredEvents = loadEv.ignoredEvents()
+        Set&lt;String&gt; ignoredEventByVUID = loadEv.ignoredEventByVUID()
         List&lt;SubCalendar&gt; allCalendars = parents.collectMany { it.subCalendars() }
-        HashMap&lt;String, Event&gt; events =
-            loadEvents(eventsAttachments['events'], eventsAttachments['eventInvitee'], parents, userGroupMappingContext)
 
         InputStream is = eventsAttachments['eventExclusion'].getContentInputStream()
         InputStreamReader isr = new InputStreamReader(is)
@@ -696,7 +724,7 @@ public class CalendarMigratorScriptService implements ScriptService
         if (cleanEvents) {
             logger.info("Cleaning existing events")
 
-            parents.collectMany { it.subCalendars() }.each { entry -&gt;
+            allCalendars.each { entry -&gt;
                 String subCalendarSpace =
                     serializer.serialize(new LocalDocumentReference(entry.reference()).parent)
                 String query = "SELECT doc " +
@@ -727,12 +755,16 @@ public class CalendarMigratorScriptService implements ScriptService
             Event event = events[entry.get("ID")]
             SubCalendar subCalendar = allCalendars.find { it.confluenceId() == entry.get("SUB_CALENDAR_ID") }
             if (event == null) {
-                logger.error("Can't find event by ID [{}]", entry.get("ID"))
+                if (ignoredEvents.contains(entry.get("ID"))) {
+                    logger.error("Can't find event by ID [{}]", entry.get("ID"))
+                }
                 return
             }
             if (subCalendar == null) {
-                logger.error("Can't find subCalendar by ID [{}] for event ID [{}]", entry.get("SUB_CALENDAR_ID"),
-                    entry.get("ID"))
+                if (ignoredSubCalendars.contains(entry.get("SUB_CALENDAR_ID"))) {
+                    logger.error("Can't find subCalendar by ID [{}] for event ID [{}]", entry.get("SUB_CALENDAR_ID"),
+                        entry.get("ID"))
+                }
                 return
             }
 
@@ -814,6 +846,9 @@ public class CalendarMigratorScriptService implements ScriptService
                 return
             }
             String eventUid = entry.get("VEVENT_UID")
+            if (ignoredEventByVUID.contains(eventUid)) {
+                return
+            }
             if (!eventOverrides.containsKey(eventUid)) {
                 eventOverrides[eventUid] = []
             }
@@ -841,6 +876,10 @@ public class CalendarMigratorScriptService implements ScriptService
 
             entry.value.each { event -&gt;
                 Event eventOverride = events[event.get("ID")]
+                if (eventOverride == null) {
+                    logger.error("Can't get event override with ID [{}]", event.get("ID"))
+                    return
+                }
                 String title = event.get("SUMMARY")
                 String description = getEventDescription(event, doc.syntax, eventOverride, locale)
                 Date startDate = getDateFromConfuence(event.get("START"), eventOverride.allDay())
@@ -867,6 +906,9 @@ public class CalendarMigratorScriptService implements ScriptService
         isr = new InputStreamReader(eventsAttachments['eventExclusion'].getContentInputStream())
         getCsvParser(isr).each { entry -&gt;
             String eventId = entry.get("EVENT_ID")
+            if (ignoredEvents.contains(eventId)) {
+                return
+            }
             String timestamp = entry.get("EXCLUSION")
             if (!eventExclusion.containsKey(eventId)) {
                 eventExclusion[eventId] = []
@@ -934,23 +976,23 @@ public class CalendarMigratorScriptService implements ScriptService
         String location = entry.get("LOCATION")
         String url = entry.get("URL")
         if (StringUtils.isNotEmpty(location)) {
-            description.append("\n")
+            description.append("\n\n")
             description.append(localization.getTranslation(
                 "confluencepro.calendarmigrator.eventdescription.location",
                 locale, docSyntax))
-            description.append(":\n")
+            description.append(":\n\n")
             description.append(escaper.escape(location, docSyntax))
         }
         if (StringUtils.isNotEmpty(url)) {
-            description.append("\n")
+            description.append("\n\n")
             description.append(localization.getTranslation(
                 "confluencepro.calendarmigrator.eventdescription.url",
                 locale, docSyntax))
-            description.append(":\n")
+            description.append(":\n\n")
             description.append(escaper.escape(url, docSyntax))
         }
         if (!event.invitee().empty) {
-            description.append("\n")
+            description.append("\n\n")
             description.append(localization.getTranslation(
                 "confluencepro.calendarmigrator.eventdescription.invitee",
                 locale, docSyntax))
@@ -1030,23 +1072,37 @@ public class CalendarMigratorScriptService implements ScriptService
         return new RecurrentEventInfo(eventFrequency, untilDate, weekDay)
     }
 
-    private List&lt;ParentCalendar&gt; loadCalendars(Attachment parents, Attachment children)
+    private LoadCalendarResult loadCalendars(Attachment parents, Attachment children,
+        List&lt;String&gt; spaceFilter)
     {
         logger.info("Load parents calendars")
 
         List&lt;ParentCalendar&gt; result = []
 
+        // Used to avoid to log to many error just because we ignored a calendar but we also want to ensure the data
+        // integrity so with this we ensure that if a calendar is not found it's expected
+        Set&lt;String&gt; ignoredParentCalendars = new HashSet&lt;&gt;()
+        Set&lt;String&gt; ignoredSubCalendars = new HashSet&lt;&gt;()
+
         InputStreamReader isr = new InputStreamReader(parents.getContentInputStream())
         getCsvParser(isr).each { entry -&gt;
             String spaceKey = entry.get("SPACE_KEY")
             String name = entry.get("NAME")
-            logger.debug("Loading parent calendar named [{}], ID [{}]", name, entry.get("ID"))
+            String id = entry.get("ID")
+            logger.debug("Loading parent calendar named [{}], ID [{}]", name, id)
 
             if (StringUtils.isEmpty(spaceKey)) {
                 // Some old calendar don't have the space key value set
                 // https://confluence.atlassian.com/teamcal/team-calendars-5-3-release-notes-776814122.html
                 // TODO find an other way to retrieve the space key for theses calendar
+                // maybe with the AO_950DC3_TC_SUBCALS_IN_SPACE table
                 logger.error("Space Key empty for calendar name [{}]", name)
+                ignoredParentCalendars.add(id)
+                return
+            }
+            if (spaceFilter != null &amp;&amp; spaceFilter.contains(spaceKey)) {
+                logger.info("Ignoring space name [{}]", spaceKey)
+                ignoredParentCalendars.add(id)
                 return
             }
             EntityReference spaceReference
@@ -1060,15 +1116,18 @@ public class CalendarMigratorScriptService implements ScriptService
                     } else {
                         logger.error("Unexpected type of reference [{}] for space key [{}]",
                             spaceKey, spaceReference.type)
+                        ignoredParentCalendars.add(id)
                         return
                     }
                 }
             } catch (Exception e) {
                 logger.error("Erro while getting space reference for space key [${spaceKey}]", e)
+                ignoredParentCalendars.add(id)
                 return
             }
             if (spaceReference == null) {
                 logger.error("Can't get space reference for space key [{}]", spaceKey)
+                ignoredParentCalendars.add(id)
                 return
             }
 
@@ -1090,9 +1149,7 @@ public class CalendarMigratorScriptService implements ScriptService
 
             DocumentReference parentCalendarReference = new DocumentReference("WebHome", targetParentCalendarSpace)
 
-            result.add(
-                new ParentCalendar(entry.get("ID"), spaceKey, name, entry.get("DESCRIPTION"), parentCalendarReference,
-                    []))
+            result.add(new ParentCalendar(id, spaceKey, name, entry.get("DESCRIPTION"), parentCalendarReference, []))
         }
         isr.close()
 
@@ -1100,11 +1157,15 @@ public class CalendarMigratorScriptService implements ScriptService
 
         isr = new InputStreamReader(children.getContentInputStream())
         getCsvParser(isr).each { entry -&gt;
-            logger.debug("Loading sub calendar ID [{}]", entry.get("ID"))
+            String id = entry.get("ID")
+            logger.debug("Loading sub calendar ID [{}]", id)
 
             ParentCalendar parent = result.find { it.confluenceId() == entry.get("PARENT_ID") }
             if (parent == null) {
-                logger.error("Can't get parent calendar for calendar ID [{}]", entry.get("ID"))
+                if (!ignoredParentCalendars.contains(entry.get("PARENT_ID"))) {
+                    logger.error("Can't get parent calendar for calendar ID [{}]", id)
+                }
+                ignoredSubCalendars.add(id)
                 return
             }
             String name = getSubCalendarNameFromType(entry.get("STORE_KEY"), entry.get("TITLE"),
@@ -1125,12 +1186,12 @@ public class CalendarMigratorScriptService implements ScriptService
                 } while (parent.subCalendars().find { it.reference() == subCalReference }.any())
             }
 
-            parent.subCalendars().add(new SubCalendar(entry.get("ID"), subCalReference))
+            parent.subCalendars().add(new SubCalendar(id, subCalReference))
         }
         isr.close()
         logger.info("Sub calendars loaded")
 
-        return result
+        return new LoadCalendarResult(result, ignoredParentCalendars, ignoredSubCalendars)
     }
 
     private Map&lt;String, Map&lt;String, Set&lt;String&gt;&gt;&gt; loadGroupsRights(Attachment groupRigths)
@@ -1181,12 +1242,17 @@ public class CalendarMigratorScriptService implements ScriptService
         return result
     }
 
-    private HashMap&lt;String, Event&gt; loadEvents(Attachment events, Attachment invitees, List&lt;ParentCalendar&gt; parents,
-        UserGroupMappingContext userGroupMappingContext)
+    private LoadEventResult loadEvents(Attachment events, Attachment invitees,
+        LoadCalendarResult loadCalendarResult, UserGroupMappingContext userGroupMappingContext)
     {
         Map&lt;String, List&lt;DocumentReference&gt;&gt; inviteeMap = [:]
         HashMap&lt;String, Event&gt; result = [:]
         HashSet&lt;DocumentReference&gt; eventReferences = new HashSet&lt;&gt;()
+
+        // Used to avoid to log to many error just because we ignored an event but we also want to ensure the data
+        // integrity so with this we ensure that if an event is not found it's expected
+        Set&lt;String&gt; ignoredEvents = new HashSet&lt;&gt;()
+        Set&lt;String&gt; ignoredEventByVUID = new HashSet&lt;&gt;()
 
         logger.info("Load events invitees")
 
@@ -1207,16 +1273,22 @@ public class CalendarMigratorScriptService implements ScriptService
         logger.info("Load events")
 
         Map&lt;String, SubCalendar&gt; subCalendarsByIds =
-            parents.collectMany { it.subCalendars() }.collectEntries { [it.confluenceId(), it] }
+            loadCalendarResult.result().collectMany { it.subCalendars() }.collectEntries { [it.confluenceId(), it] }
 
         isr = new InputStreamReader(events.getContentInputStream())
         getCsvParser(isr).each { entry -&gt;
             String name = entry.get("SUMMARY")
-            logger.debug("Loading event named [{}] ID [{}]", name, entry.get("ID"))
+            String id = entry.get("ID")
+            String vuid = entry.get("VEVENT_UID")
+            logger.debug("Loading event named [{}] ID [{}]", name, id)
 
             SubCalendar calendar = subCalendarsByIds[entry.get("SUB_CALENDAR_ID")]
             if (calendar == null) {
-                logger.error("Can't get calendar for event ID [{}]", entry.get("ID"))
+                if (!loadCalendarResult.ignoredSubCalendars().contains(entry.get("SUB_CALENDAR_ID"))) {
+                    logger.error("Can't get calendar for event ID [{}]", id)
+                }
+                ignoredEvents.add(id)
+                ignoredEventByVUID.add(vuid)
                 return
             }
 
@@ -1228,6 +1300,8 @@ public class CalendarMigratorScriptService implements ScriptService
                 logger.error(
                     "Can't get reference for event named [${name}] of calendar [${calendar.reference()}] ID [${calendar.confluenceId()}]",
                     e)
+                ignoredEvents.add(id)
+                ignoredEventByVUID.add(vuid)
                 return
             }
             if (result.containsKey(eventReference)) {
@@ -1242,7 +1316,7 @@ public class CalendarMigratorScriptService implements ScriptService
             }
             eventReferences.add(eventReference)
             result.put(entry.get("ID"),
-                new Event(entry.get("ID"), entry.get("VEVENT_UID"),
+                new Event(entry.get("ID"), vuid,
                     StringUtils.isNotEmpty(entry.get("RECURRENCE_ID_TIMESTAMP")),
                     name, "TRUE".equalsIgnoreCase(entry.get("ALL_DAY")),
                     eventReference, inviteeMap.get(entry.get("ID"), [])))
@@ -1250,7 +1324,7 @@ public class CalendarMigratorScriptService implements ScriptService
         isr.close()
 
         logger.info("Event loaded")
-        return result
+        return new LoadEventResult(result, ignoredEvents, ignoredEventByVUID)
     }
 
     private String getSubCalendarNameFromType(String type, String customTitle, Locale locale)
@@ -1352,6 +1426,13 @@ record SubCalendar(
 )
 {}
 
+record LoadCalendarResult(
+    List&lt;ParentCalendar&gt; result,
+    Set&lt;String&gt; ignoredParentCalendars,
+    Set&lt;String&gt; ignoredSubCalendars
+)
+{}
+
 record Event(
     String confluenceId,
     String veventUid,
@@ -1360,6 +1441,13 @@ record Event(
     boolean allDay,
     DocumentReference reference,
     List&lt;DocumentReference&gt; invitee
+)
+{}
+
+record LoadEventResult(
+    HashMap&lt;String, Event&gt; result,
+    Set&lt;String&gt; ignoredEvents,
+    Set&lt;String&gt; ignoredEventByVUID
 )
 {}
 
