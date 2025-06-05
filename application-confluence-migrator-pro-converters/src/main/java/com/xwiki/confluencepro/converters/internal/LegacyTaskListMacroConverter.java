@@ -23,6 +23,7 @@ package com.xwiki.confluencepro.converters.internal;
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -105,14 +106,19 @@ public class LegacyTaskListMacroConverter extends AbstractMacroConverter
                 continue;
             }
             Map<String, String> task = new HashMap<>();
-            String[] properties = line.substring(1).split("\\|");
-            maybePutFromArray(0, properties, task, Task.STATUS);
-            maybePutFromArray(1, properties, task, PARAM_PRIORITY);
-            maybePutFromArray(2, properties, task, PARAM_LOCKED);
-            maybePutFromArray(3, properties, task, Task.CREATE_DATE);
-            maybePutFromArray(4, properties, task, Task.COMPLETE_DATE);
-            maybePutFromArray(5, properties, task, Task.ASSIGNEE);
-            maybePutFromArray(6, properties, task, Task.NAME);
+
+            if (line.startsWith("|")) {
+                String[] properties = line.substring(1).split("\\|");
+                maybePutFromArray(0, properties, task, Task.STATUS);
+                maybePutFromArray(1, properties, task, PARAM_PRIORITY);
+                maybePutFromArray(2, properties, task, PARAM_LOCKED);
+                maybePutFromArray(3, properties, task, Task.CREATE_DATE);
+                maybePutFromArray(4, properties, task, Task.COMPLETE_DATE);
+                maybePutFromArray(5, properties, task, Task.ASSIGNEE);
+                maybePutFromArray(6, properties, task, Task.NAME);
+            } else {
+                task.put(Task.NAME, line);
+            }
 
             if (!task.isEmpty()) {
                 taskList.add(task);
@@ -120,6 +126,8 @@ public class LegacyTaskListMacroConverter extends AbstractMacroConverter
         }
         SimpleDateFormat storageDateFormat = new SimpleDateFormat(dateMacroConfiguration.getStorageDateFormat());
         String title = confluenceParameters.remove("title");
+        // It is possible that the title parameter has an empty name.
+        title = title == null || title.isEmpty() ? confluenceParameters.remove("") : title;
         // Can't handle these parameters.
         confluenceParameters.remove("promptOnDelete");
         confluenceParameters.remove("enableLocking");
@@ -167,7 +175,9 @@ public class LegacyTaskListMacroConverter extends AbstractMacroConverter
             task.put(propName, property);
         } catch (IndexOutOfBoundsException e) {
             // If the data is consistent with the example, it shouldn't happen.
-            logger.warn("There is no property at index [{}].", index);
+            logger.warn(
+                "There is no property at index [{}] in array [{}] when trying to extract tasks from a tasklist confluence macro.",
+                index, Arrays.toString(properties));
         }
     }
 

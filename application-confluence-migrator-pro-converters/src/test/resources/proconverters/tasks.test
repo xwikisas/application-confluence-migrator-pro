@@ -113,6 +113,56 @@ my first task2 {{mention reference="XWiki.jtille" anchor="XWiki-jtille-legacy-2"
 {{task reference="/Tasks/Task_Legacy_3" status="Done" createDate="2025/04/14 08:48" completeDate="2025/04/25 22:35"}}
 my second task2 {{mention reference="XWiki.jtille" anchor="XWiki-jtille-legacy-3" style="FULL_NAME"/}}
 {{/task}}
+)))
+
+(((
+**EP General Knowledge-01-03 Sept 2010**
+
+{{task reference="/Tasks/Task_Legacy_4" status="InProgress"}}
+Introducing to the team in place
+{{/task}}
+
+{{task reference="/Tasks/Task_Legacy_5" status="InProgress"}}
+Buidings tour and facilities
+{{/task}}
+
+{{task reference="/Tasks/Task_Legacy_6" status="InProgress"}}
+Introduction to European Institutions
+{{/task}}
+
+{{task reference="/Tasks/Task_Legacy_7" status="InProgress"}}
+European Parliament and organitional chart
+{{/task}}
+
+{{task reference="/Tasks/Task_Legacy_8" status="InProgress"}}
+ICT within European Parliament
+{{/task}}
+
+{{task reference="/Tasks/Task_Legacy_9" status="InProgress"}}
+MUST Service within ITEC
+{{/task}}
+
+{{task reference="/Tasks/Task_Legacy_10" status="InProgress"}}
+Reviewing and Assesment
+{{/task}}
+)))
+
+= {{id name="MySpaceHome-Week36"/}}Week 36 =
+
+(((
+**EP General Knowledge-06 Sept 2010**
+
+{{task reference="/Tasks/Task_Legacy_11" status="InProgress"}}
+CDC Equipment within MUST
+{{/task}}
+
+{{task reference="/Tasks/Task_Legacy_12" status="InProgress"}}
+Role and Responsabilities
+{{/task}}
+
+{{task reference="/Tasks/Task_Legacy_13" status="InProgress"}}
+Consortium Presentation and Admin.
+{{/task}}
 )))</string>
             </entry>
             <entry>
