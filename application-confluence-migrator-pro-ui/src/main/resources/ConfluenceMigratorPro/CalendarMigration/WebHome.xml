@@ -573,7 +573,9 @@ public class CalendarMigratorScriptService implements ScriptService
             doc.setAuthor(creatorRef)
             doc.getAuthors().setCreator(creatorRef)
             doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
-            doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED"))) {
+                doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            }
             doc.setContentDirty(false)
             doc.setMetaDataDirty(false)
             if (!dryRun) {
@@ -707,7 +709,9 @@ public class CalendarMigratorScriptService implements ScriptService
             doc.setAuthor(creatorRef)
             doc.getAuthors().setCreator(creatorRef)
             doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
-            doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED"))) {
+                doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            }
             doc.setContentDirty(false)
             doc.setMetaDataDirty(false)
             if (!dryRun) {
@@ -784,13 +788,13 @@ public class CalendarMigratorScriptService implements ScriptService
             Event event = events[entry.get("ID")]
             SubCalendar subCalendar = allCalendars.find { it.confluenceId() == entry.get("SUB_CALENDAR_ID") }
             if (event == null) {
-                if (ignoredEvents.contains(entry.get("ID"))) {
+                if (!ignoredEvents.contains(entry.get("ID"))) {
                     logger.error("Can't find event by ID [{}]", entry.get("ID"))
                 }
                 return
             }
             if (subCalendar == null) {
-                if (ignoredSubCalendars.contains(entry.get("SUB_CALENDAR_ID"))) {
+                if (!ignoredSubCalendars.contains(entry.get("SUB_CALENDAR_ID"))) {
                     logger.error("Can't find subCalendar by ID [{}] for event ID [{}]", entry.get("SUB_CALENDAR_ID"),
                         entry.get("ID"))
                 }
@@ -855,12 +859,16 @@ public class CalendarMigratorScriptService implements ScriptService
             eventObj.setDateValue("startDate", startDate)
             eventObj.setDateValue("endDate", endDate)
 
-            DocumentUserReference creatorRef = new DocumentUserReference(
-                getUserRefFromConfluence(entry.get("ORGANISER"), userGroupMappingContext), true)
-            doc.setAuthor(creatorRef)
-            doc.getAuthors().setCreator(creatorRef)
+            if (StringUtils.isNotEmpty(entry.get("ORGANISER"))) {
+                DocumentUserReference creatorRef = new DocumentUserReference(
+                    getUserRefFromConfluence(entry.get("ORGANISER"), userGroupMappingContext), true)
+                doc.setAuthor(creatorRef)
+                doc.getAuthors().setCreator(creatorRef)
+            }
             doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
-            doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED"))) {
+                doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            }
             doc.setContentDirty(false)
             doc.setMetaDataDirty(false)
             if (!dryRun) {
@@ -1153,27 +1161,28 @@ public class CalendarMigratorScriptService implements ScriptService
                 // https://confluence.atlassian.com/teamcal/team-calendars-5-3-release-notes-776814122.html
                 def spaces = calendarSpaceMapping.get(id)
                 if (spaces == null || spaces.empty) {
-                    logger.error("The space Key is empty for calendar name [{}] and no additional mapping was found " +
-                        "from the calendarSpaceMapping.csv file. Ignoring this calendar...", name)
+                    // TODO need to ensure that in this case we can consider that it's a stale calendar
+                    logger.warn("The space Key is empty for calendar name [{}] and ID [{}] and no additional mapping was found " +
+                        "from the calendarSpaceMapping.csv file. Ignoring this calendar...", name, id)
                     ignoredParentCalendars.add(id)
                     return
                 } else {
                     if (spaces.size() == 1) {
-                        logger.info("The space Key is empty for calendar name [{}] but an mapping was found in the " +
-                            "the calendarSpaceMapping.csv file. Using this mapping instead", name)
+                        logger.info("The space Key is empty for calendar name [{}] and ID [{}] but an mapping was found in the " +
+                            "the calendarSpaceMapping.csv file. Using this mapping instead", name, id)
                         spaceKey = spaces[0]
                     } else {
-                        logger.error("The space Key is empty for calendar name [{}] and an additional mapping was " +
+                        logger.error("The space Key is empty for calendar name [{}] and ID [{}] and an additional mapping was " +
                             "found from the calendarSpaceMapping.csv file but more than one space key was found for " +
                             "this calendar. So we can't determine the target space to import the calendar. " +
-                            "Ignoring this calendar...", name)
+                            "The list of target space is:\n{}", name, id, spaces)
                         ignoredParentCalendars.add(id)
                         return
                     }
                 }
             }
-            if (spaceFilter != null &amp;&amp; spaceFilter.contains(spaceKey)) {
-                logger.info("Ignoring space name [{}]", spaceKey)
+            if (spaceFilter != null &amp;&amp; !spaceFilter.contains(spaceKey)) {
+                logger.info("Ignoring calendar for space name [{}]", spaceKey)
                 ignoredParentCalendars.add(id)
                 return
             }
