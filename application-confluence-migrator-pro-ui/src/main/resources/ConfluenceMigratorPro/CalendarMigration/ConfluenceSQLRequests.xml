@@ -109,8 +109,26 @@ So the resulting CSV should look like this:
 
 {{code language="csv"}}
 ID;COLOUR;CREATED;CREATOR;DESCRIPTION;LAST_MODIFIED;NAME;SPACE_KEY;PARENT_ID;STORE_KEY;TITLE
-70e4a6dd-5de6-4b11-a8e4-ee2be4a38855;subcalendar-blue;1747066494245;8a9446eb967bf3810196a9ea46950001;the description;1747069898597;calendar name;XWIKISAS;f3211e0a-ca95-4ef0-9367-4b15ae36298a;com.atlassian.confluence.extra.calendar3.calendarstore.generic.GenericLocalSubCalendarDataStore;
-889a31d9-18fd-423f-809f-94f41534f4ac;subcalendar-pink;1747068002015;8a9446eb967bf3810196a9ea46950001;the description;1747069898586;calendar name;XWIKISAS;f3211e0a-ca95-4ef0-9367-4b15ae36298a;com.atlassian.confluence.extra.calendar3.calendarstore.generic.BirthdaySubCalendarDataStore;
+70e4a6dd-5de6-4b11-a8e4-ee2be4a38855;subcalendar-blue;1747066494245;8a9446eb967bf3810196a9ea46950001;the description;1747069898597;calendar name;MY_SPACE_KEY;f3211e0a-ca95-4ef0-9367-4b15ae36298a;com.atlassian.confluence.extra.calendar3.calendarstore.generic.GenericLocalSubCalendarDataStore;
+889a31d9-18fd-423f-809f-94f41534f4ac;subcalendar-pink;1747068002015;8a9446eb967bf3810196a9ea46950001;the description;1747069898586;calendar name;MY_SPACE_KEY;f3211e0a-ca95-4ef0-9367-4b15ae36298a;com.atlassian.confluence.extra.calendar3.calendarstore.generic.BirthdaySubCalendarDataStore;
+...
+{{/code}}
+
+=== For {{code language="none"}}calendarSpaceMapping.csv{{/code}} ===
+
+The mapping between the calendar and the space provided by the table "AO_950DC3_TC_SUBCALS_IN_SPACE". This is needed because sometime not all "SPACE_KEY" is set in "parentCalendars" CSV.
+
+{{code language="sql"}}
+SELECT t."SPACE_KEY"
+     , t."SUB_CALENDAR_ID"
+FROM confluence."AO_950DC3_TC_SUBCALS_IN_SPACE" t
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+SPACE_KEY;SUB_CALENDAR_ID
+MY_SPACE_KEY;f3211e0a-ca95-4ef0-9367-4b15ae36298a
 ...
 {{/code}}
 

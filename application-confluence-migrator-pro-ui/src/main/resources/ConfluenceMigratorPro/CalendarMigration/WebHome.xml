@@ -45,7 +45,8 @@ calendarsFieldsMap = [
     'parentCalendars'    : 'parent calendars',
     'subCalendars'       : 'sub calendars',
     'calendarUserRights' : 'calendars user rights',
-    'calendarGroupRights': 'calendar group rights'
+    'calendarGroupRights': 'calendar group rights',
+    'calendarSpaceMapping': 'calendar space mappping'
 ]
 eventsFieldsMap = [
     'events'             : 'events',
@@ -120,6 +121,13 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
     &lt;/dt&gt;
     &lt;dd&gt;
       &lt;input type="text" id="groupMapping" name="groupMapping" value="$!escapetool.xml($!request.get("groupMapping"))"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="dryRun"&gt;Dry run&lt;/label&gt;
+      &lt;span class="xHint"&gt;If checked the script everything will be run the same way except that the document will not be saved.&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="checkbox" id="dryRun" name="dryRun" #if($request.dryRun)checked#end/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
       &lt;label for="cleanevents"&gt;Clean calendars events&lt;/label&gt;
@@ -238,6 +246,7 @@ try {
 
     def cleanEvents = request.cleanevents == "on"
     def dontCleanRights = request.dontCleanrights == "on"
+    def dryRun = request.dryRun == "on"
 
     if (hasProgramming &amp;&amp; hasAdmin &amp;&amp; 'true' == request.confirm) {
         start = new Date();
@@ -245,9 +254,11 @@ try {
         def userGroupMappingContext = services.calendarmigrator.getUserGroupMappingContext(request.parameterMap, groupFormat)
 
         if (request.importType == "calendars") {
-            services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, dontCleanRights, userGroupMappingContext, spaceFilter)
+            services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, dontCleanRights, userGroupMappingContext,
+                dryRun, spaceFilter)
         } else if (request.importType == "events") {
-            services.calendarmigrator.migrateEvents(services.progress, calendarsAttachements, eventsAttachements, cleanEvents, userGroupMappingContext, spaceFilter)
+            services.calendarmigrator.migrateEvents(services.progress, calendarsAttachements, eventsAttachements, cleanEvents, userGroupMappingContext,
+                dryRun, spaceFilter)
         } else {
             logger.error("Invalid import type [{}]", request.importType)
             throw new Exception("Invalid import type " + request.importType)
@@ -514,12 +525,13 @@ public class CalendarMigratorScriptService implements ScriptService
     }
 
     void migrateCalendars(ProgressScripService progress, Map&lt;String, Attachment&gt; attachments, boolean dontCleanRights,
-        UserGroupMappingContext userGroupMappingContext, List&lt;String&gt; spaceFilter)
+        UserGroupMappingContext userGroupMappingContext, boolean dryRun, List&lt;String&gt; spaceFilter)
     {
         XWikiContext context = contextProvider.get()
         XWiki xwiki = context.getWiki()
 
-        def load = loadCalendars(attachments['parentCalendars'], attachments['subCalendars'], spaceFilter)
+        def load = loadCalendars(attachments['parentCalendars'], attachments['subCalendars'],
+            attachments['calendarSpaceMapping'], spaceFilter)
         List&lt;ParentCalendar&gt; parents = load.result()
         Set&lt;String&gt; ignoredParentCalendars = load.ignoredParentCalendars()
         Set&lt;String&gt; ignoredSubCalendars = load.ignoredSubCalendars()
@@ -564,7 +576,9 @@ public class CalendarMigratorScriptService implements ScriptService
             doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
             doc.setContentDirty(false)
             doc.setMetaDataDirty(false)
-            xwiki.saveDocument(doc, context)
+            if (!dryRun) {
+                xwiki.saveDocument(doc, context)
+            }
 
             logger.info("Parent for calendar named [{}] created at reference [{}]", parentCalendar.name(),
                 parentCalendar.reference())
@@ -644,7 +658,9 @@ public class CalendarMigratorScriptService implements ScriptService
 
             logger.info("User rights for calendar at reference [{}] done", parentCalendar.reference())
 
-            xwiki.saveDocument(prefDoc, context)
+            if (!dryRun) {
+                xwiki.saveDocument(prefDoc, context)
+            }
             logger.info("Right for calendar ID [{}] at reference [{}] Done",
                 calendarId, parentCalendar.reference())
 
@@ -694,8 +710,9 @@ public class CalendarMigratorScriptService implements ScriptService
             doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
             doc.setContentDirty(false)
             doc.setMetaDataDirty(false)
-            xwiki.saveDocument(doc, context)
-
+            if (!dryRun) {
+                xwiki.saveDocument(doc, context)
+            }
             logger.info("Sub calendar named [{}] created at reference [{}]", title,
                 subCalendar.reference())
             progress.endStep()
@@ -707,13 +724,14 @@ public class CalendarMigratorScriptService implements ScriptService
 
     void migrateEvents(ProgressScripService progress, Map&lt;String, Attachment&gt; calendarsAttachments,
         Map&lt;String, Attachment&gt; eventsAttachments, boolean cleanEvents,
-        UserGroupMappingContext userGroupMappingContext, List&lt;String&gt; spaceFilter)
+        UserGroupMappingContext userGroupMappingContext, boolean dryRun, List&lt;String&gt; spaceFilter)
     {
         XWikiContext context = contextProvider.get()
         XWiki xwiki = context.getWiki()
 
         def loadCal =
-            loadCalendars(calendarsAttachments['parentCalendars'], calendarsAttachments['subCalendars'], spaceFilter)
+            loadCalendars(calendarsAttachments['parentCalendars'], calendarsAttachments['subCalendars'],
+                calendarsAttachments['calendarSpaceMapping'], spaceFilter)
         def loadEv = loadEvents(eventsAttachments['events'], eventsAttachments['eventInvitee'], loadCal,
             userGroupMappingContext)
 
@@ -845,8 +863,9 @@ public class CalendarMigratorScriptService implements ScriptService
             doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
             doc.setContentDirty(false)
             doc.setMetaDataDirty(false)
-            xwiki.saveDocument(doc, context)
-
+            if (!dryRun) {
+                xwiki.saveDocument(doc, context)
+            }
             logger.info("Event named [{}] created at reference [{}]", event.name(), event.reference())
             progress.endStep()
         }
@@ -913,7 +932,9 @@ public class CalendarMigratorScriptService implements ScriptService
 
             doc.setContentDirty(false)
             doc.setMetaDataDirty(false)
-            xwiki.saveDocument(doc, context)
+            if (!dryRun) {
+                xwiki.saveDocument(doc, context)
+            }
             logger.info("Event override done for event UID [{}]", entry.getKey())
             progress.endStep()
         }
@@ -960,7 +981,9 @@ public class CalendarMigratorScriptService implements ScriptService
 
             doc.setContentDirty(false)
             doc.setMetaDataDirty(false)
-            xwiki.saveDocument(doc, context)
+            if (!dryRun) {
+                xwiki.saveDocument(doc, context)
+            }
             logger.info("Event exclusion done for event ID [{}]", entry.getKey())
             progress.endStep()
         }
@@ -1092,19 +1115,33 @@ public class CalendarMigratorScriptService implements ScriptService
         return new RecurrentEventInfo(eventFrequency, untilDate, weekDay)
     }
 
-    private LoadCalendarResult loadCalendars(Attachment parents, Attachment children,
+    private LoadCalendarResult loadCalendars(Attachment parents, Attachment children, Attachment spaceMapping,
         List&lt;String&gt; spaceFilter)
     {
-        logger.info("Load parents calendars")
-
         List&lt;ParentCalendar&gt; result = []
+        Map&lt;String, List&lt;String&gt;&gt; calendarSpaceMapping = new HashMap&lt;&gt;()
 
         // Used to avoid to log to many error just because we ignored a calendar but we also want to ensure the data
         // integrity so with this we ensure that if a calendar is not found it's expected
         Set&lt;String&gt; ignoredParentCalendars = new HashSet&lt;&gt;()
         Set&lt;String&gt; ignoredSubCalendars = new HashSet&lt;&gt;()
 
-        InputStreamReader isr = new InputStreamReader(parents.getContentInputStream())
+        logger.info("Load calendar space mapping")
+        InputStreamReader isr = new InputStreamReader(spaceMapping.getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            String spaceKey = entry.get("SPACE_KEY")
+            String id = entry.get("SUB_CALENDAR_ID")
+            List&lt;String&gt; spaces = calendarSpaceMapping.get(id)
+            if (spaces == null) {
+                spaces = []
+                calendarSpaceMapping[id] = spaces
+            }
+            spaces.add(spaceKey)
+        }
+
+        logger.info("Load parents calendars")
+
+        isr = new InputStreamReader(parents.getContentInputStream())
         getCsvParser(isr).each { entry -&gt;
             String spaceKey = entry.get("SPACE_KEY")
             String name = entry.get("NAME")
@@ -1114,11 +1151,26 @@ public class CalendarMigratorScriptService implements ScriptService
             if (StringUtils.isEmpty(spaceKey)) {
                 // Some old calendar don't have the space key value set
                 // https://confluence.atlassian.com/teamcal/team-calendars-5-3-release-notes-776814122.html
-                // TODO find an other way to retrieve the space key for theses calendar
-                // maybe with the AO_950DC3_TC_SUBCALS_IN_SPACE table
-                logger.error("Space Key empty for calendar name [{}]", name)
-                ignoredParentCalendars.add(id)
-                return
+                def spaces = calendarSpaceMapping.get(id)
+                if (spaces == null || spaces.empty) {
+                    logger.error("The space Key is empty for calendar name [{}] and no additional mapping was found " +
+                        "from the calendarSpaceMapping.csv file. Ignoring this calendar...", name)
+                    ignoredParentCalendars.add(id)
+                    return
+                } else {
+                    if (spaces.size() == 1) {
+                        logger.info("The space Key is empty for calendar name [{}] but an mapping was found in the " +
+                            "the calendarSpaceMapping.csv file. Using this mapping instead", name)
+                        spaceKey = spaces[0]
+                    } else {
+                        logger.error("The space Key is empty for calendar name [{}] and an additional mapping was " +
+                            "found from the calendarSpaceMapping.csv file but more than one space key was found for " +
+                            "this calendar. So we can't determine the target space to import the calendar. " +
+                            "Ignoring this calendar...", name)
+                        ignoredParentCalendars.add(id)
+                        return
+                    }
+                }
             }
             if (spaceFilter != null &amp;&amp; spaceFilter.contains(spaceKey)) {
                 logger.info("Ignoring space name [{}]", spaceKey)
