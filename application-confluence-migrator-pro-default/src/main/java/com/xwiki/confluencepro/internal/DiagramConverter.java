@@ -37,6 +37,8 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.contrib.confluence.resolvers.ConfluencePageIdResolver;
+import org.xwiki.contrib.confluence.resolvers.ConfluenceResolverException;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
@@ -108,6 +110,9 @@ public class DiagramConverter
     @Inject
     @Named("diagram")
     private ScriptService diagramService;
+
+    @Inject
+    private ConfluencePageIdResolver pageIdResolver;
 
     /**
      * Fix broken references in all documents of the given space.
@@ -278,10 +283,11 @@ public class DiagramConverter
             diagramName = macroBlock.getParameter(DIAGRAM_NAME);
         }
 
-        String diagramContent = getDiagramContent(migratedDoc, diagramName, macroBlock.getId());
+        String diagramContent = getDiagramContent(migratedDoc, diagramName, macroBlock.getId(),
+            macroBlock.getParameter("pageid"));
         if (StringUtils.isEmpty(diagramContent)) {
             if (dryRun) {
-                logger.warn("Document [{}]: would fail to convert convert diagram [{}]",
+                logger.warn("Document [{}]: would fail to convert diagram [{}]",
                     migratedDoc.getDocumentReference(), diagramName);
             }
             return false;
@@ -333,11 +339,12 @@ public class DiagramConverter
         return diagramReference;
     }
 
-    private String getDiagramContent(XWikiDocument migratedDoc, String diagramName, String macroName)
+    private String getDiagramContent(XWikiDocument migratedDoc, String diagramName, String macroName, String pageIdStr)
         throws IOException, XWikiException
     {
+        XWikiDocument docContainingDiagram = getDocumentContainingDiagram(migratedDoc, diagramName, pageIdStr);
         String diagramContent = "";
-        XWikiAttachment diagramAttach = migratedDoc.getAttachment(diagramName);
+        XWikiAttachment diagramAttach = docContainingDiagram.getAttachment(diagramName);
         if (diagramAttach == null) {
             logger.error("Document [{}]: diagram attachment [{}] is missing",
                 migratedDoc.getDocumentReference(), diagramName);
@@ -361,6 +368,30 @@ public class DiagramConverter
             }
         }
         return diagramContent;
+    }
+
+    private XWikiDocument getDocumentContainingDiagram(XWikiDocument migratedDoc, String diagramName, String pageIdStr)
+        throws XWikiException
+    {
+        XWikiDocument docContainingDiagram = migratedDoc;
+        if (StringUtils.isNotEmpty(pageIdStr)) {
+            try {
+                long pageId = Long.parseLong(pageIdStr, 10);
+                EntityReference docReferencedByTheMacro = pageIdResolver.getDocumentById(pageId);
+                XWikiContext context = contextProvider.get();
+                XWikiDocument d = context.getWiki().getDocument(docReferencedByTheMacro, context);
+                if (!d.isNew()) {
+                    docContainingDiagram = d;
+                }
+            } catch (NumberFormatException e) {
+                logger.error("Document [{}]: could not parse page id [{}] for diagram [{}]", migratedDoc, pageIdStr,
+                    diagramName);
+            } catch (ConfluenceResolverException e) {
+                logger.error("Document [{}]: failed to resolve page id [{}] for diagram [{}]", migratedDoc, pageIdStr,
+                    diagramName, e);
+            }
+        }
+        return docContainingDiagram;
     }
 
     private void fixDocument(Stats s, XWikiDocument migratedDoc, boolean updateInPlace, boolean dryRun)
