@@ -363,6 +363,7 @@ import org.xwiki.rendering.internal.util.XWikiSyntaxEscaper
 import org.xwiki.rendering.parser.ContentParser
 import org.xwiki.rendering.syntax.Syntax
 import org.xwiki.script.service.ScriptService
+import org.xwiki.user.internal.document.DocumentUserReference
 
 import javax.annotation.Nullable
 import javax.inject.Inject
@@ -555,9 +556,14 @@ public class CalendarMigratorScriptService implements ScriptService
             ])
             doc.setContent(xdom)
 
-            // TODO
-            // - Set author
-            // - Set created and modified date
+            DocumentUserReference creatorRef = new DocumentUserReference(
+                getUserRefFromConfluence(entry.get("CREATOR"), userGroupMappingContext), true)
+            doc.setAuthor(creatorRef)
+            doc.getAuthors().setCreator(creatorRef)
+            doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
+            doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            doc.setContentDirty(false)
+            doc.setMetaDataDirty(false)
             xwiki.saveDocument(doc, context)
 
             logger.info("Parent for calendar named [{}] created at reference [{}]", parentCalendar.name(),
@@ -680,9 +686,14 @@ public class CalendarMigratorScriptService implements ScriptService
             calendarObj.set("color", COLORS_MAP.get(entry.get("COLOUR")), context)
             calendarObj.set("description", parent.description(), context)
 
-            // TODO
-            // - Set author
-            // - Set created and modified date
+            DocumentUserReference creatorRef = new DocumentUserReference(
+                getUserRefFromConfluence(entry.get("CREATOR"), userGroupMappingContext), true)
+            doc.setAuthor(creatorRef)
+            doc.getAuthors().setCreator(creatorRef)
+            doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
+            doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            doc.setContentDirty(false)
+            doc.setMetaDataDirty(false)
             xwiki.saveDocument(doc, context)
 
             logger.info("Sub calendar named [{}] created at reference [{}]", title,
@@ -826,9 +837,14 @@ public class CalendarMigratorScriptService implements ScriptService
             eventObj.setDateValue("startDate", startDate)
             eventObj.setDateValue("endDate", endDate)
 
-            // TODO
-            // - Set author
-            // - Set created and modified date
+            DocumentUserReference creatorRef = new DocumentUserReference(
+                getUserRefFromConfluence(entry.get("ORGANISER"), userGroupMappingContext), true)
+            doc.setAuthor(creatorRef)
+            doc.getAuthors().setCreator(creatorRef)
+            doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
+            doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            doc.setContentDirty(false)
+            doc.setMetaDataDirty(false)
             xwiki.saveDocument(doc, context)
 
             logger.info("Event named [{}] created at reference [{}]", event.name(), event.reference())
@@ -895,6 +911,8 @@ public class CalendarMigratorScriptService implements ScriptService
                 eventOverrideObj.setDateValue("eventOrigStartDate", eventOrigStartDate)
             }
 
+            doc.setContentDirty(false)
+            doc.setMetaDataDirty(false)
             xwiki.saveDocument(doc, context)
             logger.info("Event override done for event UID [{}]", entry.getKey())
             progress.endStep()
@@ -940,6 +958,8 @@ public class CalendarMigratorScriptService implements ScriptService
                 eventOverrideObj.setDateValue("eventOrigStartDate", eventOrigStartDate)
             }
 
+            doc.setContentDirty(false)
+            doc.setMetaDataDirty(false)
             xwiki.saveDocument(doc, context)
             logger.info("Event exclusion done for event ID [{}]", entry.getKey())
             progress.endStep()
@@ -1560,7 +1580,8 @@ final class UsernameCleaner
     {
         return formatSubject(new StringSubstitutor(createFormatMap(variables)), format);
     }
-}</script_content>
+}
+</script_content>
     </property>
     <property>
       <script_language>groovy</script_language>
