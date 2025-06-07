@@ -1,0 +1,237 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.6" reference="ConfluenceMigratorPro.CalendarMigration.ConfluenceSQLRequests" locale="">
+  <web>ConfluenceMigratorPro.CalendarMigration</web>
+  <name>ConfluenceSQLRequests</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ConfluenceMigratorPro.CalendarMigration.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>SQL requests to retrieve Confluence team calendar data</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>== Generality ==
+
+The delimiter of the CSV file is expected to be {{code}};{{/code}} and the first line of the CSV is expected to be the header with the title of each column. The line return must be in Unix format so {{code}}\n{{/code}}. In Linux you can if needed convert the file with {{code}}dos2unix{{/code}}.
+
+All dates are expected to be provided in milliseconds since the Epoch of 1970-01-01T00:00:00Z. So by example {{code}}1747062480020{{/code}} will mean {{code}}Mon May 12 15:08:00 UTC 2025{{/code}}. Note it's the date format used in Java when we create a date with {{code language="java"}}new Date(&lt;value&gt;){{/code}}
+
+All {{code}}NULL{{/code}} value are expected to be just an empty field so by example if the column is empty we will have something like {{code}};value;;{{/code}} when the second column is null or empty. Some database export could sometime set explicitly {{code}}NULL{{/code}} in the CSV export, in this case this must be fixed before beeing imported in XWiki.
+
+== SQL requests ==
+
+Here are the SQL requests to run on the Confluence database to retrieve the CSV files used for the [[Calendar import&gt;&gt;ConfluenceMigratorPro.CalendarMigration.WebHome]].
+
+{{warning}}
+Note that these requests are written for PostgreSQL. For other database engines, they might require adjustments.
+{{/warning}}
+
+=== For {{code language="none"}}parentCalendars.csv{{/code}} ===
+
+{{code language="sql"}}
+SELECT t."ID"
+     , t."CREATED"
+     , u."username" AS "CREATOR"
+     , t."DESCRIPTION"
+     , t."LAST_MODIFIED"
+     , t."NAME"
+     , t."SPACE_KEY"
+     , t."TIME_ZONE_ID"
+FROM confluence."AO_950DC3_TC_SUBCALS" t
+LEFT JOIN confluence."user_mapping" u ON t."CREATOR" = u."user_key"
+WHERE t."STORE_KEY" = 'com.atlassian.confluence.extra.calendar3.calendarstore.generic.GenericSubCalendarDataStore'
+-- needed because we can have multiple calendar with same name on the same space and we need to handle the conflict allways in the same way
+ORDER BY t."CREATED"
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+ID;CREATED;CREATOR;DESCRIPTION;LAST_MODIFIED;NAME;SPACE_KEY;TIME_ZONE_ID
+f3211e0a-ca95-4ef0-9367-4b15ae36298a;1747062480020;8a9446eb967bf3810196a9ea46950001;calendar description;1747209195512;calendar name;MY_SPACE_KEY;Europe/Luxembourg
+...
+{{/code}}
+
+=== For {{code language="none"}}subCalendars.csv{{/code}} ===
+
+{{code language="sql"}}
+SELECT t."ID"
+     , t."COLOUR"
+     , t."CREATED"
+     , u."username" AS "CREATOR"
+     , t."DESCRIPTION"
+     , t."LAST_MODIFIED"
+     , t."NAME"
+     , p."SPACE_KEY"
+     , t."PARENT_ID"
+     , t."STORE_KEY"
+     , c."TITLE"
+FROM confluence."AO_950DC3_TC_SUBCALS" t
+JOIN confluence."AO_950DC3_TC_SUBCALS" p ON t."PARENT_ID" = p."ID"
+LEFT JOIN confluence."AO_950DC3_TC_CUSTOM_EV_TYPES" c ON t."USING_CUSTOM_EVENT_TYPE_ID" = c."ID"
+LEFT JOIN confluence."user_mapping" u ON t."CREATOR" = u."user_key"
+WHERE t."STORE_KEY" != 'com.atlassian.confluence.extra.calendar3.calendarstore.generic.GenericSubCalendarDataStore'
+AND t."STORE_KEY" != 'com.atlassian.confluence.extra.calendar3.calendarstore.InternalSubscriptionCalendarDataStore'
+AND t."STORE_KEY" != 'AGILE_SPRINTS_SUB_CALENDAR_STORE'
+AND t."STORE_KEY" != 'JIRA_ISSUE_DATES_SUB_CALENDAR_STORE'
+AND t."STORE_KEY" != 'JIRA_PROJECT_RELEASES_SUB_CALENDAR_STORE'
+-- needed because we can have multiple calendar with same name on the same space and we need to handle the conflict allways in the same way
+ORDER BY t."CREATED"
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+ID;COLOUR;CREATED;CREATOR;DESCRIPTION;LAST_MODIFIED;NAME;SPACE_KEY;PARENT_ID;STORE_KEY;TITLE
+70e4a6dd-5de6-4b11-a8e4-ee2be4a38855;subcalendar-blue;1747066494245;8a9446eb967bf3810196a9ea46950001;the description;1747069898597;calendar name;MY_SPACE_KEY;f3211e0a-ca95-4ef0-9367-4b15ae36298a;com.atlassian.confluence.extra.calendar3.calendarstore.generic.GenericLocalSubCalendarDataStore;
+889a31d9-18fd-423f-809f-94f41534f4ac;subcalendar-pink;1747068002015;8a9446eb967bf3810196a9ea46950001;the description;1747069898586;calendar name;MY_SPACE_KEY;f3211e0a-ca95-4ef0-9367-4b15ae36298a;com.atlassian.confluence.extra.calendar3.calendarstore.generic.BirthdaySubCalendarDataStore;
+...
+{{/code}}
+
+=== For {{code language="none"}}calendarSpaceMapping.csv{{/code}} ===
+
+The mapping between the calendar and the space provided by the table "AO_950DC3_TC_SUBCALS_IN_SPACE". This is needed because sometime not all "SPACE_KEY" is set in "parentCalendars" CSV.
+
+{{code language="sql"}}
+SELECT t."SPACE_KEY"
+     , t."SUB_CALENDAR_ID"
+FROM confluence."AO_950DC3_TC_SUBCALS_IN_SPACE" t
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+SPACE_KEY;SUB_CALENDAR_ID
+MY_SPACE_KEY;f3211e0a-ca95-4ef0-9367-4b15ae36298a
+...
+{{/code}}
+
+=== For {{code language="none"}}events.csv{{/code}} ===
+
+{{code language="sql"}}
+SELECT t."ID"
+     , t."SUB_CALENDAR_ID"
+     , t."CREATED"
+     , t."LAST_MODIFIED"
+     , u."username" AS "ORGANISER"
+     , t."SUMMARY"
+     , t."DESCRIPTION"
+     , t."URL"
+     , t."LOCATION"
+     , t."ALL_DAY"
+     , t."START"
+     , t."END"
+     , t."UTC_END"
+     , t."UTC_START"
+     , t."RECURRENCE_ID_TIMESTAMP"
+     , t."RECURRENCE_RULE"
+     , t."VEVENT_UID"
+FROM confluence."AO_950DC3_TC_EVENTS" t
+LEFT JOIN confluence."user_mapping" u ON t."ORGANISER" = u."user_key"
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+ID;SUB_CALENDAR_ID;CREATED;LAST_MODIFIED;ORGANISER;SUMMARY;DESCRIPTION;URL;LOCATION;ALL_DAY;START;END;UTC_END;UTC_START;RECURRENCE_ID_TIMESTAMP;RECURRENCE_RULE;VEVENT_UID
+5084;70e4a6dd-5de6-4b11-a8e4-ee2be4a38855;1747066494380;1747070009537;8a9446eb967bf3810196a9ea46950001;event title;event desc;;;False;1745992800000;1745996400000;1745996400000;1745992800000;;;20250512T161454Z-979311958@confluence-example.com
+5103;a074cfed-f8b5-48ca-ba19-3b161e2dc100;1747412141907;1747412141907;8a9446eb967bf3810196a9ea46950001;example event;;;;False;1747893780000;1747897260000;1747897260000;1747893780000;1747893720000;"FREQ=DAILY;UNTIL=20250530T060200Z;INTERVAL=1";20250516T155215Z-979311958@confluence-example.com
+...
+{{/code}}
+
+=== For {{code language="none"}}eventExclusion.csv{{/code}} ===
+
+{{code language="sql"}}
+SELECT t."ALL_DAY"
+     , t."EVENT_ID"
+     , t."EXCLUSION"
+FROM confluence."AO_950DC3_TC_EVENTS_EXCL" t
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+ALL_DAY;EVENT_ID;EXCLUSION
+False;5100;1747980120000
+...
+{{/code}}
+
+=== For {{code language="none"}}eventInvitee.csv{{/code}} ===
+
+{{code language="sql"}}
+SELECT t."EVENT_ID"
+     , t."INVITEE_ID"
+     , u."username"
+FROM confluence."AO_950DC3_TC_EVENTS_INVITEES" t
+JOIN confluence."user_mapping" u ON t."INVITEE_ID" = u."user_key"
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+EVENT_ID;INVITEE_ID;username
+5084;8a94489a8fa9263701900bc3cee5010d;toto
+...
+{{/code}}
+
+=== For {{code language="none"}}calendarGroupRights.csv{{/code}} ===
+
+{{code language="sql"}}
+SELECT t."GROUP_NAME"
+     , t."SUB_CALENDAR_ID"
+     , t."TYPE"
+FROM confluence."AO_950DC3_TC_SUBCALS_PRIV_GRP" t
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+GROUP_NAME;SUB_CALENDAR_ID;TYPE
+myGroup;0685e24f-3a38-4e21-a88a-344f3cbc8137;VIEW
+...
+{{/code}}
+
+=== For {{code language="none"}}calendarUserRights.csv{{/code}} ===
+
+{{code language="sql"}}
+SELECT t."SUB_CALENDAR_ID"
+     , t."TYPE"
+     , u."username"
+FROM confluence."AO_950DC3_TC_SUBCALS_PRIV_USR" t
+JOIN confluence."user_mapping" u ON t."USER_KEY" = u."user_key"
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+SUB_CALENDAR_ID;TYPE;username
+0685e24f-3a38-4e21-a88a-344f3cbc8137;VIEW;toto
+...
+{{/code}}</content>
+</xwikidoc>
