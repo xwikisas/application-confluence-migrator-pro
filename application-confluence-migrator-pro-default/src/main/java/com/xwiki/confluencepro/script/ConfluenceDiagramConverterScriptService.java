@@ -22,6 +22,7 @@ package com.xwiki.confluencepro.script;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -79,8 +80,8 @@ public class ConfluenceDiagramConverterScriptService implements ScriptService
 
         List<EntityReference> migrationReferences = getMigrations(statusDocument);
         List<EntityReference> spaceReferences = getSpaces(statusDocument);
-        boolean updateInPlace = ((Integer) statusDocument.getValue("updateInPlace")) == 1;
-        boolean dryRun = ((Integer) statusDocument.getValue("dryRun")) == 1;
+        boolean updateInPlace = isTrue(statusDocument, "updateInPlace");
+        boolean dryRun = isTrue(statusDocument, "dryRun");
 
         DiagramConversionJobRequest jobRequest = new DiagramConversionJobRequest(statusDocument.getDocumentReference(),
             migrationReferences, spaceReferences, updateInPlace, dryRun);
@@ -91,6 +92,11 @@ public class ConfluenceDiagramConverterScriptService implements ScriptService
             logger.error("Failed to execute the migration job for [{}].", statusDocument, e);
         }
         return null;
+    }
+
+    private static boolean isTrue(Document statusDocument, String field)
+    {
+        return Objects.equals(statusDocument.getValue(field), 1);
     }
 
     private List<EntityReference> getSpaces(Document statusDocument)
