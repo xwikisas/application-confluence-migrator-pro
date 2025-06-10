@@ -576,7 +576,7 @@ public class CalendarMigratorScriptService implements ScriptService
             doc.setAuthor(creatorRef)
             doc.getAuthors().setCreator(creatorRef)
             doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
-            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED"))) {
+            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED")) &amp;&amp; entry.get("LAST_MODIFIED") != "0") {
                 doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
             }
             doc.setContentDirty(false)
@@ -712,7 +712,7 @@ public class CalendarMigratorScriptService implements ScriptService
             doc.setAuthor(creatorRef)
             doc.getAuthors().setCreator(creatorRef)
             doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
-            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED"))) {
+            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED")) &amp;&amp; entry.get("LAST_MODIFIED") != "0") {
                 doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
             }
             doc.setContentDirty(false)
@@ -871,7 +871,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 doc.getAuthors().setCreator(creatorRef)
             }
             doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
-            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED"))) {
+            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED")) &amp;&amp; entry.get("LAST_MODIFIED") != "0") {
                 doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
             }
             doc.setContentDirty(false)
@@ -1411,7 +1411,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 ignoredEventByVUID.add(vuid)
                 return
             }
-            if (result.containsKey(eventReference)) {
+            if (eventReferences.contains(eventReference)) {
                 // We have a conflict with an other event with the same name on the same space
                 long i = Long.parseLong(entry.get("CREATED"))
                 do {
@@ -1419,7 +1419,7 @@ public class CalendarMigratorScriptService implements ScriptService
                         new SpaceReference("${baseName}_${i}",
                             calendar.reference().lastSpaceReference))
                     i++
-                } while (result.containsKey(eventReference))
+                } while (eventReferences.contains(eventReference))
             }
             eventReferences.add(eventReference)
             result.put(id,
