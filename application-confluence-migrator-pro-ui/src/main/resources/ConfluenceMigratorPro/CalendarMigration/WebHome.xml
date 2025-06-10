@@ -806,7 +806,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 return
             }
 
-            logger.info("Creating event in reference [{}]", event.reference())
+            logger.debug("Creating event in reference [{}]", event.reference())
 
             XWikiDocument doc = xwiki.getDocument(event.reference(), context).clone()
 
@@ -1477,9 +1477,14 @@ public class CalendarMigratorScriptService implements ScriptService
     private Locale getLocaleFromReference(DocumentReference reference)
     {
         def context = contextProvider.get()
+        def currentWikiId = context.getWikiId()
         context.setWikiId(reference.wikiReference.name)
-        def wiki = context.getWiki()
-        return wiki.getDefaultLocale(context)
+        try {
+            def wiki = context.getWiki()
+            return wiki.getDefaultLocale(context)
+        } finally {
+            context.setWikiId(currentWikiId)
+        }
     }
 
     private static DocumentReference getUserRefFromConfluence(String rawUsername,
