@@ -240,7 +240,7 @@ try {
             }
         }
     }
-    if (request.spaceFilter != null) {
+    if (StringUtils.isNotEmpty(request.spaceFilter)) {
         spaceFilter = request.spaceFilter.split(",").toList()
     }
 
@@ -251,13 +251,16 @@ try {
     if (hasProgramming &amp;&amp; hasAdmin &amp;&amp; 'true' == request.confirm) {
         start = new Date();
 
-        def userGroupMappingContext = services.calendarmigrator.getUserGroupMappingContext(request.parameterMap, groupFormat)
+        def userGroupMappingContext =
+            services.calendarmigrator.getUserGroupMappingContext(request.parameterMap, groupFormat)
 
         if (request.importType == "calendars") {
-            services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, dontCleanRights, userGroupMappingContext,
+            services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, dontCleanRights,
+                userGroupMappingContext,
                 dryRun, spaceFilter)
         } else if (request.importType == "events") {
-            services.calendarmigrator.migrateEvents(services.progress, calendarsAttachements, eventsAttachements, cleanEvents, userGroupMappingContext,
+            services.calendarmigrator.migrateEvents(services.progress, calendarsAttachements, eventsAttachements,
+                cleanEvents, userGroupMappingContext,
                 dryRun, spaceFilter)
         } else {
             logger.error("Invalid import type [{}]", request.importType)
@@ -769,7 +772,9 @@ public class CalendarMigratorScriptService implements ScriptService
                     .execute()
                 docToRemove.each {
                     logger.info("Deleting document [{}]", it.documentReference)
-                    xwiki.deleteAllDocuments(xwiki.getDocument(it.documentReference, context).clone(), context)
+                    if (!dryRun) {
+                        xwiki.deleteAllDocuments(xwiki.getDocument(it.documentReference, context).clone(), context)
+                    }
                 }
             }
         }
@@ -1162,26 +1167,39 @@ public class CalendarMigratorScriptService implements ScriptService
                 def spaces = calendarSpaceMapping.get(id)
                 if (spaces == null || spaces.empty) {
                     // TODO need to ensure that in this case we can consider that it's a stale calendar
-                    logger.warn("The space Key is empty for calendar name [{}] and ID [{}] and no additional mapping was found " +
-                        "from the calendarSpaceMapping.csv file. Ignoring this calendar...", name, id)
+                    logger.warn(
+                        "The space Key is empty for calendar name [{}] and ID [{}] and no additional mapping was found " +
+                            "from the calendarSpaceMapping.csv file. Ignoring this calendar...", name, id)
                     ignoredParentCalendars.add(id)
                     return
                 } else {
                     if (spaces.size() == 1) {
-                        logger.info("The space Key is empty for calendar name [{}] and ID [{}] but an mapping was found in the " +
-                            "the calendarSpaceMapping.csv file. Using this mapping instead", name, id)
+                        logger.info(
+                            "The space Key is empty for calendar name [{}] and ID [{}] but an mapping was found in the " +
+                                "the calendarSpaceMapping.csv file. Using this mapping instead", name, id)
                         spaceKey = spaces[0]
                     } else {
-                        logger.error("The space Key is empty for calendar name [{}] and ID [{}] and an additional mapping was " +
-                            "found from the calendarSpaceMapping.csv file but more than one space key was found for " +
-                            "this calendar. So we can't determine the target space to import the calendar. " +
-                            "The list of target space is:\n{}", name, id, spaces)
-                        ignoredParentCalendars.add(id)
-                        return
+                        def spaceFilterSet = new HashSet(spaceFilter)
+                        def intersect = spaceFilterSet.intersect(spaces)
+                        if (intersect.size() == 1) {
+                            spaceKey = intersect[0]
+                        } else {
+                            if (intersect.size() &gt; 1) {
+                                logger.error(
+                                    "The space Key is empty for calendar name [{}] and ID [{}] and an additional mapping was " +
+                                        "found from the calendarSpaceMapping.csv file but more than one space key was found for " +
+                                        "this calendar. So we can't determine the target space to import the calendar. " +
+                                        "The list of target space is:\n{}", name, id, spaces)
+                            }
+                            // ignore if intersect == 0 or intersect &gt; 1
+                            ignoredParentCalendars.add(id)
+                            return
+                        }
                     }
                 }
             }
             if (spaceFilter != null &amp;&amp; !spaceFilter.contains(spaceKey)) {
+                logger.info("space filter [{}]", spaceFilter)
                 logger.info("Ignoring calendar for space name [{}]", spaceKey)
                 ignoredParentCalendars.add(id)
                 return
@@ -1361,6 +1379,7 @@ public class CalendarMigratorScriptService implements ScriptService
             String name = entry.get("SUMMARY")
             String id = entry.get("ID")
             String vuid = entry.get("VEVENT_UID")
+            boolean allDay = "TRUE".equalsIgnoreCase(entry.get("ALL_DAY"))
             logger.debug("Loading event named [{}] ID [{}]", name, id)
 
             SubCalendar calendar = subCalendarsByIds[entry.get("SUB_CALENDAR_ID")]
@@ -1373,13 +1392,20 @@ public class CalendarMigratorScriptService implements ScriptService
                 return
             }
 
+            String baseName
             DocumentReference eventReference
             try {
+                // Use static name for event the summary is empty. This should not happen in most of case but
+                // we saw this in the database so we need to avoid to crash the migration of the event in this case
+                baseName = StringUtils.isNotEmpty(name) ? normalizeNameForReference(name) :
+                    localization.getTranslationPlain("confluencepro.calendarmigrator.unnamedevent",
+                        getLocaleFromReference(calendar.reference()),
+                        new Object[0])
                 eventReference = new DocumentReference("WebHome",
-                    new SpaceReference(normalizeNameForReference(name), calendar.reference().lastSpaceReference))
+                    new SpaceReference(baseName, calendar.reference().lastSpaceReference))
             } catch (Exception e) {
                 logger.error(
-                    "Can't get reference for event named [${name}] of calendar [${calendar.reference()}] ID [${calendar.confluenceId()}]",
+                    "Can't get reference for event named [${name}] ID [${id}] of calendar [${calendar.reference()}] ID [${calendar.confluenceId()}]",
                     e)
                 ignoredEvents.add(id)
                 ignoredEventByVUID.add(vuid)
@@ -1390,17 +1416,17 @@ public class CalendarMigratorScriptService implements ScriptService
                 long i = Long.parseLong(entry.get("CREATED"))
                 do {
                     eventReference = new DocumentReference("WebHome",
-                        new SpaceReference("${normalizeNameForReference(name)}_${i}",
+                        new SpaceReference("${baseName}_${i}",
                             calendar.reference().lastSpaceReference))
                     i++
                 } while (result.containsKey(eventReference))
             }
             eventReferences.add(eventReference)
-            result.put(entry.get("ID"),
-                new Event(entry.get("ID"), vuid,
+            result.put(id,
+                new Event(id, vuid,
                     StringUtils.isNotEmpty(entry.get("RECURRENCE_ID_TIMESTAMP")),
-                    name, "TRUE".equalsIgnoreCase(entry.get("ALL_DAY")),
-                    eventReference, inviteeMap.get(entry.get("ID"), [])))
+                    name, allDay,
+                    eventReference, inviteeMap.get(id, [])))
         }
         isr.close()
 

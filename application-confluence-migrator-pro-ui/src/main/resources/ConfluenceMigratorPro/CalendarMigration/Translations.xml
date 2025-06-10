@@ -42,7 +42,8 @@ confluencepro.calendarmigrator.eventtypes.leave=Leave
 confluencepro.calendarmigrator.eventtypes.travel=Travel
 confluencepro.calendarmigrator.eventdescription.location=Location
 confluencepro.calendarmigrator.eventdescription.url=URL
-confluencepro.calendarmigrator.eventdescription.invitee=Invitee</content>
+confluencepro.calendarmigrator.eventdescription.invitee=Invitee
+confluencepro.calendarmigrator.unnamedevent=Unnamed event</content>
   <object>
     <name>ConfluenceMigratorPro.CalendarMigration.Translations</name>
     <number>0</number>
