@@ -585,10 +585,10 @@ public class CalendarMigratorScriptService implements ScriptService
                 xwiki.saveDocument(doc, context)
             }
 
-            logger.info("Parent for calendar named [{}] created at reference [{}]", parentCalendar.name(),
+            logger.debug("Parent for calendar named [{}] created at reference [{}]", parentCalendar.name(),
                 parentCalendar.reference())
 
-            logger.info("Adding rights for calendar ID [{}] at reference [{}]",
+            logger.debug("Adding rights for calendar ID [{}] at reference [{}]",
                 calendarId, parentCalendar.reference())
 
             DocumentReference prefDocRef = new DocumentReference("WebPreferences",
@@ -599,7 +599,7 @@ public class CalendarMigratorScriptService implements ScriptService
             }
             List&lt;BaseObject&gt; rightsObjects = prefDoc.getXObjects(GLOBAL_RIGHTS_CLASS)
 
-            logger.info("Adding group rights for calendar ID [{}] at reference [{}]",
+            logger.debug("Adding group rights for calendar ID [{}] at reference [{}]",
                 calendarId, parentCalendar.reference())
 
             List&lt;String&gt; groupRef = rightsObjects.collect {
@@ -630,7 +630,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 rightObj.set("levels", right.value, context)
             }
 
-            logger.info("Adding user rights for calendar ID [{}] at reference [{}]",
+            logger.debug("Adding user rights for calendar ID [{}] at reference [{}]",
                 calendarId, parentCalendar.reference())
 
             List&lt;String&gt; userRef = rightsObjects.collect {
@@ -661,18 +661,19 @@ public class CalendarMigratorScriptService implements ScriptService
                 rightObj.set("levels", right.value, context)
             }
 
-            logger.info("User rights for calendar at reference [{}] done", parentCalendar.reference())
+            logger.debug("User rights for calendar at reference [{}] done", parentCalendar.reference())
 
             if (!dryRun) {
                 xwiki.saveDocument(prefDoc, context)
             }
-            logger.info("Right for calendar ID [{}] at reference [{}] Done",
+            logger.debug("Right for calendar ID [{}] at reference [{}] Done",
                 calendarId, parentCalendar.reference())
 
             progress.endStep()
         }
         isr.close()
 
+        logger.info("Creating parent calendars done")
         logger.info("Creating sub-calendars")
 
         isr = new InputStreamReader(attachments['subCalendars'].getContentInputStream())
@@ -720,11 +721,13 @@ public class CalendarMigratorScriptService implements ScriptService
             if (!dryRun) {
                 xwiki.saveDocument(doc, context)
             }
-            logger.info("Sub calendar named [{}] created at reference [{}]", title,
+            logger.debug("Sub calendar named [{}] created at reference [{}]", title,
                 subCalendar.reference())
             progress.endStep()
         }
         isr.close()
+
+        logger.info("Creating sub-calendars done")
 
         progress.popLevel()
     }
@@ -760,6 +763,7 @@ public class CalendarMigratorScriptService implements ScriptService
         if (cleanEvents) {
             logger.info("Cleaning existing events")
 
+            int counter = 1
             allCalendars.each { entry -&gt;
                 String subCalendarSpace =
                     serializer.serialize(new LocalDocumentReference(entry.reference()).parent)
@@ -771,19 +775,29 @@ public class CalendarMigratorScriptService implements ScriptService
                     .bindValue("spaceRef").literal(subCalendarSpace).literal(".").anyChars().query()
                     .execute()
                 docToRemove.each {
-                    logger.info("Deleting document [{}]", it.documentReference)
+                    logger.debug("Deleting document [{}]", it.documentReference)
                     if (!dryRun) {
                         xwiki.deleteAllDocuments(xwiki.getDocument(it.documentReference, context).clone(), context)
                     }
+                    if ((counter % 200) == 0) {
+                        logger.info("Number of event cleaned {}", counter)
+                    }
+                    counter++
                 }
             }
+            logger.info("Cleaning existing events done")
         }
 
         logger.info("Creating events")
 
         isr = new InputStreamReader(eventsAttachments['events'].getContentInputStream())
+        int counter = 1
         getCsvParser(isr).each { entry -&gt;
             progress.startStep()
+            if ((counter % 100) == 0) {
+                logger.info("Processing event {}/{}", counter, events.size())
+            }
+            counter++
 
             if (StringUtils.isNotEmpty(entry.get("RECURRENCE_ID_TIMESTAMP"))) {
                 // When 'RECURRENCE_ID_TIMESTAMP' is set, it's an event override, ignoring it here
@@ -879,11 +893,12 @@ public class CalendarMigratorScriptService implements ScriptService
             if (!dryRun) {
                 xwiki.saveDocument(doc, context)
             }
-            logger.info("Event named [{}] created at reference [{}]", event.name(), event.reference())
+            logger.debug("Event named [{}] created at reference [{}]", event.name(), event.reference())
             progress.endStep()
         }
         isr.close()
 
+        logger.info("Creating events done")
         logger.info("Loading events override data")
 
         Map&lt;String, List&lt;Map&lt;String, String&gt;&gt;&gt; eventOverrides = [:]
@@ -948,10 +963,11 @@ public class CalendarMigratorScriptService implements ScriptService
             if (!dryRun) {
                 xwiki.saveDocument(doc, context)
             }
-            logger.info("Event override done for event UID [{}]", entry.getKey())
+            logger.debug("Event override done for event UID [{}]", entry.getKey())
             progress.endStep()
         }
 
+        logger.info("Creating event overrides done")
         logger.info("Loading events exclusion data")
 
         Map&lt;String, List&lt;String&gt;&gt; eventExclusion = [:]
@@ -997,7 +1013,7 @@ public class CalendarMigratorScriptService implements ScriptService
             if (!dryRun) {
                 xwiki.saveDocument(doc, context)
             }
-            logger.info("Event exclusion done for event ID [{}]", entry.getKey())
+            logger.debug("Event exclusion done for event ID [{}]", entry.getKey())
             progress.endStep()
         }
 
@@ -1088,6 +1104,10 @@ public class CalendarMigratorScriptService implements ScriptService
             // so for instance, if we have count=2 we just need to add one more event in addition to the original one
             count -= 1
         }
+        if (rawParams.getOrDefault("INTERVAL", "1") != "1") {
+            logger.warn("Unsupported INTERVAL for recurrent event. Interval: [{}], Event Id [{}]",
+                rawParams.get("INTERVAL"), event.confluenceId())
+        }
 
         switch (rawParams.get("FREQ")) {
             case "YEARLY":
@@ -1101,6 +1121,10 @@ public class CalendarMigratorScriptService implements ScriptService
                 if (count &gt; 0) {
                     untilDate = DateUtils.addMonths(startDate, count)
                 }
+                if (rawParams.containsKey("BYDAY")) {
+                    logger.warn("Unsupported BYDAY param for monthly event. BYDAY: [{}], Event Id [{}]",
+                        rawParams.get("BYDAY"), event.confluenceId())
+                }
                 break
             case "WEEKLY":
                 eventFrequency = RecurrentEventInfo.EventFrequency.WEEKLY
@@ -1111,7 +1135,8 @@ public class CalendarMigratorScriptService implements ScriptService
                     weekDay = CONFLUENCE_RECURRENT_DAY_TO_ENUM.get(rawParams.get("BYDAY"))
                     if (weekDay == null) {
                         // Keep in mind that in confluence we can have multiple value here by example: MO,TU,WE,TH,FR
-                        logger.warn("Unsupported BYDAY param [{}]", rawParams.get("BYDAY"))
+                        logger.warn("Unsupported BYDAY param for weekly event. BYDAY: [{}], Event Id [{}]",
+                            rawParams.get("BYDAY"), event.confluenceId())
                     }
                 }
                 break
@@ -1199,8 +1224,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 }
             }
             if (spaceFilter != null &amp;&amp; !spaceFilter.contains(spaceKey)) {
-                logger.info("space filter [{}]", spaceFilter)
-                logger.info("Ignoring calendar for space name [{}]", spaceKey)
+                logger.debug("Ignoring calendar for space name [{}]", spaceKey)
                 ignoredParentCalendars.add(id)
                 return
             }
