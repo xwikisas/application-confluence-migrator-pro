@@ -302,8 +302,7 @@ public class DiagramConverter
         }
 
         if (StringUtils.isEmpty(diagramName)) {
-            logger.warn("Document [{}]: would fail to convert a [{}] macro because it is missing a diagram name",
-                migratedDocRef, macroBlock.getId());
+            logger.warn("Document [{}]: a [{}] macro is missing a diagram name", migratedDocRef, macroBlock.getId());
             return null;
         }
 
