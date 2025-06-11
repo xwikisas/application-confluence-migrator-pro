@@ -562,10 +562,8 @@ public class CalendarMigratorScriptService implements ScriptService
             logger.info("Creating parent calendar in reference [{}]", parentCalendar.reference())
 
             XWikiDocument doc = xwiki.getDocument(parentCalendar.reference(), context).clone()
-            // TODO validate: that it's ok to set the calendar name to the page title
             doc.setTitle(parentCalendar.name())
             XDOM xdom = new XDOM([
-                // TODO validate: that it's ok to put the description in top of the macro
                 new ParagraphBlock(contentParser.parse(entry.get("DESCRIPTION"), Syntax.PLAIN_1_0).getChildren()),
                 new MacroBlock("moccacalendar", ["filter": "space"], false)
             ])
@@ -623,7 +621,6 @@ public class CalendarMigratorScriptService implements ScriptService
                     rightObj = rightsObjects.get(matchingObjectIndex)
                 } else {
                     rightObj = prefDoc.newXObject(GLOBAL_RIGHTS_CLASS, context)
-                    // TODO ensure that edit right imply view right -&gt; not sure that between confluence and XWiki it's handled the same way
                     rightObj.set("groups", groupReferenceStr, context)
                 }
                 rightObj.set("allow", 1, context)
@@ -654,7 +651,6 @@ public class CalendarMigratorScriptService implements ScriptService
                     rightObj = rightsObjects.get(matchingObjectIndex)
                 } else {
                     rightObj = prefDoc.newXObject(GLOBAL_RIGHTS_CLASS, context)
-                    // TODO ensure that edit rights imply view rights -&gt; not sure that between confluence and XWiki it's handled the same way
                     rightObj.set("users", userReferenceStr, context)
                 }
                 rightObj.set("allow", 1, context)
@@ -697,7 +693,7 @@ public class CalendarMigratorScriptService implements ScriptService
 
             logger.info("Creating sub calendar in reference [{}]", subCalendar.reference())
 
-            String title = getSubCalendarNameFromType(entry.get("STORE_KEY"), entry.get("TITLE"),
+            String title = parent.name() + " - " + getSubCalendarNameFromType(entry.get("STORE_KEY"), entry.get("TITLE"),
                 getLocaleFromReference(subCalendar.reference()))
 
             XWikiDocument doc = xwiki.getDocument(subCalendar.reference(), context).clone()
@@ -1191,7 +1187,6 @@ public class CalendarMigratorScriptService implements ScriptService
                 // https://confluence.atlassian.com/teamcal/team-calendars-5-3-release-notes-776814122.html
                 def spaces = calendarSpaceMapping.get(id)
                 if (spaces == null || spaces.empty) {
-                    // TODO need to ensure that in this case we can consider that it's a stale calendar
                     logger.warn(
                         "The space Key is empty for calendar name [{}] and ID [{}] and no additional mapping was found " +
                             "from the calendarSpaceMapping.csv file. Ignoring this calendar...", name, id)
@@ -1254,13 +1249,11 @@ public class CalendarMigratorScriptService implements ScriptService
                 return
             }
 
-            // TODO validate that it's ok to put the parent calendar in &lt;confluence space home&gt;.&lt;calendar name&gt;.WebHome
             SpaceReference targetParentCalendarSpace = new SpaceReference(normalizeNameForReference(name),
                 spaceReference)
 
             if (result.find { it.reference().lastSpaceReference == targetParentCalendarSpace }.any()) {
                 // We have a conflict with an other calendar with the same name on the same space
-                // TODO validate conflict policy
                 int i = 1
                 do {
                     targetParentCalendarSpace =
@@ -1299,7 +1292,6 @@ public class CalendarMigratorScriptService implements ScriptService
 
             if (parent.subCalendars().find { it.reference() == subCalReference }.any()) {
                 // We have a conflict with an other calendar with the same name on the same space
-                // TODO validate conflict policy
                 int i = 1
                 do {
                     subCalReference = new DocumentReference("WebHome",
