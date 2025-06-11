@@ -295,9 +295,16 @@ public class DiagramConverter
     private String getDiagramDocRef(XWikiDocument migratedDoc, MacroBlock macroBlock, boolean dryRun)
         throws XWikiException
     {
+        DocumentReference migratedDocRef = migratedDoc.getDocumentReference();
         String diagramName = macroBlock.getParameter("name");
         if (StringUtils.isEmpty(diagramName)) {
             diagramName = macroBlock.getParameter(DIAGRAM_NAME);
+        }
+
+        if (StringUtils.isEmpty(diagramName)) {
+            logger.warn("Document [{}]: would fail to convert a [{}] macro because it is missing a diagram name",
+                migratedDocRef, macroBlock.getId());
+            return null;
         }
 
         String targetDiagramName = diagramName;
@@ -308,8 +315,11 @@ public class DiagramConverter
         XWikiDocument diagramDoc = maybeCreateDiagramDoc(migratedDoc, macroBlock, diagramName,
             targetDiagramName, dryRun);
 
-        return diagramDoc == null ? null : serializer.serialize(diagramDoc.getDocumentReference(),
-            migratedDoc.getDocumentReference());
+        if (diagramDoc == null) {
+            return null;
+        }
+
+        return serializer.serialize(diagramDoc.getDocumentReference(), migratedDocRef);
     }
 
     private XWikiDocument maybeCreateDiagramDoc(XWikiDocument migratedDoc, MacroBlock macroBlock, String diagramName,
