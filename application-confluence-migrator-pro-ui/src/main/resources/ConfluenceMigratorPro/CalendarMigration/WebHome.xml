@@ -541,9 +541,10 @@ public class CalendarMigratorScriptService implements ScriptService
         Map&lt;String, Map&lt;String, Set&lt;String&gt;&gt;&gt; groupsRights = loadGroupsRights(attachments['calendarGroupRights'])
         Map&lt;String, Map&lt;String, Set&lt;String&gt;&gt;&gt; usersRights = loadUsersRights(attachments['calendarUserRights'])
 
-        progress.pushLevel(
-            parents.size() +
-                ((int[]) (parents.collect { it.subCalendars().size() }.toArray(new int[0]))).sum())
+        int subCalendarNumber = ((int[]) (parents.collect { it.subCalendars().size() }.toArray(new int[0]))).sum()
+        progress.pushLevel(parents.size() + subCalendarNumber)
+
+        logger.info("Number of parents [{}], number of sub-calendars [{}]", parents.size(), subCalendarNumber)
         logger.info("Creating parent calendars")
 
         InputStreamReader isr = new InputStreamReader(attachments['parentCalendars'].getContentInputStream())
@@ -693,8 +694,9 @@ public class CalendarMigratorScriptService implements ScriptService
 
             logger.info("Creating sub calendar in reference [{}]", subCalendar.reference())
 
-            String title = parent.name() + " - " + getSubCalendarNameFromType(entry.get("STORE_KEY"), entry.get("TITLE"),
-                getLocaleFromReference(subCalendar.reference()))
+            String title =
+                parent.name() + " - " + getSubCalendarNameFromType(entry.get("STORE_KEY"), entry.get("TITLE"),
+                    getLocaleFromReference(subCalendar.reference()))
 
             XWikiDocument doc = xwiki.getDocument(subCalendar.reference(), context).clone()
             BaseObject calendarObj = doc.getXObject(CALENDAR_CLASS_REF, true, context)
@@ -753,6 +755,11 @@ public class CalendarMigratorScriptService implements ScriptService
         int lineCount = 0
         isr.eachLine { it -&gt; lineCount++ }
         isr.close()
+
+        logger.info("Number of events [{}], number of event override [{}], number of events exclusion [{}]",
+            events.values().findAll { it -&gt; !it.isEventOverride() }.size(),
+            events.values().findAll { it -&gt; it.isEventOverride() }.size(),
+            lineCount)
 
         progress.pushLevel(events.size() + lineCount)
 
