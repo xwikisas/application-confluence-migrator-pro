@@ -766,7 +766,7 @@ public class CalendarMigratorScriptService implements ScriptService
         if (cleanEvents) {
             logger.info("Cleaning existing events")
 
-            int counter = 1
+            int counter = 0
             allCalendars.each { entry -&gt;
                 String subCalendarSpace =
                     serializer.serialize(new LocalDocumentReference(entry.reference()).parent)
@@ -782,13 +782,13 @@ public class CalendarMigratorScriptService implements ScriptService
                     if (!dryRun) {
                         xwiki.deleteAllDocuments(xwiki.getDocument(it.documentReference, context).clone(), context)
                     }
-                    if ((counter % 200) == 0) {
+                    if (counter &gt; 0 &amp;&amp; (counter % 200) == 0) {
                         logger.info("Number of event cleaned {}", counter)
                     }
                     counter++
                 }
             }
-            logger.info("Cleaning existing events done")
+            logger.info("Cleaning existing events done. Number of event cleanded [{}]", counter)
         }
 
         logger.info("Creating events")
@@ -797,10 +797,6 @@ public class CalendarMigratorScriptService implements ScriptService
         int counter = 1
         getCsvParser(isr).each { entry -&gt;
             progress.startStep()
-            if ((counter % 100) == 0) {
-                logger.info("Processing event {}/{}", counter, events.size())
-            }
-            counter++
 
             if (StringUtils.isNotEmpty(entry.get("RECURRENCE_ID_TIMESTAMP"))) {
                 // When 'RECURRENCE_ID_TIMESTAMP' is set, it's an event override, ignoring it here
@@ -822,6 +818,10 @@ public class CalendarMigratorScriptService implements ScriptService
                 }
                 return
             }
+            if ((counter % 100) == 0) {
+                logger.info("Processing event {}/{}", counter, events.size())
+            }
+            counter++
 
             logger.debug("Creating event in reference [{}]", event.reference())
 
