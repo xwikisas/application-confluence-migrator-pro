@@ -549,8 +549,6 @@ public class CalendarMigratorScriptService implements ScriptService
 
         InputStreamReader isr = new InputStreamReader(attachments['parentCalendars'].getContentInputStream())
         getCsvParser(isr).each { entry -&gt;
-            progress.startStep()
-
             def calendarId = entry.get("ID")
             ParentCalendar parentCalendar = parents.find { it.confluenceId() == calendarId }
             if (parentCalendar == null) {
@@ -559,6 +557,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 }
                 return
             }
+            progress.startStep()
 
             logger.info("Creating parent calendar in reference [{}]", parentCalendar.reference())
 
@@ -675,8 +674,6 @@ public class CalendarMigratorScriptService implements ScriptService
 
         isr = new InputStreamReader(attachments['subCalendars'].getContentInputStream())
         getCsvParser(isr).each { entry -&gt;
-            progress.startStep()
-
             ParentCalendar parent = parents.find { it.confluenceId() == entry.get("PARENT_ID") }
             if (parent == null) {
                 if (!ignoredParentCalendars.contains(entry.get("PARENT_ID"))) {
@@ -691,7 +688,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 }
                 return
             }
-
+            progress.startStep()
             logger.info("Creating sub calendar in reference [{}]", subCalendar.reference())
 
             String title =
@@ -796,8 +793,6 @@ public class CalendarMigratorScriptService implements ScriptService
         isr = new InputStreamReader(eventsAttachments['events'].getContentInputStream())
         int counter = 1
         getCsvParser(isr).each { entry -&gt;
-            progress.startStep()
-
             if (StringUtils.isNotEmpty(entry.get("RECURRENCE_ID_TIMESTAMP"))) {
                 // When 'RECURRENCE_ID_TIMESTAMP' is set, it's an event override, ignoring it here
                 return
@@ -818,6 +813,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 }
                 return
             }
+            progress.startStep()
             if ((counter % 100) == 0) {
                 logger.info("Processing event {}/{}", counter, events.size())
             }
@@ -925,13 +921,12 @@ public class CalendarMigratorScriptService implements ScriptService
         logger.info("Creating event overrides")
 
         eventOverrides.each { entry -&gt;
-            progress.startStep()
-
             Event baseEvent = events.values().find { it.veventUid() == entry.getKey() &amp;&amp; !it.isEventOverride() }
             if (baseEvent == null) {
                 logger.error("Can't find base event with UID [{}]", entry.getKey())
                 return
             }
+            progress.startStep()
             logger.info("Adding event override for event UID [{}]", entry.getKey())
 
             XWikiDocument doc = xwiki.getDocument(baseEvent.reference(), context).clone()
@@ -991,13 +986,12 @@ public class CalendarMigratorScriptService implements ScriptService
         logger.info("Creating event exclusion")
 
         eventExclusion.each { entry -&gt;
-            progress.startStep()
-
             Event event = events[entry.getKey()]
             if (event == null) {
                 logger.error("Can't base event with ID [{}]", entry.getKey())
                 return
             }
+            progress.startStep()
             logger.info("Adding event exclusion for event ID [{}]", entry.getKey())
 
             XWikiDocument doc = xwiki.getDocument(event.reference(), context).clone()
