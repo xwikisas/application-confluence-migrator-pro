@@ -1,0 +1,1699 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.6" reference="ConfluenceMigratorPro.CalendarMigration.WebHome" locale="">
+  <web>ConfluenceMigratorPro.CalendarMigration</web>
+  <name>WebHome</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ConfluenceMigratorPro.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>Calendar migration</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{warning}}
+This hidden feature is experimental and not supported. Use at your own risk.
+{{/warning}}
+
+{{groovy output="false"}}
+calendarsFieldsMap = [
+    'parentCalendars'    : 'parent calendars',
+    'subCalendars'       : 'sub calendars',
+    'calendarUserRights' : 'calendars user rights',
+    'calendarGroupRights': 'calendar group rights',
+    'calendarSpaceMapping': 'calendar space mappping'
+]
+eventsFieldsMap = [
+    'events'             : 'events',
+    'eventExclusion'     : 'event exclusion',
+    'eventInvitee'       : 'event invitee'
+]
+eventsAndCalendarsFieldsMap = calendarsFieldsMap + eventsFieldsMap
+{{/groovy }}
+
+{{info}}
+See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMigratorPro.CalendarMigration.ConfluenceSQLRequests]] to get the required CSV files. 
+{{/info}}
+
+{{velocity}}
+#set($jobId = "CalendarImporter-$!{datetool.get('yyyyMMdd-HHmmssSSS')}")
+{{html clean="false"}}
+&lt;form class="xform" method="post" action="#"&gt;
+  &lt;dl&gt;
+    &lt;dt&gt;
+      &lt;label for="sourcePageName"&gt;Reference of the page containing the required attachments&lt;/label&gt;
+      &lt;span class="xHint"&gt;The reference of the page in which all attachments are provided.&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      #set ($pagePickerParams = {
+          'name': 'sourcePageName',
+          'value': $!{request.sourcePageName}
+      })
+      #pagePicker($pagePickerParams)
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="spaceFilter"&gt;Space filter&lt;/label&gt;
+      &lt;span class="xHint"&gt;A list of space to import delimited by coma. If not set all all calendar related to all spaces will be imported. If set only the calendar linked to this list of spaces will be imported. For instance: XWIKI,~toto,EXAMPLE,Hello&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="spaceFilter" name="spaceFilter" value="$!escapetool.xml($!request.get("spaceFilter"))"/&gt;
+    &lt;/dd&gt;
+    #foreach ($i in $eventsAndCalendarsFieldsMap.entrySet())
+      &lt;dt&gt;
+        &lt;label for="${i.key}Filename"&gt;Attachment name for $i.value&lt;/label&gt;
+        &lt;span class="xHint"&gt;Name of the attachment from which to read data to import calendar pages&lt;/span&gt;
+      &lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;input type="text" id="${i.key}Filename" name="${i.key}Filename" value="$!escapetool.xml($!request.get("${i.key}FileName"))" placeholder='${i.key}.csv'/&gt;
+      &lt;/dd&gt;
+    #end
+    &lt;dt&gt;
+      &lt;label for="userFormat"&gt;User format&lt;/label&gt;
+      #set ($spanXHint = 'The format to use to transform a Confluence user name to a XWiki user name for usersthat are not in the user id mapping.String ${username} will be replaced with the Confluence user name; String ${username._clean} same with the special characters removed (recommended).String ${username._lowerCase} will be replaced with the lowercased Confluence user name; String ${username._upperCase} will be replaced with the uppercased Confluence user name; String ${username._clean._lowerCase} will be replaced with the cleaned, lowercased Confluence user name; String ${username._clean._upperCase} will be replaced with the uppercased Confluence user name. By default, for backward compatibility reasons, special characters are replaced with underscores and spaces are kept.')
+      &lt;span class="xHint"&gt;$spanXHint&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="userFormat" name="userFormat" value="$!escapetool.xml($!request.get("userFormat"))"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="userMapping"&gt;User id mapping&lt;/label&gt;
+      &lt;span class="xHint"&gt;A mapping between Confluence user id located in the package and wanted ids. The format is confluenceuser=XWikiUser pairs separated by pipes ("|"). For instance: myuser=MyUser|user2=User2&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="userMapping" name="userMapping" value="$!escapetool.xml($!request.get("userMapping"))"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="groupFormat"&gt;Group format&lt;/label&gt;
+      #set ($spanXHint = 'The format to use to transform a Confluence group name to a XWiki group name for groupsthat are not in the group mapping.String ${group} will be replaced with the Confluence group name; String ${group._clean} same with the special characters removed.String ${group._lowerCase} will be replaced with the lowercased Confluence group name; String ${group._upperCase} will be replaced with the uppercased Confluence group name; String ${group._clean._lowerCase} will be replaced with the cleaned, lowercased Confluence group name; String ${group._clean._upperCase} will be replaced with the uppercased Confluence group name. Default format: ${group._clean}')
+      &lt;span class="xHint"&gt;$spanXHint&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="groupFormat" name="groupFormat" value="$!escapetool.xml($request.get("groupFormat"))" placeholder='$escapetool.d{group._clean}'/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="groupMapping"&gt;Group name mapping&lt;/label&gt;
+      &lt;span class="xHint"&gt;A mapping between Confluence group names and XWiki group names. The format is confluencegroup=XWikiGroup pairs separated by pipes ("|"). Use an empty value to ignore the group.For instance: atlassian-addons=|balsamiq-mockups-editors=MockupEditors|administrators=XWikiAdminGroup|site-admins=XWikiAdminGroup|_licensed-confluence=|confluence-users=XWikiAllGroup|confluence-administrators=XWikiAdminGroup|system-administrators=XWikiAdminGroup|group 1=MyGroup&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="groupMapping" name="groupMapping" value="$!escapetool.xml($!request.get("groupMapping"))"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="dryRun"&gt;Dry run&lt;/label&gt;
+      &lt;span class="xHint"&gt;If checked the script everything will be run the same way except that the document will not be saved.&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="checkbox" id="dryRun" name="dryRun" #if($request.dryRun)checked#end/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="cleanevents"&gt;Clean calendars events&lt;/label&gt;
+      &lt;span class="xHint"&gt;Whether the content of the existing calendar events should be reset before running the migration.&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="checkbox" id="cleanevents" name="cleanevents" #if($request.cleanevents)checked#end/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="dontCleanrights"&gt;Don't clean up existing rights before the migration&lt;/label&gt;
+      &lt;span class="xHint"&gt;Whether the calendar rights should not be cleaned before setting the new rights.&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="checkbox" id="dontCleanrights" name="dontCleanrights" #if($request.dontCleanrights)checked#end/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="importType"&gt;Select the type of import:&lt;/label&gt;
+      &lt;span class="xHint"&gt;Choose between page or space for the import&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;fieldset&gt;
+        &lt;div&gt;
+          &lt;input type="radio" id="pages" name="importType" value="calendars" #if($request.importType != 'events')checked#end/&gt;
+          &lt;label for="pages"&gt;Calendars&lt;/label&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;input type="radio" id="spaces" name="importType" value="events" #if($request.importType == 'events')checked#end/&gt;
+          &lt;label for="spaces"&gt;Event (of calendars)&lt;/label&gt;
+        &lt;/div&gt;
+      &lt;/fieldset&gt;
+    &lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;p class="buttonwrapper"&gt;
+    &lt;input type="hidden" name="form_token" value="${services.csrf.token}"/&gt;
+    &lt;input type="hidden" name="jobId" value="${jobId}"/&gt;
+    &lt;input type="hidden" name="confirm" value="true"/&gt;
+    &lt;input type="submit" class="btn" value="Import"/&gt;
+  &lt;/p&gt;
+&lt;/form&gt;
+{{/html}}
+
+#if($request.confirm == 'true')
+  #set($jobStatusURL = "$!{request.contextPath}/rest/jobstatus/$!{escapetool.url($request.jobId)}")
+  #set($jobLogURL = "$!{request.contextPath}/rest/joblog/$!{escapetool.url($request.jobId)}")
+  The ID of this import job is **$!{request.jobId}**.
+
+  Access information about the job execution using the following REST endpoints:
+
+  * ${escapetool.h}${escapetool.h}[[$!{jobStatusURL}&gt;&gt;path:$!{jobStatusURL}||target="_blank"]]${escapetool.h}${escapetool.h}
+  * ${escapetool.h}${escapetool.h}[[$!{jobLogURL}&gt;&gt;path:$!{jobLogURL}||target="_blank"]]${escapetool.h}${escapetool.h}
+#else
+  The import job will run with ID **$!{jobId}**.
+#end
+{{/velocity}}
+
+{{job id="{{velocity}}${request.jobId}{{/velocity}}" start="{{velocity}}${request.confirm}{{/velocity}}"}}
+{{groovy}}
+import groovy.time.TimeCategory
+import groovy.time.TimeDuration
+import org.apache.commons.lang.StringUtils
+import org.xwiki.logging.LogLevel
+
+final String documentName = "ConfluenceMigratorPro.CalendarMigration.WebHome"
+
+def logger = services.logging.getLogger(documentName);
+services.logging.setLevel(doc.fullName, LogLevel.DEBUG)
+
+try {
+    if (StringUtils.isEmpty(request.sourcePageName)) {
+        logger.error("Source page reference not set")
+        return
+    }
+    def sourceDoc = xwiki.getDocument(request.sourcePageName)
+    def calendarsAttachements = [:]
+    def eventsAttachements = [:]
+    List&lt;String&gt; spaceFilter = null
+
+    String groupFormat
+    if (StringUtils.isEmpty(request.groupFormat)) {
+        groupFormat = '${group._clean}'
+    } else {
+        groupFormat = request.groupFormat
+    }
+
+    for (String i in calendarsFieldsMap.keySet()) {
+        def filename = request.get(i)
+        if (StringUtils.isEmpty(filename)) {
+            filename = "${i}.csv"
+        }
+        def attachment = sourceDoc.getAttachment(filename)
+        if (attachment == null) {
+            logger.error("Could not find attachment [{}] in [{}]", filename, request.sourcePageName);
+            return
+        } else {
+            calendarsAttachements[i] = attachment
+        }
+    }
+    if (request.importType == "events") {
+        for (String i in eventsFieldsMap.keySet()) {
+            def filename = request.get(i)
+            if (StringUtils.isEmpty(filename)) {
+                filename = "${i}.csv"
+            }
+            def attachment = sourceDoc.getAttachment(filename)
+            if (attachment == null) {
+                logger.error("Could not find attachment [{}] in [{}]", filename, request.sourcePageName);
+                return
+            } else {
+                eventsAttachements[i] = attachment
+            }
+        }
+    }
+    if (StringUtils.isNotEmpty(request.spaceFilter)) {
+        spaceFilter = request.spaceFilter.split(",").toList()
+    }
+
+    def cleanEvents = request.cleanevents == "on"
+    def dontCleanRights = request.dontCleanrights == "on"
+    def dryRun = request.dryRun == "on"
+
+    if (hasProgramming &amp;&amp; hasAdmin &amp;&amp; 'true' == request.confirm) {
+        start = new Date();
+
+        def userGroupMappingContext =
+            services.calendarmigrator.getUserGroupMappingContext(request.parameterMap, groupFormat)
+
+        if (request.importType == "calendars") {
+            services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, dontCleanRights,
+                userGroupMappingContext,
+                dryRun, spaceFilter)
+        } else if (request.importType == "events") {
+            services.calendarmigrator.migrateEvents(services.progress, calendarsAttachements, eventsAttachements,
+                cleanEvents, userGroupMappingContext,
+                dryRun, spaceFilter)
+        } else {
+            logger.error("Invalid import type [{}]", request.importType)
+            throw new Exception("Invalid import type " + request.importType)
+        }
+
+        stop = new Date();
+        TimeDuration duration = TimeCategory.minus(stop, start);
+        logger.info("Total duration : ${duration.getHours()}h ${duration.getMinutes()}m ${duration.getSeconds()}s");
+    }
+} catch (Exception e) {
+    logger.error("Script crashed with error: ", e)
+}
+{{/groovy}}
+{{/job}}</content>
+  <object>
+    <name>ConfluenceMigratorPro.CalendarMigration.WebHome</name>
+    <number>0</number>
+    <className>XWiki.ScriptComponentClass</className>
+    <guid>75144cdb-78f8-4049-872e-2cea31f4602c</guid>
+    <class>
+      <name>XWiki.ScriptComponentClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <scope>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>scope</name>
+        <number>2</number>
+        <prettyName>Scope</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>|wiki|global|user</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </scope>
+      <script_content>
+        <disabled>0</disabled>
+        <editor>Text</editor>
+        <name>script_content</name>
+        <number>3</number>
+        <prettyName>Script</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </script_content>
+      <script_language>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>script_language</name>
+        <number>1</number>
+        <prettyName>Language</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>groovy|python</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </script_language>
+    </class>
+    <property>
+      <scope>wiki</scope>
+    </property>
+    <property>
+      <script_content>package com.xwiki.confluencepro
+
+import com.xpn.xwiki.XWiki
+import com.xpn.xwiki.XWikiContext
+import com.xpn.xwiki.api.Attachment
+import com.xpn.xwiki.doc.XWikiDocument
+import com.xpn.xwiki.objects.BaseObject
+import com.xpn.xwiki.objects.LargeStringProperty
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVParser
+import org.apache.commons.csv.CSVRecord
+import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang.time.DateUtils
+import org.apache.commons.lang3.RegExUtils
+import org.apache.commons.text.StringSubstitutor
+import org.slf4j.Logger
+import org.xwiki.component.annotation.Component
+import org.xwiki.contrib.confluence.filter.Mapping
+import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceKeyResolver
+import org.xwiki.job.script.ProgressScripService
+import org.xwiki.localization.LocalizationManager
+import org.xwiki.model.EntityType
+import org.xwiki.model.reference.*
+import org.xwiki.model.validation.EntityNameValidationManager
+import org.xwiki.properties.converter.Converter
+import org.xwiki.query.Query
+import org.xwiki.query.QueryManager
+import org.xwiki.rendering.block.MacroBlock
+import org.xwiki.rendering.block.ParagraphBlock
+import org.xwiki.rendering.block.XDOM
+import org.xwiki.rendering.internal.util.XWikiSyntaxEscaper
+import org.xwiki.rendering.parser.ContentParser
+import org.xwiki.rendering.syntax.Syntax
+import org.xwiki.script.service.ScriptService
+import org.xwiki.user.internal.document.DocumentUserReference
+
+import javax.annotation.Nullable
+import javax.inject.Inject
+import javax.inject.Named
+import javax.inject.Provider
+import javax.inject.Singleton
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.util.regex.Pattern
+
+@Component
+@Named("calendarmigrator")
+@Singleton
+public class CalendarMigratorScriptService implements ScriptService
+{
+    private static final Pattern FORBIDDEN_USER_CHARACTERS = Pattern.compile("[. /]");
+
+    private final static EntityReference CALENDAR_CLASS_REF = new LocalDocumentReference(
+        "MoccaCalendar", "MoccaCalendarClass")
+
+    private final static EntityReference CALENDAR_EVENT_CLASS_REF = new LocalDocumentReference(
+        "MoccaCalendar", "MoccaCalendarEventClass")
+
+    private final static EntityReference CALENDAR_EVENT_RECURRENCY_CLASS_REF = new LocalDocumentReference(
+        List.of("MoccaCalendar", "Code"), "MoccaCalendarEventRecurrencyClass")
+
+    private final static EntityReference CALENDAR_EVENT_DELETION_CLASS_REF = new LocalDocumentReference(
+        List.of("MoccaCalendar", "Code"), "MoccaCalendarEventDeletionClass")
+
+    private final static EntityReference CALENDAR_EVENT_MODIFICATION_CLASS_REF = new LocalDocumentReference(
+        List.of("MoccaCalendar", "Code"), "MoccaCalendarEventModificationClass")
+
+    private final static EntityReference GLOBAL_RIGHTS_CLASS = new LocalDocumentReference(
+        "XWiki", "XWikiGlobalRights")
+
+    private final static SimpleDateFormat RECURRENT_DATE_TIME_FORMATTER =
+        getRecurrentDateTimeFormatter()
+
+    private final static SimpleDateFormat RECURRENT_DATE_FORMATTER = new SimpleDateFormat("yyyyMMdd");
+
+    private final static Map&lt;String, String&gt; COLORS_MAP = Map.ofEntries(
+        Map.entry("subcalendar-gray", "#091E42"),
+        Map.entry("subcalendar-green2", "#00875A"),
+        Map.entry("subcalendar-purple", "#5243AA"),
+        Map.entry("subcalendar-green3", "#36B37E"),
+        Map.entry("subcalendar-yellow", "#FFC400"),
+        Map.entry("subcalendar-orange2", "#FF5630"),
+        Map.entry("subcalendar-turquoise", "#00A3BF"),
+        Map.entry("subcalendar-green", "#006644"),
+        Map.entry("subcalendar-bronze", "#FFAB00"),
+        Map.entry("subcalendar-pink", "#DE350B"),
+        Map.entry("subcalendar-purple2", "#403294"),
+        Map.entry("subcalendar-blue", "#0052CC"),
+        Map.entry("subcalendar-blue2", "#0049B0"),
+        Map.entry("subcalendar-gray2", "#0065FF"),
+        Map.entry("subcalendar-purple3", "#253858"),
+        Map.entry("subcalendar-green4", "#008DA6"),
+        Map.entry("subcalendar-red", "#BF2600"),
+        Map.entry("subcalendar-purple4", "#8777D9"),
+        Map.entry("subcalendar-green5", "#00B8D9"),
+        Map.entry("subcalendar-green6", "#42526E"),
+        Map.entry("subcalendar-orange", "#FF8B00"))
+
+    private final static Map&lt;String, String&gt; RIGHTS_MAP = Map.of(
+        "VIEW", "view",
+        "EDIT", "edit"
+    )
+
+    private static final Map&lt;String, RecurrentEventInfo.WeekDay&gt; CONFLUENCE_RECURRENT_DAY_TO_ENUM = Map.of(
+        "MO", RecurrentEventInfo.WeekDay.MON,
+        "TU", RecurrentEventInfo.WeekDay.TUE,
+        "WE", RecurrentEventInfo.WeekDay.WED,
+        "TH", RecurrentEventInfo.WeekDay.THU,
+        "FR", RecurrentEventInfo.WeekDay.FRI,
+        "SA", RecurrentEventInfo.WeekDay.SAT,
+        "SU", RecurrentEventInfo.WeekDay.SUN
+    )
+
+    private static final Map&lt;String, String&gt; SUB_CALENDAR_TYPE_TRANSLATION_MAP = Map.of(
+        "com.atlassian.confluence.extra.calendar3.calendarstore.generic.GenericLocalSubCalendarDataStore",
+        "confluencepro.calendarmigrator.eventtypes.event",
+        "com.atlassian.confluence.extra.calendar3.calendarstore.generic.BirthdaySubCalendarDataStore",
+        "confluencepro.calendarmigrator.eventtypes.birthday",
+        "com.atlassian.confluence.extra.calendar3.calendarstore.generic.LeaveSubCalendarDataStore",
+        "confluencepro.calendarmigrator.eventtypes.leave",
+        "com.atlassian.confluence.extra.calendar3.calendarstore.generic.TravelSubCalendarDataStore",
+        "confluencepro.calendarmigrator.eventtypes.travel"
+    )
+
+    private static final String XWIKI_ADMIN_GROUP_NAME = "XWikiAdminGroup";
+
+    private static final String XWIKI_ALL_GROUP_NAME = "XWikiAllGroup";
+
+    private Mapping DEFAULT_GROUP_MAPPING = new Mapping(Map.of(
+        "confluence-administrators", XWIKI_ADMIN_GROUP_NAME,
+        "administrators", XWIKI_ADMIN_GROUP_NAME,
+        "site-admins", XWIKI_ADMIN_GROUP_NAME,
+        "system-administrators", XWIKI_ADMIN_GROUP_NAME,
+        "confluence-users", XWIKI_ALL_GROUP_NAME,
+        "users", XWIKI_ALL_GROUP_NAME
+    ));
+
+    @Inject
+    private Provider&lt;XWikiContext&gt; contextProvider;
+
+    @Inject
+    private ConfluenceSpaceKeyResolver confluenceSpaceKeyResolver
+
+    @Inject
+    private ContentParser contentParser
+
+    @Inject
+    private Provider&lt;EntityNameValidationManager&gt; entityNameValidationManagerProvider;
+
+    @Inject
+    private Logger logger;
+
+    @Inject
+    private XWikiSyntaxEscaper escaper;
+
+    @Inject
+    private QueryManager queryManager
+
+    @Inject
+    private EntityReferenceSerializer&lt;String&gt; serializer;
+
+    @Inject
+    private Converter&lt;Mapping&gt; mappingConverter
+
+    @Inject
+    private LocalizationManager localization
+
+    UserGroupMappingContext getUserGroupMappingContext(Map&lt;String, String[]&gt; requestParameters, String groupFormat)
+    {
+        String userFormat = requestParameters.get("userFormat")[0]
+        String userMappingStr = requestParameters.get("userMapping")[0]
+        String groupMappingStr = requestParameters.get("groupMapping")[0]
+
+        Mapping userMapping = mappingConverter.convert(Mapping.class, userMappingStr)
+        Mapping groupMapping
+        if (StringUtils.isEmpty(groupMappingStr)) {
+            groupMapping = DEFAULT_GROUP_MAPPING
+        } else {
+            groupMapping = mappingConverter.convert(Mapping.class, groupMappingStr)
+        }
+        return new UserGroupMappingContext(userFormat, groupFormat, userMapping, groupMapping)
+    }
+
+    void migrateCalendars(ProgressScripService progress, Map&lt;String, Attachment&gt; attachments, boolean dontCleanRights,
+        UserGroupMappingContext userGroupMappingContext, boolean dryRun, List&lt;String&gt; spaceFilter)
+    {
+        XWikiContext context = contextProvider.get()
+        XWiki xwiki = context.getWiki()
+
+        def load = loadCalendars(attachments['parentCalendars'], attachments['subCalendars'],
+            attachments['calendarSpaceMapping'], spaceFilter)
+        List&lt;ParentCalendar&gt; parents = load.result()
+        Set&lt;String&gt; ignoredParentCalendars = load.ignoredParentCalendars()
+        Set&lt;String&gt; ignoredSubCalendars = load.ignoredSubCalendars()
+        Map&lt;String, Map&lt;String, Set&lt;String&gt;&gt;&gt; groupsRights = loadGroupsRights(attachments['calendarGroupRights'])
+        Map&lt;String, Map&lt;String, Set&lt;String&gt;&gt;&gt; usersRights = loadUsersRights(attachments['calendarUserRights'])
+
+        int subCalendarNumber = ((int[]) (parents.collect { it.subCalendars().size() }.toArray(new int[0]))).sum()
+        progress.pushLevel(parents.size() + subCalendarNumber)
+
+        logger.info("Number of parents [{}], number of sub-calendars [{}]", parents.size(), subCalendarNumber)
+        logger.info("Creating parent calendars")
+
+        InputStreamReader isr = new InputStreamReader(attachments['parentCalendars'].getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            def calendarId = entry.get("ID")
+            ParentCalendar parentCalendar = parents.find { it.confluenceId() == calendarId }
+            if (parentCalendar == null) {
+                if (!ignoredParentCalendars.contains(calendarId)) {
+                    logger.error("Can't find parent calendar by ID [{}]", calendarId)
+                }
+                return
+            }
+            progress.startStep()
+
+            logger.info("Creating parent calendar in reference [{}]", parentCalendar.reference())
+
+            XWikiDocument doc = xwiki.getDocument(parentCalendar.reference(), context).clone()
+            doc.setTitle(parentCalendar.name())
+            XDOM xdom = new XDOM([
+                new ParagraphBlock(contentParser.parse(entry.get("DESCRIPTION"), Syntax.PLAIN_1_0).getChildren()),
+                new MacroBlock("moccacalendar", ["filter": "space"], false)
+            ])
+            doc.setContent(xdom)
+
+            DocumentUserReference creatorRef = new DocumentUserReference(
+                getUserRefFromConfluence(entry.get("CREATOR"), userGroupMappingContext), true)
+            doc.setAuthor(creatorRef)
+            doc.getAuthors().setCreator(creatorRef)
+            doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
+            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED")) &amp;&amp; entry.get("LAST_MODIFIED") != "0") {
+                doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            }
+            doc.setContentDirty(false)
+            doc.setMetaDataDirty(false)
+            if (!dryRun) {
+                xwiki.saveDocument(doc, context)
+            }
+
+            logger.debug("Parent for calendar named [{}] created at reference [{}]", parentCalendar.name(),
+                parentCalendar.reference())
+
+            logger.debug("Adding rights for calendar ID [{}] at reference [{}]",
+                calendarId, parentCalendar.reference())
+
+            DocumentReference prefDocRef = new DocumentReference("WebPreferences",
+                parentCalendar.reference().lastSpaceReference)
+            XWikiDocument prefDoc = xwiki.getDocument(prefDocRef, context).clone()
+            if (!dontCleanRights) {
+                prefDoc.removeXObjects(GLOBAL_RIGHTS_CLASS)
+            }
+            List&lt;BaseObject&gt; rightsObjects = prefDoc.getXObjects(GLOBAL_RIGHTS_CLASS)
+
+            logger.debug("Adding group rights for calendar ID [{}] at reference [{}]",
+                calendarId, parentCalendar.reference())
+
+            List&lt;String&gt; groupRef = rightsObjects.collect {
+                if (it == null) {
+                    return null
+                }
+                String property = it.get("groups")
+                if (property != null &amp;&amp; property instanceof LargeStringProperty) {
+                    return property.value
+                } else {
+                    return null
+                }
+            }
+            groupsRights.getOrDefault(calendarId, [:]).entrySet().each { right -&gt;
+                DocumentReference groupReference = getGroupRefFromConfluence(right.key, userGroupMappingContext)
+                String groupReferenceStr = serializer.serialize(groupReference)
+
+                int matchingObjectIndex = groupRef.indexOf(groupReferenceStr)
+                BaseObject rightObj
+                if (matchingObjectIndex &gt;= 0) {
+                    rightObj = rightsObjects.get(matchingObjectIndex)
+                } else {
+                    rightObj = prefDoc.newXObject(GLOBAL_RIGHTS_CLASS, context)
+                    rightObj.set("groups", groupReferenceStr, context)
+                }
+                rightObj.set("allow", 1, context)
+                rightObj.set("levels", right.value, context)
+            }
+
+            logger.debug("Adding user rights for calendar ID [{}] at reference [{}]",
+                calendarId, parentCalendar.reference())
+
+            List&lt;String&gt; userRef = rightsObjects.collect {
+                if (it == null) {
+                    return null
+                }
+                String property = it.get("users")
+                if (property != null &amp;&amp; property instanceof LargeStringProperty) {
+                    return property.value
+                } else {
+                    return null
+                }
+            }
+            usersRights.getOrDefault(calendarId, [:]).entrySet().each { right -&gt;
+                DocumentReference userReference = getUserRefFromConfluence(right.key, userGroupMappingContext)
+                String userReferenceStr = serializer.serialize(userReference)
+
+                int matchingObjectIndex = userRef.indexOf(userReferenceStr)
+                BaseObject rightObj
+                if (matchingObjectIndex &gt;= 0) {
+                    rightObj = rightsObjects.get(matchingObjectIndex)
+                } else {
+                    rightObj = prefDoc.newXObject(GLOBAL_RIGHTS_CLASS, context)
+                    rightObj.set("users", userReferenceStr, context)
+                }
+                rightObj.set("allow", 1, context)
+                rightObj.set("levels", right.value, context)
+            }
+
+            logger.debug("User rights for calendar at reference [{}] done", parentCalendar.reference())
+
+            if (!dryRun) {
+                xwiki.saveDocument(prefDoc, context)
+            }
+            logger.debug("Right for calendar ID [{}] at reference [{}] Done",
+                calendarId, parentCalendar.reference())
+
+            progress.endStep()
+        }
+        isr.close()
+
+        logger.info("Creating parent calendars done")
+        logger.info("Creating sub-calendars")
+
+        isr = new InputStreamReader(attachments['subCalendars'].getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            ParentCalendar parent = parents.find { it.confluenceId() == entry.get("PARENT_ID") }
+            if (parent == null) {
+                if (!ignoredParentCalendars.contains(entry.get("PARENT_ID"))) {
+                    logger.error("Can't find parent calendar by ID [{}]", entry.get("PARENT_ID"))
+                }
+                return
+            }
+            SubCalendar subCalendar = parent.subCalendars().find { it.confluenceId() == entry.get("ID") }
+            if (subCalendar == null) {
+                if (!ignoredSubCalendars.contains(entry.get("ID"))) {
+                    logger.error("Can't find sub-calendar by ID [{}]", entry.get("ID"))
+                }
+                return
+            }
+            progress.startStep()
+            logger.info("Creating sub calendar in reference [{}]", subCalendar.reference())
+
+            String title =
+                parent.name() + " - " + getSubCalendarNameFromType(entry.get("STORE_KEY"), entry.get("TITLE"),
+                    getLocaleFromReference(subCalendar.reference()))
+
+            XWikiDocument doc = xwiki.getDocument(subCalendar.reference(), context).clone()
+            BaseObject calendarObj = doc.getXObject(CALENDAR_CLASS_REF, true, context)
+            doc.setTitle(title)
+            doc.setContent("{{moccacalendar filter=\"page\"/}}")
+            calendarObj.setStringValue("title", title)
+            calendarObj.set("color", COLORS_MAP.get(entry.get("COLOUR")), context)
+            calendarObj.set("description", parent.description(), context)
+
+            DocumentUserReference creatorRef = new DocumentUserReference(
+                getUserRefFromConfluence(entry.get("CREATOR"), userGroupMappingContext), true)
+            doc.setAuthor(creatorRef)
+            doc.getAuthors().setCreator(creatorRef)
+            doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
+            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED")) &amp;&amp; entry.get("LAST_MODIFIED") != "0") {
+                doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            }
+            doc.setContentDirty(false)
+            doc.setMetaDataDirty(false)
+            if (!dryRun) {
+                xwiki.saveDocument(doc, context)
+            }
+            logger.debug("Sub calendar named [{}] created at reference [{}]", title,
+                subCalendar.reference())
+            progress.endStep()
+        }
+        isr.close()
+
+        logger.info("Creating sub-calendars done")
+
+        progress.popLevel()
+    }
+
+    void migrateEvents(ProgressScripService progress, Map&lt;String, Attachment&gt; calendarsAttachments,
+        Map&lt;String, Attachment&gt; eventsAttachments, boolean cleanEvents,
+        UserGroupMappingContext userGroupMappingContext, boolean dryRun, List&lt;String&gt; spaceFilter)
+    {
+        XWikiContext context = contextProvider.get()
+        XWiki xwiki = context.getWiki()
+
+        def loadCal =
+            loadCalendars(calendarsAttachments['parentCalendars'], calendarsAttachments['subCalendars'],
+                calendarsAttachments['calendarSpaceMapping'], spaceFilter)
+        def loadEv = loadEvents(eventsAttachments['events'], eventsAttachments['eventInvitee'], loadCal,
+            userGroupMappingContext)
+
+        List&lt;ParentCalendar&gt; parents = loadCal.result()
+        Set&lt;String&gt; ignoredSubCalendars = loadCal.ignoredSubCalendars()
+        HashMap&lt;String, Event&gt; events = loadEv.result()
+        Set&lt;String&gt; ignoredEvents = loadEv.ignoredEvents()
+        Set&lt;String&gt; ignoredEventByVUID = loadEv.ignoredEventByVUID()
+        List&lt;SubCalendar&gt; allCalendars = parents.collectMany { it.subCalendars() }
+
+        InputStream is = eventsAttachments['eventExclusion'].getContentInputStream()
+        InputStreamReader isr = new InputStreamReader(is)
+        int lineCount = 0
+        isr.eachLine { it -&gt; lineCount++ }
+        isr.close()
+
+        logger.info("Number of events [{}], number of event override [{}], number of events exclusion [{}]",
+            events.values().findAll { it -&gt; !it.isEventOverride() }.size(),
+            events.values().findAll { it -&gt; it.isEventOverride() }.size(),
+            lineCount)
+
+        progress.pushLevel(events.size() + lineCount)
+
+        if (cleanEvents) {
+            logger.info("Cleaning existing events")
+
+            int counter = 0
+            allCalendars.each { entry -&gt;
+                String subCalendarSpace =
+                    serializer.serialize(new LocalDocumentReference(entry.reference()).parent)
+                String query = "SELECT doc " +
+                    "FROM XWikiDocument as doc " +
+                    "WHERE doc.space LIKE :spaceRef"
+                List&lt;XWikiDocument&gt; docToRemove = queryManager.createQuery(query, Query.HQL)
+                    .setWiki(entry.reference().wikiReference.name)
+                    .bindValue("spaceRef").literal(subCalendarSpace).literal(".").anyChars().query()
+                    .execute()
+                docToRemove.each {
+                    logger.debug("Deleting document [{}]", it.documentReference)
+                    if (!dryRun) {
+                        xwiki.deleteAllDocuments(xwiki.getDocument(it.documentReference, context).clone(), context)
+                    }
+                    if (counter &gt; 0 &amp;&amp; (counter % 200) == 0) {
+                        logger.info("Number of event cleaned {}", counter)
+                    }
+                    counter++
+                }
+            }
+            logger.info("Cleaning existing events done. Number of event cleanded [{}]", counter)
+        }
+
+        logger.info("Creating events")
+
+        isr = new InputStreamReader(eventsAttachments['events'].getContentInputStream())
+        int counter = 1
+        getCsvParser(isr).each { entry -&gt;
+            if (StringUtils.isNotEmpty(entry.get("RECURRENCE_ID_TIMESTAMP"))) {
+                // When 'RECURRENCE_ID_TIMESTAMP' is set, it's an event override, ignoring it here
+                return
+            }
+
+            Event event = events[entry.get("ID")]
+            SubCalendar subCalendar = allCalendars.find { it.confluenceId() == entry.get("SUB_CALENDAR_ID") }
+            if (event == null) {
+                if (!ignoredEvents.contains(entry.get("ID"))) {
+                    logger.error("Can't find event by ID [{}]", entry.get("ID"))
+                }
+                return
+            }
+            if (subCalendar == null) {
+                if (!ignoredSubCalendars.contains(entry.get("SUB_CALENDAR_ID"))) {
+                    logger.error("Can't find subCalendar by ID [{}] for event ID [{}]", entry.get("SUB_CALENDAR_ID"),
+                        entry.get("ID"))
+                }
+                return
+            }
+            progress.startStep()
+            if ((counter % 100) == 0) {
+                logger.info("Processing event {}/{}", counter, events.size())
+            }
+            counter++
+
+            logger.debug("Creating event in reference [{}]", event.reference())
+
+            XWikiDocument doc = xwiki.getDocument(event.reference(), context).clone()
+
+            String title = entry.get("SUMMARY")
+            Date startDate = getDateFromConfuence(entry.get("START"), event.allDay())
+            Date endDate = getDateFromConfuence(entry.get("END"), event.allDay())
+            String description =
+                getEventDescription(entry.toMap(), doc.syntax, event, getLocaleFromReference(event.reference()))
+            BaseObject eventObj = doc.getXObject(CALENDAR_EVENT_CLASS_REF, true, context)
+            doc.setTitle(title)
+            // We need to set the parent because it's what moccacalendar use to refer to the calendar
+            doc.setParent(serializer.serialize(subCalendar.reference()))
+            eventObj.setIntValue("allDay", event.allDay() ? 1 : 0)
+            eventObj.set("description", description, context)
+
+            if (event.allDay()) {
+                // In confluence a "all day event" will end at the end of the day so in confluence will have by example for a one day event:
+                // - start_date: 2025-01-02 00:00:00
+                // - end_date: 2025-01-03 00:00:00
+                // -&gt; will mean an event all the day 2025-01-02
+                // but in XWiki it's understood differently the last entry will ben an all day event
+                // from 2025-01-02 to 2025-01-03 (so 2 days).
+                // So to fix this we just deduce one day for the end of the all days events
+                endDate = DateUtils.addDays(endDate, -1)
+            }
+
+            if (StringUtils.isNotEmpty(entry.get("RECURRENCE_RULE"))) {
+                RecurrentEventInfo recurrentRules = parseAndDecodeRecurrentEvent(entry, event)
+                if (recurrentRules.recurrentEventFrequency() == RecurrentEventInfo.EventFrequency.WEEKLY
+                    &amp;&amp; recurrentRules.byDay() != null)
+                {
+                    // When the event frequency is set to weekly and the day of the recurrence is set it override the day of the event
+                    // We need to translate this to XWiki but we can't specify the day of a recurrent event so we change the
+                    // date of the first event.
+                    // Let's have an example: we have an event set as start Monday 17 april and the recurrent value is set to weekly and the day of recurrence is set to Wednesday
+                    // In this case we will change the day of the event to Wednesday 19 april
+                    int dayToAdd = 0
+                    Calendar c = Calendar.getInstance()
+                    c.setTime(startDate)
+                    while (c.get(Calendar.DAY_OF_WEEK) != recurrentRules.toCalendarDayNumber()) {
+                        c.add(Calendar.DAY_OF_MONTH, 1)
+                        dayToAdd++
+                    }
+                    startDate = DateUtils.addDays(startDate, dayToAdd)
+                    endDate = DateUtils.addDays(endDate, dayToAdd)
+                }
+
+                BaseObject recurrenceObj = doc.getXObject(CALENDAR_EVENT_RECURRENCY_CLASS_REF, true, context)
+                recurrenceObj.set("frequency", recurrentRules.toXWikiFrequency(), context)
+                recurrenceObj.setDateValue("lastInstance", recurrentRules.until())
+                eventObj.setIntValue("recurrent", 1)
+            } else {
+                eventObj.setIntValue("recurrent", 0)
+            }
+            eventObj.setDateValue("startDate", startDate)
+            eventObj.setDateValue("endDate", endDate)
+
+            if (StringUtils.isNotEmpty(entry.get("ORGANISER"))) {
+                DocumentUserReference creatorRef = new DocumentUserReference(
+                    getUserRefFromConfluence(entry.get("ORGANISER"), userGroupMappingContext), true)
+                doc.setAuthor(creatorRef)
+                doc.getAuthors().setCreator(creatorRef)
+            }
+            doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
+            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED")) &amp;&amp; entry.get("LAST_MODIFIED") != "0") {
+                doc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            }
+            doc.setContentDirty(false)
+            doc.setMetaDataDirty(false)
+            if (!dryRun) {
+                xwiki.saveDocument(doc, context)
+            }
+            logger.debug("Event named [{}] created at reference [{}]", event.name(), event.reference())
+            progress.endStep()
+        }
+        isr.close()
+
+        logger.info("Creating events done")
+        logger.info("Loading events override data")
+
+        Map&lt;String, List&lt;Map&lt;String, String&gt;&gt;&gt; eventOverrides = [:]
+        isr = new InputStreamReader(eventsAttachments['events'].getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            if (StringUtils.isEmpty(entry.get("RECURRENCE_ID_TIMESTAMP"))) {
+                // When 'RECURRENCE_ID_TIMESTAMP' is not set, it's a "normal" event, ignoring it here
+                return
+            }
+            String eventUid = entry.get("VEVENT_UID")
+            if (ignoredEventByVUID.contains(eventUid)) {
+                return
+            }
+            if (!eventOverrides.containsKey(eventUid)) {
+                eventOverrides[eventUid] = []
+            }
+            eventOverrides[eventUid].add(entry.toMap())
+        }
+        isr.close()
+
+        logger.info("Creating event overrides")
+
+        eventOverrides.each { entry -&gt;
+            Event baseEvent = events.values().find { it.veventUid() == entry.getKey() &amp;&amp; !it.isEventOverride() }
+            if (baseEvent == null) {
+                logger.error("Can't find base event with UID [{}]", entry.getKey())
+                return
+            }
+            progress.startStep()
+            logger.info("Adding event override for event UID [{}]", entry.getKey())
+
+            XWikiDocument doc = xwiki.getDocument(baseEvent.reference(), context).clone()
+            // Cleanup all objects so we are sure that we start from a clean state
+            doc.removeXObjects(CALENDAR_EVENT_MODIFICATION_CLASS_REF)
+
+            Locale locale = getLocaleFromReference(baseEvent.reference())
+
+            entry.value.each { event -&gt;
+                Event eventOverride = events[event.get("ID")]
+                if (eventOverride == null) {
+                    logger.error("Can't get event override with ID [{}]", event.get("ID"))
+                    return
+                }
+                String title = event.get("SUMMARY")
+                String description = getEventDescription(event, doc.syntax, eventOverride, locale)
+                Date startDate = getDateFromConfuence(event.get("START"), eventOverride.allDay())
+                Date endDate = getDateFromConfuence(event.get("END"), eventOverride.allDay())
+                Date eventOrigStartDate =
+                    getDateFromConfuence(event.get("RECURRENCE_ID_TIMESTAMP"), eventOverride.allDay())
+
+                BaseObject eventOverrideObj = doc.newXObject(CALENDAR_EVENT_MODIFICATION_CLASS_REF, context)
+                eventOverrideObj.set("title", title, context)
+                eventOverrideObj.set("description", description, context)
+                eventOverrideObj.setDateValue("startDate", startDate)
+                eventOverrideObj.setDateValue("endDate", endDate)
+                eventOverrideObj.setDateValue("eventOrigStartDate", eventOrigStartDate)
+            }
+
+            doc.setContentDirty(false)
+            doc.setMetaDataDirty(false)
+            if (!dryRun) {
+                xwiki.saveDocument(doc, context)
+            }
+            logger.debug("Event override done for event UID [{}]", entry.getKey())
+            progress.endStep()
+        }
+
+        logger.info("Creating event overrides done")
+        logger.info("Loading events exclusion data")
+
+        Map&lt;String, List&lt;String&gt;&gt; eventExclusion = [:]
+        isr = new InputStreamReader(eventsAttachments['eventExclusion'].getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            String eventId = entry.get("EVENT_ID")
+            if (ignoredEvents.contains(eventId)) {
+                return
+            }
+            String timestamp = entry.get("EXCLUSION")
+            if (!eventExclusion.containsKey(eventId)) {
+                eventExclusion[eventId] = []
+            }
+            eventExclusion[eventId].add(timestamp)
+        }
+        isr.close()
+
+        logger.info("Creating event exclusion")
+
+        eventExclusion.each { entry -&gt;
+            Event event = events[entry.getKey()]
+            if (event == null) {
+                logger.error("Can't base event with ID [{}]", entry.getKey())
+                return
+            }
+            progress.startStep()
+            logger.info("Adding event exclusion for event ID [{}]", entry.getKey())
+
+            XWikiDocument doc = xwiki.getDocument(event.reference(), context).clone()
+            // Cleanup all objects so we are sure that we start from a clean state
+            doc.removeXObjects(CALENDAR_EVENT_DELETION_CLASS_REF)
+
+            entry.value.each { exclusion -&gt;
+                Date eventOrigStartDate = getDateFromConfuence(exclusion, event.allDay())
+
+                BaseObject eventOverrideObj = doc.newXObject(CALENDAR_EVENT_DELETION_CLASS_REF, context)
+                eventOverrideObj.setDateValue("eventOrigStartDate", eventOrigStartDate)
+            }
+
+            doc.setContentDirty(false)
+            doc.setMetaDataDirty(false)
+            if (!dryRun) {
+                xwiki.saveDocument(doc, context)
+            }
+            logger.debug("Event exclusion done for event ID [{}]", entry.getKey())
+            progress.endStep()
+        }
+
+        logger.info("Event exclusion done")
+
+        progress.popLevel()
+    }
+
+    private static Date getDateFromConfuence(String dateStr, boolean allDay)
+    {
+        long epochDate = Long.parseLong(dateStr)
+        if (allDay) {
+            // In case of all day event we want to have the start date which correspond to the local start date
+            // by example if the start date is 2025-05-02 00:00:00 UTC we want to convert it to
+            // 2025-05-02 00:00:00 based on the configured system timezone
+            // so it will be 2025-05-02 00:00:00 UTC+2 if the server is located in Paris which mean 2025-04-01 22:00:00 UTC
+            def instant = Instant.ofEpochMilli(epochDate).atZone(ZoneId.of("UTC"))
+            Calendar c = Calendar.getInstance()
+            c.setTimeInMillis(0)
+            c.set(instant.year, instant.monthValue - 1, instant.dayOfMonth, instant.hour, instant.minute,
+                instant.second)
+            return c.getTime()
+        } else {
+            // The date from confluence is stored as long in epoch, so we just create a locale date from a epoch date.
+            return new Date(epochDate)
+        }
+    }
+
+    private String getEventDescription(Map&lt;String, String&gt; entry, Syntax docSyntax, Event event, Locale locale)
+    {
+        StringBuilder description = new StringBuilder(entry.get("DESCRIPTION"))
+        String location = entry.get("LOCATION")
+        String url = entry.get("URL")
+        if (StringUtils.isNotEmpty(location)) {
+            description.append("\n\n")
+            description.append(localization.getTranslation(
+                "confluencepro.calendarmigrator.eventdescription.location",
+                locale, docSyntax))
+            description.append(":\n\n")
+            description.append(escaper.escape(location, docSyntax))
+        }
+        if (StringUtils.isNotEmpty(url)) {
+            description.append("\n\n")
+            description.append(localization.getTranslation(
+                "confluencepro.calendarmigrator.eventdescription.url",
+                locale, docSyntax))
+            description.append(":\n\n")
+            description.append(escaper.escape(url, docSyntax))
+        }
+        if (!event.invitee().empty) {
+            description.append("\n\n")
+            description.append(localization.getTranslation(
+                "confluencepro.calendarmigrator.eventdescription.invitee",
+                locale, docSyntax))
+            description.append(":\n\n")
+            description.append(
+                "{{userList users=\"${String.join(",", event.invitee().collect { serializer.serialize(it) })}\"/}}")
+        }
+        return description.toString()
+    }
+
+    private RecurrentEventInfo parseAndDecodeRecurrentEvent(CSVRecord entry, Event event)
+    {
+        Map&lt;String, String&gt; rawParams = entry.get("RECURRENCE_RULE")
+            .split(';').
+            collectEntries {
+                def i = it.split('=')
+                return [i[0], i[1]]
+            }
+
+        RecurrentEventInfo.WeekDay weekDay = null
+        RecurrentEventInfo.EventFrequency eventFrequency
+        int count = 0
+
+        Date startDate = getDateFromConfuence(entry.get("START"), event.allDay())
+
+        Date untilDate = null
+        if (StringUtils.isNotEmpty(rawParams.get("UNTIL"))) {
+            String rawDate = rawParams.get("UNTIL")
+            if (rawDate.contains("Z")) {
+                untilDate = RECURRENT_DATE_TIME_FORMATTER.parse(rawDate)
+            } else {
+                untilDate = RECURRENT_DATE_FORMATTER.parse(rawDate)
+            }
+        } else if (StringUtils.isNotEmpty(rawParams.get("COUNT"))) {
+            count = Integer.parseInt(rawParams.get("COUNT"))
+            // Need to subtract one event because we need to keep into account the first event
+            // so for instance, if we have count=2 we just need to add one more event in addition to the original one
+            count -= 1
+        }
+        if (rawParams.getOrDefault("INTERVAL", "1") != "1") {
+            logger.warn("Unsupported INTERVAL for recurrent event. Interval: [{}], Event Id [{}]",
+                rawParams.get("INTERVAL"), event.confluenceId())
+        }
+
+        switch (rawParams.get("FREQ")) {
+            case "YEARLY":
+                eventFrequency = RecurrentEventInfo.EventFrequency.YEARLY
+                if (count &gt; 0) {
+                    untilDate = DateUtils.addYears(startDate, count)
+                }
+                break
+            case "MONTHLY":
+                eventFrequency = RecurrentEventInfo.EventFrequency.MONTHLY
+                if (count &gt; 0) {
+                    untilDate = DateUtils.addMonths(startDate, count)
+                }
+                if (rawParams.containsKey("BYDAY")) {
+                    logger.warn("Unsupported BYDAY param for monthly event. BYDAY: [{}], Event Id [{}]",
+                        rawParams.get("BYDAY"), event.confluenceId())
+                }
+                break
+            case "WEEKLY":
+                eventFrequency = RecurrentEventInfo.EventFrequency.WEEKLY
+                if (count &gt; 0) {
+                    untilDate = DateUtils.addWeeks(startDate, count)
+                }
+                if (rawParams.containsKey("BYDAY")) {
+                    weekDay = CONFLUENCE_RECURRENT_DAY_TO_ENUM.get(rawParams.get("BYDAY"))
+                    if (weekDay == null) {
+                        // Keep in mind that in confluence we can have multiple value here by example: MO,TU,WE,TH,FR
+                        logger.warn("Unsupported BYDAY param for weekly event. BYDAY: [{}], Event Id [{}]",
+                            rawParams.get("BYDAY"), event.confluenceId())
+                    }
+                }
+                break
+            case "DAILY":
+                eventFrequency = RecurrentEventInfo.EventFrequency.DAILY
+                if (count &gt; 0) {
+                    untilDate = DateUtils.addDays(startDate, count)
+                }
+                break
+            default:
+                throw new RuntimeException(
+                    "Unknown recurrent event type [${rawParams.get("FREQ")}] for event ID [${entry.get("ID")}")
+        }
+        return new RecurrentEventInfo(eventFrequency, untilDate, weekDay)
+    }
+
+    private LoadCalendarResult loadCalendars(Attachment parents, Attachment children, Attachment spaceMapping,
+        List&lt;String&gt; spaceFilter)
+    {
+        List&lt;ParentCalendar&gt; result = []
+        Map&lt;String, List&lt;String&gt;&gt; calendarSpaceMapping = new HashMap&lt;&gt;()
+
+        // Used to avoid to log to many error just because we ignored a calendar but we also want to ensure the data
+        // integrity so with this we ensure that if a calendar is not found it's expected
+        Set&lt;String&gt; ignoredParentCalendars = new HashSet&lt;&gt;()
+        Set&lt;String&gt; ignoredSubCalendars = new HashSet&lt;&gt;()
+
+        logger.info("Load calendar space mapping")
+        InputStreamReader isr = new InputStreamReader(spaceMapping.getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            String spaceKey = entry.get("SPACE_KEY")
+            String id = entry.get("SUB_CALENDAR_ID")
+            List&lt;String&gt; spaces = calendarSpaceMapping.get(id)
+            if (spaces == null) {
+                spaces = []
+                calendarSpaceMapping[id] = spaces
+            }
+            spaces.add(spaceKey)
+        }
+
+        logger.info("Load parents calendars")
+
+        isr = new InputStreamReader(parents.getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            String spaceKey = entry.get("SPACE_KEY")
+            String name = entry.get("NAME")
+            String id = entry.get("ID")
+            logger.debug("Loading parent calendar named [{}], ID [{}]", name, id)
+
+            if (StringUtils.isEmpty(spaceKey)) {
+                // Some old calendar don't have the space key value set
+                // https://confluence.atlassian.com/teamcal/team-calendars-5-3-release-notes-776814122.html
+                def spaces = calendarSpaceMapping.get(id)
+                if (spaces == null || spaces.empty) {
+                    logger.warn(
+                        "The space Key is empty for calendar name [{}] and ID [{}] and no additional mapping was found " +
+                            "from the calendarSpaceMapping.csv file. Ignoring this calendar...", name, id)
+                    ignoredParentCalendars.add(id)
+                    return
+                } else {
+                    if (spaces.size() == 1) {
+                        logger.info(
+                            "The space Key is empty for calendar name [{}] and ID [{}] but an mapping was found in the " +
+                                "the calendarSpaceMapping.csv file. Using this mapping instead", name, id)
+                        spaceKey = spaces[0]
+                    } else {
+                        def spaceFilterSet = new HashSet(spaceFilter)
+                        def intersect = spaceFilterSet.intersect(spaces)
+                        if (intersect.size() == 1) {
+                            spaceKey = intersect[0]
+                        } else {
+                            if (intersect.size() &gt; 1) {
+                                logger.error(
+                                    "The space Key is empty for calendar name [{}] and ID [{}] and an additional mapping was " +
+                                        "found from the calendarSpaceMapping.csv file but more than one space key was found for " +
+                                        "this calendar. So we can't determine the target space to import the calendar. " +
+                                        "The list of target space is:\n{}", name, id, spaces)
+                            }
+                            // ignore if intersect == 0 or intersect &gt; 1
+                            ignoredParentCalendars.add(id)
+                            return
+                        }
+                    }
+                }
+            }
+            if (spaceFilter != null &amp;&amp; !spaceFilter.contains(spaceKey)) {
+                logger.debug("Ignoring calendar for space name [{}]", spaceKey)
+                ignoredParentCalendars.add(id)
+                return
+            }
+            EntityReference spaceReference
+            try {
+                logger.debug("Resolve space with key [{}]", spaceKey)
+                spaceReference = confluenceSpaceKeyResolver.getSpaceByKey(spaceKey)
+                logger.debug("Resolved space reference [{}]", spaceReference)
+                if (spaceReference != null) {
+                    if (spaceReference.type == EntityType.SPACE) {
+                        spaceReference = new SpaceReference(spaceReference)
+                    } else {
+                        logger.error("Unexpected type of reference [{}] for space key [{}]",
+                            spaceKey, spaceReference.type)
+                        ignoredParentCalendars.add(id)
+                        return
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Erro while getting space reference for space key [${spaceKey}]", e)
+                ignoredParentCalendars.add(id)
+                return
+            }
+            if (spaceReference == null) {
+                logger.error("Can't get space reference for space key [{}]", spaceKey)
+                ignoredParentCalendars.add(id)
+                return
+            }
+
+            SpaceReference targetParentCalendarSpace = new SpaceReference(normalizeNameForReference(name),
+                spaceReference)
+
+            if (result.find { it.reference().lastSpaceReference == targetParentCalendarSpace }.any()) {
+                // We have a conflict with an other calendar with the same name on the same space
+                int i = 1
+                do {
+                    targetParentCalendarSpace =
+                        new SpaceReference("${normalizeNameForReference(name)}_${i}", spaceReference)
+                    i++
+                } while (result
+                    .find { it.reference().lastSpaceReference == targetParentCalendarSpace }.any())
+            }
+
+            DocumentReference parentCalendarReference = new DocumentReference("WebHome", targetParentCalendarSpace)
+
+            result.add(new ParentCalendar(id, spaceKey, name, entry.get("DESCRIPTION"), parentCalendarReference, []))
+        }
+        isr.close()
+
+        logger.info("Load sub calendars")
+
+        isr = new InputStreamReader(children.getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            String id = entry.get("ID")
+            logger.debug("Loading sub calendar ID [{}]", id)
+
+            ParentCalendar parent = result.find { it.confluenceId() == entry.get("PARENT_ID") }
+            if (parent == null) {
+                if (!ignoredParentCalendars.contains(entry.get("PARENT_ID"))) {
+                    logger.error("Can't get parent calendar for calendar ID [{}]", id)
+                }
+                ignoredSubCalendars.add(id)
+                return
+            }
+            String name = getSubCalendarNameFromType(entry.get("STORE_KEY"), entry.get("TITLE"),
+                getLocaleFromReference(parent.reference()))
+
+            DocumentReference subCalReference = new DocumentReference("WebHome",
+                new SpaceReference(normalizeNameForReference(name), parent.reference().lastSpaceReference))
+
+            if (parent.subCalendars().find { it.reference() == subCalReference }.any()) {
+                // We have a conflict with an other calendar with the same name on the same space
+                int i = 1
+                do {
+                    subCalReference = new DocumentReference("WebHome",
+                        new SpaceReference("${normalizeNameForReference(name)}_${i}",
+                            parent.reference().lastSpaceReference))
+                    i++
+                } while (parent.subCalendars().find { it.reference() == subCalReference }.any())
+            }
+
+            parent.subCalendars().add(new SubCalendar(id, subCalReference))
+        }
+        isr.close()
+        logger.info("Sub calendars loaded")
+
+        return new LoadCalendarResult(result, ignoredParentCalendars, ignoredSubCalendars)
+    }
+
+    private Map&lt;String, Map&lt;String, Set&lt;String&gt;&gt;&gt; loadGroupsRights(Attachment groupRigths)
+    {
+        Map&lt;String, Map&lt;String, HashSet&lt;String&gt;&gt;&gt; result = [:]
+
+        logger.info("Load group rights")
+        InputStreamReader isr = new InputStreamReader(groupRigths.getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            String calendarId = entry.get("SUB_CALENDAR_ID")
+            String groupName = entry.get("GROUP_NAME")
+            String right = entry.get("TYPE")
+            if (!result.containsKey(calendarId)) {
+                result[calendarId] = new HashMap&lt;String, HashSet&lt;String&gt;&gt;()
+            }
+            if (!result[calendarId].containsKey(groupName)) {
+                result[calendarId][groupName] = new HashSet&lt;String&gt;()
+            }
+            result[calendarId][groupName].add(RIGHTS_MAP.get(right))
+        }
+        isr.close()
+        logger.info("Group rights loaded")
+
+        return result
+    }
+
+    private Map&lt;String, Map&lt;String, Set&lt;String&gt;&gt;&gt; loadUsersRights(Attachment userRights)
+    {
+        Map&lt;String, Map&lt;String, HashSet&lt;String&gt;&gt;&gt; result = [:]
+
+        logger.info("Load user rights")
+        InputStreamReader isr = new InputStreamReader(userRights.getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            String calendarId = entry.get("SUB_CALENDAR_ID")
+            String userName = entry.get("username")
+            String right = entry.get("TYPE")
+            if (!result.containsKey(calendarId)) {
+                result[calendarId] = new HashMap&lt;String, HashSet&lt;String&gt;&gt;()
+            }
+            if (!result[calendarId].containsKey(userName)) {
+                result[calendarId][userName] = new HashSet&lt;String&gt;()
+            }
+            result[calendarId][userName].add(RIGHTS_MAP.get(right))
+        }
+        isr.close()
+        logger.info("User rights loaded")
+
+        return result
+    }
+
+    private LoadEventResult loadEvents(Attachment events, Attachment invitees,
+        LoadCalendarResult loadCalendarResult, UserGroupMappingContext userGroupMappingContext)
+    {
+        Map&lt;String, List&lt;DocumentReference&gt;&gt; inviteeMap = [:]
+        HashMap&lt;String, Event&gt; result = [:]
+        HashSet&lt;DocumentReference&gt; eventReferences = new HashSet&lt;&gt;()
+
+        // Used to avoid to log to many error just because we ignored an event but we also want to ensure the data
+        // integrity so with this we ensure that if an event is not found it's expected
+        Set&lt;String&gt; ignoredEvents = new HashSet&lt;&gt;()
+        Set&lt;String&gt; ignoredEventByVUID = new HashSet&lt;&gt;()
+
+        logger.info("Load events invitees")
+
+        InputStreamReader isr = new InputStreamReader(invitees.getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            String eventId = entry.get("EVENT_ID")
+            logger.debug("Loading event invitee ID [{}]", eventId)
+            def refList = inviteeMap[eventId]
+            if (refList == null) {
+                refList = []
+                inviteeMap[eventId] = refList
+            }
+            DocumentReference userReference = getUserRefFromConfluence(entry.get("username"), userGroupMappingContext)
+            refList.add(userReference)
+        }
+        isr.close()
+
+        logger.info("Load events")
+
+        Map&lt;String, SubCalendar&gt; subCalendarsByIds =
+            loadCalendarResult.result().collectMany { it.subCalendars() }.collectEntries { [it.confluenceId(), it] }
+
+        isr = new InputStreamReader(events.getContentInputStream())
+        getCsvParser(isr).each { entry -&gt;
+            String name = entry.get("SUMMARY")
+            String id = entry.get("ID")
+            String vuid = entry.get("VEVENT_UID")
+            boolean allDay = "TRUE".equalsIgnoreCase(entry.get("ALL_DAY"))
+            logger.debug("Loading event named [{}] ID [{}]", name, id)
+
+            SubCalendar calendar = subCalendarsByIds[entry.get("SUB_CALENDAR_ID")]
+            if (calendar == null) {
+                if (!loadCalendarResult.ignoredSubCalendars().contains(entry.get("SUB_CALENDAR_ID"))) {
+                    logger.error("Can't get calendar for event ID [{}]", id)
+                }
+                ignoredEvents.add(id)
+                ignoredEventByVUID.add(vuid)
+                return
+            }
+
+            String baseName
+            DocumentReference eventReference
+            try {
+                // Use static name for event the summary is empty. This should not happen in most of case but
+                // we saw this in the database so we need to avoid to crash the migration of the event in this case
+                baseName = StringUtils.isNotEmpty(name) ? normalizeNameForReference(name) :
+                    localization.getTranslationPlain("confluencepro.calendarmigrator.unnamedevent",
+                        getLocaleFromReference(calendar.reference()),
+                        new Object[0])
+                eventReference = new DocumentReference("WebHome",
+                    new SpaceReference(baseName, calendar.reference().lastSpaceReference))
+            } catch (Exception e) {
+                logger.error(
+                    "Can't get reference for event named [${name}] ID [${id}] of calendar [${calendar.reference()}] ID [${calendar.confluenceId()}]",
+                    e)
+                ignoredEvents.add(id)
+                ignoredEventByVUID.add(vuid)
+                return
+            }
+            if (eventReferences.contains(eventReference)) {
+                // We have a conflict with an other event with the same name on the same space
+                long i = Long.parseLong(entry.get("CREATED"))
+                do {
+                    eventReference = new DocumentReference("WebHome",
+                        new SpaceReference("${baseName}_${i}",
+                            calendar.reference().lastSpaceReference))
+                    i++
+                } while (eventReferences.contains(eventReference))
+            }
+            eventReferences.add(eventReference)
+            result.put(id,
+                new Event(id, vuid,
+                    StringUtils.isNotEmpty(entry.get("RECURRENCE_ID_TIMESTAMP")),
+                    name, allDay,
+                    eventReference, inviteeMap.get(id, [])))
+        }
+        isr.close()
+
+        logger.info("Event loaded")
+        return new LoadEventResult(result, ignoredEvents, ignoredEventByVUID)
+    }
+
+    private String getSubCalendarNameFromType(String type, String customTitle, Locale locale)
+    {
+        if (type == "com.atlassian.confluence.extra.calendar3.calendarstore.generic.CustomSubCalendarDataStore") {
+            return customTitle
+        } else {
+            String translationKey = SUB_CALENDAR_TYPE_TRANSLATION_MAP.get(type)
+            if (translationKey != null) {
+                return localization.getTranslationPlain(translationKey, locale, new Object[0])
+            } else {
+                throw new RuntimeException("Unsupported type : " + type)
+            }
+        }
+    }
+
+    private static SimpleDateFormat getRecurrentDateTimeFormatter()
+    {
+        def sdf = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
+        // As the recurrent date time is stored in UTC we need to explicitly parse it as UTC, so it is correctly
+        // converted to a date that we can store in XWiki
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"))
+        return sdf
+    }
+
+    protected static CSVParser getCsvParser(InputStreamReader isr)
+    {
+        return CSVFormat.RFC4180.builder().setHeader().setSkipHeaderRecord(true).setTrim(true).setDelimiter(';')
+            .build().parse(isr)
+    }
+
+    private String normalizeNameForReference(String name)
+    {
+        String r = entityNameValidationManagerProvider.get().getEntityReferenceNameStrategy().transform(name);
+        if (StringUtils.isEmpty(r)) {
+            logger.warn("The name strategy transformed [{}] to an empty name, will use the original name instead of"
+                + " following the name strategy", name);
+            return name;
+        }
+        return r;
+    }
+
+    private Locale getLocaleFromReference(DocumentReference reference)
+    {
+        def context = contextProvider.get()
+        def currentWikiId = context.getWikiId()
+        context.setWikiId(reference.wikiReference.name)
+        try {
+            def wiki = context.getWiki()
+            return wiki.getDefaultLocale(context)
+        } finally {
+            context.setWikiId(currentWikiId)
+        }
+    }
+
+    private static DocumentReference getUserRefFromConfluence(String rawUsername,
+        UserGroupMappingContext mappingContext)
+    {
+        String username = mappingContext.userMapping().get(rawUsername)
+        if (username == null) {
+            // code inspired from https://github.com/xwiki-contrib/confluence/blob/933ccec7f941b04bed3f69f53e1e5c22e4e46414/confluence-xml/src/main/java/org/xwiki/contrib/confluence/filter/internal/input/ConfluenceConverter.java#L219
+            String userFormat = mappingContext.userFormat()
+            if (StringUtils.isEmpty(userFormat)) {
+                // Do some minimal cleanup which is backward compatible with older versions of the filter.
+                username = FORBIDDEN_USER_CHARACTERS.matcher(rawUsername).replaceAll("_");
+            } else {
+                username = UsernameCleaner.format(userFormat, Map.of("username", rawUsername))
+            }
+        }
+        return new DocumentReference("xwiki", "XWiki", username)
+    }
+
+    private static DocumentReference getGroupRefFromConfluence(String rawGroupname,
+        UserGroupMappingContext mappingContext)
+    {
+        String groupname = mappingContext.groupMapping().get(rawGroupname)
+        if (groupname == null) {
+            // code inspired from https://github.com/xwiki-contrib/confluence/blob/933ccec7f941b04bed3f69f53e1e5c22e4e46414/confluence-xml/src/main/java/org/xwiki/contrib/confluence/filter/internal/input/ConfluenceConverter.java#L186
+            String groupFormat = mappingContext.groupFormat()
+            if (StringUtils.isEmpty(groupFormat)) {
+                groupname = rawGroupname
+            } else {
+                groupname = UsernameCleaner.format(groupFormat, Map.of("group", rawGroupname))
+            }
+        }
+        return new DocumentReference("xwiki", "XWiki", groupname)
+    }
+}
+
+record ParentCalendar(
+    String confluenceId,
+    String spaceKey,
+    String name,
+    String description,
+    DocumentReference reference,
+    List&lt;SubCalendar&gt; subCalendars
+)
+{
+}
+
+record SubCalendar(
+    String confluenceId,
+    DocumentReference reference
+)
+{}
+
+record LoadCalendarResult(
+    List&lt;ParentCalendar&gt; result,
+    Set&lt;String&gt; ignoredParentCalendars,
+    Set&lt;String&gt; ignoredSubCalendars
+)
+{}
+
+record Event(
+    String confluenceId,
+    String veventUid,
+    boolean isEventOverride,
+    String name,
+    boolean allDay,
+    DocumentReference reference,
+    List&lt;DocumentReference&gt; invitee
+)
+{}
+
+record LoadEventResult(
+    HashMap&lt;String, Event&gt; result,
+    Set&lt;String&gt; ignoredEvents,
+    Set&lt;String&gt; ignoredEventByVUID
+)
+{}
+
+record RecurrentEventInfo(
+    EventFrequency recurrentEventFrequency,
+    @Nullable Date until,
+    @Nullable WeekDay byDay
+    // Interval interval, // Not supported for now
+)
+{
+    private static final Map&lt;WeekDay, Integer&gt; FROM_ENUM_TO_XWIKI_DAY_NUMBER = Map.of(
+        WeekDay.MON, Calendar.MONDAY,
+        WeekDay.TUE, Calendar.TUESDAY,
+        WeekDay.WED, Calendar.WEDNESDAY,
+        WeekDay.THU, Calendar.THURSDAY,
+        WeekDay.FRI, Calendar.FRIDAY,
+        WeekDay.SAT, Calendar.SATURDAY,
+        WeekDay.SUN, Calendar.SUNDAY
+    );
+
+    enum EventFrequency {
+        YEARLY, MONTHLY, WEEKLY, DAILY
+    }
+
+    enum WeekDay {
+        MON, TUE, WED, THU, FRI, SAT, SUN
+    }
+
+    int toCalendarDayNumber()
+    {
+        return FROM_ENUM_TO_XWIKI_DAY_NUMBER.getOrDefault(byDay(), -1)
+    }
+
+    String toXWikiFrequency()
+    {
+        switch (recurrentEventFrequency()) {
+            case EventFrequency.YEARLY:
+                return "yearly"
+            case EventFrequency.MONTHLY:
+                return "monthly"
+            case EventFrequency.WEEKLY:
+                return "weekly"
+            case EventFrequency.DAILY:
+                return "daily"
+            default:
+                throw new RuntimeException("Unknown frequency type: " + recurrentEventFrequency())
+        }
+    }
+}
+
+record UserGroupMappingContext(
+    String userFormat,
+    String groupFormat,
+    Map&lt;String, String&gt; userMapping,
+    Map&lt;String, String&gt; groupMapping
+)
+{}
+
+/**
+ * Code past from https://github.com/xwiki-contrib/confluence/blob/41658372197b3890e2b71ece14deb876897cb318/confluence-xml/src/main/java/org/xwiki/contrib/confluence/filter/internal/input/UsernameCleaner.java
+ * FIXME We should use a shared code instead of a full copy past of this class
+ */
+final class UsernameCleaner
+{
+    private UsernameCleaner()
+    {
+        // empty
+    }
+
+    private static String clean(String str)
+    {
+        return RegExUtils.removePattern(str, "[\\.\\:\\s,@\\^\\/]");
+    }
+
+    private static void putVariable(Map&lt;String, String&gt; map, String key, String value)
+    {
+        if (value != null) {
+            map.put(key, value);
+
+            map.put(key + ".lowerCase", value.toLowerCase());
+            map.put(key + "._lowerCase", value.toLowerCase());
+            map.put(key + ".upperCase", value.toUpperCase());
+            map.put(key + "._upperCase", value.toUpperCase());
+
+            String cleanValue = clean(value);
+            map.put(key + ".clean", cleanValue);
+            map.put(key + "._clean", cleanValue);
+            map.put(key + ".clean.lowerCase", cleanValue.toLowerCase());
+            map.put(key + "._clean._lowerCase", cleanValue.toLowerCase());
+            map.put(key + ".clean.upperCase", cleanValue.toUpperCase());
+            map.put(key + "._clean._upperCase", cleanValue.toUpperCase());
+        }
+    }
+
+    private static Map&lt;String, String&gt; createFormatMap(Map&lt;String, String&gt; variables)
+    {
+        Map&lt;String, String&gt; formatMap = new HashMap&lt;&gt;();
+        for (Map.Entry&lt;String, String&gt; variable : variables.entrySet()) {
+            putVariable(formatMap, variable.getKey(), variable.getValue());
+        }
+        return formatMap;
+    }
+
+    private static String formatSubject(StringSubstitutor substitutor, String format)
+    {
+        return substitutor.replace(format);
+    }
+
+    static String format(String format, Map&lt;String, String&gt; variables)
+    {
+        return formatSubject(new StringSubstitutor(createFormatMap(variables)), format);
+    }
+}
+</script_content>
+    </property>
+    <property>
+      <script_language>groovy</script_language>
+    </property>
+  </object>
+</xwikidoc>
