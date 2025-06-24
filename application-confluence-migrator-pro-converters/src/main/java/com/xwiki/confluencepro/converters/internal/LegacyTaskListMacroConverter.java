@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceInputContext;
 import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.MacroBlock;
 import org.xwiki.rendering.block.ParagraphBlock;
@@ -65,11 +64,17 @@ import com.xwiki.task.model.Task;
 @Component
 @Singleton
 @Named("tasklist")
-public class LegacyTaskListMacroConverter extends AbstractMacroConverter
+public class LegacyTaskListMacroConverter extends AbstractTaskConverter
 {
     private static final String PARAM_PRIORITY = "priority";
 
     private static final String PARAM_LOCKED = "locked";
+
+    private static final String PARAM_CHECKED = "checked";
+
+    private static final String VAL_T = "T";
+
+    private static final String PARAM_ID = "id";
 
     @Inject
     private TaskConfiguration taskConfiguration;
@@ -100,6 +105,34 @@ public class LegacyTaskListMacroConverter extends AbstractMacroConverter
     public void toXWiki(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline, Listener listener)
     {
+        List<Map<String, String>> taskList = getConfluenceTasksFromContent(confluenceContent);
+        SimpleDateFormat storageDateFormat = new SimpleDateFormat(dateMacroConfiguration.getStorageDateFormat());
+        String title = confluenceParameters.remove("title");
+        // It is possible that the title parameter has an empty name.
+        title = title == null || title.isEmpty() ? confluenceParameters.remove("") : title;
+        // Can't handle these parameters.
+        confluenceParameters.remove("promptOnDelete");
+        confluenceParameters.remove("enableLocking");
+        listener.beginGroup(confluenceParameters);
+        maybeTraverseTitle(listener, title);
+        for (Map<String, String> task : taskList) {
+            if (!shouldConvertToTaskbox("", confluenceParameters, confluenceContent)) {
+                toXWikiTask(task, storageDateFormat);
+
+                int refSuffix = legacyMacrosIdCounter.getOrDefault(context.getCurrentPage(), 0);
+                legacyMacrosIdCounter.put(context.getCurrentPage(), refSuffix + 1);
+                task.put(Task.REFERENCE, "/Tasks/Task_Legacy_" + refSuffix);
+                listener.onMacro("task", task, task.remove(Task.NAME), false);
+            } else {
+                toXWikiTaskbox(task);
+                listener.onMacro("taskbox", task, task.remove(Task.NAME), false);
+            }
+        }
+        listener.endGroup(confluenceParameters);
+    }
+
+    private List<Map<String, String>> getConfluenceTasksFromContent(String confluenceContent)
+    {
         List<Map<String, String>> taskList = new ArrayList<>();
         for (String line : confluenceContent.split("\n")) {
             if (line.trim().isEmpty() || line.startsWith("||")) {
@@ -124,24 +157,7 @@ public class LegacyTaskListMacroConverter extends AbstractMacroConverter
                 taskList.add(task);
             }
         }
-        SimpleDateFormat storageDateFormat = new SimpleDateFormat(dateMacroConfiguration.getStorageDateFormat());
-        String title = confluenceParameters.remove("title");
-        // It is possible that the title parameter has an empty name.
-        title = title == null || title.isEmpty() ? confluenceParameters.remove("") : title;
-        // Can't handle these parameters.
-        confluenceParameters.remove("promptOnDelete");
-        confluenceParameters.remove("enableLocking");
-        listener.beginGroup(confluenceParameters);
-        maybeTraverseTitle(listener, title);
-        for (Map<String, String> task : taskList) {
-            toXWikiTask(task, storageDateFormat);
-
-            int refSuffix = legacyMacrosIdCounter.getOrDefault(context.getCurrentPage(), 0);
-            legacyMacrosIdCounter.put(context.getCurrentPage(), refSuffix + 1);
-            task.put(Task.REFERENCE, "/Tasks/Task_Legacy_" + refSuffix);
-            listener.onMacro("task", task, task.remove(Task.NAME), false);
-        }
-        listener.endGroup(confluenceParameters);
+        return taskList;
     }
 
     private void maybeTraverseTitle(Listener listener, String title)
@@ -189,7 +205,7 @@ public class LegacyTaskListMacroConverter extends AbstractMacroConverter
         task.remove(PARAM_LOCKED);
 
         String xwikiStatus = task.getOrDefault(Task.STATUS, "");
-        xwikiStatus = xwikiStatus.equals("T") ? Task.STATUS_DONE : taskConfiguration.getDefaultInlineStatus();
+        xwikiStatus = xwikiStatus.equals(VAL_T) ? Task.STATUS_DONE : taskConfiguration.getDefaultInlineStatus();
         task.put(Task.STATUS, xwikiStatus);
 
         maybeUpdateDateProperty(Task.CREATE_DATE, task, storageDateFormat);
@@ -198,24 +214,33 @@ public class LegacyTaskListMacroConverter extends AbstractMacroConverter
         String content = task.getOrDefault(Task.NAME, "");
 
         String assignee = task.remove(Task.ASSIGNEE);
+        String mentionMacro = getMentionMacro(assignee);
+        if (mentionMacro != null && !mentionMacro.trim().isEmpty()) {
+            content = String.join(" ", content, mentionMacro);
+        }
+        task.put(Task.NAME, content);
+    }
+
+    private String getMentionMacro(String assignee)
+    {
         if (assignee != null && !assignee.trim().isEmpty()) {
-            assignee = confluenceConverter.convertUserReference(assignee);
-            if (assignee != null) {
+            String userRef = confluenceConverter.convertUserReference(assignee);
+            if (userRef != null) {
                 Map<String, String> mentionParams = new HashMap<>();
                 mentionParams.put("style", "FULL_NAME");
-                mentionParams.put(Task.REFERENCE, assignee);
+                mentionParams.put(Task.REFERENCE, userRef);
                 mentionParams.put("anchor",
                     String.join("-",
-                        assignee.replace('.', '-'),
+                        userRef.replace('.', '-'),
                         "legacy",
                         legacyMacrosIdCounter.getOrDefault(context.getCurrentPage(), 0).toString()));
                 MacroBlock mentionBlock = new MacroBlock("mention", mentionParams, true);
                 WikiPrinter printer = new DefaultWikiPrinter(new StringBuffer());
                 blockRenderer.render(Collections.singletonList(mentionBlock), printer);
-                content = String.join(" ", content, printer.toString());
+                return printer.toString();
             }
         }
-        task.put(Task.NAME, content);
+        return null;
     }
 
     private void maybeUpdateDateProperty(String key, Map<String, String> task, SimpleDateFormat storageDateFormat)
@@ -229,5 +254,32 @@ public class LegacyTaskListMacroConverter extends AbstractMacroConverter
         } catch (NumberFormatException e) {
             logger.warn("Failed to parse the date [{}] for the [{}] property.", task.get(key), key);
         }
+    }
+
+    private void toXWikiTaskbox(Map<String, String> task)
+    {
+        // Unhandled params.
+        task.remove(PARAM_PRIORITY);
+        task.remove(PARAM_LOCKED);
+        task.remove(Task.CREATE_DATE);
+        // Taskbox content.
+        String content = task.remove(Task.NAME);
+        if (content == null) {
+            content = "";
+        }
+        String assignee = task.remove(Task.ASSIGNEE);
+        String mentionMacro = getMentionMacro(assignee);
+        if (mentionMacro != null) {
+            content = String.join(" ", content, mentionMacro);
+        }
+        task.put(Task.NAME, content);
+        // Checked param.
+        String status = task.remove(Task.STATUS);
+        status = VAL_T.equals(status) ? Boolean.TRUE.toString() : Boolean.FALSE.toString();
+        task.put(PARAM_CHECKED, status);
+        // Id param.
+        int refSuffix = legacyMacrosIdCounter.getOrDefault(context.getCurrentPage(), 0);
+        legacyMacrosIdCounter.put(context.getCurrentPage(), refSuffix + 1);
+        task.put(PARAM_ID, "Legacy" + refSuffix);
     }
 }
