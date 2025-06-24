@@ -21,8 +21,6 @@ package com.xwiki.confluencepro;
 
 import java.util.List;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -46,6 +44,9 @@ import org.xwiki.test.mockito.MockitoComponentManager;
 
 import com.xwiki.date.DateMacroConfiguration;
 import com.xwiki.task.TaskConfiguration;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;

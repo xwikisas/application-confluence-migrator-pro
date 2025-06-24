@@ -1,2 +1,4 @@
 500:com.xwiki.confluencepro.converters.internal.DeterministicMentionMacroConverter
 500:com.xwiki.confluencepro.converters.internal.DeckContainerMacroTestMacroConverter
+500:com.xwiki.confluencepro.converters.internal.TestLegacyTaskMacroConverter
+500:com.xwiki.confluencepro.converters.internal.TestTaskMacroConverter

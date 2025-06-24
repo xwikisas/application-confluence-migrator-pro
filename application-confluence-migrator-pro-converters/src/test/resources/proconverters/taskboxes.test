@@ -1,0 +1,190 @@
+.#------------------------------------------------------------------------------
+.expect|filter+xml
+.configuration.actionsToCheckboxes=true
+.# Content conversions
+.#------------------------------------------------------------------------------
+<wikiSpace name="MySpace">
+  <wikiDocument name="WebHome">
+    <wikiDocumentLocale>
+      <p>
+        <parameters>
+          <entry>
+            <string>creation_author</string>
+            <string>XWiki.47826731</string>
+          </entry>
+          <entry>
+            <string>creation_date</string>
+            <date>2012-08-21 15:37:47.0 UTC</date>
+          </entry>
+          <entry>
+            <string>lastrevision</string>
+            <string>1</string>
+          </entry>
+        </parameters>
+      </p>
+      <wikiDocumentRevision revision="1">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.47826731</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2016-10-11 14:47:37.0 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>My Space</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>I will add some tasks
+
+(% class="task-list" %)
+(((
+{{taskbox checked="true" id="4"}}
+Do this123_test_123 pls! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} {{date format="yyyy-MM-dd" value="2023-03-13"/}}
+{{/taskbox}}
+
+{{taskbox checked="false" id="7"}}
+Do this as 123_test_123 well {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date format="yyyy-MM-dd" value="2023-11-23"/}}
+{{/taskbox}}
+)))
+
+Some more tasks here
+
+(% class="task-list" %)
+(((
+{{taskbox checked="true" id="5"}}
+DO this 123_test_123as well! {{date format="yyyy-MM-dd" value="2023-03-16"/}}{{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} 
+{{/taskbox}}
+
+{{taskbox checked="false" id="6"}}
+And 123_test_123 this!!! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date format="yyyy-MM-dd" value="2023-03-20"/}}
+{{/taskbox}}
+)))
+
+Some more editing!!!
+
+(% class="task-list" %)
+(((
+{{taskbox checked="false" id="153"}}
+Lorem ipsum dolor123_test_123 sit amet, consetetur sadipscing elitr, sed\\
+
+(% class="task-list" %)
+(((
+
+{{taskbox checked="false" id="156"}}
+Lorem ipsum123_test_123 dolor sit amet, consetetur sadipscing elitr, sed
+{{/taskbox}}
+
+{{taskbox checked="false" id="206"}}
+Lorem ipsum123_test_123 dolor sit amet, consetetur sadipscing elitr, sed
+{{/taskbox}}
+)))
+{{/taskbox}}
+)))
+
+(% width="80%" %)
+(((
+**Task list title**
+
+{{taskbox checked="false" id="Legacy0"}}
+123_test_123 {{mention reference="XWiki.jtille" anchor="XWiki-jtille-legacy-0" style="FULL_NAME"/}}
+{{/taskbox}}
+
+{{taskbox checked="false" id="Legacy1"}}
+my second task {{mention reference="XWiki.jtille" anchor="XWiki-jtille-legacy-1" style="FULL_NAME"/}}
+{{/taskbox}}
+)))
+
+(% width="80%" %)
+(((
+**Task list title**
+
+{{taskbox checked="false" id="Legacy2"}}
+my 123_test_123 task2 {{mention reference="XWiki.jtille" anchor="XWiki-jtille-legacy-2" style="FULL_NAME"/}}
+{{/taskbox}}
+
+{{taskbox checked="true" id="Legacy3" completeDate="1745620525970"}}
+my second task2 {{mention reference="XWiki.jtille" anchor="XWiki-jtille-legacy-3" style="FULL_NAME"/}}
+{{/taskbox}}
+)))
+
+(((
+**EP General Knowledge-01-03 Sept 2010**
+
+{{taskbox checked="false" id="Legacy4"}}
+Introducing to the team in place
+{{/taskbox}}
+
+{{taskbox checked="false" id="Legacy5"}}
+Buidings tour 123_test_123 facilities
+{{/taskbox}}
+
+{{taskbox checked="false" id="Legacy6"}}
+Introduction to European Institutions
+{{/taskbox}}
+
+{{taskbox checked="false" id="Legacy7"}}
+European Parliament and organitional chart
+{{/taskbox}}
+
+{{taskbox checked="false" id="Legacy8"}}
+ICT within European Parliament
+{{/taskbox}}
+
+{{taskbox checked="false" id="Legacy9"}}
+MUST Service within ITEC
+{{/taskbox}}
+
+{{taskbox checked="false" id="Legacy10"}}
+Reviewing and Assesment
+{{/taskbox}}
+)))
+
+= {{id name="MySpaceHome-Week36"/}}Week 36 =
+
+(((
+**EP General Knowledge-06 Sept 2010**
+
+{{taskbox checked="false" id="Legacy11"}}
+CDC Equipment within MUST
+{{/taskbox}}
+
+{{taskbox checked="false" id="Legacy12"}}
+Role and 123_test_123
+{{/taskbox}}
+
+{{taskbox checked="false" id="Legacy13"}}
+Consortium Presentation and Admin.
+{{/taskbox}}
+)))</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+      </wikiDocumentRevision>
+    </wikiDocumentLocale>
+  </wikiDocument>
+</wikiSpace>
+.#------------------------------------------------------------------------------
+.input|confluence+xml
+.configuration.source=taskboxes
+.configuration.storeConfluenceDetailsEnabled=false
+.#------------------------------------------------------------------------------
