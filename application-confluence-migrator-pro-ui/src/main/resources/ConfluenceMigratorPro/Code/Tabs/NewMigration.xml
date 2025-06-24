@@ -452,7 +452,7 @@ require(['jquery', 'xwiki-l10n!xwiki-confluence-attachments-messages'], function
   });
 
   $('.howToMigrateSubsection &gt; a').each(function() {
-    console.info('Observer registred');
+    console.info('Observer registered');
     observer.observe(this, { attributes: true });
   });
 
@@ -474,7 +474,6 @@ require(['jquery', 'xwiki-l10n!xwiki-confluence-attachments-messages'], function
    * Open the delete confirmation modal on liveData attachment delete button.
    */
     $(document).on('click', '#confluencePackages .attachmentActions .actiondelete', function(e) {
-      console.info('Added new delete event');
       e.preventDefault();
       let liveData = $(e.currentTarget).closest('.liveData');
       let modal = $('#confluenceMigratorDeleteAttachment');
