@@ -45,7 +45,7 @@ public abstract class AbstractTaskConverter extends AbstractMacroConverter
     protected boolean shouldConvertToTaskbox(String confluenceId, Map<String, String> confluenceParameters,
         String content)
     {
-        return (content != null && content.trim().isEmpty() && isPropertyEnabled("emptyActionsToCheckboxes"))
+        return ((content == null || content.trim().isEmpty()) && isPropertyEnabled("emptyActionsToCheckboxes"))
             || isPropertyEnabled("actionsToCheckboxes");
     }
 
