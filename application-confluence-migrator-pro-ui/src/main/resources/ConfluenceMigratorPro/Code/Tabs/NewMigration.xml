@@ -420,7 +420,7 @@
   keys: [
     'inProgress',
     'done',
-    'error'
+    'failed'
   ]
 });
 require(['jquery', 'xwiki-l10n!xwiki-confluence-attachments-messages'], function($, l10n){
@@ -457,9 +457,7 @@ require(['jquery', 'xwiki-l10n!xwiki-confluence-attachments-messages'], function
   });
 
   var enhanceUploadInputs = function(liveDataElems) {
-    console.log(liveDataElems.find('input[type=file]'))
     $.each(liveDataElems.find('input[type=file]'), function() {
-      console.log('enchanced')
       // Since the attachments liveData is refreshed on file upload, there is no need for a response container.
       new XWiki.FileUploader(this, {
         'progressAutohide': true,
@@ -471,6 +469,18 @@ require(['jquery', 'xwiki-l10n!xwiki-confluence-attachments-messages'], function
 
   $(function() {
     enhanceUploadInputs($('#addConfluencePackage'));
+
+   /**
+   * Open the delete confirmation modal on liveData attachment delete button.
+   */
+    $(document).on('click', '#confluencePackages .attachmentActions .actiondelete', function(e) {
+      console.info('Added new delete event');
+      e.preventDefault();
+      let liveData = $(e.currentTarget).closest('.liveData');
+      let modal = $('#confluenceMigratorDeleteAttachment');
+      modal.data('relatedTarget', e.currentTarget);
+      modal.modal('show');
+    });
   })
 
   $(document).on('xwiki:html5upload:done', function(e) {
@@ -483,26 +493,15 @@ require(['jquery', 'xwiki-l10n!xwiki-confluence-attachments-messages'], function
   });
 
 
-    /**
-   * Open the delete confirmation modal on liveData attachment delete button.
-   */
-  $(document).on('click', '#confluencePackages .attachmentActions .actiondelete', function(e) {
-    e.preventDefault();
-    let liveData = $(e.currentTarget).closest('.liveData');
-    var modal = $('#confluenceMigratorDeleteAttachment');
-    modal.data('relatedTarget', e.currentTarget);
-    modal.modal('show');
-  });
-
   /**
    * On delete confirmation, delete attachment and refresh liveData.
    */
   $(document).on('click', '#confluenceMigratorDeleteAttachment input.btn-danger', function(e) {
     e.preventDefault();
-    var modal = $('#confluenceMigratorDeleteAttachment');
-    var button = $(modal.data('relatedTarget'));
+    let modal = $('#confluenceMigratorDeleteAttachment');
+    let button = $(modal.data('relatedTarget'));
     let liveData = button.closest('.liveData');
-    var notification;
+    let notification;
 
     $.ajax({
       url : button.prop('href'),
