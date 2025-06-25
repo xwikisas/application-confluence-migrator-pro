@@ -35,7 +35,7 @@ import org.xwiki.job.event.status.JobStatus;
  * Abstract class that offers methods to determine whether to convert action items to tasks or taskboxes.
  *
  * @version $Id$
- * @since 1.34.10
+ * @since 1.35.0
  */
 public abstract class AbstractTaskConverter extends AbstractMacroConverter
 {

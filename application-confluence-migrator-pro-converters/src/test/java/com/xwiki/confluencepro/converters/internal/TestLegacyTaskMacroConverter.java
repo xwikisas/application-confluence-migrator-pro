@@ -32,6 +32,7 @@ import org.xwiki.contrib.confluence.filter.internal.macros.MentionMacroConverter
  * Customize {@link MentionMacroConverter} to avoid random result.
  *
  * @version $Id$
+ * @since 1.35.0
  */
 @Component
 @Singleton
