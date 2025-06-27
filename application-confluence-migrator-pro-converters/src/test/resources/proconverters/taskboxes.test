@@ -47,47 +47,48 @@
 
 (% class="task-list" %)
 (((
-{{taskbox checked="true" id="4"}}
+{{checkbox checked="true" id="4"}}
 Do this123_test_123 pls! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} {{date format="yyyy-MM-dd" value="2023-03-13"/}}
-{{/taskbox}}
+{{/checkbox}}
 
-{{taskbox checked="false" id="7"}}
+{{checkbox checked="false" id="7"}}
 Do this as 123_test_123 well {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date format="yyyy-MM-dd" value="2023-11-23"/}}
-{{/taskbox}}
+{{/checkbox}}
 )))
 
 Some more tasks here
 
 (% class="task-list" %)
 (((
-{{taskbox checked="true" id="5"}}
+{{checkbox checked="true" id="5"}}
 DO this 123_test_123as well! {{date format="yyyy-MM-dd" value="2023-03-16"/}}{{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} 
-{{/taskbox}}
+{{/checkbox}}
 
-{{taskbox checked="false" id="6"}}
+{{checkbox checked="false" id="6"}}
 And 123_test_123 this!!! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date format="yyyy-MM-dd" value="2023-03-20"/}}
-{{/taskbox}}
+{{/checkbox}}
 )))
 
 Some more editing!!!
 
 (% class="task-list" %)
 (((
-{{taskbox checked="false" id="153"}}
+{{checkbox checked="false" id="153"}}
 Lorem ipsum dolor123_test_123 sit amet, consetetur sadipscing elitr, sed\\
 
 (% class="task-list" %)
 (((
+ 
 
-{{taskbox checked="false" id="156"}}
+{{checkbox checked="false" id="156"}}
 Lorem ipsum123_test_123 dolor sit amet, consetetur sadipscing elitr, sed
-{{/taskbox}}
+{{/checkbox}}
 
-{{taskbox checked="false" id="206"}}
+{{checkbox checked="false" id="206"}}
 Lorem ipsum123_test_123 dolor sit amet, consetetur sadipscing elitr, sed
-{{/taskbox}}
+{{/checkbox}}
 )))
-{{/taskbox}}
+{{/checkbox}}
 )))
 
 (% width="80%" %)

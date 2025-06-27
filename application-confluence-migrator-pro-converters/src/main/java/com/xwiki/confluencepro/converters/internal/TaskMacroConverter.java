@@ -62,7 +62,7 @@ public class TaskMacroConverter extends AbstractTaskConverter
         boolean inline)
     {
         if (shouldConvertToTaskbox(confluenceId, confluenceParameters, confluenceContent)) {
-            return "taskbox";
+            return "checkbox";
         }
         return super.toXWikiId(confluenceId, confluenceParameters, confluenceContent, inline);
     }
