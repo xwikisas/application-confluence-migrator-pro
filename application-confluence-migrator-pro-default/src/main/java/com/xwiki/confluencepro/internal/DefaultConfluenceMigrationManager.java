@@ -253,19 +253,19 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final class LogLine<T>
     {
-        public Long pageId;
-        public Long originalVersion;
-        public String spaceKey;
-        public String pageTitle;
-        public T data;
+        private Long pageId;
+        private Long originalVersion;
+        private String spaceKey;
+        private String pageTitle;
+        private T data;
     }
 
     private static final class SimpleLog
     {
-        public String level;
-        public String marker;
-        public String msg;
-        public Object[] args;
+        private String level;
+        private String marker;
+        private String msg;
+        private Object[] args;
     }
 
     private static final class CurrentPage
