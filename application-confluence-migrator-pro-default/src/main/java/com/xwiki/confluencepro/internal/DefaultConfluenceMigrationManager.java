@@ -436,8 +436,28 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     {
         if (currentPage.ref != null && currentPage.isCurrentRevision() && args[0] instanceof Map) {
             Map<String, Integer> macrosIds = (Map<String, Integer>) args[0];
-            macroPages.put(currentPage.ref, macrosIds);
+            macroPages.put(currentPage.ref, mergeMacroIds(macrosIds, macroPages.get(currentPage.ref)));
         }
+    }
+
+    private static Map<String, Integer> mergeMacroIds(Map<String, Integer> newMacrosIds,
+        Map<String, Integer> oldMacrosIds)
+    {
+        if (oldMacrosIds == null) {
+            return newMacrosIds;
+        }
+
+        // We merge the counts of the different document translations because that's what seems to be the most intuitive
+        // We expect translations to have about the same macro counts, but we don't want to miss some macro usage if
+        // it's not the case
+        // summing would provide surprisingly high numbers.
+
+        Map<String, Integer> macroIds = new LinkedHashMap<>(newMacrosIds);
+        for (Map.Entry<String, Integer> entry : oldMacrosIds.entrySet()) {
+            String id = entry.getKey();
+            macroIds.put(entry.getKey(), Math.max(entry.getValue(), macroIds.getOrDefault(id, 0)));
+        }
+        return macroIds;
     }
 
     private static boolean isADocumentOutputFilterEvent(Marker marker)
