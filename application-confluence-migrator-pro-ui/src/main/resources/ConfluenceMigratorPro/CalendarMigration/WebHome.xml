@@ -592,8 +592,10 @@ public class CalendarMigratorScriptService implements ScriptService
             DocumentReference prefDocRef = new DocumentReference("WebPreferences",
                 parentCalendar.reference().lastSpaceReference)
             XWikiDocument prefDoc = xwiki.getDocument(prefDocRef, context).clone()
-            if (!dontCleanRights) {
+            boolean prefEdited = false
+            if (!dontCleanRights &amp;&amp; !prefDoc.isNew()) {
                 prefDoc.removeXObjects(GLOBAL_RIGHTS_CLASS)
+                prefEdited = true
             }
             List&lt;BaseObject&gt; rightsObjects = prefDoc.getXObjects(GLOBAL_RIGHTS_CLASS)
 
@@ -625,6 +627,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 }
                 rightObj.set("allow", 1, context)
                 rightObj.set("levels", right.value, context)
+                prefEdited = true
             }
 
             logger.debug("Adding user rights for calendar ID [{}] at reference [{}]",
@@ -655,11 +658,25 @@ public class CalendarMigratorScriptService implements ScriptService
                 }
                 rightObj.set("allow", 1, context)
                 rightObj.set("levels", right.value, context)
+                prefEdited = true
             }
 
             logger.debug("User rights for calendar at reference [{}] done", parentCalendar.reference())
 
-            if (!dryRun) {
+            prefDoc.setHidden(true)
+            // Seem that by default XWiki set this page title
+            prefDoc.setTitle("Preferences")
+            // Ensure to have a XWiki.XWikiPreferences object in the page
+            prefDoc.getXObject(new LocalDocumentReference("XWiki", "XWikiPreferences"), true, context)
+            prefDoc.setAuthor(creatorRef)
+            prefDoc.getAuthors().setCreator(creatorRef)
+            prefDoc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
+            if (StringUtils.isNotEmpty(entry.get("LAST_MODIFIED")) &amp;&amp; entry.get("LAST_MODIFIED") != "0") {
+                prefDoc.setDate(getDateFromConfuence(entry.get("LAST_MODIFIED"), false))
+            }
+            prefDoc.setContentDirty(false)
+            prefDoc.setMetaDataDirty(false)
+            if (!dryRun &amp;&amp; prefEdited) {
                 xwiki.saveDocument(prefDoc, context)
             }
             logger.debug("Right for calendar ID [{}] at reference [{}] Done",
