@@ -215,7 +215,7 @@ cmpMigrationOptionField={0} migration option
 ## Screen reader
 cfm.sr-only.newBatch.packages=Select confluence packages.
 cfm.sr-only.migrationSheet.missingReferences=Click to expand a list of pages that have missing references.
-cfm.sr-only.migrationSheet.expandMigratedSpaces=Click to expand a list with all the migrated spaces.</content>
+cfm.sr-only.migrationSheet.expandMigratedSpaces=Click to expand a list with all the migrated spaces.
 
 ##Confluence Pro configs
 ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=Extension IDs
@@ -223,7 +223,6 @@ ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs.hint=List of extensio
 admin.cmp.section.title=Confluence Migrator Pro
 cmp.extraDetails.title=Extra Details
 </content>
-
   <object>
     <name>ConfluenceMigratorPro.Code.Translations</name>
     <number>0</number>
