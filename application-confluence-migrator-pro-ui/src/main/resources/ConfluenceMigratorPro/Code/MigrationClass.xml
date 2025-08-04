@@ -60,6 +60,24 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
     </executed>
+    <extensions>
+      <contenttype>PureText</contenttype>
+      <customDisplay/>
+      <disabled>0</disabled>
+      <editor>PureText</editor>
+      <hint/>
+      <name>extensions</name>
+      <number>10</number>
+      <picker>1</picker>
+      <prettyName>extensions</prettyName>
+      <restricted>0</restricted>
+      <rows>5</rows>
+      <size>40</size>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+    </extensions>
     <imported>
       <customDisplay/>
       <disabled>0</disabled>
@@ -74,20 +92,6 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
     </imported>
-    <templates>
-      <customDisplay/>
-      <disabled>0</disabled>
-      <hint/>
-      <name>templates</name>
-      <number>2</number>
-      <numberType>long</numberType>
-      <prettyName>templates</prettyName>
-      <size>30</size>
-      <unmodifiable>0</unmodifiable>
-      <validationMessage/>
-      <validationRegExp/>
-      <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
-    </templates>
     <inputProperties>
       <contenttype>PureText</contenttype>
       <customDisplay/>
@@ -106,6 +110,20 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
     </inputProperties>
+    <licenseType>
+      <customDisplay/>
+      <disabled>0</disabled>
+      <hint/>
+      <name>licenseType</name>
+      <number>11</number>
+      <picker>1</picker>
+      <prettyName>licenseType</prettyName>
+      <size>30</size>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+    </licenseType>
     <macros>
       <contenttype>PureText</contenttype>
       <customDisplay/>
@@ -195,6 +213,20 @@
       <values/>
       <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
     </spaces>
+    <templates>
+      <customDisplay/>
+      <disabled>0</disabled>
+      <hint/>
+      <name>templates</name>
+      <number>2</number>
+      <numberType>long</numberType>
+      <prettyName>templates</prettyName>
+      <size>30</size>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
+    </templates>
   </class>
   <object>
     <name>ConfluenceMigratorPro.Code.MigrationClass</name>

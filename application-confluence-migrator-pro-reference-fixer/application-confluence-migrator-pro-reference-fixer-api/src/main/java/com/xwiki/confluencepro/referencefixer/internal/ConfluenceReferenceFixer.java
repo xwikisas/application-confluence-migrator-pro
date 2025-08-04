@@ -141,6 +141,12 @@ public class ConfluenceReferenceFixer
 
     private static final String SLASH = "/";
 
+    private static final String BROKEN_LINKS_PAGES_JSON = "brokenLinksPages.json";
+
+    private static final String CONFLUENCE_REF_WARNINGS_JSON = "confluenceRefWarnings.json";
+
+    private static final String BROKEN_LINKS_PAGES = "brokenLinksPages";
+
     @Inject
     private Provider<XWikiContext> contextProvider;
 
@@ -176,13 +182,14 @@ public class ConfluenceReferenceFixer
      * @param migrationReferences the migration documents
      * @param spaceReferences the spaces in which to fix the references
      * @param brokenRefType the type of the broken references
+     * @param exhaustive whether to ignore information about page containing missing references in migrations
      * @param updateInPlace whether to update migrated documents with the fixed references in place instead of
      *                      creating a new revision.
      * @param dryRun true to simulate only (the fixed documents will not be saved)
      * @return the statistics of the reference fixing sessions
      */
     public Stats fixDocuments(List<EntityReference> migrationReferences, List<EntityReference> spaceReferences,
-        String[] baseURLs, BrokenRefType brokenRefType, boolean updateInPlace, boolean dryRun)
+        String[] baseURLs, BrokenRefType brokenRefType, boolean exhaustive, boolean updateInPlace, boolean dryRun)
     {
         logConfluenceReferenceParserPresence();
         BrokenRefType b = brokenRefType == null ? BrokenRefType.UNKNOWN : brokenRefType;
@@ -193,12 +200,12 @@ public class ConfluenceReferenceFixer
             migrationReferences,
             spaceReferences,
             migratedDoc -> fixDocument(s, migratedDoc, baseURLsNotNull, updateInPlace, b, dryRun),
-            migrationDoc -> fixDocumentsOfMigration(s, migrationDoc, baseURLs, updateInPlace, dryRun)
+            migrationDoc -> fixDocumentsOfMigration(s, migrationDoc, baseURLs, exhaustive, updateInPlace, dryRun)
         );
         return s;
     }
 
-    private void fixDocumentsOfMigration(Stats s, XWikiDocument migrationDoc, String[] baseURLs,
+    private void fixDocumentsOfMigration(Stats s, XWikiDocument migrationDoc, String[] baseURLs, boolean exhaustive,
         boolean updateInPlace, boolean dryRun)
     {
         String[] actualBaseURLs;
@@ -208,25 +215,46 @@ public class ConfluenceReferenceFixer
             actualBaseURLs = baseURLs;
         }
 
-        boolean foundShortcut = fixDocumentsListedInRefWarnings(s, migrationDoc, actualBaseURLs, updateInPlace, dryRun);
+        boolean foundShortcut = false;
 
-        if (!foundShortcut) {
-            foundShortcut = fixDocumentsListedInBrokenLinks(s, migrationDoc, actualBaseURLs, updateInPlace, dryRun);
+        if (!exhaustive) {
+            foundShortcut = fixDocumentsListedInRefWarnings(s, migrationDoc, actualBaseURLs, updateInPlace, dryRun);
+
+            if (!foundShortcut) {
+                foundShortcut = fixDocumentsListedInBrokenLinks(s, migrationDoc, actualBaseURLs, updateInPlace, dryRun);
+            }
         }
 
         if (!foundShortcut) {
-            logger.warn("Failed to find a strategy to find only affected documents, will browse all the documents");
+            if (!exhaustive) {
+                logger.warn("Failed to find a strategy to find only affected documents, will browse all the documents");
+            }
+            BrokenRefType b = getBrokenRefType(migrationDoc);
             migrationFixingTools.fixDocumentsOfMigration(migrationDoc,
-                migratedDoc -> fixDocument(s, migratedDoc, actualBaseURLs, updateInPlace, BrokenRefType.UNKNOWN,
-                    dryRun));
+                migratedDoc -> fixDocument(s, migratedDoc, actualBaseURLs, updateInPlace, b, dryRun));
         }
+    }
+
+    private static BrokenRefType getBrokenRefType(XWikiDocument migrationDoc)
+    {
+        if (migrationDoc.getAttachment(CONFLUENCE_REF_WARNINGS_JSON) != null) {
+            return BrokenRefType.CONFLUENCE_REFS;
+        }
+
+        if (migrationDoc.getAttachment(BROKEN_LINKS_PAGES_JSON) != null
+            || StringUtils.isNotEmpty(migrationDoc.getStringValue(BROKEN_LINKS_PAGES))
+        ) {
+            return BrokenRefType.BROKEN_LINKS;
+        }
+
+        return BrokenRefType.UNKNOWN;
     }
 
     private boolean fixDocumentsListedInRefWarnings(Stats s, XWikiDocument migrationDoc, String[] baseURLs,
         boolean updateInPlace, boolean dryRun)
     {
         XWikiContext context = contextProvider.get();
-        XWikiAttachment refWarningsAttachment = migrationDoc.getAttachment("confluenceRefWarnings.json");
+        XWikiAttachment refWarningsAttachment = migrationDoc.getAttachment(CONFLUENCE_REF_WARNINGS_JSON);
         if (refWarningsAttachment == null) {
             return false;
         }
@@ -260,11 +288,11 @@ public class ConfluenceReferenceFixer
         XWikiContext context = contextProvider.get();
         // Older migrations had a brokenLinksPages.json object listing affected pages
         Map<String, Object> brokenLinksPages;
-        XWikiAttachment brokenLinksPageAttachment = migrationDoc.getAttachment("brokenLinksPages.json");
+        XWikiAttachment brokenLinksPageAttachment = migrationDoc.getAttachment(BROKEN_LINKS_PAGES_JSON);
         try {
             if (brokenLinksPageAttachment == null) {
                 // Even older migrations stored them in a brokenLinksPages field
-                String brokenLinksPageJSON = migrationDoc.getStringValue("brokenLinksPages");
+                String brokenLinksPageJSON = migrationDoc.getStringValue(BROKEN_LINKS_PAGES);
                 if (StringUtils.isEmpty(brokenLinksPageJSON)) {
                     return false;
                 }
@@ -659,7 +687,8 @@ public class ConfluenceReferenceFixer
         return null;
     }
 
-    private ResourceReference maybeConvertUnprefixedBrokenLink(Stats s, String oldRef, EntityReference migratedDocRef)
+    private ResourceReference maybeConvertUnprefixedBrokenLink(Stats s, String oldRef, EntityReference migratedDocRef,
+        boolean isAttachment)
     {
         int dot = oldRef.indexOf('.');
         if (dot == -1) {
@@ -681,7 +710,11 @@ public class ConfluenceReferenceFixer
         // let's play safe here.
 
         String nameValidatedTitle = m.group("nameValidatedTitle");
-        if (containsUnescapedChar(nameValidatedTitle, '.') || WEB_HOME.equals(nameValidatedTitle)) {
+        String attachment = m.group("attachment");
+        if (containsUnescapedChar(nameValidatedTitle, '.')
+            || WEB_HOME.equals(nameValidatedTitle)
+            || (isAttachment && StringUtils.isEmpty(attachment))
+        ) {
             // Links we handle here should not contain dots, as they should be of the shape SPACE.page title, where
             // page title does not contain a dot. But the regular expression we use is to limited to check that the
             // title doesn't contain an unescaped dot.
@@ -692,11 +725,13 @@ public class ConfluenceReferenceFixer
             // database.
             // Worst case, it shouldn't be too hard to handle these hypothetical broken links with a custom script for
             // the odd page titled "WebHome" hanging around, or maybe the few affected links can even be fixed manually.
+
+            // The isAttachment check is there to ignore attach:filename.ext references, which would match the broken
+            // links regex but are not to be converted.
             return null;
         }
 
         String space = m.group("space");
-        String attachment = m.group("attachment");
 
         EntityReference newRef = null;
         try {
@@ -730,12 +765,8 @@ public class ConfluenceReferenceFixer
         int prefixLength = getReferencePrefixLength(str);
         String oldRef = str.substring(prefixLength);
         String prefix = str.substring(0, prefixLength);
-        if (prefix.equals(ATTACH) && !containsUnescapedChar(oldRef, '@')) {
-            // This reference doesn't contain an '@' character, it should not be converted.
-            return null;
-        }
-
-        ResourceReference newRef = maybeConvertUnprefixedBrokenLink(s, oldRef, ref);
+        boolean attachment = prefix.equals(ATTACH);
+        ResourceReference newRef = maybeConvertUnprefixedBrokenLink(s, oldRef, ref, attachment);
         if (newRef == null) {
             return null;
         }
@@ -775,7 +806,8 @@ public class ConfluenceReferenceFixer
 
     private String maybeConvertMacroParameter(Stats s, String str, EntityReference migratedDocRef, String[] baseURLs)
     {
-        ResourceReference rr = maybeConvertReference(s, str, migratedDocRef, baseURLs, BrokenRefType.CONFLUENCE_REFS);
+        ResourceReference rr = maybeConvertReference(s, str, migratedDocRef, baseURLs, BrokenRefType.CONFLUENCE_REFS,
+            false);
         if (rr == null) {
             return null;
         }
@@ -792,6 +824,10 @@ public class ConfluenceReferenceFixer
 
         ResourceType type = reference.getType();
 
+        if (type.equals(ResourceType.MAILTO) || type.equals(ResourceType.DATA)) {
+            return null;
+        }
+
         if (type.equals(ResourceType.URL)) {
             return maybeConvertURLAsResourceRef(s, reference.getReference(), migratedDocRef, baseURLs, false);
         }
@@ -805,16 +841,20 @@ public class ConfluenceReferenceFixer
                 }
             }
 
-            logger.warn("Docuemnt [{}]: unrecognized Confluence resource reference type [{}] for reference [{}]",
+            logger.warn("Document [{}]: unrecognized Confluence resource reference type [{}] for reference [{}]",
                 migratedDocRef, scheme, reference);
         }
 
-        return maybeConvertReference(s, reference.getReference(), migratedDocRef, baseURLs, brokenRefType);
+        boolean attachment = type.equals(ResourceType.ATTACHMENT);
+        return maybeConvertReference(s, reference.getReference(), migratedDocRef, baseURLs, brokenRefType, attachment);
     }
 
     private ResourceReference maybeConvertReference(Stats s, String reference, EntityReference migratedDocRef,
-        String[] baseURLs, BrokenRefType brokenRefType)
+        String[] baseURLs, BrokenRefType brokenRefType, boolean attachment)
     {
+        // the attachment boolean is only relevent for BROKEN_LINKS BrokenRefType and should not be used for
+        // CONFLUENCE_REFS
+
         if (StringUtils.isEmpty(reference)) {
             return null;
         }
@@ -830,7 +870,7 @@ public class ConfluenceReferenceFixer
 
         if (brokenRefType == BrokenRefType.BROKEN_LINKS || brokenRefType == BrokenRefType.UNKNOWN) {
             String unprefixedRef = reference.substring(getReferencePrefixLength(reference));
-            res = maybeConvertUnprefixedBrokenLink(s, unprefixedRef, migratedDocRef);
+            res = maybeConvertUnprefixedBrokenLink(s, unprefixedRef, migratedDocRef, attachment);
             if (res != null) {
                 return res;
             }

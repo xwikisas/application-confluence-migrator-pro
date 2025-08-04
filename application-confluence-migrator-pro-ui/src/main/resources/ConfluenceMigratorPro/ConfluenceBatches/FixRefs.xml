@@ -46,6 +46,7 @@
         #getBatches
         &lt;p&gt;&lt;label&gt; Batch: #displaySelectBatches("batch", false)&lt;/label&gt;&lt;/p&gt;
         &lt;p&gt;&lt;label&gt;&lt;input type="checkbox" name="dryRun"/&gt; Dry run &lt;/label&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;label&gt;&lt;input type="checkbox" name="exhaustive"/&gt; Exhaustive browsing (when fixing migrations, handle all pages, not only those for which missing references were reported). &lt;/label&gt;&lt;/p&gt;
         &lt;p&gt;&lt;label&gt;&lt;input type="checkbox" name="updateInPlace"/&gt; Update in place &lt;/label&gt;&lt;/p&gt;
         &lt;p&gt;&lt;button class="btn btn-primary" name="confirm" value="1"&gt;Prepare the batch reference fixing session&lt;/button&gt;&lt;/p&gt;
     &lt;/form&gt;
@@ -85,6 +86,11 @@
         #else
             #set ($updateInPlace = 0)
         #end
+        #if ($request.exhaustive &amp;&amp; $request.exhaustive != "0" &amp;&amp; $request.exhaustive != "off")
+            #set ($exhaustive = 1)
+        #else
+            #set ($exhaustive = 0)
+        #end
         #foreach ($migrationRefStr in $migrations)
             #set ($migrationRef = $services.model.resolveDocument($migrationRefStr))
             #set ($sessionRef = $services.model.createDocumentReference($xcontext.getDatabase(), ["ConfluenceMigratorPro", "ReferenceFixer", "Sessions"], "${sessionNumber}_${migrationRef.getName()}"))
@@ -92,6 +98,7 @@
             #set ($sessionObj = $sessionDoc.getObject("ConfluenceMigratorPro.ReferenceFixer.Code.ReferenceFixingSessionClass", true))
             #set ($discard = $sessionObj.set("migrations", [$migrationRefStr]))
             #set ($discard = $sessionObj.set("dryRun", $dryRun))
+            #set ($discard = $sessionObj.set("exhaustive", $exhaustive))
             #set ($discard = $sessionObj.set("updateInPlace", $updateInPlace))
             #set ($discard = $sessionDoc.save())
             #set ($discard = $sessions.add($services.model.serialize($sessionRef, "default")))
@@ -100,6 +107,7 @@
         #set ($discard = $obj.set("batch", $batchDoc.getDocumentReference()))
         #set ($discard = $obj.set("sessions", $sessions))
         #set ($discard = $obj.set("dryRun", $dryRun))
+        #set ($discard = $obj.set("exhaustive", $exhaustive))
         #set ($discard = $obj.set("updateInPlace", $updateInPlace))
         #set ($discard = $batchRefFixSession.save())
         #set ($discard = $refFixes.add($services.model.serialize($batchRefFixSessionRef, "default")))

@@ -125,7 +125,7 @@
     #else
         #set ($dryRunInt = 0)
     #end
-    #if ($dog.getValue("dryRun") != $dryRunInt)
+    #if ($doc.getValue("dryRun") != $dryRunInt)
        #set ($discard = $doc.set("dryRun", $dryRunInt))
        #set ($discard = $doc.save("Update dryRun status to $dryRunInt"))
    #end

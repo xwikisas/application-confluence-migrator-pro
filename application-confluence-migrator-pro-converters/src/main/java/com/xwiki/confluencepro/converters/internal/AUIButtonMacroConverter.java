@@ -20,14 +20,19 @@
 package com.xwiki.confluencepro.converters.internal;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.icon.IconException;
+import org.xwiki.icon.IconManager;
 
 /**
  * Convert Confluence auibutton macro.
@@ -40,7 +45,6 @@ import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverte
 @Named("auibutton")
 public class AUIButtonMacroConverter extends AbstractMacroConverter
 {
-
     private static final String URL = "url";
 
     private static final String ICON = "icon";
@@ -48,6 +52,16 @@ public class AUIButtonMacroConverter extends AbstractMacroConverter
     private static final String ID = "id";
 
     private static final String CLASS = "class";
+
+    private static final String PARAM_TYPE = "type";
+
+    private static final String PARAM_TYPE_DEFAULT = "DEFAULT";
+
+    @Inject
+    private IconManager iconManager;
+
+    @Inject
+    private Logger logger;
 
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -64,13 +78,33 @@ public class AUIButtonMacroConverter extends AbstractMacroConverter
 
         parameters.put("label", confluenceParameters.get("title"));
         parameters.put(URL, confluenceParameters.get(URL));
-        String color = "primary".equals(confluenceParameters.get("type")) ? "#386da7" : "#ffffff";
-        parameters.put("color", color);
+        String type;
+        switch (confluenceParameters.get(PARAM_TYPE)) {
+            case "standard":
+                type = PARAM_TYPE_DEFAULT;
+                break;
+            case "primary":
+                type = "PRIMARY";
+                break;
+            default:
+                type = PARAM_TYPE_DEFAULT;
+        }
+        parameters.put(PARAM_TYPE, type);
         parameters.put("newTab", confluenceParameters.get("target"));
 
         String icon = confluenceParameters.get(ICON);
         if (StringUtils.isNotEmpty(icon)) {
-            parameters.put(ICON, icon);
+            List<String> iconList = List.of();
+            try {
+                iconList = iconManager.getIconNames();
+            } catch (IconException e) {
+                logger.error("Can't get icon list", e);
+            }
+            if (iconList.contains(icon)) {
+                parameters.put(ICON, icon);
+            } else {
+                markUnhandledParameterValue(confluenceParameters, ICON);
+            }
         }
         String id = confluenceParameters.get(ID);
         if (StringUtils.isNotEmpty(id)) {

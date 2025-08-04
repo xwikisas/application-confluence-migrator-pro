@@ -37,6 +37,8 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.contrib.confluence.resolvers.ConfluencePageIdResolver;
+import org.xwiki.contrib.confluence.resolvers.ConfluenceResolverException;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
@@ -53,7 +55,6 @@ import org.xwiki.script.service.ScriptService;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiAttachment;
@@ -103,11 +104,15 @@ public class DiagramConverter
     private Provider<XWikiContext> contextProvider;
 
     @Inject
+    @Named("local")
     private EntityReferenceSerializer<String> serializer;
 
     @Inject
     @Named("diagram")
     private ScriptService diagramService;
+
+    @Inject
+    private ConfluencePageIdResolver pageIdResolver;
 
     /**
      * Fix broken references in all documents of the given space.
@@ -137,7 +142,12 @@ public class DiagramConverter
         Map<String, Map<String, Integer>> macroPages = null;
         XWikiAttachment macroPagesAttachment = migrationDoc.getAttachment("macroPages.json");
         if (macroPagesAttachment != null) {
-            XWikiAttachmentContent attachmentContent = macroPagesAttachment.getAttachment_content();
+            XWikiAttachmentContent attachmentContent = null;
+            try {
+                attachmentContent = macroPagesAttachment.getAttachmentContent(contextProvider.get());
+            } catch (XWikiException e) {
+                logger.error("Failed get macro pages data", e);
+            }
             if (attachmentContent != null) {
                 try {
                     InputStream contentInputStream = attachmentContent.getContentInputStream();
@@ -222,17 +232,8 @@ public class DiagramConverter
         boolean updated = false;
         List<MacroBlock> macros = xdom.getBlocks(MACRO_MATCHER, Block.Axes.DESCENDANT_OR_SELF);
         for (MacroBlock macroBlock : macros) {
-            boolean mustConvert = false;
-            for (String macroName : DIAGRAM_MACRO_NAMES) {
-                String id = macroBlock.getId();
-                if ((CONFLUENCE_UNDERSCORE + macroName).equals(id) || macroName.equals(id)) {
-                    mustConvert = true;
-                    break;
-                }
-            }
-
             try {
-                if (mustConvert) {
+                if (shouldConvertMacro(macroBlock)) {
                     updated = convertDiagramMacro(s, migratedDoc, dryRun, macroBlock) || updated;
                 } else {
                     XDOM macroXDOM = getMacroXDOM(macroBlock, syntaxId);
@@ -247,6 +248,17 @@ public class DiagramConverter
         return updated;
     }
 
+    private static boolean shouldConvertMacro(MacroBlock macroBlock)
+    {
+        for (String macroName : DIAGRAM_MACRO_NAMES) {
+            String id = macroBlock.getId();
+            if ((CONFLUENCE_UNDERSCORE + macroName).equals(id) || macroName.equals(id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean convertDiagramMacro(Stats s, XWikiDocument migratedDoc, boolean dryRun, MacroBlock macroBlock)
     {
         boolean updated = false;
@@ -258,7 +270,7 @@ public class DiagramConverter
                 logger.error(FAILED_TO_UPDATE_DIAGRAM, migratedDoc.getDocumentReference());
                 s.incFailedDiagrams();
             }
-        } catch (XWikiException | IOException e) {
+        } catch (XWikiException e) {
             logger.error(FAILED_TO_UPDATE_DIAGRAM, migratedDoc.getDocumentReference(), e);
             s.incFailedDiagrams();
         }
@@ -266,99 +278,161 @@ public class DiagramConverter
     }
 
     private boolean convertDiagramMacro(XWikiDocument migratedDoc, MacroBlock macroBlock, boolean dryRun)
-        throws XWikiException, IOException
+        throws XWikiException
     {
-        String diagramName = macroBlock.getParameter("name");
-        if (StringUtils.isEmpty(diagramName)) {
-            diagramName = macroBlock.getParameter(DIAGRAM_NAME);
-        }
+        String reference = getDiagramDocRef(migratedDoc, macroBlock, dryRun);
 
-        String diagramPreview = macroBlock.getParameter("tempPreview");
-        if (StringUtils.isEmpty(diagramPreview)) {
-            diagramPreview = diagramName + ".png";
-        }
-
-        String diagramContent = getDiagramContent(migratedDoc, diagramName, macroBlock.getId());
-        if (StringUtils.isEmpty(diagramContent)) {
-            if (dryRun) {
-                logger.warn("Document [{}]: would fail to convert convert diagram [{}]",
-                    migratedDoc.getDocumentReference(), diagramName);
-            }
+        if (StringUtils.isEmpty(reference)) {
             return false;
         }
 
-        if (dryRun) {
-            logger.info("Document [{}]: would successfully convert diagram [{}]", migratedDoc.getDocumentReference(),
-                diagramName);
-            return true;
-        }
-
-        XWikiContext context = contextProvider.get();
-        XWiki wiki = context.getWiki();
-        String targetDiagramName = diagramName;
-        if (targetDiagramName.endsWith(".drawio")) {
-            targetDiagramName = diagramName.substring(0, diagramName.length() - 7);
-        }
-        DocumentReference diagramReference = getDiagramReference(migratedDoc, targetDiagramName, wiki, context);
-
-        XWikiDocument diagramDoc = wiki.getDocument(diagramReference, context);
-        diagramDoc.newXObject(DIAGRAM_CLASS_REFERENCE, context);
-        BaseObject diagramObject = diagramDoc.newXObject(DIAGRAM_PRO_CLASS_REFERENCE, context);
-        diagramObject.setDBStringListValue("page",
-            List.of(serializer.serialize(migratedDoc.getDocumentReference())));
-        diagramObject.setStringValue(DIAGRAM_NAME, diagramReference.getName());
-        diagramDoc.setTitle("Diagram " + targetDiagramName);
-        diagramDoc.setContent(diagramContent);
-        wiki.saveDocument(diagramDoc, context);
-        String reference = serializer.serialize(new EntityReference(diagramReference.getName(), EntityType.DOCUMENT));
         Map<String, String> diagramParameters = Map.of("reference", reference, "cached", "false");
         macroBlock.getParent().replaceChild(
             List.of(new MacroBlock("diagram", diagramParameters, macroBlock.isInline())), macroBlock);
         return true;
     }
 
-    private static DocumentReference getDiagramReference(XWikiDocument migratedDoc, String diagramName, XWiki wiki,
-        XWikiContext context) throws XWikiException
+    private String getDiagramDocRef(XWikiDocument migratedDoc, MacroBlock macroBlock, boolean dryRun)
+        throws XWikiException
     {
-        EntityReference docSpace = migratedDoc.getDocumentReference().getParent();
-        DocumentReference diagramReference = new DocumentReference(
-            new EntityReference(diagramName, EntityType.DOCUMENT, docSpace));
-
-        int i = 0;
-        while (wiki.exists(diagramReference, context)) {
-            String diagramDocumentName = diagramName + (++i);
-            diagramReference = new DocumentReference(
-                new EntityReference(diagramDocumentName, EntityType.DOCUMENT, docSpace));
+        DocumentReference migratedDocRef = migratedDoc.getDocumentReference();
+        String diagramName = macroBlock.getParameter("name");
+        if (StringUtils.isEmpty(diagramName)) {
+            diagramName = macroBlock.getParameter(DIAGRAM_NAME);
         }
-        return diagramReference;
+
+        if (StringUtils.isEmpty(diagramName)) {
+            logger.warn("Document [{}]: a [{}] macro is missing a diagram name", migratedDocRef, macroBlock.getId());
+            return null;
+        }
+
+        String targetDiagramName = diagramName;
+        if (targetDiagramName.endsWith(".drawio")) {
+            targetDiagramName = diagramName.substring(0, diagramName.length() - 7);
+        }
+
+        XWikiDocument diagramDoc = maybeCreateDiagramDoc(migratedDoc, macroBlock, diagramName,
+            targetDiagramName, dryRun);
+
+        if (diagramDoc == null) {
+            return null;
+        }
+
+        return serializer.serialize(diagramDoc.getDocumentReference(), migratedDocRef);
     }
 
-    private String getDiagramContent(XWikiDocument migratedDoc, String diagramName, String macroName) throws IOException
+    private XWikiDocument maybeCreateDiagramDoc(XWikiDocument migratedDoc, MacroBlock macroBlock, String diagramName,
+        String targetDiagramName, boolean dryRun) throws XWikiException
     {
-        String diagramContent = "";
-        XWikiAttachment diagramAttach = migratedDoc.getAttachment(diagramName);
+        String pageid = macroBlock.getParameter("pageid");
+        XWikiDocument docContainingDiagram = getDocumentContainingDiagram(migratedDoc, diagramName, pageid);
+        if (docContainingDiagram == null) {
+            return null;
+        }
+        XWikiContext context = contextProvider.get();
+        EntityReference parent = docContainingDiagram.getDocumentReference().getParent();
+        EntityReference convertedDiagramDocRef = new EntityReference(targetDiagramName, EntityType.DOCUMENT, parent);
+        XWikiDocument convertedDiagramDoc = context.getWiki().getDocument(convertedDiagramDocRef, context);
+        if (convertedDiagramDoc.isNew()) {
+            // The diagram has not been migrated yet, let's create it.
+            // Otherwise, we do assume that the target page indeed exists because the diagram was previously converted
+            // This is not ideal, but we don't have much choice
+            String diagramContent = getDiagramContent(migratedDoc, diagramName, macroBlock.getId(),
+                docContainingDiagram);
+            DocumentReference migratedDocRef = migratedDoc.getDocumentReference();
+            if (StringUtils.isEmpty(diagramContent)) {
+                if (dryRun) {
+                    logger.warn("Document [{}]: would fail to convert diagram [{}]", migratedDocRef, diagramName);
+                }
+                return null;
+            }
+
+            if (dryRun) {
+                logger.info("Document [{}]: would successfully convert diagram [{}]", migratedDocRef, diagramName);
+                return convertedDiagramDoc;
+            }
+
+            convertedDiagramDoc.newXObject(DIAGRAM_CLASS_REFERENCE, context);
+            BaseObject diagramObject = convertedDiagramDoc.newXObject(DIAGRAM_PRO_CLASS_REFERENCE, context);
+            diagramObject.setDBStringListValue("page",
+                List.of(serializer.serialize(migratedDocRef)));
+            diagramObject.setStringValue(DIAGRAM_NAME, targetDiagramName);
+            convertedDiagramDoc.setTitle("Diagram " + targetDiagramName);
+            convertedDiagramDoc.setContent(diagramContent);
+            context.getWiki().saveDocument(convertedDiagramDoc, context);
+        }
+        return convertedDiagramDoc;
+    }
+
+    private String getDiagramContent(XWikiDocument migratedDoc, String diagramName, String macroName,
+        XWikiDocument docContainingDiagram)
+    {
+        XWikiAttachment diagramAttach = docContainingDiagram.getAttachment(diagramName);
         if (diagramAttach == null) {
             logger.error("Document [{}]: diagram attachment [{}] is missing",
                 migratedDoc.getDocumentReference(), diagramName);
-        } else {
-            diagramContent = new String(diagramAttach.getAttachment_content().getContentInputStream().readAllBytes(),
-                    StandardCharsets.UTF_8);
-            if (diagramContent.isEmpty()) {
-                logger.error("Document [{}]: diagram attachment [{}] is empty",
-                    migratedDoc.getDocumentReference(), diagramName);
-            }
-            if (!macroName.endsWith(DRAWIO)) {
-                try {
-                    return ((DiagramScriptService) diagramService).importDiagram(diagramContent, diagramName);
-                } catch (Exception e) {
-                    // It can be a com.google.gson.JsonSyntaxException / java.lang.NumberFormatException because our
-                    // conversion code is old and doesn't manage newly created diagrams well
-                    logger.error("Diagram conversion threw an exception", e);
-                    return null;
-                }
+            return null;
+        }
+
+        String diagramContent = "";
+        try {
+            XWikiAttachmentContent attachmentContent = diagramAttach.getAttachmentContent(contextProvider.get());
+            InputStream attachmentInputStream = attachmentContent.getContentInputStream();
+            diagramContent = new String(attachmentInputStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (XWikiException | IOException e) {
+            logger.error("Document [{}]: failed to get diagram attachment [{}] on document [{}]",
+                migratedDoc.getDocumentReference(), diagramName, docContainingDiagram);
+            return null;
+        }
+
+        if (diagramContent.isEmpty()) {
+            logger.error("Document [{}]: diagram attachment [{}] on document [{}] is empty",
+                migratedDoc.getDocumentReference(), docContainingDiagram, diagramName);
+        } else if (!macroName.endsWith(DRAWIO)) {
+            try {
+                return ((DiagramScriptService) diagramService).importDiagram(diagramContent, diagramName);
+            } catch (Exception e) {
+                // It can be a com.google.gson.JsonSyntaxException / java.lang.NumberFormatException because our
+                // conversion code is old and doesn't manage newly created diagrams well
+                logger.error("Diagram conversion threw an exception", e);
+                return null;
             }
         }
         return diagramContent;
+    }
+
+    private XWikiDocument getDocumentContainingDiagram(XWikiDocument migratedDoc, String diagramName, String pageIdStr)
+    {
+        XWikiDocument docContainingDiagram = migratedDoc;
+        if (StringUtils.isNotEmpty(pageIdStr)) {
+            try {
+                long pageId = Long.parseLong(pageIdStr, 10);
+                EntityReference docReferencedByTheMacro = pageIdResolver.getDocumentById(pageId);
+                if (docReferencedByTheMacro == null) {
+                    logger.error("Document [{}]: could not find page id [{}] for diagram [{}]",
+                        migratedDoc.getDocumentReference(), pageIdStr, diagramName);
+                } else {
+                    XWikiContext context = contextProvider.get();
+                    XWikiDocument d = context.getWiki().getDocument(docReferencedByTheMacro, context);
+                    if (d.isNew()) {
+                        logger.error("Document [{}]: page id [{}] for diagram [{}] is the new document [{}] ",
+                            migratedDoc, pageIdStr, diagramName, docReferencedByTheMacro);
+                    } else {
+                        docContainingDiagram = d;
+                    }
+                }
+            } catch (XWikiException e) {
+                logger.error("Document [{}]: could get document page id [{}] for diagram [{}]",
+                    migratedDoc.getDocumentReference(), pageIdStr, diagramName);
+            } catch (NumberFormatException e) {
+                logger.error("Document [{}]: could not parse page id [{}] for diagram [{}]",
+                    migratedDoc.getDocumentReference(), pageIdStr, diagramName);
+            } catch (ConfluenceResolverException e) {
+                logger.error("Document [{}]: failed to resolve page id [{}] for diagram [{}]",
+                    migratedDoc.getDocumentReference(), pageIdStr, diagramName, e);
+            }
+        }
+        return docContainingDiagram;
     }
 
     private void fixDocument(Stats s, XWikiDocument migratedDoc, boolean updateInPlace, boolean dryRun)

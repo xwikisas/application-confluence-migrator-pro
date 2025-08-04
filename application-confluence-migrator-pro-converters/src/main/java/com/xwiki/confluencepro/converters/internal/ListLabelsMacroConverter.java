@@ -28,7 +28,7 @@ import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.input.ConfluenceInputContext;
+import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
 import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
 import org.xwiki.rendering.listener.Listener;
 
@@ -51,7 +51,8 @@ public class ListLabelsMacroConverter extends AbstractMacroConverter
     private static final String SPACES = "spaces";
 
     @Inject
-    private ConfluenceInputContext context;
+    private ConfluenceConverter converter;
+
 
     @Override
     public void toXWiki(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -69,7 +70,7 @@ public class ListLabelsMacroConverter extends AbstractMacroConverter
         if (StringUtils.isNotEmpty(spaceKey)) {
             xwikiParameters.put(SPACES, spaceKey);
         } else {
-            xwikiParameters.put(SPACES, context.getCurrentSpace());
+            xwikiParameters.put(SPACES, converter.convertSpaceReference("@self"));
         }
         String excludedLabels = confluenceParameters.get(EXCLUDED_LABELS);
         if (StringUtils.isNotEmpty(excludedLabels)) {

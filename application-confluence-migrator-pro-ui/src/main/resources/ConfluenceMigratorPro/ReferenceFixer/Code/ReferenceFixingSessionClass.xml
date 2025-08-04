@@ -104,7 +104,7 @@
       <displayType/>
       <hint>Whether the last run was simulated. If set to true, the affected documents have not actually been updated.</hint>
       <name>dryRun</name>
-      <number>6</number>
+      <number>7</number>
       <prettyName>Dry run</prettyName>
       <unmodifiable>0</unmodifiable>
       <validationMessage/>
@@ -116,7 +116,7 @@
       <disabled>0</disabled>
       <hint>The executed state of this reference fixing session.</hint>
       <name>executed</name>
-      <number>7</number>
+      <number>8</number>
       <numberType>integer</numberType>
       <prettyName>Executed</prettyName>
       <size>30</size>
@@ -125,6 +125,21 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
     </executed>
+    <exhaustive>
+      <customDisplay/>
+      <defaultValue/>
+      <disabled>0</disabled>
+      <displayFormType>select</displayFormType>
+      <displayType/>
+      <hint>When fixing a migration, handle all pages, not only those for which missing references were reported.</hint>
+      <name>exhaustive</name>
+      <number>5</number>
+      <prettyName>Exhaustive browsing</prettyName>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+    </exhaustive>
     <migrations>
       <cache>0</cache>
       <classname>ConfluenceMigratorPro.Code.MigrationClass</classname>
@@ -189,7 +204,7 @@
       <displayType/>
       <hint>Whether the documents should be fixed in place instead of creating a new revisions.</hint>
       <name>updateInPlace</name>
-      <number>5</number>
+      <number>6</number>
       <prettyName>Update in place</prettyName>
       <unmodifiable>0</unmodifiable>
       <validationMessage/>

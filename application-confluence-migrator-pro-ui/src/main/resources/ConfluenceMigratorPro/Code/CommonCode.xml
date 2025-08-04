@@ -191,6 +191,21 @@
     &lt;dd&gt;
       &lt;input id="attachmentsOnly" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('attachmentsOnly', 'false')" data-key="attachmentsOnly"/&gt;
     &lt;/dd&gt;
+    ## Task related props.
+    &lt;dt&gt;
+      &lt;label for="emptyActionsToCheckboxes"&gt;$escapetool.xml($services.localization.render('confluencepro.job.emptyActionsToCheckboxes.question.title'))&lt;/label&gt;
+      &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.emptyActionsToCheckboxes.question.hint'))&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input id="emptyActionsToCheckboxes" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('emptyActionsToCheckboxes', 'false')" data-key="emptyActionsToCheckboxes"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="actionsToCheckboxes"&gt;$escapetool.xml($services.localization.render('confluencepro.job.actionsToCheckboxes.question.title'))&lt;/label&gt;
+      &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('confluencepro.job.actionsToCheckboxes.question.hint'))&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input id="actionsToCheckboxes" type="text" class="cfm-output-filter-property" value="$prefilledValues['output'].getOrDefault('actionsToCheckboxes', 'false')" data-key="actionsToCheckboxes"/&gt;
+    &lt;/dd&gt;
   &lt;/dl&gt;
   &lt;h3&gt;$escapetool.xml($services.localization.render('confluencepro.job.linkmapping.title'))&lt;/h3&gt;
   &lt;dl&gt;

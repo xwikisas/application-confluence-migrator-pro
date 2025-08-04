@@ -103,6 +103,21 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
     </executed>
+    <exhaustive>
+      <customDisplay/>
+      <defaultValue/>
+      <disabled>0</disabled>
+      <displayFormType>select</displayFormType>
+      <displayType/>
+      <hint>When fixing migrations, handle all pages, not only those for which missing references were reported.</hint>
+      <name>exhaustive</name>
+      <number>5</number>
+      <prettyName>Exhaustive browsing</prettyName>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+    </exhaustive>
     <sessions>
       <cache>0</cache>
       <classname/>
@@ -139,7 +154,7 @@
       <displayType/>
       <hint/>
       <name>updateInPlace</name>
-      <number>5</number>
+      <number>6</number>
       <prettyName>updateInPlace</prettyName>
       <unmodifiable>0</unmodifiable>
       <validationMessage/>

@@ -107,6 +107,7 @@ confluencepro.migration.raport.problems.missingUsersGroups.groups=Missing groups
 confluencepro.migration.raport.problems.done.title={0} page(s) have encountered issues during the import
 confluencepro.migration.raport.problems.other.title=Other issue were encountered during the import
 confluencepro.migration.raport.problems.confluencerefs.list=List of targeted but missing pages
+confluencepro.migration.raport.problems.confluencerefids.list=List of targeted but missing page IDs:
 confluencepro.migration.raport.problems.brokenLinks.list=List of pages targeted by potentially broken links
 confluencepro.migration.raport.problems.unhandledParameters.title=There are {0} unhandled macro parameters or parameter values
 confluencepro.migration.raport.problems.unhandledParameters.info=Unhandled parameter warnings:
@@ -172,7 +173,7 @@ confluencepro.job.question.advanced.link=Advanced migration options
 confluencepro.job.question.advanced.input=Properties of the input filter stream (Confluence XML)
 confluencepro.job.question.advanced.output=Properties of the output filter stream (XWiki instance)
 confluencepro.job.question.advanced.source=The source package
-confluencepro.job.question.advanced.source.description=The path to the package that will be migrated e.g. file://home/user/Downloads/confluencePackage.zip. You can also give the path to a directory containing the unzipped package (an entity.xml file and an attachments folder). the protocol part ("file://") is important and needs to be there.
+confluencepro.job.question.advanced.source.description=The path to the package that will be migrated e.g. file://home/user/Downloads/confluencePackage.zip. You can also give the path to a directory containing the unzipped package (an entity.xml file and an attachments folder).
 confluencepro.job.general.title=General parameters
 confluencepro.job.skipquestions.question.title=Skip the space selection screen
 confluencepro.job.skipquestions.question.hint=If you check this, all spaces will be imported. Note: the screen will always be skipped if the Confluence package contains only one space, regardless the value of this parameter.
@@ -191,6 +192,11 @@ confluencepro.job.linkmapping.title=Link Mapping
 confluencepro.job.linkmapping.description=Link Mapping lets the migrator collect information about spaces and documents as Confluence packages are analysed in order to produce the right links when pages link to other pages that are not in the same Confluence export package (for instance when using space exports).
 confluencepro.job.savelinkmapping.question.title=Update link mapping
 confluencepro.job.savelinkmapping.question.hint=Save information about documents in this package so links to these documents in migrations will work. This includes documents that are not in the spaces selected for import. You can disable this behavior by setting this to false.
+confluencepro.job.emptyActionsToCheckboxes.question.title=Migrate empty action items to checkboxes
+confluencepro.job.emptyActionsToCheckboxes.question.hint=This will migrate all empty tasks (ac:task-body&lt;/ac:task-body) to checkboxes. This will mean that if an action item has no description, even if it has an assignee or due date, it will be migrated to a checkbox.
+confluencepro.job.actionsToCheckboxes.question.title=Migrate all action items to checkboxes
+confluencepro.job.actionsToCheckboxes.question.hint=This will convert all Confluence action items into checkboxes.
+ac:task-bodymy task description&lt;/ac:task-body should be migrated to the checkboxes's content.
 
 ##Confluence Pro UI translations
 confluencemigratorpro.homepage.tab.newMigration.title=New migration
@@ -202,6 +208,7 @@ confluencepro.howToMigrate.server.title=Select from your server a Confluence exp
 confluencepro.uploadFacadeButton=Upload export
 confluencepro.lastMigration=Last migration
 
+
 ## Accessibility
 cmpMigrationOptionField={0} migration option
 
@@ -209,6 +216,14 @@ cmpMigrationOptionField={0} migration option
 cfm.sr-only.newBatch.packages=Select confluence packages.
 cfm.sr-only.migrationSheet.missingReferences=Click to expand a list of pages that have missing references.
 cfm.sr-only.migrationSheet.expandMigratedSpaces=Click to expand a list with all the migrated spaces.</content>
+
+##Confluence Pro configs
+ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=Extension IDs
+ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs.hint=List of extension ids separated by a comma.
+admin.cmp.section.title=Confluence Migrator Pro
+cmp.extraDetails.title=Extra Details
+</content>
+
   <object>
     <name>ConfluenceMigratorPro.Code.Translations</name>
     <number>0</number>

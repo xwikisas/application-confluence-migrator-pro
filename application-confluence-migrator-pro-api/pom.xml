@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
     <artifactId>application-confluence-migrator-pro</artifactId>
-    <version>1.34.0-rc-2-SNAPSHOT</version>
+    <version>1.35.3-SNAPSHOT</version>
   </parent>
   <artifactId>application-confluence-migrator-pro-api</artifactId>
   <name>Confluence Migrator Pro - API</name>
@@ -54,6 +54,16 @@
       <groupId>com.xwiki.confluencepro</groupId>
       <artifactId>application-confluence-migrator-pro-resolvers</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-extension-script</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.xwiki.licensing</groupId>
+      <artifactId>application-licensing-licensor-api</artifactId>
+      <version>${licensing.version}</version>
     </dependency>
   </dependencies>
 </project>

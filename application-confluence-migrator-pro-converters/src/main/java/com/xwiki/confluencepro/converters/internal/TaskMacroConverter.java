@@ -22,12 +22,13 @@ package com.xwiki.confluencepro.converters.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
 
+import com.xwiki.task.TaskConfiguration;
 import com.xwiki.task.model.Task;
 
 /**
@@ -39,15 +40,32 @@ import com.xwiki.task.model.Task;
 @Component
 @Singleton
 @Named("task")
-public class TaskMacroConverter extends AbstractMacroConverter
+public class TaskMacroConverter extends AbstractTaskConverter
 {
     private static final String TASK_STATUS_PARAMETER = "status";
+
+    private static final String TASK_STATUS_COMPLETE = "complete";
 
     private static final String TASK_ID_PARAMETER = "id";
 
     private static final String TASK_REFERENCE_PARAMETER = "reference";
 
     private static final String TASK_REFERENCE_PREFIX = "/Tasks/Task_";
+
+    private static final String TASKBOX_CHECKED_PARAMETER = "checked";
+
+    @Inject
+    private TaskConfiguration taskConfiguration;
+
+    @Override
+    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
+        boolean inline)
+    {
+        if (shouldConvertToTaskbox(confluenceId, confluenceParameters, confluenceContent)) {
+            return "checkbox";
+        }
+        return super.toXWikiId(confluenceId, confluenceParameters, confluenceContent, inline);
+    }
 
     @Override
     protected String toXWikiContent(String confluenceId, Map<String, String> parameters, String confluenceContent)
@@ -70,11 +88,20 @@ public class TaskMacroConverter extends AbstractMacroConverter
         String content)
     {
         Map<String, String> params = new HashMap<>();
+        if (shouldConvertToTaskbox(confluenceId, confluenceParameters, content)) {
+            if (confluenceParameters.get(TASK_STATUS_PARAMETER).equals(TASK_STATUS_COMPLETE)) {
+                params.put(TASKBOX_CHECKED_PARAMETER, Boolean.TRUE.toString());
+            } else {
+                params.put(TASKBOX_CHECKED_PARAMETER, Boolean.FALSE.toString());
+            }
+            params.put(TASK_ID_PARAMETER, confluenceParameters.get(TASK_ID_PARAMETER));
+            return params;
+        }
         // TODO: Use a configurable value instead of "Done".
         String confluenceStatus = confluenceParameters.get(TASK_STATUS_PARAMETER);
-        String xwikiStatus = confluenceStatus.equals("complete") || confluenceStatus.equals(Task.STATUS_DONE)
+        String xwikiStatus = confluenceStatus.equals(TASK_STATUS_COMPLETE) || confluenceStatus.equals(Task.STATUS_DONE)
             ? Task.STATUS_DONE
-            : Task.STATUS_IN_PROGRESS;
+            : taskConfiguration.getDefaultInlineStatus();
         String confluenceTaskId = confluenceParameters.get(TASK_ID_PARAMETER);
         String reference = confluenceParameters.get(TASK_REFERENCE_PARAMETER);
         String xwikiIdParam = confluenceTaskId != null

@@ -7,4 +7,6 @@
 <suppressions>
     <suppress checks="ClassFanOutComplexity"
               files="src/main/java/com/xwiki/confluencepro/referencefixer/internal/ConfluenceReferenceFixer\.java$"/>
+    <suppress checks="ParameterNumber"
+              files="src/main/java/com/xwiki/confluencepro/referencefixer/internal/ReferenceFixingJobRequest\.java$"/>
 </suppressions>

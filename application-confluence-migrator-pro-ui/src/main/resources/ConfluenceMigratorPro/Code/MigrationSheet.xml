@@ -89,7 +89,7 @@
           &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render("confluencepro.job.question.advanced.source.description"))&lt;/span&gt;
         &lt;/dt&gt;
         &lt;dd&gt;
-          &lt;input type="text" class="cfm-input-filter-property" value="$prefilledValues['input'].getOrDefault('source', '')" data-key="source"&gt;
+          &lt;input type="text" class="cfm-input-filter-property" value="$prefilledValues['input'].getOrDefault('source', '')" data-key="source" name="source" id="source"&gt;
         &lt;/dd&gt;
       &lt;/dl&gt;
     #end
@@ -123,7 +123,7 @@
   #set ($obj = $doc.getObject('ConfluenceMigratorPro.Code.MigrationClass'))
   #if ("$!obj.getValue('executed')" == "" || "$obj.getValue('executed')" == "0")
     #if ($hasAdmin)
-      #if ($request.run || !($doc.name.contains("__LM__") || $doc.name.contains("__CONTENT__")))
+      #if ($request.run || !($doc.documentReference.name.contains("__LM__") || $doc.documentReference.name.contains("__CONTENT__")))
         #runMigrationJob($doc, true)
         #displayJob($obj)
       #else
@@ -404,6 +404,7 @@
     #displayFixLinks
     #displayJson('confluenceRefWarnings')
     #set ($missingPages = $collectiontool.getSortedSet())
+    #set ($missingPagesIds = $collectiontool.getSortedSet())
     #foreach ($entry in $jsonObject.entrySet())
       #foreach ($log in $entry.getValue())
         #set ($args = $log.get("args"))
@@ -414,11 +415,16 @@
           #set ($spaceKey = $args.get(1))
           #set ($pageTitle = $args.get(0))
         #end
-        #set ($discard = $missingPages.add("${spaceKey}.${pageTitle}"))
+        #if ($spaceKey.class.name != "java.lang.String")
+          #set ($discard = $missingPagesIds.add($spaceKey))
+        #else
+          #set ($discard = $missingPages.add("${spaceKey}.${pageTitle}"))
+        #end
       #end
     #end
     &lt;details class="cfm-details"&gt;
       &lt;summary&gt;$services.localization.render('confluencepro.migration.raport.problems.confluencerefs.list')&lt;/summary&gt;
+      #if (!$missingPages.isEmpty())
       &lt;table&gt;
         &lt;tr&gt;
           &lt;th&gt;$services.localization.render('confluencepro.migration.raport.confluencespace')&lt;/th&gt;
@@ -432,6 +438,10 @@
         &lt;/tr&gt;
       #end
       &lt;/table&gt;
+      #end
+      #if (!$missingPagesIds.isEmpty())
+        $services.localization.render('confluencepro.migration.raport.problems.confluencerefids.list') $missingPagesIds
+      #end
     &lt;/details&gt;
   #end
 
@@ -923,6 +933,8 @@
     #set ($status = $obj.getValue('executed'))
   #end
   $os.print("Status: $status$escapetool.N")
+  $os.println("LicenseType: $obj.getValue('licenseType')")
+  $os.println("Extensions: $obj.getValue('extensions')")
 
   #if ($obj.getValue('imported'))
     $os.print("Number of imported pages: $obj.getValue('imported')$escapetool.N")

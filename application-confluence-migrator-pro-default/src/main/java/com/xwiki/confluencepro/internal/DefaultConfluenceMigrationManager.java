@@ -68,6 +68,8 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xwiki.confluencepro.ConfluenceMigrationJobStatus;
 import com.xwiki.confluencepro.ConfluenceMigrationManager;
+import com.xwiki.confluencepro.MigrationExtraDetails;
+
 import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
 
@@ -148,7 +150,8 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     @Inject
     private EntityReferenceResolver<String> referenceResolver;
-
+    @Inject
+    private MigrationExtraDetails migrationExtraDetails;
     @Override
     public void updateAndSaveMigration(ConfluenceMigrationJobStatus jobStatus)
     {
@@ -162,6 +165,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
             object = document.getXObject(MIGRATION_OBJECT);
             object.set(EXECUTED, jobStatus.isCanceled() ? 3 : 1, context);
             object.setStringListValue("spaces", new ArrayList<>(jobStatus.getSpaces()));
+            completeExtraDetails(object, context);
             String root = updateMigrationPropertiesAndGetRoot(object);
             Map<String, Map<String, Integer>> macroPages = analyseLogs(jobStatus, object, document, root);
             if (!isTrue(jobStatus.getRequest().getOutputProperties().getOrDefault(ONLY_LINK_MAPPING, "0").toString())) {
@@ -193,6 +197,12 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
                 }
             }
         }
+    }
+
+    private void completeExtraDetails(BaseObject object, XWikiContext context) throws JsonProcessingException
+    {
+        object.set("extensions", migrationExtraDetails.identifyDependencyVersions(), context);
+        object.set("licenseType", migrationExtraDetails.identifyLicenseType(), context);
     }
 
     private String updateMigrationPropertiesAndGetRoot(BaseObject object)
@@ -243,19 +253,19 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final class LogLine<T>
     {
-        public Long pageId;
-        public Long originalVersion;
-        public String spaceKey;
-        public String pageTitle;
-        public T data;
+        private Long pageId;
+        private Long originalVersion;
+        private String spaceKey;
+        private String pageTitle;
+        private T data;
     }
 
     private static final class SimpleLog
     {
-        public String level;
-        public String marker;
-        public String msg;
-        public Object[] args;
+        private String level;
+        private String marker;
+        private String msg;
+        private Object[] args;
     }
 
     private static final class CurrentPage
@@ -426,8 +436,28 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
     {
         if (currentPage.ref != null && currentPage.isCurrentRevision() && args[0] instanceof Map) {
             Map<String, Integer> macrosIds = (Map<String, Integer>) args[0];
-            macroPages.put(currentPage.ref, macrosIds);
+            macroPages.put(currentPage.ref, mergeMacroIds(macrosIds, macroPages.get(currentPage.ref)));
         }
+    }
+
+    private static Map<String, Integer> mergeMacroIds(Map<String, Integer> newMacrosIds,
+        Map<String, Integer> oldMacrosIds)
+    {
+        if (oldMacrosIds == null) {
+            return newMacrosIds;
+        }
+
+        // We merge the counts of the different document translations because that's what seems to be the most intuitive
+        // We expect translations to have about the same macro counts, but we don't want to miss some macro usage if
+        // it's not the case
+        // summing would provide surprisingly high numbers.
+
+        Map<String, Integer> macroIds = new LinkedHashMap<>(newMacrosIds);
+        for (Map.Entry<String, Integer> entry : oldMacrosIds.entrySet()) {
+            String id = entry.getKey();
+            macroIds.put(entry.getKey(), Math.max(entry.getValue(), macroIds.getOrDefault(id, 0)));
+        }
+        return macroIds;
     }
 
     private static boolean isADocumentOutputFilterEvent(Marker marker)

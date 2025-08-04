@@ -39,6 +39,7 @@
   <content>{{velocity}}
 * Batch: $doc.display("batch")
 * Dry run: $doc.display("dryRun")
+* Exhaustive browsing: $doc.display("exhaustive")
 * Update in place: $doc.display("updateInPlace")
 
 #set ($tabChar = $jsontool.fromString('"\t"'))

@@ -60,9 +60,7 @@ Hello ~{~{secondvariable}} (this is multiexcrpt, simple)
 
 {{excerpt name="exceprt3" inline="true"}}
 Hello ~{~{inline}}
-{{/excerpt}}
-
-</string>
+{{/excerpt}}</string>
               </entry>
               <entry>
                 <string>syntax</string>
