@@ -187,7 +187,7 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
 {{groovy}}
 import groovy.time.TimeCategory
 import groovy.time.TimeDuration
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.xwiki.logging.LogLevel
 
 final String documentName = "ConfluenceMigratorPro.CalendarMigration.WebHome"
@@ -354,8 +354,8 @@ import com.xpn.xwiki.objects.LargeStringProperty
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord
-import org.apache.commons.lang.StringUtils
-import org.apache.commons.lang.time.DateUtils
+import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.time.DateUtils
 import org.apache.commons.lang3.RegExUtils
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
