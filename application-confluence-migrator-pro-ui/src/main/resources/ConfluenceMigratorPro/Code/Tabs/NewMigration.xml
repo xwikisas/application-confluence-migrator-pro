@@ -74,9 +74,11 @@
 #addPrerequisiteToList($prerequisites, $services.confluenceMigration.checkMemory(), 'memory', 'https://www.xwiki.org/xwiki/bin/view/Documentation/AdminGuide/Performances/#HMemory', [$services.confluenceMigration.xmx, $services.confluenceMigration.xms, $mathtool.div($services.confluenceMigration.memory, 2), $services.confluenceMigration.memory])
 
 {{html}}
-&lt;a role="button" data-toggle="collapse" href="#cfmPrerequisitesCollapse" aria-expanded="false" aria-controls="cfmPrerequisitesCollapse"&gt;
-#displaySubtitle('caret-down', 'confluencepro.prerequisites.title', $prerequisitesComplete, {})
-&lt;/a&gt;
+&lt;div class="cfmTitle"&gt;
+  &lt;a role="button" data-toggle="collapse" href="#cfmPrerequisitesCollapse" aria-expanded="false" aria-controls="cfmPrerequisitesCollapse"&gt;
+    #displaySubtitle('caret-down', 'confluencepro.prerequisites.title', $prerequisitesComplete, {})
+  &lt;/a&gt;
+&lt;/div&gt;
 &lt;div id="cfmPrerequisitesCollapse" class="cfmPrerequisites collapse"&gt;
   &lt;div class="box infomessage"&gt;
     &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.prerequisites.hint'))&lt;/p&gt;
@@ -119,14 +121,14 @@
       &lt;div&gt;
       ## CSRF prevention
       &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
-      &lt;fieldset&gt;
+      &lt;div&gt;
         &lt;div class="fileupload-field"&gt;
           &lt;label class="sr-only" for="confluenceUploadFile"&gt;$escapetool.xml(
             $services.localization.render('core.viewers.attachments.upload.file'))&lt;/label&gt;
           &lt;input id="confluenceUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems hidden"
             data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;
         &lt;/div&gt;
-      &lt;/fieldset&gt;
+      &lt;/div&gt;
       &lt;/div&gt;
       &lt;/form&gt;
     #end

@@ -283,7 +283,7 @@
     #else
       #set ($propertyDescriptorInputValue = $prefilledValues[$type].get($propertyDescriptorId))
     #end
-    &lt;input type="text" class="cfm-${type}-filter-property"
+    &lt;input id="$!escapetool.xml($propertyDescriptorId)" type="text" class="cfm-${type}-filter-property"
       value="$!escapetool.xml($propertyDescriptorInputValue)"
       data-key="$!escapetool.xml($propertyDescriptorId)" /&gt;
   &lt;/dd&gt;
@@ -292,7 +292,8 @@
   #set ($migrations = $services.query.xwql("select doc.fullName, doc.name, doc.title from Document doc, doc.object(ConfluenceMigratorPro.Code.MigrationClass) obj where doc.fullName not like 'ConfluenceMigratorPro.Code.%' order by doc.creationDate desc").execute())
 #end
 #macro (displaySelectMigrations $fieldName $allowEmpty)
-  &lt;select name="$fieldName" class="$fieldName" autocomplete="off"&gt;
+  &lt;select name="$fieldName" class="$fieldName migrationOptionsSelect" autocomplete="off"
+    aria-label="$services.localization.render("cmpMigrationOptionField", [$fieldName])"&gt;
     #if ($allowEmpty)
       &lt;option value="" #if ($specifiedMigration == "") selected="selected"#end&gt;&lt;/option&gt;
     #end
@@ -328,8 +329,8 @@
         #set ($configSource = "default")
       #end
     #end
-    &lt;div class="migrationSettings $class"&gt;
-      &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.packages.prefillUsing'))&lt;/p&gt;
+    &lt;fieldset class="migrationSettings $class"&gt;
+      &lt;legend&gt;$escapetool.xml($services.localization.render('confluencepro.packages.prefillUsing'))&lt;/legend&gt;
       &lt;p&gt;
         &lt;label&gt;
           &lt;input type="radio" name="config-source" value="default" autocomplete="off" #if ($configSource == "default") checked="checked" #end/&gt;
@@ -343,7 +344,7 @@
         &lt;/label&gt;
         #displaySelectMigrations("specified-migration", true)
       &lt;/p&gt;
-    &lt;/div&gt;
+    &lt;/fieldset&gt;
   #end
 #end
 #**
@@ -681,6 +682,10 @@
 .migrationState .migrationStateIcon {
   width: 1em;
   margin-right: 0.5em;
+}
+
+.specified-migration.migrationOptionsSelect {
+  width: fit-content;
 }</code>
     </property>
     <property>
