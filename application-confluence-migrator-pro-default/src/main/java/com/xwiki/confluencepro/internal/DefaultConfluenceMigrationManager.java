@@ -666,9 +666,9 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         logger.info("Saving the macro usage statistics in [{}] and [{}]",
             migratedMacrosCountJSONDocRef, migratedMacrosDocsJSONDocRef);
         try {
-            XWikiDocument macroCountDoc = context.getWiki().getDocument(migratedMacrosCountJSONDocRef, context);
+            XWikiDocument macroCountDoc = context.getWiki().getDocument(migratedMacrosCountJSONDocRef, context).clone();
             Map<String, Map<String, Integer>> countMap = contentToMap(macroCountDoc, COUNT_MAP_TYPE_REF);
-            XWikiDocument macroDocsDoc = context.getWiki().getDocument(migratedMacrosDocsJSONDocRef, context);
+            XWikiDocument macroDocsDoc = context.getWiki().getDocument(migratedMacrosDocsJSONDocRef, context).clone();
             Map<String, Map<String, Set<?>>> docsMap = contentToMap(macroDocsDoc, DOCS_MAP_TYPE_REF);
 
             prepareMacroMap(macroMap, countMap, docsMap);
