@@ -1538,54 +1538,240 @@ public class CalendarMigratorScriptService implements ScriptService
     }
 }
 
-record ParentCalendar(
-    String confluenceId,
-    String spaceKey,
-    String name,
-    String description,
-    DocumentReference reference,
-    List&lt;SubCalendar&gt; subCalendars
-)
+/*
+ * FIXME when we depends of XWiki &gt;=16.0 we can use record instead of class. We converted this to class because records
+ *  are not supported in Java 11, but it was initially written to use records.
+ */
+final class ParentCalendar
 {
+    private final String confluenceId;
+
+    private final String spaceKey;
+
+    private final String name;
+
+    private final String description;
+
+    private final DocumentReference reference;
+
+    private final List&lt;SubCalendar&gt; subCalendars;
+
+    ParentCalendar(
+        String confluenceId,
+        String spaceKey,
+        String name,
+        String description,
+        DocumentReference reference,
+        List&lt;SubCalendar&gt; subCalendars
+    )
+    {
+        this.confluenceId = confluenceId;
+        this.spaceKey = spaceKey;
+        this.name = name;
+        this.description = description;
+        this.reference = reference;
+        this.subCalendars = subCalendars;
+    }
+
+    public String confluenceId()
+    {
+        return confluenceId;
+    }
+
+    public String spaceKey()
+    {
+        return spaceKey;
+    }
+
+    public String name()
+    {
+        return name;
+    }
+
+    public String description()
+    {
+        return description;
+    }
+
+    public DocumentReference reference()
+    {
+        return reference;
+    }
+
+    public List&lt;SubCalendar&gt; subCalendars()
+    {
+        return subCalendars;
+    }
 }
 
-record SubCalendar(
-    String confluenceId,
-    DocumentReference reference
-)
-{}
+final class SubCalendar
+{
+    private final String confluenceId;
 
-record LoadCalendarResult(
-    List&lt;ParentCalendar&gt; result,
-    Set&lt;String&gt; ignoredParentCalendars,
-    Set&lt;String&gt; ignoredSubCalendars
-)
-{}
+    private final DocumentReference reference;
 
-record Event(
-    String confluenceId,
-    String veventUid,
-    boolean isEventOverride,
-    String name,
-    boolean allDay,
-    DocumentReference reference,
-    List&lt;DocumentReference&gt; invitee
-)
-{}
+    SubCalendar(
+        String confluenceId,
+        DocumentReference reference
+    )
+    {
+        this.confluenceId = confluenceId;
+        this.reference = reference;
+    }
 
-record LoadEventResult(
-    HashMap&lt;String, Event&gt; result,
-    Set&lt;String&gt; ignoredEvents,
-    Set&lt;String&gt; ignoredEventByVUID
-)
-{}
+    public String confluenceId()
+    {
+        return confluenceId;
+    }
 
-record RecurrentEventInfo(
-    EventFrequency recurrentEventFrequency,
-    @Nullable Date until,
-    @Nullable WeekDay byDay
-    // Interval interval, // Not supported for now
-)
+    public DocumentReference reference()
+    {
+        return reference;
+    }
+}
+
+final class LoadCalendarResult
+{
+    private final List&lt;ParentCalendar&gt; result;
+
+    private final Set&lt;String&gt; ignoredParentCalendars;
+
+    private final Set&lt;String&gt; ignoredSubCalendars;
+
+    LoadCalendarResult(
+        List&lt;ParentCalendar&gt; result,
+        Set&lt;String&gt; ignoredParentCalendars,
+        Set&lt;String&gt; ignoredSubCalendars
+    )
+    {
+        this.result = result;
+        this.ignoredParentCalendars = ignoredParentCalendars;
+        this.ignoredSubCalendars = ignoredSubCalendars;
+    }
+
+    public List&lt;ParentCalendar&gt; result()
+    {
+        return result;
+    }
+
+    public Set&lt;String&gt; ignoredParentCalendars()
+    {
+        return ignoredParentCalendars;
+    }
+
+    public Set&lt;String&gt; ignoredSubCalendars()
+    {
+        return ignoredSubCalendars;
+    }
+}
+
+final class Event
+{
+    private final String confluenceId;
+
+    private final String veventUid;
+
+    private final boolean isEventOverride;
+
+    private final String name;
+
+    private final boolean allDay;
+
+    private final DocumentReference reference;
+
+    private final List&lt;DocumentReference&gt; invitee;
+
+    Event(
+        String confluenceId,
+        String veventUid,
+        boolean isEventOverride,
+        String name,
+        boolean allDay,
+        DocumentReference reference,
+        List&lt;DocumentReference&gt; invitee
+    )
+    {
+        this.confluenceId = confluenceId;
+        this.veventUid = veventUid;
+        this.isEventOverride = isEventOverride;
+        this.name = name;
+        this.allDay = allDay;
+        this.reference = reference;
+        this.invitee = invitee;
+    }
+
+    public String confluenceId()
+    {
+        return confluenceId;
+    }
+
+    public String veventUid()
+    {
+        return veventUid;
+    }
+
+    public boolean isEventOverride()
+    {
+        return isEventOverride;
+    }
+
+    public String name()
+    {
+        return name;
+    }
+
+    public boolean allDay()
+    {
+        return allDay;
+    }
+
+    public DocumentReference reference()
+    {
+        return reference;
+    }
+
+    public List&lt;DocumentReference&gt; invitee()
+    {
+        return invitee;
+    }
+}
+
+final class LoadEventResult
+{
+    private final HashMap&lt;String, Event&gt; result;
+
+    private final Set&lt;String&gt; ignoredEvents;
+
+    private final Set&lt;String&gt; ignoredEventByVUID;
+
+    LoadEventResult(
+        HashMap&lt;String, Event&gt; result,
+        Set&lt;String&gt; ignoredEvents,
+        Set&lt;String&gt; ignoredEventByVUID
+    )
+    {
+        this.result = result;
+        this.ignoredEvents = ignoredEvents;
+        this.ignoredEventByVUID = ignoredEventByVUID;
+    }
+
+    public HashMap&lt;String, Event&gt; result()
+    {
+        return result;
+    }
+
+    public Set&lt;String&gt; ignoredEvents()
+    {
+        return ignoredEvents;
+    }
+
+    public Set&lt;String&gt; ignoredEventByVUID()
+    {
+        return ignoredEventByVUID;
+    }
+}
+
+final class RecurrentEventInfo
 {
     private static final Map&lt;WeekDay, Integer&gt; FROM_ENUM_TO_XWIKI_DAY_NUMBER = Map.of(
         WeekDay.MON, Calendar.MONDAY,
@@ -1597,12 +1783,43 @@ record RecurrentEventInfo(
         WeekDay.SUN, Calendar.SUNDAY
     );
 
-    enum EventFrequency {
-        YEARLY, MONTHLY, WEEKLY, DAILY
+    private final EventFrequency recurrentEventFrequency;
+
+    @Nullable
+    private final Date until;
+
+    @Nullable
+    private final WeekDay byDay;
+
+    RecurrentEventInfo(
+        EventFrequency recurrentEventFrequency,
+        @Nullable Date until,
+        @Nullable WeekDay byDay
+        // Interval interval, // Not supported for now
+    )
+    {
+        this.recurrentEventFrequency = recurrentEventFrequency;
+        this.until = until;
+        this.byDay = byDay;
     }
 
-    enum WeekDay {
-        MON, TUE, WED, THU, FRI, SAT, SUN
+    enum EventFrequency
+    {
+        YEARLY,
+        MONTHLY,
+        WEEKLY,
+        DAILY
+    }
+
+    enum WeekDay
+    {
+        MON,
+        TUE,
+        WED,
+        THU,
+        FRI,
+        SAT,
+        SUN
     }
 
     int toCalendarDayNumber()
@@ -1625,15 +1842,68 @@ record RecurrentEventInfo(
                 throw new RuntimeException("Unknown frequency type: " + recurrentEventFrequency())
         }
     }
+
+    public EventFrequency recurrentEventFrequency()
+    {
+        return recurrentEventFrequency;
+    }
+
+    @Nullable
+    public Date until()
+    {
+        return until;
+    }
+
+    @Nullable
+    public WeekDay byDay()
+    {
+        return byDay;
+    }
 }
 
-record UserGroupMappingContext(
-    String userFormat,
-    String groupFormat,
-    Map&lt;String, String&gt; userMapping,
-    Map&lt;String, String&gt; groupMapping
-)
-{}
+final class UserGroupMappingContext
+{
+    private final String userFormat;
+
+    private final String groupFormat;
+
+    private final Map&lt;String, String&gt; userMapping;
+
+    private final Map&lt;String, String&gt; groupMapping;
+
+    UserGroupMappingContext(
+        String userFormat,
+        String groupFormat,
+        Map&lt;String, String&gt; userMapping,
+        Map&lt;String, String&gt; groupMapping
+    )
+    {
+        this.userFormat = userFormat;
+        this.groupFormat = groupFormat;
+        this.userMapping = userMapping;
+        this.groupMapping = groupMapping;
+    }
+
+    public String userFormat()
+    {
+        return userFormat;
+    }
+
+    public String groupFormat()
+    {
+        return groupFormat;
+    }
+
+    public Map&lt;String, String&gt; userMapping()
+    {
+        return userMapping;
+    }
+
+    public Map&lt;String, String&gt; groupMapping()
+    {
+        return groupMapping;
+    }
+}
 
 /**
  * Code past from https://github.com/xwiki-contrib/confluence/blob/41658372197b3890e2b71ece14deb876897cb318/confluence-xml/src/main/java/org/xwiki/contrib/confluence/filter/internal/input/UsernameCleaner.java
