@@ -80,7 +80,7 @@ public class TaskMacroConverter extends AbstractTaskConverter
         // On certain confluence versions, some tasks may contain subtasks. If the subtasks were introduced inline,
         // since the confluence tasks are not supported inline, they also inserted a <br/> element which gets converted
         // to a "\n " in XWiki. This newline does not appear in confluence.
-        return newContent.replace("\n \n\n{{task", "\n\n{{task");
+        return newContent.replaceAll("\\s*\n\\s*\n\\s*\\{\\{task", "\n\n{{task").trim();
     }
 
     @Override
