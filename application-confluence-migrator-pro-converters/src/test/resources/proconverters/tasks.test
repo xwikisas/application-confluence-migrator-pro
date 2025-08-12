@@ -60,7 +60,7 @@ Some more tasks here
 (% class="task-list" %)
 (((
 {{task reference="/Tasks/Task_5" status="Done"}}
-DO this as well! {{date format="yyyy-MM-dd" value="2023-03-16"/}}{{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} 
+DO this as well! {{date format="yyyy-MM-dd" value="2023-03-16"/}}{{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}
 {{/task}}
 
 {{task reference="/Tasks/Task_6" status="InProgress"}}
@@ -77,7 +77,6 @@ Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed\\
 
 (% class="task-list" %)
 (((
-
 {{task reference="/Tasks/Task_156" status="InProgress"}}
 Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed
 {{/task}}

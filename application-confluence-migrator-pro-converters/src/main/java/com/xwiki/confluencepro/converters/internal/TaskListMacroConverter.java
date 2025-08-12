@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
@@ -71,7 +72,7 @@ public class TaskListMacroConverter implements MacroConverter
         String syntaxId = macroContentSyntax != null ? macroContentSyntax.toIdString() : Syntax.XWIKI_2_1.toIdString();
         try {
             Parser parser = componentManager.getInstance(Parser.class, syntaxId);
-            XDOM contentXDOM = parser.parse(new StringReader(content));
+            XDOM contentXDOM = parser.parse(new StringReader(StringUtils.defaultString(content).trim()));
             contentXDOM.getChildren().forEach(child -> child.traverse(listener));
         } catch (ComponentLookupException | ParseException e) {
             new MacroBlock("error", Collections.emptyMap(),
