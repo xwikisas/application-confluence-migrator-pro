@@ -253,6 +253,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final class LogLine<T>
     {
+        // Keep the fields public: it's important for the JSON serialization.
         public Long pageId;
         public Long originalVersion;
         public String spaceKey;
@@ -262,6 +263,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private static final class SimpleLog
     {
+        // Keep the fields public: it's important for the JSON serialization.
         public String level;
         public String marker;
         public String msg;
