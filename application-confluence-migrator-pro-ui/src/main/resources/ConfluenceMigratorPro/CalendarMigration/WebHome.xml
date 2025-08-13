@@ -665,7 +665,7 @@ public class CalendarMigratorScriptService implements ScriptService
 
             prefDoc.setHidden(true)
             // Seem that by default XWiki set this page title
-            prefDoc.setTitle("Preferences")
+            prefDoc.setTitle("\$services.localization.render('admin.preferences.title')")
             // Ensure to have a XWiki.XWikiPreferences object in the page
             prefDoc.getXObject(new LocalDocumentReference("XWiki", "XWikiPreferences"), true, context)
             prefDoc.setAuthor(creatorRef)
