@@ -518,12 +518,6 @@
     }
   });
 
-  $(document).on('xwiki:html5upload:done', function(e) {
-    if ($(e.target).prop('id') == 'confluenceUploadFile') {
-      $('#confluencePackages').data('liveData').updateEntries();
-    }
-  });
-
   document.addEventListener("click", function (e) {
     const a = e.target.closest(".action_interrupt");
     if (!a) {
