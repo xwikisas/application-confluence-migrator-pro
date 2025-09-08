@@ -208,6 +208,8 @@ confluencepro.howToMigrate.server.title=Select from your server a Confluence exp
 confluencepro.uploadFacadeButton=Upload export
 confluencepro.lastMigration=Last migration
 
+## Tabs javascript
+confluencemigratorpro.javascript.notifications.failedToLoad=The section couldn't be loaded. Please refresh the page, and if the error still persists, contact the XWiki team.
 
 ## Accessibility
 cmpMigrationOptionField={0} migration option
