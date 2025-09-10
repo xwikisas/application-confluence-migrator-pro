@@ -44,6 +44,8 @@ All dates are expected to be provided in milliseconds since the Epoch of 1970-01
 
 All {{code}}NULL{{/code}} value are expected to be just an empty field so by example if the column is empty we will have something like {{code}};value;;{{/code}} when the second column is null or empty. Some database export could sometime set explicitly {{code}}NULL{{/code}} in the CSV export, in this case this must be fixed before beeing imported in XWiki.
 
+For the boolean we are expected to be {{code}}TRUE{{/code}} or {{code}}FALSE{{/code}}. Note the migration script will be case insensitive for boolean, and the current script already try to convert the boolean to the correct expected value.
+
 == SQL requests ==
 
 Here are the SQL requests to run on the Confluence database to retrieve the CSV files used for the [[Calendar import&gt;&gt;ConfluenceMigratorPro.CalendarMigration.WebHome]].
@@ -144,7 +146,7 @@ SELECT t."ID"
      , t."DESCRIPTION"
      , t."URL"
      , t."LOCATION"
-     , t."ALL_DAY"
+     , CASE WHEN (t."ALL_DAY") THEN 'TRUE' ELSE 'FALSE' END AS "ALL_DAY"
      , t."START"
      , t."END"
      , t."UTC_END"
@@ -168,7 +170,7 @@ ID;SUB_CALENDAR_ID;CREATED;LAST_MODIFIED;ORGANISER;SUMMARY;DESCRIPTION;URL;LOCAT
 === For {{code language="none"}}eventExclusion.csv{{/code}} ===
 
 {{code language="sql"}}
-SELECT t."ALL_DAY"
+SELECT CASE WHEN (t."ALL_DAY") THEN 'TRUE' ELSE 'FALSE' END AS "ALL_DAY"
      , t."EVENT_ID"
      , t."EXCLUSION"
 FROM confluence."AO_950DC3_TC_EVENTS_EXCL" t
@@ -233,5 +235,13 @@ So the resulting CSV should look like this:
 SUB_CALENDAR_ID;TYPE;username
 0685e24f-3a38-4e21-a88a-344f3cbc8137;VIEW;toto
 ...
+{{/code}}
+
+== Example of SQL request for CSV export with PostgreSQL ==
+
+Here are an example of SQL request which works with PostgreSQL to do a CSV export:
+
+{{code language="sql"}}
+COPY (&lt;The previously mentioned SQL requests&gt;) TO '&lt;output file name&gt;' DELIMITER ';' NULL '' CSV HEADER;
 {{/code}}</content>
 </xwikidoc>
