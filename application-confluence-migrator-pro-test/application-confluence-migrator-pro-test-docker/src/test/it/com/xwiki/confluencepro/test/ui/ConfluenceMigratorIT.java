@@ -25,6 +25,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.WebElement;
 import org.xwiki.test.docker.junit5.ExtensionOverride;
 import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.UITest;
@@ -63,6 +64,8 @@ public class ConfluenceMigratorIT
 
     private static final String MULTI_SPACE_PACKAGE = "4.3.2.xml.zip";
 
+    private static final String TRIAL_LIMIT_PACKAGE = "trialLimit.zip";
+
     @BeforeAll
     void beforeAll(TestUtils testUtils)
     {
@@ -81,7 +84,7 @@ public class ConfluenceMigratorIT
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
         confluenceHomePage.attachFiles(testConfiguration.getBrowser().getTestResourcesPath(),
-            List.of(SINGLE_SPACE_PACKAGE, MULTI_SPACE_PACKAGE));
+            List.of(SINGLE_SPACE_PACKAGE,MULTI_SPACE_PACKAGE,TRIAL_LIMIT_PACKAGE));
         assertTrue(confluenceHomePage.getPackageLiveTable().getTableLayout().countRows() > 0);
     }
 
@@ -208,11 +211,11 @@ public class ConfluenceMigratorIT
         createBatchPage.completePath(new File(testConfiguration.getBrowser().getTestResourcesPath()).getAbsolutePath())
             .refreshPage();
         createBatchPage.selectAll();
-        assertEquals(2, createBatchPage.countSelectedPackages());
+        assertEquals(3, createBatchPage.countSelectedPackages());
         createBatchPage.selectNone();
         assertEquals(0, createBatchPage.countSelectedPackages());
         createBatchPage.inverseSelection();
-        assertEquals(2, createBatchPage.countSelectedPackages());
+        assertEquals(3, createBatchPage.countSelectedPackages());
     }
 
     /**
@@ -237,6 +240,38 @@ public class ConfluenceMigratorIT
         //Check that the batch was created.
         assertTrue(confluenceHomePage.countBatches() >= 1);
     }
+
+
+    @Test
+    @Order(10)
+    void testTrialPageLimitEnforcement(TestConfiguration testConfiguration)
+    {
+        ConfluenceHomePage.goToPage();
+        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
+
+        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(3);
+        migrationCreationPage.setTitle(MIGRATION_TITLE + "4");
+        migrationCreationPage.clickSaveAndView();
+        MigrationRunningPage runningPage = new MigrationRunningPage();
+        assertEquals(MIGRATION_TITLE +"4", runningPage.getDocumentTitle());
+        ConfluenceHomePage.goToPage();
+        confluenceHomePage.openSection("confluence-pro-tab-container-all-migrations");
+
+        String migrationStatus = confluenceHomePage.migrationStatus(0);
+        assertEquals("Running", migrationStatus);
+
+        runningPage = confluenceHomePage.getMigrationRunningPage(0);
+        for(int i=0;i<3;i++)
+        {QuestionSpace questionSpace = runningPage.getSelectableSpace(i);
+        questionSpace.getCheckbox().click();}
+
+        MigrationRaportView raportView = runningPage.confirmSpacesToMigrate();
+        raportView.expandAllSpacesAndPages();
+        System.out.println(raportView.getPagesCount());
+
+       }
 
     private void testMigrationOptions(String sectionId, String subsectionClass, String formSelector, String option,
         String expectedValue)
