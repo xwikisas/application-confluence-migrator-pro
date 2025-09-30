@@ -43,7 +43,7 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-    <licensing.version>1.29</licensing.version>
+    <licensing.version>1.30</licensing.version>
     <listeneradmin.version>1.0.2</listeneradmin.version>
     <xwiki.extension.category>application</xwiki.extension.category>
     <confluence.version>9.88.4</confluence.version>
