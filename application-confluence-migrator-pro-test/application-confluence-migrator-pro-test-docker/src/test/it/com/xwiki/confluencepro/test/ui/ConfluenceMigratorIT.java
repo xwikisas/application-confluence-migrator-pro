@@ -25,17 +25,20 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.docker.junit5.ExtensionOverride;
 import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.UITest;
 import org.xwiki.test.ui.TestUtils;
 
+import com.google.inject.Inject;
 import com.xwiki.confluencepro.test.po.ConfluenceHomePage;
 import com.xwiki.confluencepro.test.po.CreateBatchPage;
 import com.xwiki.confluencepro.test.po.MigrationCreationPage;
 import com.xwiki.confluencepro.test.po.MigrationRaportView;
 import com.xwiki.confluencepro.test.po.MigrationRunningPage;
 import com.xwiki.confluencepro.test.po.QuestionSpace;
+import com.xwiki.licensing.test.script.LicensorScriptService;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -55,6 +58,9 @@ import static junit.framework.TestCase.assertTrue;
 )
 public class ConfluenceMigratorIT
 {
+    @Inject
+    private LicensorScriptService licensorScriptService;
+
     private static final String MIGRATION_TITLE = "NewMigration";
 
     private static final String USER_NAME = "JohnDoe";
@@ -240,11 +246,24 @@ public class ConfluenceMigratorIT
         assertTrue(confluenceHomePage.countBatches() >= 1);
     }
 
-
     @Test
     @Order(10)
-    void testTrialPageLimitEnforcement(TestConfiguration testConfiguration)
+    void testTrialPageLimitEnforcement(TestConfiguration testConfiguration, TestUtils setup) throws Exception
     {
+
+        final DocumentReference pageWithLicense = new DocumentReference("xwiki", "Main", "LicenseTest");
+        String licenseContent = "{{velocity}} "
+            + "#set($entityReference = $services.model.createDocumentReference($xcontext.wiki, \"Main\", "
+            + "\"LicenseTest\"))\n " + "\n"
+            + "#set($license = $services.licensing.licensor.addLicense($entityReference, " + "'TRIAL'))\n "
+            + "Added license: $license.type " + "\n"
+            + "#set ($license2 = $services.licensing.licensor.getLicenseForEntity($entityReference))" + "\n"
+            + "$license2.type"
+            + "#set ($extensionId = $services.extension.createExtensionId(\"extensionIdTrial1\", \"14.10.1\"))\n"
+            + "#set($license3 = $services.licensing.licensor.addLicense($extensionId, 'TRIAL'))\n" + "$license3.type "
+            + " {{/velocity}}";
+        setup.createPage(pageWithLicense, licenseContent);
+
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
@@ -254,7 +273,7 @@ public class ConfluenceMigratorIT
         migrationCreationPage.setTitle(MIGRATION_TITLE + "4");
         migrationCreationPage.clickSaveAndView();
         MigrationRunningPage runningPage = new MigrationRunningPage();
-        assertEquals(MIGRATION_TITLE +"4", runningPage.getDocumentTitle());
+        assertEquals(MIGRATION_TITLE + "4", runningPage.getDocumentTitle());
         ConfluenceHomePage.goToPage();
         confluenceHomePage.openSection("confluence-pro-tab-container-all-migrations");
 
@@ -262,15 +281,15 @@ public class ConfluenceMigratorIT
         assertEquals("Running", migrationStatus);
 
         runningPage = confluenceHomePage.getMigrationRunningPage(0);
-        for(int i=0;i<3;i++)
-        {QuestionSpace questionSpace = runningPage.getSelectableSpace(i);
-        questionSpace.getCheckbox().click();}
+        for (int i = 0; i < 3; i++) {
+            QuestionSpace questionSpace = runningPage.getSelectableSpace(i);
+            questionSpace.getCheckbox().click();
+        }
 
-        MigrationRaportView raportView = runningPage.confirmSpacesToMigrate();
-        raportView.expandAllSpacesAndPages();
-        System.out.println(raportView.getPagesCount());
-
-       }
+        MigrationRaportView reportView = runningPage.confirmSpacesToMigrate();
+        reportView.expandAllSpacesAndPages();
+        System.out.println(reportView.getPagesCount());
+    }
 
     private void testMigrationOptions(String sectionId, String subsectionClass, String formSelector, String option,
         String expectedValue)
