@@ -19,8 +19,12 @@
  */
 package com.xwiki.confluencepro.test.ui;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
@@ -248,21 +252,20 @@ public class ConfluenceMigratorIT
 
     @Test
     @Order(10)
-    void testTrialPageLimitEnforcement(TestConfiguration testConfiguration, TestUtils setup) throws Exception
+    void testTrialPageLimitEnforcement(TestUtils setup) throws Exception
     {
 
         final DocumentReference pageWithLicense = new DocumentReference("xwiki", "Main", "LicenseTest");
-        String licenseContent = "{{velocity}} "
-            + "#set($entityReference = $services.model.createDocumentReference($xcontext.wiki, \"Main\", "
-            + "\"LicenseTest\"))\n " + "\n"
-            + "#set($license = $services.licensing.licensor.addLicense($entityReference, " + "'TRIAL'))\n "
-            + "Added license: $license.type " + "\n"
-            + "#set ($license2 = $services.licensing.licensor.getLicenseForEntity($entityReference))" + "\n"
-            + "$license2.type"
-            + "#set ($extensionId = $services.extension.createExtensionId(\"extensionIdTrial1\", \"14.10.1\"))\n"
-            + "#set($license3 = $services.licensing.licensor.addLicense($extensionId, 'TRIAL'))\n" + "$license3.type "
-            + " {{/velocity}}";
-        setup.createPage(pageWithLicense, licenseContent);
+        try (InputStream inputStream = getClass().getResourceAsStream("/license/licenseContent.vm")) {
+            if (inputStream == null) {
+                throw new Exception("License file not found: /license/licenseContent.vm");
+            }
+
+            String licenseContent = new BufferedReader(new InputStreamReader(inputStream)).lines()
+                .filter(line -> !line.trim().startsWith("##")).collect(Collectors.joining("\n"));
+
+            setup.createPage(pageWithLicense, licenseContent);
+        }
 
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
@@ -281,14 +284,17 @@ public class ConfluenceMigratorIT
         assertEquals("Running", migrationStatus);
 
         runningPage = confluenceHomePage.getMigrationRunningPage(0);
-        for (int i = 0; i < 3; i++) {
-            QuestionSpace questionSpace = runningPage.getSelectableSpace(i);
-            questionSpace.getCheckbox().click();
-        }
+        int index = runningPage.getSpaceIndexByName("SPACE1");
+
+        // The number of pages the space has before the import.
+        assertEquals(31, runningPage.getNumberOfDocuments(index));
+
+        runningPage.selectSpaceByLabel("SPACE1 - space1");
+        runningPage.confirmSpacesToMigrate();
 
         MigrationRaportView reportView = runningPage.confirmSpacesToMigrate();
-        reportView.expandAllSpacesAndPages();
-        System.out.println(reportView.getPagesCount());
+        // The number of pages the space has after the import, the 30 pages limit was applied.
+        assertEquals(30, reportView.getPagesCount());
     }
 
     private void testMigrationOptions(String sectionId, String subsectionClass, String formSelector, String option,

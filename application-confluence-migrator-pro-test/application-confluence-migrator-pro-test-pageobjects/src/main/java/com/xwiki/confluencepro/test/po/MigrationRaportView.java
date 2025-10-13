@@ -46,33 +46,19 @@ public class MigrationRaportView extends ViewPage
             .collect(Collectors.toList());
     }
 
-    public void expandAllSpacesAndPages()
-    {
-        List<WebElement> expandButtons =
-            getDriver().findElements(By.cssSelector(".imported-spaces > li > a[role='button']"));
-        for (WebElement button : expandButtons) {
-            String expanded = button.getAttribute("aria-expanded");
-            if (expanded == null || expanded.equals("false")) {
-                button.click();
-            }
-        }
-
-        List<WebElement> moreLinks = getDriver().findElements(By.cssSelector(".jstree-anchor"));
-        for (WebElement link : moreLinks) {
-            String text = link.getText();
-            if (text != null && text.matches("\\d+ more.*")) {
-                link.click();
-            }
-        }
+    public boolean hasErrorLogs() {
+        return !getDriver().findElements(By.cssSelector(".log .log-item-error")).isEmpty();
     }
 
     public int getPagesCount()
     {
-        List<WebElement> pages = getDriver().findElements(By.cssSelector(".imported-spaces li div.xtree li"));
-        return (int) pages.stream().map(WebElement::getText).filter(text -> text != null && !text.isEmpty()).count();
-    }
+        WebElement span = getDriver().findElement(By.xpath("//div/span[contains(text(),'imported pages')]"));
 
-    public boolean hasErrorLogs() {
-        return !getDriver().findElements(By.cssSelector(".log .log-item-error")).isEmpty();
+        String text = span.getText();
+        int index = text.indexOf(" imported pages");
+        String before = text.substring(0, index);
+        String numberString = before.replaceAll("\\D+", "");
+
+        return Integer.parseInt(numberString);
     }
 }
