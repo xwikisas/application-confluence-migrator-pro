@@ -31,8 +31,8 @@
   <name>Confluence Migrator Pro - Converters</name>
   <properties>
     <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
-    <xwiki.jacoco.instructionRatio>0.67</xwiki.jacoco.instructionRatio>
-    <taskapplication.version>3.9.2</taskapplication.version>
+    <xwiki.jacoco.instructionRatio>0.89</xwiki.jacoco.instructionRatio>
+    <taskapplication.version>3.9.3</taskapplication.version>
   </properties>
   <dependencies>
     <dependency>

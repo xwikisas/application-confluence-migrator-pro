@@ -37,8 +37,8 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
   <content>{{velocity}}
-#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.Tabs.Javascript'))
 #set ($discard = $xwiki.ssx.use('ConfluenceMigratorPro.WebHome'))
+#set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.Tabs.Javascript'))
 ##JS/CSS required by the lazy loaded pages.
 #set ($discard = $xwiki.jsfx.use('uicomponents/widgets/liveData.js', {'forceSkinAction': true}))
 {{/velocity}}
@@ -186,14 +186,20 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery'], function($){
-      $('#confluence-pro-tab-root li').on('click', function(){
-        let currentElement = $(this);
-        let selectedElement = $('#confluence-pro-tab-root .active');
-        selectedElement.removeClass('active');
-        currentElement.addClass('active');
-      })
-    })</code>
+      <code>require(['jquery'], function ($) {
+  $(document).on('xwiki:html5upload:done', function (e) {
+    if ($(e.target).prop('id') == 'confluenceUploadFile') {
+      $('#confluencePackages').data('liveData').updateEntries();
+    }
+  });
+
+  $('#confluence-pro-tab-root li').on('click', function () {
+    let currentElement = $(this);
+    let selectedElement = $('#confluence-pro-tab-root .active');
+    selectedElement.removeClass('active');
+    currentElement.addClass('active');
+  })
+})</code>
     </property>
     <property>
       <name/>
