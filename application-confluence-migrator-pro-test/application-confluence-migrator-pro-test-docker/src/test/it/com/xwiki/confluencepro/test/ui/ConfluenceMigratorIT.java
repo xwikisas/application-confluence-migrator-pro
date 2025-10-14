@@ -93,7 +93,7 @@ public class ConfluenceMigratorIT
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
         confluenceHomePage.attachFiles(testConfiguration.getBrowser().getTestResourcesPath(),
-            List.of(SINGLE_SPACE_PACKAGE,MULTI_SPACE_PACKAGE,TRIAL_LIMIT_PACKAGE));
+            List.of(SINGLE_SPACE_PACKAGE, MULTI_SPACE_PACKAGE, TRIAL_LIMIT_PACKAGE));
         assertTrue(confluenceHomePage.getPackageLiveTable().getTableLayout().countRows() > 0);
     }
 
