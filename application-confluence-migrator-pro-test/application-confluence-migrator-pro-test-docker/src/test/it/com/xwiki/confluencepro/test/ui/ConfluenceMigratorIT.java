@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.xwiki.model.reference.DocumentReference;
@@ -35,14 +36,13 @@ import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.UITest;
 import org.xwiki.test.ui.TestUtils;
 
-import com.google.inject.Inject;
 import com.xwiki.confluencepro.test.po.ConfluenceHomePage;
 import com.xwiki.confluencepro.test.po.CreateBatchPage;
 import com.xwiki.confluencepro.test.po.MigrationCreationPage;
 import com.xwiki.confluencepro.test.po.MigrationRaportView;
 import com.xwiki.confluencepro.test.po.MigrationRunningPage;
 import com.xwiki.confluencepro.test.po.QuestionSpace;
-import com.xwiki.licensing.test.script.LicensorScriptService;
+import com.xwiki.licensing.test.TestLicensor;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -62,9 +62,6 @@ import static junit.framework.TestCase.assertTrue;
 )
 public class ConfluenceMigratorIT
 {
-    @Inject
-    private LicensorScriptService licensorScriptService;
-
     private static final String MIGRATION_TITLE = "NewMigration";
 
     private static final String USER_NAME = "JohnDoe";
@@ -75,6 +72,12 @@ public class ConfluenceMigratorIT
 
     private static final String TRIAL_LIMIT_PACKAGE = "trialLimit.zip";
 
+    @BeforeEach
+    public void beforeEach()
+    {
+        TestLicensor.clearCustomLicenses();
+    }
+
     @BeforeAll
     void beforeAll(TestUtils testUtils)
     {
@@ -83,7 +86,6 @@ public class ConfluenceMigratorIT
         testUtils.setGlobalRights("", "XWiki." + USER_NAME, "admin", true);
         testUtils.createUserAndLogin(USER_NAME, "pa$$word");
     }
-
     @Test
     @Order(1)
     void packageUpload(TestConfiguration testConfiguration)
