@@ -203,10 +203,13 @@ confluencemigratorpro.homepage.tab.newMigration.title=New migration
 confluencemigratorpro.homepage.tab.allMigrations.title=All migrations
 confluencemigratorpro.homepage.tab.importedMacros.title=Imported macros
 confluencemigratorpro.homepage.tab.postMigrationFixes.title=Post migration fixes
+confluencemigratorpro.homepage.tab.otherTools.title=Other migration tools
 confluencepro.howToMigrate.upload.title=Upload a Confluence export (or use an already uploaded one)
 confluencepro.howToMigrate.server.title=Select from your server a Confluence export
 confluencepro.uploadFacadeButton=Upload export
 confluencepro.lastMigration=Last migration
+confluencepro.no=No
+confluencepro.yes=Yes
 
 ## Tabs javascript
 confluencemigratorpro.javascript.notifications.failedToLoad=The section couldn't be loaded. Please refresh the page, and if the error still persists, contact the XWiki team.
@@ -223,8 +226,7 @@ cfm.sr-only.migrationSheet.expandMigratedSpaces=Click to expand a list with all 
 ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=Extension IDs
 ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs.hint=List of extension ids separated by a comma.
 admin.cmp.section.title=Confluence Migrator Pro
-cmp.extraDetails.title=Extra Details
-</content>
+cmp.extraDetails.title=Extra Details</content>
   <object>
     <name>ConfluenceMigratorPro.Code.Translations</name>
     <number>0</number>
