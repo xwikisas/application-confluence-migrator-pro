@@ -19,12 +19,15 @@
  */
 package com.xwiki.confluencepro.test.po;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.ui.po.ViewPage;
 
@@ -70,45 +73,5 @@ public class MigrationRunningPage extends ViewPage
         getDriver().findElement(By.className("btn-primary")).click();
         getDriver().waitUntilElementIsVisible(By.className("imported-spaces"));
         return new MigrationRaportView();
-    }
-
-    public int getNumberOfDocuments(int index)
-    {
-        List<WebElement> spaces = getDriver().findElements(By.className("available-space"));
-        WebElement space = spaces.get(index);
-
-        WebElement properties = space.findElement(By.className("cfmProperties"));
-        String documentsText = properties.findElement(By.xpath("./span[1]")).getText();
-
-        return Integer.parseInt(documentsText.split(":")[1].trim());
-    }
-
-    public int getSpaceIndexByName(String spaceName)
-    {
-        List<WebElement> spaces = getDriver().findElements(By.className("available-space"));
-
-        for (int i = 0; i < spaces.size(); i++) {
-            WebElement label = spaces.get(i).findElement(By.tagName("label"));
-            String labelText = label.getText();
-            if (labelText.startsWith(spaceName))
-                return i;
-
-        }
-        return -1;
-    }
-
-    public void selectSpaceByLabel(String spaceLabel)
-    {
-        List<WebElement> spaces = getDriver().findElements(By.className("available-space"));
-
-        for (WebElement space : spaces) {
-            WebElement labelElement = space.findElement(By.tagName("label"));
-            String labelText = labelElement.getText();
-
-            if (labelText.equals(spaceLabel)) {
-                space.findElement(By.cssSelector("input[type='checkbox']")).click();
-                return;
-            }
-        }
     }
 }
