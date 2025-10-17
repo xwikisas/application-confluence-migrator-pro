@@ -48,6 +48,7 @@
     <xwiki.extension.category>application</xwiki.extension.category>
     <confluence.version>9.88.4</confluence.version>
     <diagram.version>1.22.5</diagram.version>
+    <macrojob.version>2.2.1</macrojob.version>
     <xwiki.enforcer.enforce-javase-dependencies.skip>true</xwiki.enforcer.enforce-javase-dependencies.skip>
   </properties>
   <modules>
