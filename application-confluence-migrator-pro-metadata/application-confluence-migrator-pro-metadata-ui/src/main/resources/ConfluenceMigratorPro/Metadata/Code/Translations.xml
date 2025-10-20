@@ -55,7 +55,7 @@ confluencepro.metadata.livetable.doc.author=Author
 confluencepro.metadata.livetable.actions=Actions
 confluencepro.metadata.welcome=This tool lets you import data from Metadata for Confluence.
 confluencepro.metadata.intro=First, import your Confluence pages using [[Confluence Migrator Pro&gt;&gt;ConfluenceMigratorPro.WebHome]]. Then, attach the JSON files exported from Metadata for Confluence and run the migrations.
-confluencepro.metadata.pleaseinstallmetadatapro=But before you can do this, please install [[Metadata Pro&gt;&gt;url:https://store.xwiki.com/xwiki/bin/view/Extension/Metadata/]].
+confluencepro.metadata.pleaseinstallmetadatapro=But before you can do this, please install [[Metadata Pro&gt;&gt;url:https://store.xwiki.com/xwiki/bin/view/Extension/MetadataPro/]].
 confluencepro.metadata.metadataforconfluence=Metadata for Confluence
 confluencepro.metadata.metadatamigratorpresentation=You can migrate from the Metadata for Confluence plugin with the [[Metadata migration tool&gt;&gt;ConfluenceMigratorPro.Metadata.WebHome]]. Support for other metadata plugins may come in the future. </content>
   <object>
