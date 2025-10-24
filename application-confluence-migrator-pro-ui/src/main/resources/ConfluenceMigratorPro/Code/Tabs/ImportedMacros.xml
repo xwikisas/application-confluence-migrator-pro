@@ -47,7 +47,7 @@
 
 {{html}}
 #displaySubtitle('list', 'confluencepro.macros.title', '', {})
-&lt;a href="https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation"&gt;$escapetool.xml($services.localization.render('confluencepro.macros.link'))&lt;/a&gt;
+&lt;a href="https://store.xwiki.com/xwiki/bin/view/Extension/ConfluenceMigratorPro#documentation"&gt;$escapetool.xml($services.localization.render('confluencepro.macros.link'))&lt;/a&gt;
 {{/html}}
 
 #set ($liveDataConfig = {

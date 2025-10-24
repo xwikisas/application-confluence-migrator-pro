@@ -38,7 +38,7 @@
       ConfluenceMigratorPro.Code.CommonCode,
       ConfluenceMigratorPro.Code.Configuration
     </xwiki.extension.licensing.publicDocuments>
-    <xwiki.extension.name>Confluence Migrator Application (Pro)</xwiki.extension.name>
+    <xwiki.extension.name>Confluence Migrator Pro</xwiki.extension.name>
   </properties>
   <dependencies>
     <dependency>
