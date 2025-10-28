@@ -29,6 +29,7 @@ import org.xwiki.test.docker.junit5.ExtensionOverride;
 import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.UITest;
 import org.xwiki.test.ui.TestUtils;
+import org.xwiki.test.ui.po.editor.ObjectEditPage;
 
 import com.xwiki.confluencepro.test.po.ConfluenceHomePage;
 import com.xwiki.confluencepro.test.po.CreateBatchPage;
@@ -63,6 +64,8 @@ public class ConfluenceMigratorIT
 
     private static final String MULTI_SPACE_PACKAGE = "4.3.2.xml.zip";
 
+    private static final String CONTENT_PACKAGE = "ContentTest.zip";
+
     @BeforeAll
     void beforeAll(TestUtils testUtils)
     {
@@ -81,7 +84,7 @@ public class ConfluenceMigratorIT
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
         confluenceHomePage.attachFiles(testConfiguration.getBrowser().getTestResourcesPath(),
-            List.of(SINGLE_SPACE_PACKAGE, MULTI_SPACE_PACKAGE));
+            List.of(SINGLE_SPACE_PACKAGE, MULTI_SPACE_PACKAGE, CONTENT_PACKAGE));
         assertTrue(confluenceHomePage.getPackageLiveTable().getTableLayout().countRows() > 0);
     }
 
@@ -208,11 +211,11 @@ public class ConfluenceMigratorIT
         createBatchPage.completePath(new File(testConfiguration.getBrowser().getTestResourcesPath()).getAbsolutePath())
             .refreshPage();
         createBatchPage.selectAll();
-        assertEquals(2, createBatchPage.countSelectedPackages());
+        assertEquals(3, createBatchPage.countSelectedPackages());
         createBatchPage.selectNone();
         assertEquals(0, createBatchPage.countSelectedPackages());
         createBatchPage.inverseSelection();
-        assertEquals(2, createBatchPage.countSelectedPackages());
+        assertEquals(3, createBatchPage.countSelectedPackages());
     }
 
     /**
@@ -236,6 +239,35 @@ public class ConfluenceMigratorIT
         confluenceHomePage.openHowToMigrateSubsection(".batchSubsection");
         //Check that the batch was created.
         assertTrue(confluenceHomePage.countBatches() >= 1);
+    }
+
+    @Test
+    @Order(10)
+
+    void importedContentTest(TestConfiguration testConfiguration, TestUtils setup)
+    {
+        ConfluenceHomePage.goToPage();
+        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
+
+        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(3);
+        migrationCreationPage.clickAdvancedMigrationOptions();
+        migrationCreationPage.setTitle("MigrationContentTest");
+        migrationCreationPage.clickSaveAndView();
+
+        MigrationRaportView raportView = new MigrationRaportView();
+        assertEquals(1, raportView.getImportedSpaces().size());
+        assertFalse(raportView.hasErrorLogs());
+        System.out.println(raportView.getImportedMacroNames());
+        System.out.println(raportView.getConfluenceMacros());
+
+        setup.loginAsSuperAdmin();
+        setup.gotoPage("MigrationContentTest","ContentTest","edit","editor","object");
+        ObjectEditPage objectEditPage = new ObjectEditPage();
+        assertTrue(objectEditPage.hasObject("Code.ConfluencePageClass"));
+        //setup.getDriver().waitUntilCondition(driver -> objectEditPage.hasObject("Code.ConfluencePageClass"));
+
     }
 
     private void testMigrationOptions(String sectionId, String subsectionClass, String formSelector, String option,
