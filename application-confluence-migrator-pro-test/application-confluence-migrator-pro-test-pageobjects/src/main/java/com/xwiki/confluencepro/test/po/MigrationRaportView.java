@@ -49,4 +49,22 @@ public class MigrationRaportView extends ViewPage
     public boolean hasErrorLogs() {
         return !getDriver().findElements(By.cssSelector(".log .log-item-error")).isEmpty();
     }
+
+    public List<String> getImportedMacroNames()
+    {
+        List<WebElement> macroElements = getDriver().findElements(By.cssSelector(".imported-macros-list span"));
+
+        return macroElements.stream()
+            .map(WebElement::getText)
+            .map(text -> text.replaceAll("\\s*\\(\\d+\\)\\s*", ""))
+            .collect(Collectors.toList());
+    }
+
+    public List<String> getConfluenceMacros()
+    {
+        return getImportedMacroNames().stream()
+            .filter(name -> name.startsWith("confluence_"))
+            .collect(Collectors.toList());
+    }
+
 }
