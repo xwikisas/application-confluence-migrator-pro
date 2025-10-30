@@ -29,6 +29,7 @@ import org.xwiki.test.docker.junit5.ExtensionOverride;
 import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.UITest;
 import org.xwiki.test.ui.TestUtils;
+import org.xwiki.test.ui.po.ViewPage;
 import org.xwiki.test.ui.po.editor.ObjectEditPage;
 
 import com.xwiki.confluencepro.test.po.ConfluenceHomePage;
@@ -141,7 +142,7 @@ public class ConfluenceMigratorIT
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
-        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(2);
+        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(3);
         migrationCreationPage.setTitle(MIGRATION_TITLE + "2");
         migrationCreationPage.clickSaveAndView();
         MigrationRaportView raportView = new MigrationRaportView();
@@ -157,7 +158,7 @@ public class ConfluenceMigratorIT
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
-        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(2);
+        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(3);
         migrationCreationPage.setTitle(MIGRATION_TITLE + "3");
         migrationCreationPage.clickAdvancedMigrationOptions();
         migrationCreationPage.fillOption("archivedDocumentsEnabled", "true");
@@ -243,7 +244,6 @@ public class ConfluenceMigratorIT
 
     @Test
     @Order(10)
-
     void importedContentTest(TestConfiguration testConfiguration, TestUtils setup)
     {
         ConfluenceHomePage.goToPage();
@@ -251,7 +251,7 @@ public class ConfluenceMigratorIT
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
 
-        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(3);
+        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(2);
         migrationCreationPage.clickAdvancedMigrationOptions();
         migrationCreationPage.setTitle("MigrationContentTest");
         migrationCreationPage.clickSaveAndView();
@@ -261,13 +261,9 @@ public class ConfluenceMigratorIT
         assertFalse(raportView.hasErrorLogs());
         System.out.println(raportView.getImportedMacroNames());
         System.out.println(raportView.getConfluenceMacros());
-
-        setup.loginAsSuperAdmin();
-        setup.gotoPage("MigrationContentTest","ContentTest","edit","editor","object");
-        ObjectEditPage objectEditPage = new ObjectEditPage();
-        assertTrue(objectEditPage.hasObject("Code.ConfluencePageClass"));
-        //setup.getDriver().waitUntilCondition(driver -> objectEditPage.hasObject("Code.ConfluencePageClass"));
-
+        ViewPage page = raportView.clickPageLink("MigrationC", "ContentTest");
+        ObjectEditPage objectEditPage = page.editObjects();
+        //assertTrue(objectEditPage.hasObject("Code.ConfluencePageClass"));
     }
 
     private void testMigrationOptions(String sectionId, String subsectionClass, String formSelector, String option,

@@ -54,17 +54,39 @@ public class MigrationRaportView extends ViewPage
     {
         List<WebElement> macroElements = getDriver().findElements(By.cssSelector(".imported-macros-list span"));
 
-        return macroElements.stream()
-            .map(WebElement::getText)
-            .map(text -> text.replaceAll("\\s*\\(\\d+\\)\\s*", ""))
+        return macroElements.stream().map(WebElement::getText).map(text -> text.replaceAll("\\s*\\(\\d+\\)\\s*", ""))
             .collect(Collectors.toList());
     }
 
     public List<String> getConfluenceMacros()
     {
-        return getImportedMacroNames().stream()
-            .filter(name -> name.startsWith("confluence_"))
+        return getImportedMacroNames().stream().filter(name -> name.startsWith("confluence_"))
             .collect(Collectors.toList());
     }
 
+    public ViewPage clickPageLink(String spaceName, String pageName)
+    {
+        String spaceXPath =
+            String.format("//ul[@class='imported-spaces']//span[@class='wikilink']/a[text()='%s']/ancestor::li",
+                spaceName);
+
+        WebElement spaceElement = getDriver().findElement(By.xpath(spaceXPath));
+
+        WebElement toggleButton = spaceElement.findElement(By.cssSelector("a[data-toggle='collapse']"));
+        String ariaExpanded = toggleButton.getAttribute("aria-expanded");
+        if (ariaExpanded == null || ariaExpanded.equals("false")) {
+            toggleButton.click();
+        }
+
+        getDriver().waitUntilCondition(
+            driver -> !spaceElement.findElements(By.cssSelector(".jstree-anchor")).isEmpty());
+
+        String pageLinkXPath =
+            String.format(".//a[contains(@class, 'jstree-anchor') and normalize-space(text())='%s']", pageName);
+
+        WebElement pageLink = spaceElement.findElement(By.xpath(pageLinkXPath));
+        pageLink.click();
+
+        return new ViewPage();
+    }
 }
