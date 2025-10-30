@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.xwiki.test.ui.po.ViewPage;
+import org.xwiki.test.ui.po.editor.ObjectEditPage;
 
 /**
  * Represents actions that can be done on the raport view of a migration page.
@@ -64,7 +65,7 @@ public class MigrationRaportView extends ViewPage
             .collect(Collectors.toList());
     }
 
-    public ViewPage clickPageLink(String spaceName, String pageName)
+    public ObjectEditPage clickPageLink(String spaceName, String pageName)
     {
         String spaceXPath =
             String.format("//ul[@class='imported-spaces']//span[@class='wikilink']/a[text()='%s']/ancestor::li",
@@ -87,6 +88,6 @@ public class MigrationRaportView extends ViewPage
         WebElement pageLink = spaceElement.findElement(By.xpath(pageLinkXPath));
         pageLink.click();
 
-        return new ViewPage();
+        return new ObjectEditPage();
     }
 }
