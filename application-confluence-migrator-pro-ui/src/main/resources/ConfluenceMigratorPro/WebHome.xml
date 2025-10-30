@@ -88,6 +88,11 @@
           $escapetool.xml($services.localization.render('confluencemigratorpro.homepage.tab.postMigrationFixes.title'))
         &lt;/a&gt;
       &lt;/li&gt;
+      &lt;li class="" data-content-container="confluence-pro-tab-container-other-tools" data-page-reference="ConfluenceMigratorPro.Code.Tabs.OtherTools"&gt;
+        &lt;a rel="nofollow"&gt;
+          $escapetool.xml($services.localization.render('confluencemigratorpro.homepage.tab.otherTools.title'))
+        &lt;/a&gt;
+      &lt;/li&gt;
     &lt;/ul&gt;
     &lt;div class='confluence-pro-section-containers'&gt;&lt;/div&gt;
   &lt;/div&gt;
@@ -95,7 +100,6 @@
 #end
 
 {{/velocity}}
-
 
 </content>
   <object>

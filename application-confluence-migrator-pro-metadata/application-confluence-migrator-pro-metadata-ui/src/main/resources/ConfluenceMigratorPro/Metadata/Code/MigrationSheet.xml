@@ -1,0 +1,157 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.6" reference="ConfluenceMigratorPro.Metadata.Code.MigrationSheet" locale="">
+  <web>ConfluenceMigratorPro.Metadata.Code</web>
+  <name>MigrationSheet</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>Main.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity}}
+
+#set ($parameterFields ='&lt;p&gt;You can tweak how metadata sets will be migrated. If unsure, leave the default values.&lt;/p&gt;&lt;div class="xform"&gt;&lt;dl&gt;
+  &lt;dt&gt;
+    &lt;label for="setreferencetemplate"&gt;Metadata set reference&lt;/label&gt;
+    &lt;span class="xHint"&gt;Import metadata sets at this location in the wiki. ${spaceKey} will be replaced with the key of the space in which the metadata sets were stored in Confluence and ${setName} will be replaced with the name of the metadata sets (without the "metadataset." prefix)&lt;/span&gt;
+  &lt;/dt&gt;
+  &lt;dd&gt;
+    &lt;input type="text" name="setreferencetemplate" id="setreferencetemplate" value="MetadataPro.Sets.${spaceKey}_${setName}" /&gt;
+  &lt;/dd&gt;
+  &lt;dt&gt;
+    &lt;label for="settitletemplate"&gt;Metadata set title&lt;/label&gt;
+    &lt;span class="xHint"&gt;Use this user-friendly title. The same replacements as for the previous field will be done.&lt;/span&gt;
+  &lt;/dt&gt;
+  &lt;dd&gt;
+    &lt;input type="text" name="settitletemplate" id="settitletemplate" value="${setName}" /&gt;
+  &lt;/dd&gt;
+&lt;/dl&gt;&lt;/div&gt;')
+
+#if ($doc.isNew())
+  #if ($objecttool.isNull($xwiki.getDocument("ConfluenceMigratorPro.Metadata.Code.PackagesStore").getAttachment($request.package)))
+
+    {{error}}
+    Package $services.rendering.escape($request.package, $doc.getSyntax) does not exist.
+    {{/error}}
+
+  #else
+
+    You are about to import the {{code language=none}}$request.package{{/code}} package.
+
+    When you are ready, click {{html}}$services.localization.render("saveandview"){{/html}}.
+
+    {{html}}
+    &lt;input type="hidden" classname="ConfluenceMigratorPro.Metadata.Code.MigrationClass" /&gt;
+    &lt;input type="hidden" name="ConfluenceMigratorPro.Metadata.Code.MigrationClass_0_package" value="$escapetool.xml($request.package)" /&gt;
+    &lt;input type="hidden" name="ConfluenceMigratorPro.Metadata.Code.MigrationClass_0_executed" value="0" /&gt;
+    &lt;input type="hidden" name="addedObjects" value="ConfluenceMigratorPro.Metadata.Code.MigrationClass_0" /&gt;
+    &lt;input type="hidden" name="startmigration" value="true" /&gt;
+    $parameterFields
+    {{/html}}
+
+  #end
+#else
+  #set ($obj = $doc.getObject("ConfluenceMigratorPro.Metadata.Code.MigrationClass"))
+  #set ($executed = $obj.getValue("executed"))
+  #set ($storeDoc = $xwiki.getDocument("ConfluenceMigratorPro.Metadata.Code.PackagesStore"))
+  #set ($packageName = $obj.getValue("package"))
+  #set ($stats = $jsontool.fromString($doc.getAttachment("stats.json").getContentAsString()))
+
+  |=$services.localization.render("confluencepro.metadata.package")|[[$services.rendering.escape($services.rendering.escape($packageName, 'xwiki/2.1'), 'xwiki/2.1')&gt;&gt;path:$storeDoc.getAttachmentURL($packageName)]]
+  |=$services.localization.render("confluencepro.metadata.executed")|#if ($executed == 0)$services.localization.render("confluencepro.no")#{else}$services.localization.render("confluencepro.yes")#end|
+  |=$services.localization.render("confluencepro.metadata.space")|$stringtool.join($obj.getValue('spaces'), ", ")
+  #if ($objecttool.isNotNull($stats))
+  #foreach ($e in $stats.entrySet())
+  |=$services.localization.render("confluencepro.metadata.stat.$e.key")|$e.value
+  #end
+  #end
+
+  #if ("$executed" == "0")
+
+    #if (!$request.startmigration)
+
+      {{html}}
+      &lt;form method="post"&gt;
+        $parameterFields
+        &lt;p&gt;
+          &lt;button class="btn btn-primary" name="startmigration" value="true"&gt;$services.localization.render("confluencepro.migration.popup.startMigration")&lt;/button&gt;
+        &lt;/p&gt;
+      &lt;/form&gt;
+      {{/html}}
+
+    #end
+  #end
+#end
+{{/velocity}}
+
+{{job id="{{velocity}}$doc.fullName{{/velocity}}" start="{{velocity}}$!request.startmigration{{/velocity}}" grouppath="confluencepro/metadatamigration"}}
+{{groovy}}
+  def log = services.logging.getLogger(doc.fullName);
+  try {
+    services.logging.setLevel(doc.fullName, org.xwiki.logging.LogLevel.INFO);
+    services.get("confluencepro.metadataforconfluencemigrator").run(doc, request.setreferencetemplate, request.settitletemplate);
+  } catch (e) {
+    log.error("Something seriously wrong happened during the migration", e);
+  }
+{{/groovy}}
+{{/job}}
+
+{{velocity}}
+
+#if ($!request.startmigration)
+
+{{info}}
+$services.localization.render('confluencepro.metadata.refreshinvite')
+{{/info}}
+
+#end
+{{/velocity}}</content>
+  <class>
+    <name>ConfluenceMigratorPro.Metadata.Code.MigrationSheet</name>
+    <customClass/>
+    <customMapping/>
+    <defaultViewSheet/>
+    <defaultEditSheet/>
+    <defaultWeb/>
+    <nameField/>
+    <validationScript/>
+    <test>
+      <disabled>0</disabled>
+      <name>test</name>
+      <number>1</number>
+      <numberType>long</numberType>
+      <prettyName>test</prettyName>
+      <size>30</size>
+      <unmodifiable>0</unmodifiable>
+      <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
+    </test>
+  </class>
+</xwikidoc>

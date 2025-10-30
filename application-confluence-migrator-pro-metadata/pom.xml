@@ -20,22 +20,19 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
-    <artifactId>application-confluence-migrator-pro-reference-fixer-parent</artifactId>
+    <artifactId>application-confluence-migrator-pro</artifactId>
     <version>1.36.0-rc-2-SNAPSHOT</version>
   </parent>
-  <artifactId>application-confluence-migrator-pro-reference-fixer-ui</artifactId>
-  <name>Confluence Migrator Pro - Reference Fixer</name>
-  <packaging>xar</packaging>
-  <description>A tool to help you fix broken links and references following a Confluence migration</description>
-  <dependencies>
-    <dependency>
-      <groupId>com.xwiki.confluencepro</groupId>
-      <artifactId>application-confluence-migrator-pro-reference-fixer-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-  </dependencies>
+  <artifactId>application-confluence-migrator-pro-metadata</artifactId>
+  <packaging>pom</packaging>
+  <name>Confluence Migrator Pro - Metadata - Parent POM</name>
+  <description>Migrate your structured data from the Metadata for Confluence plugin.</description>
+  <modules>
+    <module>application-confluence-migrator-pro-metadata-ui</module>
+    <module>application-confluence-migrator-pro-metadata-api</module>
+  </modules>
 </project>

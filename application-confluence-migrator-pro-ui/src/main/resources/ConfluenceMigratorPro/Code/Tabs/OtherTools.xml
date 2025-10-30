@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.1" encoding="UTF-8"?>
 
 <!--
  * See the NOTICE file distributed with this work for additional
@@ -19,19 +19,25 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
+<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.Tabs.OtherTools" locale="">
+  <web>ConfluenceMigratorPro.Code.Tabs</web>
+  <name>OtherTools</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>OtherTools</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity}}
+== $services.localization.render("confluencepro.metadata.metadataforconfluence")
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.xwiki.confluencepro</groupId>
-    <artifactId>application-confluence-migrator-pro</artifactId>
-    <version>1.36.0-rc-2-SNAPSHOT</version>
-  </parent>
-  <packaging>pom</packaging>
-  <artifactId>application-confluence-migrator-pro-reference-fixer-parent</artifactId>
-  <name>Confluence Migrator Pro - Reference Fixer Parent POM</name>
-  <modules>
-    <module>application-confluence-migrator-pro-reference-fixer-api</module>
-    <module>application-confluence-migrator-pro-reference-fixer-ui</module>
-  </modules>
-</project>
+$services.localization.render("confluencepro.metadata.metadatamigratorpresentation")
+{{/velocity}}</content>
+</xwikidoc>

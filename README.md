@@ -1,9 +1,9 @@
-## Confluence Migrator Application (Pro)
+## Confluence Migrator Pro
 
 XWiki Confluence Migrator Pro helps admins to import confluence packages into their XWiki instance.
 
 * Project Lead: [Teo Caras](https://github.com/trrenty)
-* [Documentation](https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro))
+* [Documentation](https://store.xwiki.com/xwiki/bin/view/Extension/ConfluenceMigratorPro)
 * Communication: [Forum and mailing list](http://dev.xwiki.org/xwiki/bin/view/Community/MailingLists), [chat](http://dev.xwiki.org/xwiki/bin/view/Community/IRC)
 * [Development Practices](http://dev.xwiki.org)
 * License: LGPL 2.1+

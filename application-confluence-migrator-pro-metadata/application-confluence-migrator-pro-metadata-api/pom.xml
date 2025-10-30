@@ -24,38 +24,30 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
-    <artifactId>application-confluence-migrator-pro-reference-fixer-parent</artifactId>
+    <artifactId>application-confluence-migrator-pro-metadata</artifactId>
     <version>1.36.0-rc-2-SNAPSHOT</version>
   </parent>
-  <artifactId>application-confluence-migrator-pro-reference-fixer-api</artifactId>
-  <name>Confluence Migrator Pro - Reference Fixer API</name>
+  <artifactId>application-confluence-migrator-pro-metadata-api</artifactId>
+  <name>Confluence Migrator Pro - Metadata - API</name>
   <properties>
-    <xwiki.surefire.captureconsole.skip>true</xwiki.surefire.captureconsole.skip>
-    <xwiki.jacoco.instructionRatio>0.7</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.skip>false</xwiki.jacoco.skip>
+    <xwiki.jacoco.instructionRatio>0.74</xwiki.jacoco.instructionRatio>
   </properties>
   <dependencies>
-    <!-- FIXME: servlet-api is only useful because we pass a null of type HttpServletRequest), we should probably
-     find a way not to depend on url-mapping. -->
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-job-api</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-extension-script</artifactId>
+      <version>${platform.version}</version>
     </dependency>
     <dependency>
       <groupId>org.xwiki.contrib.confluence</groupId>
       <artifactId>confluence-resolvers</artifactId>
-      <version>${confluence.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.contrib.confluence</groupId>
-      <artifactId>confluence-url-mapping</artifactId>
-      <version>${confluence.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-oldcore</artifactId>
-      <version>${platform.version}</version>
+      <version>9.88.4</version>
     </dependency>
     <dependency>
       <groupId>org.xwiki.commons</groupId>
@@ -68,35 +60,6 @@
       <artifactId>xwiki-platform-test-page</artifactId>
       <version>${platform.version}</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.rendering</groupId>
-      <artifactId>xwiki-rendering-macro-message</artifactId>
-      <version>${rendering.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.contrib.confluence</groupId>
-      <artifactId>confluence-resource-reference-type-parsers</artifactId>
-      <version>${confluence.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.xwiki.confluencepro</groupId>
-      <artifactId>application-confluence-migrator-pro-api</artifactId>
-      <version>${project.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.xwiki.confluencepro</groupId>
-      <artifactId>application-confluence-migrator-pro-api</artifactId>
-      <version>1.36.0-rc-2-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-wiki-default</artifactId>
-      <version>${platform.version}</version>
     </dependency>
   </dependencies>
   <build>

@@ -1,0 +1,32 @@
+{
+  "metadataFields": [
+    {
+      "key": "metadatafield.modificationdate",
+      "description": "",
+      "spaceKey": "TestSpace",
+      "title": "Last Modification Date",
+      "typeName": "DATE",
+      "typeConfiguration": null
+    }
+  ],
+  "metadataSets": [
+    {
+      "key": "metadataset.mysetwithnovalues",
+      "description": "",
+      "spaceKey": "TestSpace",
+      "title": "My Set with no values",
+      "templateIds": [],
+      "metadataFields": [
+        {
+          "key": "metadatafield.modificationdate",
+          "description": "",
+          "spaceKey": "TestSpace",
+          "title": "Last Modification Date",
+          "typeName": "DATE",
+          "typeConfiguration": null
+        }
+      ],
+      "defaultFor": []
+    }
+  ]
+}

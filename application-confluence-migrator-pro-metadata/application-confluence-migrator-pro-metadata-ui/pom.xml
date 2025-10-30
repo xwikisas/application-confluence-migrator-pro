@@ -24,51 +24,14 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
-    <artifactId>application-confluence-migrator-pro</artifactId>
+    <artifactId>application-confluence-migrator-pro-metadata</artifactId>
     <version>1.36.0-rc-2-SNAPSHOT</version>
   </parent>
-  <artifactId>application-confluence-migrator-pro-ui</artifactId>
-  <name>Confluence Migrator Pro - UI</name>
+  <artifactId>application-confluence-migrator-pro-metadata-ui</artifactId>
+  <name>Confluence Migrator Pro - Metadata - UI</name>
   <packaging>xar</packaging>
-  <description>The Confluence Migrator Pro is an all-in-one toolkit that allows you to migrate and reorganise your data in only a few minutes! The migrator is available for any deployment method, whether it is on your server or in the XWiki Cloud. Try it now.</description>
-  <properties>
-    <xwiki.extension.licensing.publicDocuments>
-      ConfluenceMigratorPro.WebHome,
-      ConfluenceMigratorPro.Migrations.WebHome,
-      ConfluenceMigratorPro.Code.CommonCode,
-      ConfluenceMigratorPro.Code.Configuration
-    </xwiki.extension.licensing.publicDocuments>
-    <xwiki.extension.name>Confluence Migrator Pro</xwiki.extension.name>
-  </properties>
+  <description>Migrate your structured data from the Metadata for Confluence plugin.</description>
   <dependencies>
-    <dependency>
-      <groupId>com.xwiki.confluencepro</groupId>
-      <artifactId>application-confluence-migrator-pro-default</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.xwiki.confluencepro</groupId>
-      <artifactId>application-confluence-migrator-pro-converters</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.xwiki.confluencepro</groupId>
-      <artifactId>application-confluence-migrator-pro-reference-fixer-ui</artifactId>
-      <type>xar</type>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.contrib.listeneradmin</groupId>
-      <artifactId>application-listener-admin-ui</artifactId>
-      <version>${listeneradmin.version}</version>
-      <type>xar</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.xwiki.licensing</groupId>
-      <artifactId>application-licensing-licensor-api</artifactId>
-      <version>${licensing.version}</version>
-    </dependency>
     <dependency>
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-platform-rendering-macro-velocity</artifactId>
@@ -93,22 +56,46 @@
       <version>${platform.version}</version>
       <scope>runtime</scope>
     </dependency>
-    <!-- Batch migration dependencies -->
-    <dependency>
-      <groupId>org.xwiki.contrib</groupId>
-      <artifactId>scriptcomponent</artifactId>
-      <version>1.1.1</version>
-    </dependency>
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
       <artifactId>macro-job</artifactId>
       <version>${macrojob.version}</version>
+      <!-- we exclude 12.10 dependencies -->
+      <exclusions>
+        <exclusion>
+          <groupId>org.xwiki.commons</groupId>
+          <artifactId>xwiki-commons-job-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.xwiki.platform</groupId>
+          <artifactId>xwiki-platform-rendering-signature</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.xwiki.platform</groupId>
+          <artifactId>xwiki-platform-skin-skinx</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.xwiki.rendering</groupId>
+          <artifactId>xwiki-rendering-macro-html</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.xwiki.platform</groupId>
+          <artifactId>xwiki-platform-oldcore</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.xwiki.commons</groupId>
+          <artifactId>xwiki-commons-text</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.xwiki.commons</groupId>
+          <artifactId>xwiki-commons-context</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.xwiki.confluencepro</groupId>
-      <artifactId>application-confluence-migrator-pro-metadata-ui</artifactId>
+      <artifactId>application-confluence-migrator-pro-metadata-api</artifactId>
       <version>${project.version}</version>
-      <type>xar</type>
     </dependency>
   </dependencies>
   <build>
@@ -118,8 +105,7 @@
         <artifactId>xwiki-commons-tool-xar-plugin</artifactId>
         <configuration>
           <visibleTechnicalPages>
-            <visibleTechnicalPage>.*/ConfluenceMigratorPro/WebHome\.xml</visibleTechnicalPage>
-            <visibleTechnicalPage>.*/ConfluenceMigratorPro/Migrations/WebHome\.xml</visibleTechnicalPage>
+            <visibleTechnicalPage>.*/ConfluencePro/Metadata/WebHome\.xml</visibleTechnicalPage>
           </visibleTechnicalPages>
         </configuration>
       </plugin>
