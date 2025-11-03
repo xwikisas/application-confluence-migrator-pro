@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.xwiki.test.ui.po.ViewPage;
-import org.xwiki.test.ui.po.editor.ObjectEditPage;
 
 /**
  * Represents actions that can be done on the raport view of a migration page.

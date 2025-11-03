@@ -25,12 +25,14 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.docker.junit5.ExtensionOverride;
 import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.UITest;
 import org.xwiki.test.ui.TestUtils;
 import org.xwiki.test.ui.po.ViewPage;
 import org.xwiki.test.ui.po.editor.ObjectEditPage;
+import org.xwiki.test.ui.po.editor.ObjectEditPane;
 
 import com.xwiki.confluencepro.test.po.ConfluenceHomePage;
 import com.xwiki.confluencepro.test.po.CreateBatchPage;
@@ -244,7 +246,7 @@ public class ConfluenceMigratorIT
 
     @Test
     @Order(10)
-    void importedContentTest(TestConfiguration testConfiguration, TestUtils setup)
+    void importedContentTest(TestUtils testUtils)
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
@@ -262,15 +264,16 @@ public class ConfluenceMigratorIT
         System.out.println(raportView.getImportedMacroNames());
         System.out.println(raportView.getConfluenceMacros());
 
-        //ViewPage page = raportView.clickPageLink("MigrationC", "ContentTest");
-        //setup.gotoPage(setup.getDriver().getCurrentUrl(),"ContentTest","edit","editor","object");
-        //setup.gotoPage("edit",setup.getDriver().getCurrentUrl())
-        //ObjectEditPage objectEditPage = page.editObjects();
-
-        //setup.loginAsSuperAdmin();
         ViewPage page = raportView.clickPageLink("MigrationC", "ContentTest");
+        DocumentReference documentReference = new DocumentReference("Xwiki", "MigrationC", page.getDocumentTitle());
+        testUtils.loginAsSuperAdmin();
+        testUtils.gotoPage(documentReference);
         ObjectEditPage objectEditPage = page.editObjects();
-        //assertTrue(page.hasObject("Code.ConfluencePageClass"));
+        List<ObjectEditPane> xobjects = objectEditPage.getObjectsOfClass("Confluence.Code.ConfluencePageClass");
+        assertEquals(1, xobjects.size());
+
+        // TO DO: install : id extension com.xwiki.task:application-task-ui
+
     }
 
     private void testMigrationOptions(String sectionId, String subsectionClass, String formSelector, String option,
