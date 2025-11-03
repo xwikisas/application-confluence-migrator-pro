@@ -261,13 +261,15 @@ public class ConfluenceMigratorIT
         assertFalse(raportView.hasErrorLogs());
         System.out.println(raportView.getImportedMacroNames());
         System.out.println(raportView.getConfluenceMacros());
+
         //ViewPage page = raportView.clickPageLink("MigrationC", "ContentTest");
         //setup.gotoPage(setup.getDriver().getCurrentUrl(),"ContentTest","edit","editor","object");
         //setup.gotoPage("edit",setup.getDriver().getCurrentUrl())
         //ObjectEditPage objectEditPage = page.editObjects();
 
-        ObjectEditPage page = raportView.clickPageLink("MigrationC", "ContentTest");
-        page.editObjects();
+        //setup.loginAsSuperAdmin();
+        ViewPage page = raportView.clickPageLink("MigrationC", "ContentTest");
+        ObjectEditPage objectEditPage = page.editObjects();
         //assertTrue(page.hasObject("Code.ConfluencePageClass"));
     }
 

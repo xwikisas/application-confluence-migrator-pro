@@ -65,7 +65,7 @@ public class MigrationRaportView extends ViewPage
             .collect(Collectors.toList());
     }
 
-    public ObjectEditPage clickPageLink(String spaceName, String pageName)
+    public ViewPage clickPageLink(String spaceName, String pageName)
     {
         String spaceXPath =
             String.format("//ul[@class='imported-spaces']//span[@class='wikilink']/a[text()='%s']/ancestor::li",
@@ -88,6 +88,6 @@ public class MigrationRaportView extends ViewPage
         WebElement pageLink = spaceElement.findElement(By.xpath(pageLinkXPath));
         pageLink.click();
 
-        return new ObjectEditPage();
+        return new ViewPage();
     }
 }
