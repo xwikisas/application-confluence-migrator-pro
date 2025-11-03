@@ -39,6 +39,7 @@ public class ViewFileMacroConverter extends AbstractMacroConverter
 {
     static final String VIEW_FILE = "view-file";
     private static final String NAME = "name";
+    private static final String DISPLAY = "display";
 
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -52,7 +53,11 @@ public class ViewFileMacroConverter extends AbstractMacroConverter
         String content)
     {
         Map<String, String> parameters = new HashMap<>(4);
-        parameters.put("display", VIEW_FILE.equals(confluenceId) ? "thumbnail" : "full");
+        String display = confluenceParameters.get(DISPLAY);
+        if (StringUtils.isEmpty(display)) {
+            display = VIEW_FILE.equals(confluenceId) ? "thumbnail" : "full";
+        }
+        parameters.put(DISPLAY, display);
         String filename = confluenceParameters.get("att--filename");
         if (StringUtils.isEmpty(filename)) {
             filename = confluenceParameters.get(NAME);
