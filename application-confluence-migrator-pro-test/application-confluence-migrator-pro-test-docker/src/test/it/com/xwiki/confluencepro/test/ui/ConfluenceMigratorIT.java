@@ -19,10 +19,15 @@
  */
 package com.xwiki.confluencepro.test.ui;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.xwiki.model.reference.DocumentReference;
@@ -40,6 +45,7 @@ import com.xwiki.confluencepro.test.po.MigrationCreationPage;
 import com.xwiki.confluencepro.test.po.MigrationRaportView;
 import com.xwiki.confluencepro.test.po.MigrationRunningPage;
 import com.xwiki.confluencepro.test.po.QuestionSpace;
+import com.xwiki.licensing.test.TestLicensor;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -69,6 +75,14 @@ public class ConfluenceMigratorIT
 
     private static final String CONTENT_PACKAGE = "ContentTest.zip";
 
+    private static final String TRIAL_LIMIT_PACKAGE = "trialLimit.zip";
+
+    @BeforeEach
+    public void beforeEach()
+    {
+        TestLicensor.clearCustomLicenses();
+    }
+
     @BeforeAll
     void beforeAll(TestUtils testUtils)
     {
@@ -77,7 +91,6 @@ public class ConfluenceMigratorIT
         testUtils.setGlobalRights("", "XWiki." + USER_NAME, "admin", true);
         testUtils.createUserAndLogin(USER_NAME, "pa$$word");
     }
-
     @Test
     @Order(1)
     void packageUpload(TestConfiguration testConfiguration)
@@ -87,7 +100,7 @@ public class ConfluenceMigratorIT
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
         confluenceHomePage.attachFiles(testConfiguration.getBrowser().getTestResourcesPath(),
-            List.of(SINGLE_SPACE_PACKAGE, MULTI_SPACE_PACKAGE, CONTENT_PACKAGE));
+            List.of(SINGLE_SPACE_PACKAGE, MULTI_SPACE_PACKAGE, TRIAL_LIMIT_PACKAGE, CONTENT_PACKAGE));
         assertTrue(confluenceHomePage.getPackageLiveTable().getTableLayout().countRows() > 0);
     }
 
@@ -144,7 +157,7 @@ public class ConfluenceMigratorIT
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
-        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(3);
+        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(2);
         migrationCreationPage.setTitle(MIGRATION_TITLE + "2");
         migrationCreationPage.clickSaveAndView();
         MigrationRaportView raportView = new MigrationRaportView();
@@ -160,7 +173,7 @@ public class ConfluenceMigratorIT
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
-        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(3);
+        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(2);
         migrationCreationPage.setTitle(MIGRATION_TITLE + "3");
         migrationCreationPage.clickAdvancedMigrationOptions();
         migrationCreationPage.fillOption("archivedDocumentsEnabled", "true");
@@ -214,11 +227,11 @@ public class ConfluenceMigratorIT
         createBatchPage.completePath(new File(testConfiguration.getBrowser().getTestResourcesPath()).getAbsolutePath())
             .refreshPage();
         createBatchPage.selectAll();
-        assertEquals(3, createBatchPage.countSelectedPackages());
+        assertEquals(4, createBatchPage.countSelectedPackages());
         createBatchPage.selectNone();
         assertEquals(0, createBatchPage.countSelectedPackages());
         createBatchPage.inverseSelection();
-        assertEquals(3, createBatchPage.countSelectedPackages());
+        assertEquals(4, createBatchPage.countSelectedPackages());
     }
 
     /**
@@ -246,6 +259,53 @@ public class ConfluenceMigratorIT
 
     @Test
     @Order(10)
+    void testTrialPageLimitEnforcement(TestUtils setup) throws Exception
+    {
+
+        final DocumentReference pageWithLicense = new DocumentReference("xwiki", "Main", "LicenseTest");
+        try (InputStream inputStream = getClass().getResourceAsStream("/license/licenseContent.vm")) {
+            if (inputStream == null) {
+                throw new Exception("License file not found: /license/licenseContent.vm");
+            }
+
+            String licenseContent = new BufferedReader(new InputStreamReader(inputStream)).lines()
+                .filter(line -> !line.trim().startsWith("##")).collect(Collectors.joining("\n"));
+
+            setup.createPage(pageWithLicense, licenseContent);
+        }
+
+        ConfluenceHomePage.goToPage();
+        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
+
+        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(3);
+        migrationCreationPage.setTitle(MIGRATION_TITLE + "4");
+        migrationCreationPage.clickSaveAndView();
+        MigrationRunningPage runningPage = new MigrationRunningPage();
+        assertEquals(MIGRATION_TITLE + "4", runningPage.getDocumentTitle());
+        ConfluenceHomePage.goToPage();
+        confluenceHomePage.openSection("confluence-pro-tab-container-all-migrations");
+
+        String migrationStatus = confluenceHomePage.migrationStatus(0);
+        assertEquals("Running", migrationStatus);
+
+        runningPage = confluenceHomePage.getMigrationRunningPage(0);
+        int index = runningPage.getSpaceIndexByName("SPACE1");
+
+        // The number of pages the space has before the import.
+        assertEquals(31, runningPage.getNumberOfDocuments(index));
+
+        runningPage.selectSpaceByLabel("SPACE1 - space1");
+        runningPage.confirmSpacesToMigrate();
+
+        MigrationRaportView reportView = runningPage.confirmSpacesToMigrate();
+        // The number of pages the space has after the import, the 30 pages limit was applied.
+        assertEquals(30, reportView.getPagesCount());
+    }
+
+    @Test
+    @Order(11)
     void importedContentTest(TestUtils testUtils)
     {
         ConfluenceHomePage.goToPage();

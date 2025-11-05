@@ -50,6 +50,18 @@ public class MigrationRaportView extends ViewPage
         return !getDriver().findElements(By.cssSelector(".log .log-item-error")).isEmpty();
     }
 
+    public int getPagesCount()
+    {
+        WebElement span = getDriver().findElement(By.xpath("//div/span[contains(text(),'imported pages')]"));
+
+        String text = span.getText();
+        int index = text.indexOf(" imported pages");
+        String before = text.substring(0, index);
+        String numberString = before.replaceAll("\\D+", "");
+
+        return Integer.parseInt(numberString);
+    }
+
     public List<String> getImportedMacroNames()
     {
         List<WebElement> macroElements = getDriver().findElements(By.cssSelector(".imported-macros-list span"));

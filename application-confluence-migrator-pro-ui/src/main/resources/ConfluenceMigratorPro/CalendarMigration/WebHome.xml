@@ -354,9 +354,9 @@ import com.xpn.xwiki.objects.LargeStringProperty
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord
+import org.apache.commons.lang3.RegExUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateUtils
-import org.apache.commons.lang3.RegExUtils
 import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.xwiki.component.annotation.Component
@@ -454,7 +454,7 @@ public class CalendarMigratorScriptService implements ScriptService
         "TH", RecurrentEventInfo.WeekDay.THU,
         "FR", RecurrentEventInfo.WeekDay.FRI,
         "SA", RecurrentEventInfo.WeekDay.SAT,
-        "SU", RecurrentEventInfo.WeekDay.SUN
+        "SU", RecurrentEventInfo.WeekDay.SUN,
     )
 
     private static final Map&lt;String, String&gt; SUB_CALENDAR_TYPE_TRANSLATION_MAP = Map.of(
@@ -467,6 +467,13 @@ public class CalendarMigratorScriptService implements ScriptService
         "com.atlassian.confluence.extra.calendar3.calendarstore.generic.TravelSubCalendarDataStore",
         "confluencepro.calendarmigrator.eventtypes.travel"
     )
+
+    private static final Set&lt;RecurrentEventInfo.WeekDay&gt; WORK_DAY_SET = Set.of(
+        RecurrentEventInfo.WeekDay.MON,
+        RecurrentEventInfo.WeekDay.TUE,
+        RecurrentEventInfo.WeekDay.WED,
+        RecurrentEventInfo.WeekDay.THU,
+        RecurrentEventInfo.WeekDay.FRI)
 
     private static final String XWIKI_ADMIN_GROUP_NAME = "XWikiAdminGroup";
 
@@ -865,8 +872,10 @@ public class CalendarMigratorScriptService implements ScriptService
 
             if (StringUtils.isNotEmpty(entry.get("RECURRENCE_RULE"))) {
                 RecurrentEventInfo recurrentRules = parseAndDecodeRecurrentEvent(entry, event)
-                if (recurrentRules.recurrentEventFrequency() == RecurrentEventInfo.EventFrequency.WEEKLY
-                    &amp;&amp; recurrentRules.byDay() != null)
+                BaseObject recurrenceObj = doc.getXObject(CALENDAR_EVENT_RECURRENCY_CLASS_REF, true, context)
+                if ((recurrentRules.recurrentEventFrequency() == RecurrentEventInfo.EventFrequency.WEEKLY
+                    || recurrentRules.recurrentEventFrequency() == RecurrentEventInfo.EventFrequency.BIWEEKLY)
+                    &amp;&amp; recurrentRules.byDays().size() == 1)
                 {
                     // When the event frequency is set to weekly and the day of the recurrence is set it override the day of the event
                     // We need to translate this to XWiki but we can't specify the day of a recurrent event so we change the
@@ -876,15 +885,55 @@ public class CalendarMigratorScriptService implements ScriptService
                     int dayToAdd = 0
                     Calendar c = Calendar.getInstance()
                     c.setTime(startDate)
-                    while (c.get(Calendar.DAY_OF_WEEK) != recurrentRules.toCalendarDayNumber()) {
+                    while (c.get(Calendar.DAY_OF_WEEK) != recurrentRules.toCalendarDayNumbers().first()) {
                         c.add(Calendar.DAY_OF_MONTH, 1)
                         dayToAdd++
                     }
                     startDate = DateUtils.addDays(startDate, dayToAdd)
                     endDate = DateUtils.addDays(endDate, dayToAdd)
                 }
+                if (recurrentRules.recurrentEventFrequency() == RecurrentEventInfo.EventFrequency.CUSTOM_WEEKLY) {
+                    recurrenceObj.setStringListValue("days",
+                        recurrentRules.toCalendarDayNumbers().collect(Integer::toString))
+                }
+                if (recurrentRules.recurrentEventFrequency() == RecurrentEventInfo.EventFrequency.MONTHLY_SPECIFIC) {
+                    // When the event frequency is set to monthly but it's mentioned it's the same day of week every
+                    // month. So for instance every first monday of every month. In this case we need to ensure
+                    // that the the first date of the event is correct, because it's what XWiki consider to decide when
+                    // will be the next event. In comparison in Confluence the day of the event is not really considered
+                    // as at the end it's the recurrence information (with the day of week and the week number or the
+                    // month) which will decide when will be the event.
+                    //
+                    // So, we need to translate this to XWiki to change the date of the first event to have the correct
+                    // day and week number of the month.
+                    // Let's have an example: we have an event set as start Monday 4 august and
+                    // the recurrent value is set to every second Wednesday of the month
+                    // In this case we will change the day of the event to Wednesday 13 august.
+                    int dayToAdd = 0
+                    Calendar c = Calendar.getInstance()
+                    c.setTime(startDate)
 
-                BaseObject recurrenceObj = doc.getXObject(CALENDAR_EVENT_RECURRENCY_CLASS_REF, true, context)
+                    if (recurrentRules.nthWeekdayOfMonth() == -1) {
+                        // -1 means the last week of the month, so by example every last monday of the month
+                        // but we don't have a strong equivalent in XWiki, because setting the last week in the month
+                        // is not allways identical... We can have some months of 4 weeks and some others of 5 weeks
+                        logger.warn(
+                            "Recurrence for event ID [{}] with last week of month not supported. This will be translated to the last week of the month for the main event, but it's not strongly identical in some cases. " +
+                                "See this comment for more details: https://github.com/xwikisas/application-mocca-calendar/issues/149#issuecomment-3269850547",
+                            event.confluenceId())
+                    }
+
+                    while (!checkIfMatchingDay(
+                        recurrentRules.toCalendarDayNumbers().first(),
+                        recurrentRules.nthWeekdayOfMonth(),
+                        c))
+                    {
+                        c.add(Calendar.DAY_OF_MONTH, 1)
+                        dayToAdd++
+                    }
+                    startDate = DateUtils.addDays(startDate, dayToAdd)
+                    endDate = DateUtils.addDays(endDate, dayToAdd)
+                }
                 recurrenceObj.set("frequency", recurrentRules.toXWikiFrequency(), context)
                 recurrenceObj.setDateValue("lastInstance", recurrentRules.until())
                 eventObj.setIntValue("recurrent", 1)
@@ -1098,9 +1147,10 @@ public class CalendarMigratorScriptService implements ScriptService
                 return [i[0], i[1]]
             }
 
-        RecurrentEventInfo.WeekDay weekDay = null
+        List&lt;RecurrentEventInfo.WeekDay&gt; weekDays = List.of()
         RecurrentEventInfo.EventFrequency eventFrequency
         int count = 0
+        int weekInMonth = 0
 
         Date startDate = getDateFromConfuence(entry.get("START"), event.allDay())
 
@@ -1118,7 +1168,8 @@ public class CalendarMigratorScriptService implements ScriptService
             // so for instance, if we have count=2 we just need to add one more event in addition to the original one
             count -= 1
         }
-        if (rawParams.getOrDefault("INTERVAL", "1") != "1") {
+        def interval = rawParams.getOrDefault("INTERVAL", "1")
+        if (interval != "1" &amp;&amp; rawParams.get("FREQ") != "WEEKLY") {
             logger.warn("Unsupported INTERVAL for recurrent event. Interval: [{}], Event Id [{}]",
                 rawParams.get("INTERVAL"), event.confluenceId())
         }
@@ -1135,23 +1186,82 @@ public class CalendarMigratorScriptService implements ScriptService
                 if (count &gt; 0) {
                     untilDate = DateUtils.addMonths(startDate, count)
                 }
+
                 if (rawParams.containsKey("BYDAY")) {
-                    logger.warn("Unsupported BYDAY param for monthly event. BYDAY: [{}], Event Id [{}]",
-                        rawParams.get("BYDAY"), event.confluenceId())
+                    String byDay = rawParams.get("BYDAY")
+                    if (StringUtils.isNotEmpty(byDay)) {
+                        eventFrequency = RecurrentEventInfo.EventFrequency.MONTHLY_SPECIFIC
+
+                        String day = null
+                        if (byDay.length() == 2) {
+                            // We have something like MO for monday
+                            day = byDay
+                        } else if (byDay.length() == 3 || (byDay.length() == 4 &amp;&amp; byDay.startsWith("-1"))) {
+                            // We have something like 1MO which mean the first monday of the month
+                            day = byDay.length() == 3 ? byDay.substring(1, 3) : byDay.substring(2, 4)
+                            def number = byDay.length() == 3 ? byDay.substring(0, 1) : byDay.substring(0, 2)
+                            try {
+                                weekInMonth = Integer.parseInt(number)
+                            } catch (NumberFormatException e) {
+                                logger.error("Can't get the day number for month. BYDAY: [{}], Event Id [{}]", byDay,
+                                    event.confluenceId(), e)
+                            }
+                        } else {
+                            logger.error("Unsupported BYDAY param for monthly event. BYDAY: [{}], Event Id [{}]",
+                                byDay, event.confluenceId())
+                        }
+                        def weekDay = CONFLUENCE_RECURRENT_DAY_TO_ENUM.get(day)
+                        if (weekDay == null) {
+                            logger.error("Can't get the week day for monthly event. BYDAY: [{}], Event Id [{}]",
+                                byDay, event.confluenceId())
+                        } else {
+                            weekDays = List.of(weekDay)
+                        }
+                    }
                 }
                 break
             case "WEEKLY":
-                eventFrequency = RecurrentEventInfo.EventFrequency.WEEKLY
                 if (count &gt; 0) {
                     untilDate = DateUtils.addWeeks(startDate, count)
                 }
                 if (rawParams.containsKey("BYDAY")) {
-                    weekDay = CONFLUENCE_RECURRENT_DAY_TO_ENUM.get(rawParams.get("BYDAY"))
-                    if (weekDay == null) {
-                        // Keep in mind that in confluence we can have multiple value here by example: MO,TU,WE,TH,FR
-                        logger.warn("Unsupported BYDAY param for weekly event. BYDAY: [{}], Event Id [{}]",
-                            rawParams.get("BYDAY"), event.confluenceId())
+                    weekDays = new ArrayList&lt;&gt;(7)
+                    rawParams.get("BYDAY").split(",").each { it -&gt;
+                        def d = CONFLUENCE_RECURRENT_DAY_TO_ENUM.get(it)
+                        if (d == null) {
+                            logger.error("Unsupported BYDAY param for weekly event. BYDAY: [{}], Event Id [{}]",
+                                rawParams.get("BYDAY"), event.confluenceId())
+                        } else {
+                            weekDays.add(d)
+                        }
                     }
+                }
+                if (interval == "1") {
+                    if (WORK_DAY_SET == weekDays.toSet()) {
+                        eventFrequency = RecurrentEventInfo.EventFrequency.WORK_DAYS
+                    } else if (weekDays.size() &gt; 1) {
+                        eventFrequency = RecurrentEventInfo.EventFrequency.CUSTOM_WEEKLY
+                    } else {
+                        eventFrequency = RecurrentEventInfo.EventFrequency.WEEKLY
+                    }
+                } else if (interval == "2") {
+                    if (WORK_DAY_SET == weekDays.toSet()) {
+                        eventFrequency = RecurrentEventInfo.EventFrequency.WORK_DAYS
+                        logger.warn(
+                            "Unsupported INTERVAL=2 for recurrent event when there are multiple BYDAY. Interval: [{}], Event Id [{}]",
+                            rawParams.get("INTERVAL"), event.confluenceId())
+                    } else if (weekDays.size() &gt; 1) {
+                        logger.warn(
+                            "Unsupported INTERVAL=2 for recurrent event when there are multiple BYDAY. Interval: [{}], Event Id [{}]",
+                            rawParams.get("INTERVAL"), event.confluenceId())
+                        eventFrequency = RecurrentEventInfo.EventFrequency.CUSTOM_WEEKLY
+                    } else {
+                        eventFrequency = RecurrentEventInfo.EventFrequency.BIWEEKLY
+                    }
+                } else {
+                    eventFrequency = RecurrentEventInfo.EventFrequency.WEEKLY
+                    logger.warn("Unsupported INTERVAL for recurrent event. Interval: [{}], Event Id [{}]",
+                        rawParams.get("INTERVAL"), event.confluenceId())
                 }
                 break
             case "DAILY":
@@ -1164,7 +1274,27 @@ public class CalendarMigratorScriptService implements ScriptService
                 throw new RuntimeException(
                     "Unknown recurrent event type [${rawParams.get("FREQ")}] for event ID [${entry.get("ID")}")
         }
-        return new RecurrentEventInfo(eventFrequency, untilDate, weekDay)
+        return new RecurrentEventInfo(eventFrequency, untilDate, weekDays, weekInMonth)
+    }
+
+    private static boolean checkIfMatchingDay(int dayOfWeek, int nthWeekdayOfMonth, Calendar calendar)
+    {
+        if (calendar.get(Calendar.DAY_OF_WEEK) != dayOfWeek) {
+            return false
+        }
+        if (nthWeekdayOfMonth == -1) {
+            def daysNumberInCurrentMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+            return calendar.toMonthDay().dayOfMonth &gt; daysNumberInCurrentMonth - 7
+        }
+
+        // Here we want to calculate, in the current day in the calendar, the week day occurrence in the month.
+        // By example the saturday 2th will be the first saturday of the month.
+        // And saturday 9 will be second saturday of the month.
+        int weekdayOccurrenceInMonth = (calendar.toMonthDay().dayOfMonth - 1).intdiv(7) + 1
+        if (weekdayOccurrenceInMonth != nthWeekdayOfMonth) {
+            return false
+        }
+        return true
     }
 
     private LoadCalendarResult loadCalendars(Attachment parents, Attachment children, Attachment spaceMapping,
@@ -1559,6 +1689,7 @@ public class CalendarMigratorScriptService implements ScriptService
  * FIXME when we depends of XWiki &gt;=16.0 we can use record instead of class. We converted this to class because records
  *  are not supported in Java 11, but it was initially written to use records.
  */
+
 final class ParentCalendar
 {
     private final String confluenceId;
@@ -1798,33 +1929,39 @@ final class RecurrentEventInfo
         WeekDay.FRI, Calendar.FRIDAY,
         WeekDay.SAT, Calendar.SATURDAY,
         WeekDay.SUN, Calendar.SUNDAY
-    );
+    )
 
     private final EventFrequency recurrentEventFrequency;
 
     @Nullable
     private final Date until;
 
-    @Nullable
-    private final WeekDay byDay;
+    private final List&lt;WeekDay&gt; byDay;
+
+    private final int nthWeekdayOfMonth
 
     RecurrentEventInfo(
         EventFrequency recurrentEventFrequency,
         @Nullable Date until,
-        @Nullable WeekDay byDay
-        // Interval interval, // Not supported for now
+        @Nullable List&lt;WeekDay&gt; byDay,
+        int nthWeekdayOfMonth
     )
     {
         this.recurrentEventFrequency = recurrentEventFrequency;
         this.until = until;
         this.byDay = byDay;
+        this.nthWeekdayOfMonth = nthWeekdayOfMonth
     }
 
     enum EventFrequency
     {
         YEARLY,
         MONTHLY,
+        MONTHLY_SPECIFIC,
         WEEKLY,
+        BIWEEKLY,
+        CUSTOM_WEEKLY,
+        WORK_DAYS,
         DAILY
     }
 
@@ -1839,9 +1976,9 @@ final class RecurrentEventInfo
         SUN
     }
 
-    int toCalendarDayNumber()
+    List&lt;Integer&gt; toCalendarDayNumbers()
     {
-        return FROM_ENUM_TO_XWIKI_DAY_NUMBER.getOrDefault(byDay(), -1)
+        return byDays().collect { it -&gt; FROM_ENUM_TO_XWIKI_DAY_NUMBER.getOrDefault(it, -1) }
     }
 
     String toXWikiFrequency()
@@ -1851,8 +1988,16 @@ final class RecurrentEventInfo
                 return "yearly"
             case EventFrequency.MONTHLY:
                 return "monthly"
+            case EventFrequency.MONTHLY_SPECIFIC:
+                return "monthlySpecific"
             case EventFrequency.WEEKLY:
                 return "weekly"
+            case EventFrequency.BIWEEKLY:
+                return "biweekly"
+            case EventFrequency.WORK_DAYS:
+                return "workdays"
+            case EventFrequency.CUSTOM_WEEKLY:
+                return "customWeekly"
             case EventFrequency.DAILY:
                 return "daily"
             default:
@@ -1872,9 +2017,14 @@ final class RecurrentEventInfo
     }
 
     @Nullable
-    public WeekDay byDay()
+    public List&lt;WeekDay&gt; byDays()
     {
         return byDay;
+    }
+
+    public int nthWeekdayOfMonth()
+    {
+        return nthWeekdayOfMonth
     }
 }
 

@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
     <artifactId>application-confluence-migrator-pro</artifactId>
-    <version>1.35.6-SNAPSHOT</version>
+    <version>1.36.0-rc-2-SNAPSHOT</version>
   </parent>
   <artifactId>application-confluence-migrator-pro-ui</artifactId>
   <name>Confluence Migrator Pro - UI</name>
@@ -38,7 +38,7 @@
       ConfluenceMigratorPro.Code.CommonCode,
       ConfluenceMigratorPro.Code.Configuration
     </xwiki.extension.licensing.publicDocuments>
-    <xwiki.extension.name>Confluence Migrator Application (Pro)</xwiki.extension.name>
+    <xwiki.extension.name>Confluence Migrator Pro</xwiki.extension.name>
   </properties>
   <dependencies>
     <dependency>
@@ -102,7 +102,13 @@
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
       <artifactId>macro-job</artifactId>
-      <version>2.2.0</version>
+      <version>${macrojob.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.xwiki.confluencepro</groupId>
+      <artifactId>application-confluence-migrator-pro-metadata-ui</artifactId>
+      <version>${project.version}</version>
+      <type>xar</type>
     </dependency>
   </dependencies>
   <build>
