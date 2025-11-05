@@ -272,7 +272,6 @@ public class ConfluenceMigratorIT
         List<ObjectEditPane> xobjects = objectEditPage.getObjectsOfClass("Confluence.Code.ConfluencePageClass");
         assertEquals(1, xobjects.size());
 
-        // TO DO: install : id extension com.xwiki.task:application-task-ui
 
     }
 
