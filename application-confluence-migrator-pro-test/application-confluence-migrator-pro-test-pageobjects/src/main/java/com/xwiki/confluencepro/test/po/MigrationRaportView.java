@@ -39,7 +39,7 @@ public class MigrationRaportView extends ViewPage
     }
 
     public List<String> getImportedSpaces() {
-        return getDriver().findElements(By.cssSelector(".imported-spaces li span a"))
+        return getDriver().findElements(By.cssSelector("#cfm-doc-tree summary > a"))
             .stream()
             .map(WebElement::getText)
             .filter(e -> !e.isEmpty())

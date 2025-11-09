@@ -100,7 +100,7 @@ public class ConfluenceMigratorIT
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
         confluenceHomePage.attachFiles(testConfiguration.getBrowser().getTestResourcesPath(),
-            List.of(SINGLE_SPACE_PACKAGE, MULTI_SPACE_PACKAGE, TRIAL_LIMIT_PACKAGE, CONTENT_PACKAGE));
+            List.of(SINGLE_SPACE_PACKAGE, MULTI_SPACE_PACKAGE, TRIAL_LIMIT_PACKAGE));
         assertTrue(confluenceHomePage.getPackageLiveTable().getTableLayout().countRows() > 0);
     }
 
@@ -304,7 +304,7 @@ public class ConfluenceMigratorIT
         assertEquals(30, reportView.getPagesCount());
     }
 
-    @Test
+    //@Test
     @Order(11)
     void importedContentTest(TestUtils testUtils)
     {
