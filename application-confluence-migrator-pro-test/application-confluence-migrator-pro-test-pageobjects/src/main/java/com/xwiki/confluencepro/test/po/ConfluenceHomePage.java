@@ -87,10 +87,11 @@ public class ConfluenceHomePage extends ViewPage
         return new MigrationCreationPage();
     }
 
-    public MigrationCreationPage deletePackage(int number)
+    public void deletePackage(int number)
     {
         getPackageLiveTable().getTableLayout().findElementInRow(number, By.className("actiondelete")).click();
-        return new MigrationCreationPage();
+        getDriver().waitUntilElementIsVisible(By.cssSelector(".modal.deleteAttachment.in"));
+        getDriver().findElement(By.cssSelector(".modal-footer .btn.btn-danger")).click();
     }
 
     public void openHowToMigrateSubsection(String subsectionClass)

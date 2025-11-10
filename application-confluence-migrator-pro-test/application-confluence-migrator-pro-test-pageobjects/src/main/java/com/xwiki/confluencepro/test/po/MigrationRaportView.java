@@ -62,7 +62,7 @@ public class MigrationRaportView extends ViewPage
         return Integer.parseInt(numberString);
     }
 
-    public List<String> getImportedMacroNames()
+    private List<String> getImportedMacros()
     {
         List<WebElement> macroElements = getDriver().findElements(By.cssSelector(".imported-macros-list span"));
 
@@ -70,33 +70,39 @@ public class MigrationRaportView extends ViewPage
             .collect(Collectors.toList());
     }
 
+    public List<String> getXWikiMacros()
+    {
+        return getImportedMacros().stream().filter(name -> !(name.startsWith("confluence_")))
+            .collect(Collectors.toList());
+    }
+
     public List<String> getConfluenceMacros()
     {
-        return getImportedMacroNames().stream().filter(name -> name.startsWith("confluence_"))
+        return getImportedMacros().stream().filter(name -> name.startsWith("confluence_"))
             .collect(Collectors.toList());
     }
 
     public ViewPage clickPageLink(String spaceName, String pageName)
     {
-        String spaceXPath =
-            String.format("//ul[@class='imported-spaces']//span[@class='wikilink']/a[text()='%s']/ancestor::li",
-                spaceName);
 
+        String spaceXPath = String.format(
+            "//div[@id='cfm-doc-tree']//summary/a[normalize-space(text())='%s']/ancestor::details",
+            spaceName
+        );
         WebElement spaceElement = getDriver().findElement(By.xpath(spaceXPath));
 
-        WebElement toggleButton = spaceElement.findElement(By.cssSelector("a[data-toggle='collapse']"));
-        String ariaExpanded = toggleButton.getAttribute("aria-expanded");
-        if (ariaExpanded == null || ariaExpanded.equals("false")) {
-            toggleButton.click();
+        if (spaceElement.getAttribute("open") == null) {
+            WebElement summary = spaceElement.findElement(By.xpath("./summary"));
+            summary.click();
+            getDriver().waitUntilElementIsVisible(By.cssSelector("li.cfm-doc-tree-leaf a"));
         }
 
-        getDriver().waitUntilCondition(
-            driver -> !spaceElement.findElements(By.cssSelector(".jstree-anchor")).isEmpty());
+        String pageXPath = String.format(
+            ".//li[contains(@class,'cfm-doc-tree-leaf')]//a[normalize-space(text())='%s']",
+            pageName
+        );
+        WebElement pageLink = spaceElement.findElement(By.xpath(pageXPath));
 
-        String pageLinkXPath =
-            String.format(".//a[contains(@class, 'jstree-anchor') and normalize-space(text())='%s']", pageName);
-
-        WebElement pageLink = spaceElement.findElement(By.xpath(pageLinkXPath));
         pageLink.click();
 
         return new ViewPage();
