@@ -111,6 +111,14 @@ public class ConfluenceFilteringListener extends AbstractEventListener
 
         ConfluenceFilteringEvent ev = (ConfluenceFilteringEvent) event;
         Collection<String> spaces = new ArrayList<>(confluencePackage.getSpaceKeys(false));
+        Map<String, String> spaceTargets = ev.getSpaceTargets();
+
+        spaceTargets.forEach((spaceTargetKey, spaceTargetValue) -> {
+            if (!spaceTargetKey.equals(spaceTargetValue)) {
+                logger.warn("Space [{}] was renamed to [{}]", spaceTargetKey, spaceTargetValue);
+            }
+        });
+
         for (Long spaceId : ev.getDisabledSpaces()) {
             try {
                 spaces.remove(confluencePackage.getSpaceKey(spaceId));
