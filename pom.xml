@@ -50,6 +50,7 @@
     <diagram.version>1.22.6</diagram.version>
     <macrojob.version>2.2.1</macrojob.version>
     <xwiki.enforcer.enforce-javase-dependencies.skip>true</xwiki.enforcer.enforce-javase-dependencies.skip>
+    <favorites.version>1.4.1</favorites.version>
   </properties>
   <modules>
     <module>application-confluence-migrator-pro-api</module>

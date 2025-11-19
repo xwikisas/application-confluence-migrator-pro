@@ -93,6 +93,7 @@
       <version>${platform.version}</version>
       <scope>runtime</scope>
     </dependency>
+
     <!-- Batch migration dependencies -->
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
@@ -109,6 +110,19 @@
       <artifactId>application-confluence-migrator-pro-metadata-ui</artifactId>
       <version>${project.version}</version>
       <type>xar</type>
+    </dependency>
+
+    <!-- Make sure favorites are migrated by default -->
+    <dependency>
+      <groupId>org.xwiki.contrib</groupId>
+      <artifactId>application-favorites-default</artifactId>
+      <version>${favorites.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.xwiki.platform</groupId>
+          <artifactId>xwiki-platform-user-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
   <build>

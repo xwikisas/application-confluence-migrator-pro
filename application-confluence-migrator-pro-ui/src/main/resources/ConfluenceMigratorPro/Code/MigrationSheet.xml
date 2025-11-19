@@ -303,14 +303,14 @@
         #set ($nameEscaped = $escapetool.xml($name))
         #set ($child = $tree[$name])
         #if ("$!child.getName()" != "")
-         &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$escapetool.url($xwiki.getURL($child))"&gt;$nameEscaped&lt;/a&gt;&lt;/li&gt;
+         &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$xwiki.getURL($child)"&gt;$nameEscaped&lt;/a&gt;&lt;/li&gt;
         #elseif ($child.containsKey("WebHome") &amp;&amp; $child.size() == 1)
-         &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$escapetool.url($xwiki.getURL($child["WebHome"]))"&gt;$nameEscaped&lt;/a&gt;&lt;/li&gt;
+         &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;&lt;/li&gt;
         #else
           &lt;li&gt;&lt;details&gt;
             &lt;summary&gt;##
               #if ($child.containsKey("WebHome"))
-                &lt;a href="$escapetool.url($xwiki.getURL($child["WebHome"]))"&gt;$nameEscaped&lt;/a&gt;
+                &lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;
               #else
                 $nameEscaped
               #end##

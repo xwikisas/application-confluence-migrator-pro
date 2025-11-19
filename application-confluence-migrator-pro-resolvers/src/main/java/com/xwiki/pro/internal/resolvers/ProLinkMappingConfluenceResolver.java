@@ -82,7 +82,7 @@ public class ProLinkMappingConfluenceResolver implements ConfluencePageIdResolve
             return null;
         }
 
-        return resolver.resolve(ref, EntityType.SPACE);
+        return resolver.resolve(ref, EntityType.DOCUMENT).getParent();
     }
 
     @Override
