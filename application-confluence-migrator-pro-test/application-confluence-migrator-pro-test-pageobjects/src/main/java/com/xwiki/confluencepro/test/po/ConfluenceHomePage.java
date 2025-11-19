@@ -92,6 +92,7 @@ public class ConfluenceHomePage extends ViewPage
         getPackageLiveTable().getTableLayout().findElementInRow(number, By.className("actiondelete")).click();
         getDriver().waitUntilElementIsVisible(By.cssSelector(".modal.deleteAttachment.in"));
         getDriver().findElement(By.cssSelector(".modal-footer .btn.btn-danger")).click();
+        getDriver().waitUntilElementDisappears(By.cssSelector(".modal-footer .btn.btn-danger"));
     }
 
     public void openHowToMigrateSubsection(String subsectionClass)

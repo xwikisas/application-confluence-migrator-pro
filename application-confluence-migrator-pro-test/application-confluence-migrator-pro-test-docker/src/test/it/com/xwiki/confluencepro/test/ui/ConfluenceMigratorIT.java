@@ -361,9 +361,9 @@ public class ConfluenceMigratorIT
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
 
-        confluenceHomePage.deletePackage(1);
-        confluenceHomePage.deletePackage(2);
-        confluenceHomePage.deletePackage(1);
+        for (int i = 1; i <= 3; i++) {
+            confluenceHomePage.deletePackage(1);
+        }
     }
 
     private void testMigrationOptions(String sectionId, String subsectionClass, String formSelector, String option,
