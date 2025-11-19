@@ -1,0 +1,169 @@
+{
+  "metadataFields": [
+    {
+      "key": "metadatafield.department",
+      "description": "",
+      "spaceKey": "TestSpace",
+      "title": "Department",
+      "typeName": "DROPDOWN",
+      "typeConfiguration": "[\"Ain\",\"Moselle\",\"Isère\"]"
+    },
+    {
+      "key": "metadatafield.color",
+      "description": "",
+      "spaceKey": "TestSpace",
+      "title": "Color",
+      "typeName": "CHECKBOX",
+      "typeConfiguration": "[\"Red\",\"Green\",\"Blue\"]"
+    },
+    {
+      "key": "metadatafield.description",
+      "description": "",
+      "spaceKey": "TestSpace",
+      "title": "Description",
+      "typeName": "TEXT",
+      "typeConfiguration": null
+    },
+    {
+      "key": "metadatafield.modificationdate",
+      "description": "",
+      "spaceKey": "TestSpace",
+      "title": "Last Modification Date",
+      "typeName": "DATE",
+      "typeConfiguration": null
+    }
+  ],
+  "metadataSets": [
+    {
+      "key": "metadataset.myset",
+      "description": "",
+      "spaceKey": "TestSpace",
+      "title": "My Set",
+      "templateIds": [],
+      "metadataFields": [
+        {
+          "key": "metadatafield.department",
+          "hidden": false,
+          "required": true,
+          "defaultValue": null
+        },
+        {
+          "key": "metadatafield.color",
+          "hidden": false,
+          "required": false,
+          "defaultValue": "[\"Green\"]"
+        },
+        {
+          "key": "metadatafield.description",
+          "hidden": false,
+          "required": false,
+          "defaultValue": null
+        }
+      ],
+      "defaultFor": []
+    },
+    {
+      "key": "metadataset.myset2",
+      "description": "",
+      "spaceKey": "TestSpace",
+      "title": "My Set 2",
+      "templateIds": [],
+      "metadataFields": [
+        {
+          "key": "metadatafield.description",
+          "hidden": false,
+          "required": true,
+          "defaultValue": null
+        },
+        {
+          "key": "metadatafield.modificationdate",
+          "description": "",
+          "spaceKey": "TestSpace",
+          "title": "Last Modification Date",
+          "typeName": "DATE",
+          "typeConfiguration": null
+        }
+      ],
+      "defaultFor": []
+    },
+    {
+      "key": "metadataset.newset",
+      "description": "",
+      "spaceKey": "TestSpace",
+      "title": "New Set",
+      "templateIds": [],
+      "metadataFields": [
+        {
+          "key": "metadatafield.description",
+          "hidden": false,
+          "required": false,
+          "defaultValue": null
+        }
+      ],
+      "defaultFor": []
+    }
+  ],
+  "metadataValues": [
+    {
+      "metadataSetKey": "metadataset.myset2",
+      "metadataSetSpaceKey": "TestSpace",
+      "contentEntityObjects": [
+        {
+          "spaceKey": "TestSpace",
+          "title": "Test page",
+          "blogPost": false,
+          "blogPostPostingTimestamp": -1,
+          "metadataFieldValues": {
+            "metadatafield.description": "This is a **description**.",
+            "metadatafield.modificationdate": "2025-10-08 + "
+          }
+        }
+      ]
+    },
+    {
+      "metadataSetKey": "metadataset.myset",
+      "metadataSetSpaceKey": "TestSpace",
+      "contentEntityObjects": [
+        {
+          "spaceKey": "TestSpace",
+          "title": "Test page",
+          "blogPost": false,
+          "blogPostPostingTimestamp": -1,
+          "metadataFieldValues": {
+            "metadatafield.color": "[\"Green\", \"Blue\"]",
+            "metadatafield.department": "[\"Moselle\"]",
+            "metadatafield.description": "This is a **description**."
+          }
+        },
+        {
+          "spaceKey": "TestSpace",
+          "title": "Page with nulls",
+          "blogPost": false,
+          "blogPostPostingTimestamp": -1,
+          "metadataFieldValues": {
+            "metadatafield.color": null,
+            "metadatafield.department": null,
+            "metadatafield.description": null
+          }
+        },
+        {
+          "spaceKey": "TestSpace",
+          "title": "Not found",
+          "blogPost": false,
+          "blogPostPostingTimestamp": -1,
+          "metadataFieldValues": {
+            "metadatafield.testdemo": null,
+            "metadatafield.hub": null,
+            "metadatafield.department": null,
+            "metadatafield.brmteammemberowner": null,
+            "metadatafield.fiscalyear": null,
+            "metadatafield.country": null,
+            "metadatafield.description": null,
+            "metadatafield.modificationdate": null,
+            "metadatafield.status": null
+          }
+        }
+      ]
+    }
+  ]
+}

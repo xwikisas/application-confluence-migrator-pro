@@ -268,6 +268,61 @@
   &lt;/div&gt;
 #end
 
+#macro (addSpaceToDocTree $docTree $spaceRef)
+  #set ($initialParentSpace = $parentSpace)
+  #set ($p = $spaceRef.getParent())
+  #if ($objecttool.isNull($p) || $p.equals($rootSpace) || "$p.getType()" == "WIKI")
+    #set ($parentSpace = $docTree)
+  #else
+    #addSpaceToDocTree($docTree, $p)
+    #set ($parentSpace = $space)
+  #end
+  #set ($n = $spaceRef.getName())
+  #set ($space = $parentSpace.get($n))
+  #if ($objecttool.isNull($space))
+    #set ($space = {})
+    #set ($parentSpace[$n] = $space)
+  #end
+  #set ($parentSpace = $initialParentSpace)
+#end
+
+#macro (addDocToDocTree $docTree $docRef)
+  #set ($p = $docRef.getParent())
+  #if ($objecttool.isNull($p) || $p.equals($rootSpace) ||  "$p.getType()" == "WIKI")
+    #set ($space = $docTree)
+  #else
+    #addSpaceToDocTree($docTree, $p)
+  #end
+  #set ($space[$docRef.getName()] = $docRef)
+#end
+
+#macro (printDocTree $tree)
+  &lt;ul&gt;
+    #foreach ($name in $tree.keySet())
+      #if ($name != "WebHome")
+        #set ($nameEscaped = $escapetool.xml($name))
+        #set ($child = $tree[$name])
+        #if ("$!child.getName()" != "")
+         &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$xwiki.getURL($child)"&gt;$nameEscaped&lt;/a&gt;&lt;/li&gt;
+        #elseif ($child.containsKey("WebHome") &amp;&amp; $child.size() == 1)
+         &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;&lt;/li&gt;
+        #else
+          &lt;li&gt;&lt;details&gt;
+            &lt;summary&gt;##
+              #if ($child.containsKey("WebHome"))
+                &lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;
+              #else
+                $nameEscaped
+              #end##
+            &lt;/summary&gt;
+            #printDocTree($child)
+          &lt;/details&gt;&lt;/li&gt;
+        #end
+      #end
+    #end
+  &lt;/ul&gt;
+#end
+
 #macro(displayMigrationInfo)
 
   {{html clean=false}}
@@ -296,32 +351,45 @@
 
   {{/html}}
 
-  {{html wiki=true clean=false}}
-
-  &lt;ul class="imported-spaces"&gt;
-    #set ($options = {})
-    #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
-    #computeRootSpace
-    #foreach ($space in $spaces)
-      #set ($spaceRef = $services.model.createSpaceReference($space, $rootSpace))
-      #set ($spaceHomeEntityReference = $services.modelvalidation.transformEntityReference($services.model.createDocumentReference("WebHome", $spaceRef)))
-      #set ($spaceHomeRef = $services.model.serialize($spaceHomeEntityReference))
-      &lt;li&gt;
-        &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
-          $services.icon.renderHTML('caret-down')
-          &lt;p class="sr-only"&gt;$services.localization.render("cfm.sr-only.migrationSheet.expandMigratedSpaces")&lt;p&gt;
-        &lt;/a&gt;
-        [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$services.rendering.escape($spaceHomeRef, $xwiki.currentContentSyntaxId)]]
-        #set ($discard = $options.put('root', "document:$spaceHomeRef"))
-        #set ($discard = $options.put('links', 'true'))
-        #set ($discard = $options.put('compact', 'true'))
-        &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;
-          #documentTree($options)
-        &lt;/div&gt;
-      &lt;/li&gt;
+  #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
+  #computeRootSpace
+  #set ($docsAttachment = $doc.getAttachment('docs.json'))
+  #if ($objecttool.isNull($docsAttachment))
+    {{html wiki=true clean=false}}
+    &lt;ul class="imported-spaces"&gt;
+      #set ($options = {})
+      #foreach ($space in $spaces)
+        #set ($spaceRef = $services.model.createSpaceReference($space, $rootSpace))
+        #set ($spaceHomeEntityReference = $services.modelvalidation.transformEntityReference($services.model.createDocumentReference("WebHome", $spaceRef)))
+        #set ($spaceHomeRef = $services.model.serialize($spaceHomeEntityReference))
+        &lt;li&gt;
+          &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
+            $services.icon.renderHTML('caret-down')
+            &lt;p class="sr-only"&gt;$services.localization.render("cfm.sr-only.migrationSheet.expandMigratedSpaces")&lt;p&gt;
+          &lt;/a&gt;
+          [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$services.rendering.escape($spaceHomeRef, $xwiki.currentContentSyntaxId)]]
+          #set ($discard = $options.put('root', "document:$spaceHomeRef"))
+          #set ($discard = $options.put('links', 'true'))
+          #set ($discard = $options.put('compact', 'true'))
+          &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;
+            #documentTree($options)
+          &lt;/div&gt;
+        &lt;/li&gt;
+      #end
+    &lt;/ul&gt;
+    {{/html}}
+  #else
+    {{html clean=false}}
+    #set ($docTree = {})
+    #foreach ($docRefStr in $jsontool.fromString($docsAttachment.getContentAsString()))
+      #set($docRef = $services.model.resolveDocument($docRefStr))
+      #addDocToDocTree($docTree, $docRef)
     #end
-  &lt;/ul&gt;
-  {{/html}}
+    &lt;div id="cfm-doc-tree"&gt;
+      #printDocTree($docTree)
+    &lt;/div&gt;
+    {{/html}}
+  #end
 
   {{html wiki=false clean=false}}
   ## Missing macros
@@ -375,7 +443,7 @@
 
     {{html wiki=false clean=false}}
     &lt;p&gt;
-      &lt;a href="https://store.xwiki.com/xwiki/bin/view/Extension/Confluence%20Migrator%20Application%20(Pro)#documentation"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.link'))&lt;/a&gt;
+      &lt;a href="https://store.xwiki.com/xwiki/bin/view/Extension/ConfluenceMigratorPro#documentation"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.link'))&lt;/a&gt;
     &lt;/p&gt;
   &lt;/div&gt;
   
@@ -1752,6 +1820,23 @@ details.cfm-details summary {
 
 .edit_section {
   display: none;
+}
+
+#cfm-doc-tree {
+  ul {
+    list-style:none;
+  }
+
+  /* We don't use the native list marker because we want the item to be aligned
+     with details elements in sibling list items */
+  .cfm-doc-tree-leaf:before {
+    content: " • ";
+  }
+
+  /* Get back the default details and summary behavior */
+  details, summary {
+    display: revert;
+  }
 }</code>
     </property>
     <property>

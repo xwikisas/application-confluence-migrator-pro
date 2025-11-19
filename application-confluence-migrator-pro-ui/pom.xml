@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
     <artifactId>application-confluence-migrator-pro</artifactId>
-    <version>1.35.8-SNAPSHOT</version>
+    <version>1.36.0-rc-2-SNAPSHOT</version>
   </parent>
   <artifactId>application-confluence-migrator-pro-ui</artifactId>
   <name>Confluence Migrator Pro - UI</name>
@@ -38,7 +38,7 @@
       ConfluenceMigratorPro.Code.CommonCode,
       ConfluenceMigratorPro.Code.Configuration
     </xwiki.extension.licensing.publicDocuments>
-    <xwiki.extension.name>Confluence Migrator Application (Pro)</xwiki.extension.name>
+    <xwiki.extension.name>Confluence Migrator Pro</xwiki.extension.name>
   </properties>
   <dependencies>
     <dependency>
@@ -93,6 +93,7 @@
       <version>${platform.version}</version>
       <scope>runtime</scope>
     </dependency>
+
     <!-- Batch migration dependencies -->
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
@@ -102,7 +103,26 @@
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
       <artifactId>macro-job</artifactId>
-      <version>2.2.0</version>
+      <version>${macrojob.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.xwiki.confluencepro</groupId>
+      <artifactId>application-confluence-migrator-pro-metadata-ui</artifactId>
+      <version>${project.version}</version>
+      <type>xar</type>
+    </dependency>
+
+    <!-- Make sure favorites are migrated by default -->
+    <dependency>
+      <groupId>org.xwiki.contrib</groupId>
+      <artifactId>application-favorites-default</artifactId>
+      <version>${favorites.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.xwiki.platform</groupId>
+          <artifactId>xwiki-platform-user-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
   <build>

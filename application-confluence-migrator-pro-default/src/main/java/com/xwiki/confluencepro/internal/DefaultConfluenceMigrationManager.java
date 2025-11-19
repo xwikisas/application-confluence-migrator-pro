@@ -342,7 +342,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
         CurrentPage currentPage = new CurrentPage();
         DocCounts counts = new DocCounts();
-        Collection<String> docs = new HashSet<>();
+        Collection<String> docs = new TreeSet<>();
 
         for (LogEvent event : jobStatus.getLogTail()) {
             if (event == null) {
@@ -360,6 +360,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
         addAttachment("missingUsersGroups.json", getPermissionIssues(root, docs), document);
         addAttachment("collisions.json", collisions, document);
         addAttachment("macroPages.json", macroPages, document);
+        addAttachment("docs.json", docs, document);
         object.setLongValue("imported", counts.docCount);
         object.setLongValue("templates", counts.templateCount);
         object.setLongValue("revisions", counts.revisionCount);
