@@ -62,14 +62,6 @@ public class MigrationRaportView extends ViewPage
         return Integer.parseInt(numberString);
     }
 
-    private List<String> getImportedMacros()
-    {
-        List<WebElement> macroElements = getDriver().findElements(By.cssSelector(".imported-macros-list span"));
-
-        return macroElements.stream().map(WebElement::getText).map(text -> text.replaceAll("\\s*\\(\\d+\\)\\s*", ""))
-            .collect(Collectors.toList());
-    }
-
     public List<String> getXWikiMacros()
     {
         return getImportedMacros().stream().filter(name -> !(name.startsWith("confluence_")))
@@ -106,5 +98,13 @@ public class MigrationRaportView extends ViewPage
         pageLink.click();
 
         return new ViewPage();
+    }
+
+    private List<String> getImportedMacros()
+    {
+        List<WebElement> macroElements = getDriver().findElements(By.cssSelector(".imported-macros-list span"));
+
+        return macroElements.stream().map(WebElement::getText).map(text -> text.replaceAll("\\s*\\(\\d+\\)\\s*", ""))
+            .collect(Collectors.toList());
     }
 }
