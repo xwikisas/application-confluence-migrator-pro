@@ -113,6 +113,7 @@ confluencepro.migration.raport.problems.unhandledParameters.title=There are {0} 
 confluencepro.migration.raport.problems.unhandledParameters.info=Unhandled parameter warnings:
 confluencepro.migration.raport.problems.unhandledParameterValues.info=Unhandled parameter values warnings:
 confluencepro.migration.raport.problems.unhandledParameters.list=The unhandled parameter (values), per macro
+confluencepro.migration.raport.renamingSpace=(original space key: {0})
 confluencepro.migration.raport.macroName=Macro
 confluencepro.migration.raport.parameterName=Parameter
 confluencepro.migration.raport.parameterValues=Value(s)
