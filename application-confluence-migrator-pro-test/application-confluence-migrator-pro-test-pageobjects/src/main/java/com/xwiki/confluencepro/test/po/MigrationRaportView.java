@@ -76,7 +76,6 @@ public class MigrationRaportView extends ViewPage
 
     public ViewPage clickPageLink(String spaceName, String pageName)
     {
-
         String spaceXPath = String.format(
             "//div[@id='cfm-doc-tree']//summary/a[normalize-space(text())='%s']/ancestor::details",
             spaceName

@@ -334,7 +334,7 @@ public class ConfluenceMigratorIT
         assertFalse(raportView.hasErrorLogs());
 
         // Checks that 14 macros were imported and converted correctly from Confluence.
-        assertEquals(Arrays.asList("date", "info", "code", "toc", "task-report", "profile-picture", "expand",
+        assertEquals(List.of("date", "info", "code", "toc", "task-report", "profile-picture", "expand",
                 "recently-updated", "content-report-table", "contributors", "excerpt", "panel", "excerpt-include",
                 "status"),
             raportView.getXWikiMacros());
