@@ -68,7 +68,7 @@ public class MigrationRunningPage extends ViewPage
 
     public MigrationRaportView confirmSpacesToMigrate() {
         getDriver().findElement(By.className("btn-primary")).click();
-        getDriver().waitUntilElementIsVisible(By.className("imported-spaces"));
+        getDriver().waitUntilElementIsVisible(By.id("cfm-doc-tree"));
         return new MigrationRaportView();
     }
 

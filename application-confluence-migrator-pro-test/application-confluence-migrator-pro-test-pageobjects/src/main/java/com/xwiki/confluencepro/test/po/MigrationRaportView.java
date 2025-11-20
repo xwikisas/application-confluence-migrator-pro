@@ -39,7 +39,7 @@ public class MigrationRaportView extends ViewPage
     }
 
     public List<String> getImportedSpaces() {
-        return getDriver().findElements(By.cssSelector(".imported-spaces li span a"))
+        return getDriver().findElements(By.cssSelector("#cfm-doc-tree summary > a"))
             .stream()
             .map(WebElement::getText)
             .filter(e -> !e.isEmpty())
@@ -60,5 +60,50 @@ public class MigrationRaportView extends ViewPage
         String numberString = before.replaceAll("\\D+", "");
 
         return Integer.parseInt(numberString);
+    }
+
+    public List<String> getXWikiMacros()
+    {
+        return getImportedMacros().stream().filter(name -> !(name.startsWith("confluence_")))
+            .collect(Collectors.toList());
+    }
+
+    public List<String> getConfluenceMacros()
+    {
+        return getImportedMacros().stream().filter(name -> name.startsWith("confluence_"))
+            .collect(Collectors.toList());
+    }
+
+    public ViewPage clickPageLink(String spaceName, String pageName)
+    {
+        String spaceXPath = String.format(
+            "//div[@id='cfm-doc-tree']//summary/a[normalize-space(text())='%s']/ancestor::details",
+            spaceName
+        );
+        WebElement spaceElement = getDriver().findElement(By.xpath(spaceXPath));
+
+        if (spaceElement.getAttribute("open") == null) {
+            WebElement summary = spaceElement.findElement(By.xpath("./summary"));
+            summary.click();
+            getDriver().waitUntilElementIsVisible(By.cssSelector("li.cfm-doc-tree-leaf a"));
+        }
+
+        String pageXPath = String.format(
+            ".//li[contains(@class,'cfm-doc-tree-leaf')]//a[normalize-space(text())='%s']",
+            pageName
+        );
+        WebElement pageLink = spaceElement.findElement(By.xpath(pageXPath));
+
+        pageLink.click();
+
+        return new ViewPage();
+    }
+
+    private List<String> getImportedMacros()
+    {
+        List<WebElement> macroElements = getDriver().findElements(By.cssSelector(".imported-macros-list span"));
+
+        return macroElements.stream().map(WebElement::getText).map(text -> text.replaceAll("\\s*\\(\\d+\\)\\s*", ""))
+            .collect(Collectors.toList());
     }
 }
