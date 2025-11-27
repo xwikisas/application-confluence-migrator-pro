@@ -316,15 +316,15 @@
          &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;#if($isRoot)#displayRenaming($name, $spaceTargets)#end&lt;/li&gt;
         #else
           &lt;li&gt;&lt;details&gt;
-              &lt;summary&gt;##
-                #if ($child.containsKey("WebHome"))
-                  &lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;
-                #else
-                  $nameEscaped#if($isRoot)#displayRenaming($name, $spaceTargets)#end
-                #end##
-              &lt;/summary&gt;
-                #printDocTree($child $spaceTargets, false)
-            &lt;/details&gt;&lt;/li&gt;
+            &lt;summary&gt;##
+              #if ($child.containsKey("WebHome"))
+                &lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;
+              #else
+                $nameEscaped#if($isRoot)#displayRenaming($name, $spaceTargets)#end
+              #end##
+            &lt;/summary&gt;
+              #printDocTree($child $spaceTargets, false)
+          &lt;/details&gt;&lt;/li&gt;
         #end
       #end
     #end
