@@ -359,7 +359,7 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
         addAttachment("missingUsersGroups.json", getPermissionIssues(root, docs), document);
         addAttachment("collisions.json", collisions, document);
-        addAttachment("spacesOldNames.json", jobStatus.getSpacesOldNames(), document);
+        addAttachment("spaceTargets.json", jobStatus.getSpaceTargets(), document);
         addAttachment("macroPages.json", macroPages, document);
         addAttachment("docs.json", docs, document);
         object.setLongValue("imported", counts.docCount);

@@ -296,15 +296,15 @@
   #set ($space[$docRef.getName()] = $docRef)
 #end
 
-#macro (displayRenaming $name $spacesOldNames)
+#macro (displayRenaming $name $spaceTargets)
   #set ($nameEscaped = $escapetool.xml($name))
-  #set ($spaceOldName = $spacesOldNames.get($name))
-  #if("$!spaceOldName" != "")
-    $services.localization.render('confluencepro.migration.raport.renamingSpace', $escapetool.xml($spaceOldName))
+  #set ($spaceTarget = $spaceTargets.get($name))
+  #if(!$name.equals($spaceTarget))
+    $services.localization.render('confluencepro.migration.raport.renamingSpace', $escapetool.xml($spaceTarget))
   #end
 #end
 
-#macro (printDocTree $tree $spacesOldNames $isRoot)
+#macro (printDocTree $tree $spaceTargets $isRoot)
   &lt;ul&gt;
     #foreach ($name in $tree.keySet())
       #if ($name != "WebHome")
@@ -313,32 +313,18 @@
         #if ("$!child.getName()" != "")
          &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$xwiki.getURL($child)"&gt;$nameEscaped&lt;/a&gt;&lt;/li&gt;
         #elseif ($child.containsKey("WebHome") &amp;&amp; $child.size() == 1)
-         &lt;li class="cfm-doc-tree-leaf"&gt;
-           &lt;a href="$xwiki.getURL($child["WebHome"])"&gt;
-             $nameEscaped
-           &lt;/a&gt;
-             #if($isRoot)
-               #displayRenaming($name, $spacesOldNames)
-             #end
-         &lt;/li&gt;
+         &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;#if($isRoot)#displayRenaming($name, $spaceTargets)#end&lt;/li&gt;
         #else
-          &lt;li&gt;
-            &lt;details&gt;
+          &lt;li&gt;&lt;details&gt;
               &lt;summary&gt;##
                 #if ($child.containsKey("WebHome"))
-                  &lt;a href="$xwiki.getURL($child["WebHome"])"&gt;
-                    $nameEscaped
-                  &lt;/a&gt;
+                  &lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;
                 #else
-                  $nameEscaped
+                  $nameEscaped#if($isRoot)#displayRenaming($name, $spaceTargets)#end
                 #end##
-                #if($isRoot)
-                  #displayRenaming($name, $spacesOldNames)
-                #end
               &lt;/summary&gt;
-                #printDocTree($child $spacesOldNames, false)
-            &lt;/details&gt;
-          &lt;/li&gt;
+                #printDocTree($child $spaceTargets, false)
+            &lt;/details&gt;&lt;/li&gt;
         #end
       #end
     #end
@@ -376,7 +362,7 @@
   #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
   #computeRootSpace
   #set ($docsAttachment = $doc.getAttachment('docs.json'))
-  #set ($spacesOldNamesAttachment = $doc.getAttachment('spacesOldNames.json'))
+  #set ($spaceTargetsAttachment = $doc.getAttachment('spaceTargets.json'))
   #if ($objecttool.isNull($docsAttachment))
     {{html wiki=true clean=false}}
     &lt;ul class="imported-spaces"&gt;
@@ -404,13 +390,17 @@
   #else
     {{html clean=false}}
     #set ($docTree = {})
-    #set ($spacesOldNames = $jsontool.fromString($spacesOldNamesAttachment.getContentAsString()))
+    #set ($spaceTargets = $jsontool.fromString($spaceTargetsAttachment.getContentAsString()))
+    #set ($invertedSpaceTargets = {})
+    #foreach ($entry in $spaceTargets.entrySet())
+      #set ($discard = $invertedSpaceTargets.put($entry.getValue(), $entry.getKey()))
+    #end
     #foreach ($docRefStr in $jsontool.fromString($docsAttachment.getContentAsString()))
       #set($docRef = $services.model.resolveDocument($docRefStr))
       #addDocToDocTree($docTree, $docRef)
     #end
     &lt;div id="cfm-doc-tree"&gt;
-      #printDocTree($docTree, $spacesOldNames, true)
+      #printDocTree($docTree, $invertedSpaceTargets, true)
     &lt;/div&gt;
     {{/html}}
   #end
