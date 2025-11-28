@@ -19,13 +19,15 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 
 /**
  * Converter used for deck macro.
@@ -45,7 +47,6 @@ public class DeckMacroConverter extends AbstractMacroConverter
         "tabLocation",
         "width",
         "height",
-        CSS_CLASS,
         "nextAfter",
         "loopCards",
         "effectType",
@@ -56,22 +57,23 @@ public class DeckMacroConverter extends AbstractMacroConverter
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
-        // Useless for now, since we don't override toXWikiParameters, all the parameters are output, but we could
-        // decide to warn about unknown parameters in the future even for such macro converters.
-        for (String p : KNOWN_PARAMETERS) {
-            markHandledParameter(confluenceParameters, p, true);
-        }
         return "tab-group";
     }
 
     @Override
-    protected String toXWikiParameterName(String confluenceParameterName, String id,
-        Map<String, String> confluenceParameters, String confluenceContent)
+    protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
+        String content)
     {
-        if ("class".equals(confluenceParameterName)) {
-            return CSS_CLASS;
+        for (String p : KNOWN_PARAMETERS) {
+            markHandledParameter(confluenceParameters, p, true);
         }
-        return super.toXWikiParameterName(confluenceParameterName, id, confluenceParameters, confluenceContent);
+
+        Map<String, String> res = new LinkedHashMap<>(confluenceParameters);
+        String clazz = res.remove("class");
+        if (StringUtils.isNotEmpty(clazz)) {
+            res.put(CSS_CLASS, clazz);
+        }
+        return res;
     }
 
     @Override

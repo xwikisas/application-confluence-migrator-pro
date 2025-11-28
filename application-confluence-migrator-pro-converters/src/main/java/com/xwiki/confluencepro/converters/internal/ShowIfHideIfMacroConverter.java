@@ -28,8 +28,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.ConfluenceFilterReferenceConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 
 /**
  * Converter used for hide-if and show-if macro.
@@ -58,7 +58,14 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
     private static final String DISPLAY_PARAM_VALUE_PRINTABLE = "printable";
 
     @Inject
-    private ConfluenceConverter converter;
+    private ConfluenceFilterReferenceConverter converter;
+
+    @Override
+    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
+        boolean inline)
+    {
+        return confluenceId;
+    }
 
     @Override
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
@@ -70,30 +77,28 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
         // different, so it's why we have 2 group parameters with the value handled differently.
         for (Map.Entry<String, String> entry : confluenceParameters.entrySet()) {
             String name = entry.getKey();
-            String confluenceValue = entry.getValue();
-            String xwikiValue = toXWikiParameterValue(name, confluenceValue, confluenceId, confluenceParameters,
-                content);
+            String v = entry.getValue();
 
             switch (name) {
                 case "match":
-                    parameters.put("matchUsing", xwikiValue.toUpperCase());
+                    parameters.put("matchUsing", v.toUpperCase());
                     break;
                 case "user":
-                    if (xwikiValue.charAt(0) == '@') {
+                    if (v.charAt(0) == '@') {
                         // Handle a specific legacy case when the special username was set in the user parameter
                         // (instead of in the new specific 'special' parameter)
                         // Note that to make this working correctly, in confluence-xml a custom code avoid to make any
                         // transformation when we have this specific parameter.
                         // This part of code is available here:
                         // https://github.com/xwiki-contrib/confluence/blob/5b12c59dd56253d559496d20b0f4d0d8ffac31ae/confluence-syntax-xhtml/src/main/java/org/xwiki/contrib/confluence/parser/xhtml/internal/wikimodel/UserTagHandler.java#L104-L118
-                        String value = confluenceValue.substring(1).toUpperCase();
+                        String value = v.substring(1).toUpperCase();
                         parameters.put(AUTHENTICATION_TYPE_PARAM, value);
                     } else {
-                        parameters.put("users", xwikiValue);
+                        parameters.put("users", v);
                     }
                     break;
                 case GROUP_ID_PARAM:
-                    String valueGroupId = Arrays.stream(confluenceValue.split(LIST_ITEM_PARAM_SEPARATOR))
+                    String valueGroupId = Arrays.stream(v.split(LIST_ITEM_PARAM_SEPARATOR))
                         .map(i -> {
                             String groupRef = converter.convertGroupId(i);
                             return groupRef == null ? i : groupRef;
@@ -102,7 +107,7 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
                     break;
 
                 case GROUP_PARAM:
-                    String valueGroup = Arrays.stream(confluenceValue.split(LIST_ITEM_PARAM_SEPARATOR))
+                    String valueGroup = Arrays.stream(v.split(LIST_ITEM_PARAM_SEPARATOR))
                         .map(i -> {
                             String groupRef = converter.toGroupReference(i);
                             return groupRef == null ? i : groupRef;
@@ -110,32 +115,37 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
                     parameters.put(GROUPS_PARAM, valueGroup);
                     break;
                 case SPECIAL_USERNAME_PARAM:
-                    parameters.put(AUTHENTICATION_TYPE_PARAM, xwikiValue.toUpperCase());
+                    parameters.put(AUTHENTICATION_TYPE_PARAM, v.toUpperCase());
                     break;
                 case SPECIAL_PARAM:
-                    String valueSpecial = confluenceValue.replace("@", "").toUpperCase();
+                    String valueSpecial = v.replace("@", "").toUpperCase();
                     parameters.put(AUTHENTICATION_TYPE_PARAM, valueSpecial);
                     break;
                 case "type":
-                    parameters.put("contentType", xwikiValue);
+                    parameters.put("contentType", v);
                     break;
                 case "display":
-                    if ("word".equalsIgnoreCase(xwikiValue)) {
-                        xwikiValue = DISPLAY_PARAM_VALUE_PRINTABLE;
-                    } else if ("pdf".equalsIgnoreCase(xwikiValue)) {
-                        xwikiValue = DISPLAY_PARAM_VALUE_PRINTABLE;
+                    if ("word".equalsIgnoreCase(v)) {
+                        v = DISPLAY_PARAM_VALUE_PRINTABLE;
+                    } else if ("pdf".equalsIgnoreCase(v)) {
+                        v = DISPLAY_PARAM_VALUE_PRINTABLE;
                     }
-                    parameters.put("displayType", xwikiValue.toUpperCase());
+                    parameters.put("displayType", v.toUpperCase());
                     break;
                 case "label":
-                    parameters.put("tags", xwikiValue);
+                    parameters.put("tags", v);
                     break;
                 default:
-                    String parameterName = toXWikiParameterName(name, confluenceId, confluenceParameters, content);
-                    parameters.put(parameterName, xwikiValue);
+                    parameters.put(name, v);
                     break;
             }
         }
         return parameters;
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.YES;
     }
 }

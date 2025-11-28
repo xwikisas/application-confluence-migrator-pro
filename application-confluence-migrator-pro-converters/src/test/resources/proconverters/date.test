@@ -42,11 +42,11 @@
             </entry>
             <entry>
               <string>content</string>
-              <string>{{date format="yyyy-MM-dd" value="2025-08-28"/}}
+              <string>{{date value="2025-08-28" format="yyyy-MM-dd"/}}
 
-{{date format="yyyy-MM-dd" value="2025-05-20"/}}
+{{date value="2025-05-20" format="yyyy-MM-dd"/}}
 
-{{date format="yyyy-MM-dd" value="2021-07-19"/}}</string>
+{{date value="2021-07-19" format="yyyy-MM-dd"/}}</string>
             </entry>
             <entry>
               <string>syntax</string>

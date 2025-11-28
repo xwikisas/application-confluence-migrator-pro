@@ -35,7 +35,7 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 
 import com.xwiki.date.DateMacroConfiguration;
@@ -164,5 +164,11 @@ public class TasksReportMacroConverter extends AbstractMacroConverter
         }
 
         return xwikiParams;
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.NO;
     }
 }

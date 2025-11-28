@@ -28,9 +28,8 @@ import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
-import org.xwiki.rendering.listener.Listener;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.ConfluenceFilterReferenceConverter;
 
 /**
  * Convert the confluence listlabels macro into a tagList macro.
@@ -43,22 +42,14 @@ import org.xwiki.rendering.listener.Listener;
 @Named("listlabels")
 public class ListLabelsMacroConverter extends AbstractMacroConverter
 {
-
-    private static final String SPACE_KEY = "spaceKey";
-
-    private static final String EXCLUDED_LABELS = "excludedLabels";
-
-    private static final String SPACES = "spaces";
-
     @Inject
-    private ConfluenceConverter converter;
-
+    private ConfluenceFilterReferenceConverter converter;
 
     @Override
-    public void toXWiki(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
-        boolean inline, Listener listener)
+    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
+        boolean inline)
     {
-        super.toXWiki("tagList", confluenceParameters, confluenceContent, inline, listener);
+        return "tagList";
     }
 
     @Override
@@ -66,16 +57,16 @@ public class ListLabelsMacroConverter extends AbstractMacroConverter
         String content)
     {
         Map<String, String> xwikiParameters = new HashMap<>(2);
-        String spaceKey = confluenceParameters.get(SPACE_KEY);
-        if (StringUtils.isNotEmpty(spaceKey)) {
-            xwikiParameters.put(SPACES, spaceKey);
-        } else {
-            xwikiParameters.put(SPACES, converter.convertSpaceReference("@self"));
-        }
-        String excludedLabels = confluenceParameters.get(EXCLUDED_LABELS);
-        if (StringUtils.isNotEmpty(excludedLabels)) {
-            xwikiParameters.put("excludedTags", excludedLabels);
-        }
+        String spaceKey = confluenceParameters.get("spaceKey");
+        String space = StringUtils.isEmpty(spaceKey) ? converter.convertSpaceReference("@self") : spaceKey;
+        xwikiParameters.put("spaces", space);
+        saveParameter(confluenceParameters, xwikiParameters, "excludedLabels", "excludedTags", true);
         return xwikiParameters;
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.NO;
     }
 }

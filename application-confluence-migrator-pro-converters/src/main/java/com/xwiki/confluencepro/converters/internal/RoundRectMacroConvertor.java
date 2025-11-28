@@ -19,16 +19,14 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 
 /**
  * Convert the confluence roundrect macro into a panel macro.
@@ -41,25 +39,6 @@ import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverte
 @Named("roundrect")
 public class RoundRectMacroConvertor extends AbstractMacroConverter
 {
-    private static final String TITLE = "title";
-
-    private static final String FOOTER = "footer";
-
-    private static final String TITLEBGCOLOR = "titlebgcolor";
-
-    private static final String BGCOLOR = "bgcolor";
-
-    private static final String FOOTERBGCOLOR = "footerbgcolor";
-
-    private static final String WIDTH = "width";
-
-    private static final String HEIGHT = "height";
-
-    private static final String CLASS = "class";
-
-    @Inject
-    private Logger logger;
-
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
@@ -71,40 +50,21 @@ public class RoundRectMacroConvertor extends AbstractMacroConverter
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
         String content)
     {
-        Map<String, String> xwikiParameters = new HashMap<>();
-        for (String key : confluenceParameters.keySet()) {
-            switch (key) {
-                case TITLE:
-                    xwikiParameters.put(TITLE, confluenceParameters.get(key));
-                    break;
-                case FOOTER:
-                    xwikiParameters.put(FOOTER, confluenceParameters.get(key));
-                    break;
-                case TITLEBGCOLOR:
-                    xwikiParameters.put("titleBGColor", confluenceParameters.get(key));
-                    break;
-                case BGCOLOR:
-                    xwikiParameters.put("bgColor", confluenceParameters.get(key));
-                    break;
-                case FOOTERBGCOLOR:
-                    xwikiParameters.put("footerBGColor", confluenceParameters.get(key));
-                    break;
-                case WIDTH:
-                    xwikiParameters.put(WIDTH, confluenceParameters.get(key));
-                    break;
-                case HEIGHT:
-                    xwikiParameters.put(HEIGHT, confluenceParameters.get(key));
-                    break;
-                case CLASS:
-                    xwikiParameters.put("classes", confluenceParameters.get(key));
-                    break;
-                default:
-                    xwikiParameters.put("confluence_" + key, confluenceParameters.get(key));
-                    logger.warn(
-                        String.format("Parameter %s is not supported and was converted into confluence_%s.", key, key));
-                    break;
-            }
-        }
+        Map<String, String> xwikiParameters = new LinkedHashMap<>();
+        saveParameter(confluenceParameters, xwikiParameters, "bgcolor", "bgColor", true);
+        saveParameter(confluenceParameters, xwikiParameters, "footer", true);
+        saveParameter(confluenceParameters, xwikiParameters, "titlebgcolor", "titleBGColor", true);
+        saveParameter(confluenceParameters, xwikiParameters, "class", "classes", true);
+        saveParameter(confluenceParameters, xwikiParameters, "width", true);
+        saveParameter(confluenceParameters, xwikiParameters, "footerbgcolor", "footerBGColor", true);
+        saveParameter(confluenceParameters, xwikiParameters, "title", true);
+        saveParameter(confluenceParameters, xwikiParameters, "height", true);
         return xwikiParameters;
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return null;
     }
 }

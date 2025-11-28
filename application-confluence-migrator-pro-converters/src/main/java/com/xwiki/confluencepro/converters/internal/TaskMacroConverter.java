@@ -61,10 +61,9 @@ public class TaskMacroConverter extends AbstractTaskConverter
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
-        if (shouldConvertToTaskbox(confluenceId, confluenceParameters, confluenceContent)) {
-            return "checkbox";
-        }
-        return super.toXWikiId(confluenceId, confluenceParameters, confluenceContent, inline);
+        return shouldConvertToTaskbox(confluenceId, confluenceParameters, confluenceContent)
+            ? "checkbox"
+            : "task";
     }
 
     @Override
@@ -81,6 +80,12 @@ public class TaskMacroConverter extends AbstractTaskConverter
         // since the confluence tasks are not supported inline, they also inserted a <br/> element which gets converted
         // to a "\n " in XWiki. This newline does not appear in confluence.
         return newContent.replaceAll("\\s*\n\\s*\n\\s*\\{\\{task", "\n\n{{task").trim();
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.YES;
     }
 
     @Override

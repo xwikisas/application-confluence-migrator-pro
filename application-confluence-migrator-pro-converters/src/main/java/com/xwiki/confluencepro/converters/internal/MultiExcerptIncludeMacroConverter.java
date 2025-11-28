@@ -22,7 +22,7 @@ package com.xwiki.confluencepro.converters.internal;
 import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.MacroConverter;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 
 import javax.inject.Singleton;
 import java.util.Map;
@@ -43,14 +43,14 @@ import java.util.TreeMap;
 @Singleton
 public class MultiExcerptIncludeMacroConverter extends AbstractMacroConverter implements MacroConverter
 {
-
     private static final String INLINE = "inline";
-    private static final String BLOCK = "block";
-    private static final String TEMPLATE_DATA = "templateData";
     private static final String NAME = "name";
     private static final String TRUE = "true";
     private static final String NOPANEL = "nopanel";
     private static final String FALSE = "false";
+    private static final String[] TITLE_PARAMS = {"page", "PageWithExcerpt", "pageTitle"};
+    private static final String[] NAME_PARAMS = { NAME, "MultiExcerptName" };
+    private static final String REF_PARAM = "0";
 
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -65,34 +65,12 @@ public class MultiExcerptIncludeMacroConverter extends AbstractMacroConverter im
     {
 
         Map<String, String> p = new TreeMap<>();
-
-        String reference = confluenceParameters.get("page");
-
-        if (reference == null) {
-            reference = confluenceParameters.get("PageWithExcerpt");
+        if (saveParameter(confluenceParameters, p, TITLE_PARAMS, REF_PARAM, true) == null) {
+            p.put(REF_PARAM, "WebHome");
         }
 
-        if (reference == null) {
-            reference = confluenceParameters.get("pageTitle");
-        }
-
-        reference = (reference == null || reference.isEmpty()) ? "WebHome" : reference;
-
-        p.put("0", reference);
-
-        String name = confluenceParameters.get(NAME);
-        if (name == null) {
-            name = confluenceParameters.get("MultiExcerptName");
-        }
-
-        p.put(NAME, name);
-
-        String templateData = confluenceParameters.get(TEMPLATE_DATA);
-        if (templateData != null && !templateData.isEmpty()) {
-            // as of writing this, templateData is not supported, but we don't want to lose this information.
-            // it contains information to replace placeholders by actual values
-            p.put(TEMPLATE_DATA, templateData);
-        }
+        saveParameter(confluenceParameters, p, NAME_PARAMS, NAME, true);
+        saveParameter(confluenceParameters, p, "templateData", true);
 
         handleInlineAndPanel(confluenceId, confluenceParameters, content, p);
 
@@ -125,7 +103,7 @@ public class MultiExcerptIncludeMacroConverter extends AbstractMacroConverter im
     @Override
     public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
     {
-        if (id.contains(BLOCK)) {
+        if (id.contains("block")) {
             return InlineSupport.NO;
         }
 

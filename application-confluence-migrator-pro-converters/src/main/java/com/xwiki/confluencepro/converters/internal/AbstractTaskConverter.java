@@ -24,7 +24,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 import org.xwiki.filter.job.FilterStreamConverterJobRequest;
 import org.xwiki.job.Job;
 import org.xwiki.job.JobContext;

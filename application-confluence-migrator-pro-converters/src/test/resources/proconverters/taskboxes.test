@@ -48,11 +48,11 @@
 (% class="task-list" %)
 (((
 {{checkbox checked="true" id="4"}}
-Do this123_test_123 pls! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} {{date format="yyyy-MM-dd" value="2023-03-13"/}}
+Do this123_test_123 pls! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}} {{date value="2023-03-13" format="yyyy-MM-dd"/}}
 {{/checkbox}}
 
 {{checkbox checked="false" id="7"}}
-Do this as 123_test_123 well {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date format="yyyy-MM-dd" value="2023-11-23"/}}
+Do this as 123_test_123 well {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date value="2023-11-23" format="yyyy-MM-dd"/}}
 {{/checkbox}}
 )))
 
@@ -61,11 +61,11 @@ Some more tasks here
 (% class="task-list" %)
 (((
 {{checkbox checked="true" id="5"}}
-DO this 123_test_123as well! {{date format="yyyy-MM-dd" value="2023-03-16"/}}{{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}
+DO this 123_test_123as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}
 {{/checkbox}}
 
 {{checkbox checked="false" id="6"}}
-And 123_test_123 this!!! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date format="yyyy-MM-dd" value="2023-03-20"/}}
+And 123_test_123 this!!! {{mention reference="XWiki.6321bed3051efc6985671eed" style="FULL_NAME" anchor="XWiki-6321bed3051efc6985671eed"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
 {{/checkbox}}
 )))
 
