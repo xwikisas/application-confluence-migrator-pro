@@ -46,7 +46,7 @@
     <licensing.version>1.30.1</licensing.version>
     <listeneradmin.version>1.0.2</listeneradmin.version>
     <xwiki.extension.category>application</xwiki.extension.category>
-    <confluence.version>9.88.4</confluence.version>
+    <confluence.version>9.89.0</confluence.version>
     <diagram.version>1.22.6</diagram.version>
     <macrojob.version>2.2.2</macrojob.version>
     <xwiki.enforcer.enforce-javase-dependencies.skip>true</xwiki.enforcer.enforce-javase-dependencies.skip>

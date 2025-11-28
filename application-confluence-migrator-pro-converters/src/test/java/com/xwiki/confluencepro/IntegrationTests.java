@@ -27,6 +27,7 @@ import org.mockito.stubbing.Answer;
 import org.slf4j.LoggerFactory;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceXMLPackage;
 import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceInputFilterStream;
+import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceSpaceHelpers;
 import org.xwiki.contrib.confluence.resolvers.ConfluencePageIdResolver;
 import org.xwiki.contrib.confluence.resolvers.ConfluencePageTitleResolver;
 import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceKeyResolver;
@@ -68,6 +69,7 @@ public class IntegrationTests
     public void initialized(MockitoComponentManager componentManager) throws Exception
     {
         Environment environment = componentManager.registerMockComponent(Environment.class);
+        ConfluenceSpaceHelpers spaceHelpers = componentManager.registerMockComponent(ConfluenceSpaceHelpers.class);
         when(environment.getTemporaryDirectory()).thenReturn(XWikiTempDirUtil.createTemporaryDirectory());
 
         DateMacroConfiguration dateConfig = componentManager.registerMockComponent(DateMacroConfiguration.class);
