@@ -47,7 +47,7 @@
     <dependency>
       <groupId>org.xwiki.contrib.confluence</groupId>
       <artifactId>confluence-resolvers</artifactId>
-      <version>9.88.4</version>
+      <version>${confluence.version}</version>
     </dependency>
     <dependency>
       <groupId>org.xwiki.commons</groupId>
