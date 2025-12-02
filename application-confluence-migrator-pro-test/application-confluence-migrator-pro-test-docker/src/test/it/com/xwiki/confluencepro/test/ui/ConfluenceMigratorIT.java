@@ -35,6 +35,9 @@ import org.xwiki.test.docker.junit5.ExtensionOverride;
 import org.xwiki.test.docker.junit5.TestConfiguration;
 import org.xwiki.test.docker.junit5.UITest;
 import org.xwiki.test.ui.TestUtils;
+import org.xwiki.test.ui.po.ViewPage;
+import org.xwiki.test.ui.po.editor.ObjectEditPage;
+import org.xwiki.test.ui.po.editor.ObjectEditPane;
 
 import com.xwiki.confluencepro.test.po.ConfluenceHomePage;
 import com.xwiki.confluencepro.test.po.CreateBatchPage;
@@ -69,6 +72,8 @@ public class ConfluenceMigratorIT
     private static final String SINGLE_SPACE_PACKAGE = "confluence-package.zip";
 
     private static final String MULTI_SPACE_PACKAGE = "4.3.2.xml.zip";
+
+    private static final String CONTENT_PACKAGE = "ContentTest.zip";
 
     private static final String TRIAL_LIMIT_PACKAGE = "trialLimit.zip";
 
@@ -222,11 +227,11 @@ public class ConfluenceMigratorIT
         createBatchPage.completePath(new File(testConfiguration.getBrowser().getTestResourcesPath()).getAbsolutePath())
             .refreshPage();
         createBatchPage.selectAll();
-        assertEquals(3, createBatchPage.countSelectedPackages());
+        assertEquals(4, createBatchPage.countSelectedPackages());
         createBatchPage.selectNone();
         assertEquals(0, createBatchPage.countSelectedPackages());
         createBatchPage.inverseSelection();
-        assertEquals(3, createBatchPage.countSelectedPackages());
+        assertEquals(4, createBatchPage.countSelectedPackages());
     }
 
     /**
@@ -297,6 +302,67 @@ public class ConfluenceMigratorIT
         MigrationRaportView reportView = runningPage.confirmSpacesToMigrate();
         // The number of pages the space has after the import, the 30 pages limit was applied.
         assertEquals(30, reportView.getPagesCount());
+    }
+
+    @Test
+    @Order(11)
+    void importedContentTest(TestUtils testUtils, TestConfiguration testConfiguration)
+    {
+        // Cleanup: deletes the packages imported in the other tests.
+        deletePackages();
+
+        ConfluenceHomePage.goToPage();
+        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
+        confluenceHomePage.attachFiles(testConfiguration.getBrowser().getTestResourcesPath(),
+            List.of(CONTENT_PACKAGE));
+        assertTrue(confluenceHomePage.getPackageLiveTable().getTableLayout().countRows() > 0);
+
+        ConfluenceHomePage.goToPage();
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
+
+        MigrationCreationPage migrationCreationPage = confluenceHomePage.selectPackage(1);
+        migrationCreationPage.clickAdvancedMigrationOptions();
+        migrationCreationPage.setTitle("MigrationContentTest");
+        migrationCreationPage.clickSaveAndView();
+
+        MigrationRaportView raportView = new MigrationRaportView();
+        assertEquals(1, raportView.getImportedSpaces().size());
+        assertFalse(raportView.hasErrorLogs());
+
+        // Checks that 14 macros were imported and converted correctly from Confluence.
+        assertEquals(List.of("date", "info", "code", "toc", "task-report", "profile-picture", "expand",
+                "recently-updated", "content-report-table", "contributors", "excerpt", "panel", "excerpt-include",
+                "status"),
+            raportView.getXWikiMacros());
+
+        // Checks that the Confluence create-from-template macro has been imported but not converted (it's not
+        // supported by XWiki).
+        assertTrue(raportView.getConfluenceMacros().contains("confluence_create-from-template"));
+
+        ViewPage page = raportView.clickPageLink("MigrationC", "ContentTest");
+        DocumentReference documentReference = new DocumentReference("Xwiki", "MigrationC", page.getDocumentTitle());
+        testUtils.loginAsSuperAdmin();
+        testUtils.gotoPage(documentReference);
+        ObjectEditPage objectEditPage = page.editObjects();
+
+        // Checks that the imported page contains the object "Confluence.Code.ConfluencePageClass".
+        List<ObjectEditPane> xobjects = objectEditPage.getObjectsOfClass("Confluence.Code.ConfluencePageClass");
+        assertEquals(1, xobjects.size());
+    }
+
+    private void deletePackages()
+    {
+        ConfluenceHomePage.goToPage();
+        ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
+        confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
+        confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
+
+        for (int i = 1; i <= 3; i++) {
+            confluenceHomePage.deletePackage(1);
+        }
     }
 
     private void testMigrationOptions(String sectionId, String subsectionClass, String formSelector, String option,

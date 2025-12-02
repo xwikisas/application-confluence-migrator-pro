@@ -17,41 +17,43 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
 package com.xwiki.confluencepro.converters.internal;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang.StringUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.ConversionException;
 
 /**
- * Convert user macro into a userList macro.
- *
+ * Macro converter for ui-expand.
+ * @since 1.37.0
  * @version $Id$
- * @since 1.22.1
  */
 @Component
 @Singleton
-@Named("profile")
-public class ProfileMacroConverter extends AbstractMacroConverter
+@Named("ui-expand")
+public class UIExpandMacroConverter extends AbstractMacroConverter
 {
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
-        return "userProfile";
+        return "expand";
     }
 
     @Override
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
-        String content)
+        String content) throws ConversionException
     {
-        return Map.of("reference", StringUtils.defaultString(confluenceParameters.get("user")));
+        Map<String, String> parameters = new LinkedHashMap<>(2);
+        saveParameter(confluenceParameters, parameters, "title", true);
+        saveParameter(confluenceParameters, parameters, "expanded", true);
+        return parameters;
     }
 
     @Override

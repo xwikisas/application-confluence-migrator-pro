@@ -21,7 +21,7 @@ package com.xwiki.confluencepro.converters.internal;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.MacroConverter;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 
 import javax.inject.Singleton;
 import java.util.HashMap;
@@ -48,8 +48,8 @@ public class MultiExcerptMacroConverter extends AbstractMacroConverter implement
     private static final String FALSE = "false";
     private static final String TRUE = "true";
     private static final String INLINE = "inline";
-    private static final String BLOCK = "block";
     private static final String NAME = "name";
+    private static final String[] NAME_PARAMS = { NAME, "MultiExcerptName" };
 
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -64,12 +64,7 @@ public class MultiExcerptMacroConverter extends AbstractMacroConverter implement
     {
         Map<String, String> p = new HashMap<>(4);
 
-        String name = confluenceParameters.get(NAME);
-        if (name == null) {
-            name = confluenceParameters.get("MultiExcerptName");
-        }
-
-        p.put(NAME, name);
+        saveParameter(confluenceParameters, p, NAME_PARAMS, NAME, true);
 
         if (!FALSE.equals(confluenceParameters.getOrDefault(HIDDEN, FALSE))) {
             p.put(HIDDEN, TRUE);
@@ -93,8 +88,7 @@ public class MultiExcerptMacroConverter extends AbstractMacroConverter implement
     @Override
     public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
     {
-
-        if (id.contains(BLOCK) || "BLOCK".equals(parameters.get(ATLASSIAN_MACRO_OUTPUT_TYPE))) {
+        if (id.contains("block") || "BLOCK".equals(parameters.get(ATLASSIAN_MACRO_OUTPUT_TYPE))) {
             return InlineSupport.NO;
         }
 

@@ -37,8 +37,8 @@ import javax.inject.Singleton;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.confluence.filter.ConfluenceFilterReferenceConverter;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceInputContext;
-import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.MacroBlock;
 import org.xwiki.rendering.block.ParagraphBlock;
@@ -67,14 +67,10 @@ import com.xwiki.task.model.Task;
 public class LegacyTaskListMacroConverter extends AbstractTaskConverter
 {
     private static final String PARAM_PRIORITY = "priority";
-
     private static final String PARAM_LOCKED = "locked";
-
-    private static final String PARAM_CHECKED = "checked";
-
     private static final String VAL_T = "T";
-
-    private static final String PARAM_ID = "id";
+    private static final String TASK = "task";
+    private static final String TASKBOX = "taskbox";
 
     @Inject
     private TaskConfiguration taskConfiguration;
@@ -83,7 +79,7 @@ public class LegacyTaskListMacroConverter extends AbstractTaskConverter
     private DateMacroConfiguration dateMacroConfiguration;
 
     @Inject
-    private ConfluenceConverter confluenceConverter;
+    private ConfluenceFilterReferenceConverter confluenceConverter;
 
     @Inject
     @Named("xwiki/2.1")
@@ -99,11 +95,18 @@ public class LegacyTaskListMacroConverter extends AbstractTaskConverter
     @Inject
     private Logger logger;
 
-    private Map<Long, Integer> legacyMacrosIdCounter = new HashMap<>();
+    private final Map<Long, Integer> legacyMacrosIdCounter = new HashMap<>();
 
     @Override
-    public void toXWiki(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
-        boolean inline, Listener listener)
+    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
+        boolean inline)
+    {
+        return shouldConvertToTaskbox(confluenceId, confluenceParameters, confluenceContent) ? TASKBOX : TASK;
+    }
+
+    @Override
+    public void toXWiki(String confluenceId, Map<String, String> confluenceParameters, boolean inline,
+        String confluenceContent, Listener listener)
     {
         List<Map<String, String>> taskList = getConfluenceTasksFromContent(confluenceContent);
         SimpleDateFormat storageDateFormat = new SimpleDateFormat(dateMacroConfiguration.getStorageDateFormat());
@@ -116,19 +119,32 @@ public class LegacyTaskListMacroConverter extends AbstractTaskConverter
         listener.beginGroup(confluenceParameters);
         maybeTraverseTitle(listener, title);
         for (Map<String, String> task : taskList) {
-            if (!shouldConvertToTaskbox("", confluenceParameters, confluenceContent)) {
+            if (shouldConvertToTaskbox(confluenceId, confluenceParameters, confluenceContent)) {
+                toXWikiTaskbox(task);
+                listener.onMacro(TASKBOX, task, task.remove(Task.NAME), false);
+            } else {
                 toXWikiTask(task, storageDateFormat);
 
                 int refSuffix = legacyMacrosIdCounter.getOrDefault(context.getCurrentPage(), 0);
                 legacyMacrosIdCounter.put(context.getCurrentPage(), refSuffix + 1);
                 task.put(Task.REFERENCE, "/Tasks/Task_Legacy_" + refSuffix);
-                listener.onMacro("task", task, task.remove(Task.NAME), false);
-            } else {
-                toXWikiTaskbox(task);
-                listener.onMacro("taskbox", task, task.remove(Task.NAME), false);
+                listener.onMacro(TASK, task, task.remove(Task.NAME), false);
             }
         }
         listener.endGroup(confluenceParameters);
+    }
+
+    @Override
+    protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
+        String content)
+    {
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.NO;
     }
 
     private List<Map<String, String>> getConfluenceTasksFromContent(String confluenceContent)
@@ -276,10 +292,10 @@ public class LegacyTaskListMacroConverter extends AbstractTaskConverter
         // Checked param.
         String status = task.remove(Task.STATUS);
         status = VAL_T.equals(status) ? Boolean.TRUE.toString() : Boolean.FALSE.toString();
-        task.put(PARAM_CHECKED, status);
+        task.put("checked", status);
         // Id param.
         int refSuffix = legacyMacrosIdCounter.getOrDefault(context.getCurrentPage(), 0);
         legacyMacrosIdCounter.put(context.getCurrentPage(), refSuffix + 1);
-        task.put(PARAM_ID, "Legacy" + refSuffix);
+        task.put("id", "Legacy" + refSuffix);
     }
 }

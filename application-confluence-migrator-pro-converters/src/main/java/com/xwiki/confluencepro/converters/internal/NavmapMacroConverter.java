@@ -26,7 +26,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 
 /**
  * Convert the confluence Navmap macro.
@@ -39,8 +39,6 @@ import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverte
 @Named("navmap")
 public class NavmapMacroConverter extends AbstractMacroConverter
 {
-    private static final String TITLE = "title";
-
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
@@ -55,11 +53,14 @@ public class NavmapMacroConverter extends AbstractMacroConverter
         // The parameters that were related to width/height and max elements per row were dropped.
         Map<String, String> xwikiParameters = new HashMap<>();
         // For some reason confluence stores the value of the label in an empty key.
-        xwikiParameters.put("labels", confluenceParameters.get(""));
-        if (confluenceParameters.containsKey(TITLE))
-        {
-            xwikiParameters.put(TITLE, confluenceParameters.get(TITLE));
-        }
+        saveParameter(confluenceParameters, xwikiParameters, "", "labels", true);
+        saveParameter(confluenceParameters, xwikiParameters, "title", true);
         return xwikiParameters;
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.NO;
     }
 }

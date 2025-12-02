@@ -23,10 +23,13 @@ import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.test.junit5.mockito.OldcoreTest;
 import com.xwiki.confluencepro.referencefixer.BrokenRefType;
+import com.xwiki.licensing.internal.upgrades.LicensingSchedulerListener;
+
 import org.junit.jupiter.api.Test;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.contrib.confluence.resolvers.internal.DefaultConfluencePageResolver;
 import org.xwiki.contrib.confluence.resolvers.internal.DefaultConfluenceSpaceResolver;
+import org.xwiki.extension.xar.internal.handler.XarExtensionJobFinishedListener;
 import org.xwiki.query.internal.DefaultQueryManager;
 import org.xwiki.search.solr.internal.EmbeddedSolr;
 import org.xwiki.search.solr.internal.reference.SolrEntityReferenceResolver;
@@ -45,6 +48,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @AllComponents (excludes = {
     DefaultQueryManager.class,
     EmbeddedSolr.class,
+    XarExtensionJobFinishedListener.class,
+    LicensingSchedulerListener.class,
     DefaultConfluencePageResolver.class,
     DefaultConfluenceSpaceResolver.class,
     SolrEntityReferenceResolver.class

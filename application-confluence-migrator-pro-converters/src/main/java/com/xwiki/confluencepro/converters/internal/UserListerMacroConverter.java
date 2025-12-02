@@ -29,7 +29,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
@@ -82,6 +82,12 @@ public class UserListerMacroConverter extends AbstractMacroConverter
             parameters.put(key, value);
         }
         return parameters;
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.NO;
     }
 
     private String convertGroupsParameter(Map.Entry<String, String> p, List<String> groupList)

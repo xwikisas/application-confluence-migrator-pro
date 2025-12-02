@@ -30,7 +30,7 @@ import javax.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 import org.xwiki.icon.IconException;
 import org.xwiki.icon.IconManager;
 
@@ -46,16 +46,8 @@ import org.xwiki.icon.IconManager;
 public class AUIButtonMacroConverter extends AbstractMacroConverter
 {
     private static final String URL = "url";
-
     private static final String ICON = "icon";
-
-    private static final String ID = "id";
-
-    private static final String CLASS = "class";
-
     private static final String PARAM_TYPE = "type";
-
-    private static final String PARAM_TYPE_DEFAULT = "DEFAULT";
 
     @Inject
     private IconManager iconManager;
@@ -80,14 +72,12 @@ public class AUIButtonMacroConverter extends AbstractMacroConverter
         parameters.put(URL, confluenceParameters.get(URL));
         String type;
         switch (confluenceParameters.get(PARAM_TYPE)) {
-            case "standard":
-                type = PARAM_TYPE_DEFAULT;
-                break;
             case "primary":
                 type = "PRIMARY";
                 break;
+            case "standard":
             default:
-                type = PARAM_TYPE_DEFAULT;
+                type = "DEFAULT";
         }
         parameters.put(PARAM_TYPE, type);
         parameters.put("newTab", confluenceParameters.get("target"));
@@ -106,14 +96,8 @@ public class AUIButtonMacroConverter extends AbstractMacroConverter
                 markUnhandledParameterValue(confluenceParameters, ICON);
             }
         }
-        String id = confluenceParameters.get(ID);
-        if (StringUtils.isNotEmpty(id)) {
-            parameters.put(ID, id);
-        }
-        String classParam = confluenceParameters.get(CLASS);
-        if (StringUtils.isNotEmpty(classParam)) {
-            parameters.put(CLASS, classParam);
-        }
+        saveParameter(confluenceParameters, parameters, "id", true);
+        saveParameter(confluenceParameters, parameters, "class", true);
         return parameters;
     }
 

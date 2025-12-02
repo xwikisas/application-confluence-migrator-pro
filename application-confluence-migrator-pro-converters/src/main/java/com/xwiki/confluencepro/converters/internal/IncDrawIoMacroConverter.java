@@ -28,8 +28,8 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.ConfluenceFilterReferenceConverter;
 import org.xwiki.model.reference.EntityReference;
 
 /**
@@ -41,13 +41,13 @@ import org.xwiki.model.reference.EntityReference;
 @Component
 @Singleton
 @Named("inc-drawio")
-public class IncDrawIoMacroConvertor extends AbstractMacroConverter
+public class IncDrawIoMacroConverter extends AbstractMacroConverter
 {
     @Inject
     private Logger logger;
 
     @Inject
-    private ConfluenceConverter converter;
+    private ConfluenceFilterReferenceConverter converter;
 
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -79,5 +79,11 @@ public class IncDrawIoMacroConvertor extends AbstractMacroConverter
 
         xwikiParameters.put("diagramName", confluenceParameters.get("diagramDisplayName"));
         return xwikiParameters;
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.NO;
     }
 }
