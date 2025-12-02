@@ -41,7 +41,7 @@
             </entry>
             <entry>
               <string>content</string>
-              <string>{{expand title="Activités" expanded="true"/}}
+              <string>{{expand title="Activités" expanded="true"}}
 Rich block content
 {{/expand}}</string>
             </entry>
