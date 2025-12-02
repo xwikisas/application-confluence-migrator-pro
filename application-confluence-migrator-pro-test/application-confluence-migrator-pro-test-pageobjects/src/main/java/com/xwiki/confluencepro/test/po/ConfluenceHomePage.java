@@ -87,6 +87,14 @@ public class ConfluenceHomePage extends ViewPage
         return new MigrationCreationPage();
     }
 
+    public String getPackageName(int number)
+    {
+        WebElement nameElement =
+            getPackageLiveTable().getTableLayout().findElementInRow(number, By.cssSelector("span.name a"));
+
+        return nameElement.getText();
+    }
+
     public void deletePackage(int number)
     {
         getPackageLiveTable().getTableLayout().findElementInRow(number, By.className("actiondelete")).click();
