@@ -25,6 +25,7 @@ import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.test.junit5.mockito.OldcoreTest;
+import com.xwiki.licensing.internal.upgrades.LicensingSchedulerListener;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,7 @@ import org.xwiki.contrib.confluence.internal.parser.reference.type.ConfluencePag
 import org.xwiki.contrib.confluence.internal.parser.reference.type.ConfluenceSpaceResourceReferenceTypeParser;
 import org.xwiki.contrib.confluence.resolvers.internal.DefaultConfluencePageResolver;
 import org.xwiki.contrib.confluence.resolvers.internal.DefaultConfluenceSpaceResolver;
+import org.xwiki.extension.xar.internal.handler.XarExtensionJobFinishedListener;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
@@ -68,6 +70,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
     DefaultConfluencePageResolver.class,
     DefaultConfluenceSpaceResolver.class,
     SolrEntityReferenceResolver.class,
+    XarExtensionJobFinishedListener.class,
+    LicensingSchedulerListener.class,
     ConfluencePageResourceReferenceTypeParser.class,
     ConfluenceSpaceResourceReferenceTypeParser.class,
     ConfluenceAttachResourceReferenceTypeParser.class
