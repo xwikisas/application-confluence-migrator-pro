@@ -309,14 +309,13 @@ public class ConfluenceMigratorIT
     void importedContentTest(TestUtils testUtils, TestConfiguration testConfiguration)
     {
         // Cleanup: deletes the packages imported in the other tests.
-        deletePackages();
+        deletePackages(testUtils);
 
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
-        confluenceHomePage.attachFiles(testConfiguration.getBrowser().getTestResourcesPath(),
-            List.of(CONTENT_PACKAGE));
+        confluenceHomePage.attachFiles(testConfiguration.getBrowser().getTestResourcesPath(), List.of(CONTENT_PACKAGE));
         assertTrue(confluenceHomePage.getPackageLiveTable().getTableLayout().countRows() > 0);
 
         ConfluenceHomePage.goToPage();
@@ -333,9 +332,9 @@ public class ConfluenceMigratorIT
         assertFalse(raportView.hasErrorLogs());
 
         // Checks that 14 macros were imported and converted correctly from Confluence.
-        assertEquals(List.of("date", "info", "code", "toc", "task-report", "profile-picture", "expand",
-                "recently-updated", "content-report-table", "contributors", "excerpt", "panel", "excerpt-include",
-                "status"),
+        assertEquals(
+            List.of("date", "info", "code", "toc", "task-report", "profile-picture", "expand", "recently-updated",
+                "content-report-table", "contributors", "excerpt", "panel", "excerpt-include", "status"),
             raportView.getXWikiMacros());
 
         // Checks that the Confluence create-from-template macro has been imported but not converted (it's not
@@ -353,16 +352,22 @@ public class ConfluenceMigratorIT
         assertEquals(1, xobjects.size());
     }
 
-    private void deletePackages()
+    private void deletePackages(TestUtils setup)
     {
         ConfluenceHomePage.goToPage();
         ConfluenceHomePage confluenceHomePage = new ConfluenceHomePage();
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".uploadSubsection");
 
-        for (int i = 1; i <= 3; i++) {
-            confluenceHomePage.deletePackage(1);
-        }
+        setup.getDriver()
+            .waitUntilCondition(driver -> "4.3.2.xml.zip".equals(confluenceHomePage.getPackageName(1)), 30000);
+        confluenceHomePage.deletePackage(1);
+        setup.getDriver()
+            .waitUntilCondition(driver -> "confluence-package.zip".equals(confluenceHomePage.getPackageName(1)), 30000);
+        confluenceHomePage.deletePackage(1);
+        setup.getDriver()
+            .waitUntilCondition(driver -> "trialLimit.zip".equals(confluenceHomePage.getPackageName(1)), 30000);
+        confluenceHomePage.deletePackage(1);
     }
 
     private void testMigrationOptions(String sectionId, String subsectionClass, String formSelector, String option,
