@@ -19,13 +19,15 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 
 /**
  * Converter used for card macro.
@@ -45,8 +47,6 @@ public class CardMacroConverter extends AbstractMacroConverter
         "label",
         "id",
         "showByDefault",
-        CSS_CLASS,
-        CSS_STYLE,
         "nextAfter",
         "effectType",
         "effectDuration"
@@ -56,24 +56,29 @@ public class CardMacroConverter extends AbstractMacroConverter
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
-        // Useless for now, since we don't override toXWikiParameters, all the parameters are output, but we could
-        // decide to warn about unknown parameters in the future even for such macro converters.
-        for (String p : KNOWN_PARAMETERS) {
-            markHandledParameter(confluenceParameters, p, true);
-        }
         return "tab";
     }
 
     @Override
-    protected String toXWikiParameterName(String confluenceParameterName, String id,
-        Map<String, String> confluenceParameters, String confluenceContent)
+    protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
+        String content)
     {
-        if ("style".equals(confluenceParameterName)) {
-            return CSS_STYLE;
-        } else if ("class".equals(confluenceParameterName)) {
-            return CSS_CLASS;
+        // for now, all the parameters are output, but we could
+        // decide to warn about unknown parameters in the future even for such macro converters.
+        for (String p : KNOWN_PARAMETERS) {
+            markHandledParameter(confluenceParameters, p, true);
         }
-        return super.toXWikiParameterName(confluenceParameterName, id, confluenceParameters, confluenceContent);
+
+        Map<String, String> res = new LinkedHashMap<>(confluenceParameters);
+        String style = res.remove("style");
+        if (StringUtils.isNotEmpty(style)) {
+            res.put(CSS_STYLE, style);
+        }
+        String clazz = res.remove("class");
+        if (StringUtils.isNotEmpty(clazz)) {
+            res.put(CSS_CLASS, clazz);
+        }
+        return res;
     }
 
     @Override

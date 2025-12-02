@@ -32,7 +32,8 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
-import org.xwiki.contrib.confluence.filter.MacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.ConversionException;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceInputContext;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceInputProperties;
 import org.xwiki.rendering.block.MacroBlock;
@@ -51,7 +52,7 @@ import org.xwiki.rendering.syntax.Syntax;
 @Component
 @Singleton
 @Named("task-list")
-public class TaskListMacroConverter implements MacroConverter
+public class TaskListMacroConverter extends AbstractMacroConverter
 {
     @Inject
     private ConfluenceInputContext context;
@@ -63,7 +64,14 @@ public class TaskListMacroConverter implements MacroConverter
     private Logger logger;
 
     @Override
-    public void toXWiki(String id, Map<String, String> parameters, String content, boolean inline, Listener listener)
+    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
+        boolean inline)
+    {
+        return null;
+    }
+
+    @Override
+    public void toXWiki(String id, Map<String, String> parameters, boolean inline, String content, Listener listener)
     {
         Map<String, String> taskListGroupParams = Collections.singletonMap("class", "task-list");
         listener.beginGroup(taskListGroupParams);
@@ -80,5 +88,18 @@ public class TaskListMacroConverter implements MacroConverter
                 false).traverse(listener);
         }
         listener.endGroup(taskListGroupParams);
+    }
+
+    @Override
+    protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
+        String content) throws ConversionException
+    {
+        return Map.of();
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.NO;
     }
 }

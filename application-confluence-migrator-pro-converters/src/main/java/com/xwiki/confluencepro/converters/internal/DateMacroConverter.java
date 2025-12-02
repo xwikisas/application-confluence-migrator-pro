@@ -19,15 +19,14 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.HashMap;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
-import org.xwiki.rendering.listener.Listener;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 
 /**
  * Convert the confluence time macro into a date macro.
@@ -41,22 +40,26 @@ import org.xwiki.rendering.listener.Listener;
 public class DateMacroConverter extends AbstractMacroConverter
 {
     @Override
-    public void toXWiki(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
-        boolean inline, Listener listener)
+    public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
+        boolean inline)
     {
-        Map<String, String> parameters = new HashMap<>(confluenceParameters);
-        parameters.put("format", "yyyy-MM-dd");
-
-        super.toXWiki("date", parameters, confluenceContent, inline, listener);
+        return "date";
     }
 
     @Override
-    protected String toXWikiParameterName(String confluenceParameterName, String id,
-        Map<String, String> confluenceParameters, String confluenceContent)
+    protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
+        String content)
     {
-        if (confluenceParameterName.equals("datetime")) {
-            return "value";
+        Map<String, String> parameters = new LinkedHashMap<>(2);
+        if (saveParameter(confluenceParameters, parameters, "datetime", "value", true) != null) {
+            parameters.put("format", "yyyy-MM-dd");
         }
-        return super.toXWikiParameterName(confluenceParameterName, id, confluenceParameters, confluenceContent);
+        return parameters;
+    }
+
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
+    {
+        return InlineSupport.YES;
     }
 }

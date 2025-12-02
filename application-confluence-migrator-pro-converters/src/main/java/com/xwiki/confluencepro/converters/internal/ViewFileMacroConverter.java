@@ -21,7 +21,8 @@ package com.xwiki.confluencepro.converters.internal;
 
 import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.macros.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
+import org.xwiki.contrib.confluence.filter.ConversionException;
 
 import javax.inject.Singleton;
 import java.util.HashMap;
@@ -38,7 +39,9 @@ import java.util.Map;
 public class ViewFileMacroConverter extends AbstractMacroConverter
 {
     static final String VIEW_FILE = "view-file";
+
     private static final String NAME = "name";
+
     private static final String DISPLAY = "display";
 
     @Override
@@ -50,7 +53,7 @@ public class ViewFileMacroConverter extends AbstractMacroConverter
 
     @Override
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
-        String content)
+        String content) throws ConversionException
     {
         Map<String, String> parameters = new HashMap<>(4);
         String display = confluenceParameters.get(DISPLAY);
@@ -68,30 +71,26 @@ public class ViewFileMacroConverter extends AbstractMacroConverter
             if (filename != null && filename.startsWith("^")) {
                 filename = filename.substring(1);
             } else {
-                throw new RuntimeException("view-file like macro [" + confluenceId + "]'s file parameter doesn't start "
-                    + "with the '^' character, don't know how to convert this. Killing the macro conversion.");
+                throw new ConversionException("view-file like macro [" + confluenceId + "]'s file parameter"
+                    + "doesn't start with the '^' character, don't know how to convert this");
             }
         }
 
         if (StringUtils.isEmpty(filename)) {
-            throw new RuntimeException("Missing file name in viewfile-like macro [" + confluenceId + "],"
-                + " killing the macro conversion.");
+            throw new ConversionException("Missing file name in viewfile-like macro [" + confluenceId + "]");
         }
 
         parameters.put(NAME, filename);
-        retrieveParameter(confluenceParameters, parameters, "height");
-        retrieveParameter(confluenceParameters, parameters, "width");
-        retrieveParameter(confluenceParameters, parameters, "page");
-        retrieveParameter(confluenceParameters, parameters, "exportFileDelimiter");
+        saveParameter(confluenceParameters, parameters, "height", true);
+        saveParameter(confluenceParameters, parameters, "width", true);
+        saveParameter(confluenceParameters, parameters, "page", true);
+        saveParameter(confluenceParameters, parameters, "exportFileDelimiter", true);
         return parameters;
     }
 
-    private static void retrieveParameter(Map<String, String> confluenceParameters,
-        Map<String, String> parameters, String key)
+    @Override
+    public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
     {
-        String v = confluenceParameters.get(key);
-        if (StringUtils.isNotEmpty(v)) {
-            parameters.put(key, v);
-        }
+        return InlineSupport.YES;
     }
 }

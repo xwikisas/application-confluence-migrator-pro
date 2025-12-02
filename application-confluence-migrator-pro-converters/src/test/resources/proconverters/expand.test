@@ -1,15 +1,14 @@
 .#------------------------------------------------------------------------------
 .expect|filter+xml
-.# Content conversions
 .#------------------------------------------------------------------------------
-<wikiSpace name="JustAnotherSpace">
+<wikiSpace name="MySpace">
   <wikiDocument name="WebHome">
     <wikiDocumentLocale>
       <p>
         <parameters>
           <entry>
             <string>creation_author</string>
-            <string>XWiki.Teo</string>
+            <string>XWiki.47826731</string>
           </entry>
           <entry>
             <string>creation_date</string>
@@ -26,7 +25,7 @@
           <parameters>
             <entry>
               <string>revision_author</string>
-              <string>XWiki.Teo</string>
+              <string>XWiki.47826731</string>
             </entry>
             <entry>
               <string>revision_date</string>
@@ -38,15 +37,13 @@
             </entry>
             <entry>
               <string>title</string>
-              <string>Just Another Space</string>
+              <string>My Space</string>
             </entry>
             <entry>
               <string>content</string>
-              <string>{{date value="2025-08-28" format="yyyy-MM-dd"/}}
-
-{{date value="2025-05-20" format="yyyy-MM-dd"/}}
-
-{{date value="2021-07-19" format="yyyy-MM-dd"/}}</string>
+              <string>{{expand title="Activités" expanded="true"}}
+Rich block content
+{{/expand}}</string>
             </entry>
             <entry>
               <string>syntax</string>
@@ -67,6 +64,6 @@
 </wikiSpace>
 .#------------------------------------------------------------------------------
 .input|confluence+xml
-.configuration.source=date
+.configuration.source=expand
 .configuration.storeConfluenceDetailsEnabled=false
 .#------------------------------------------------------------------------------
