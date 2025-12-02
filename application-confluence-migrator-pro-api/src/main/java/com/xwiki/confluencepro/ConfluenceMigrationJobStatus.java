@@ -45,6 +45,8 @@ public class ConfluenceMigrationJobStatus extends DefaultJobStatus<ConfluenceMig
 
     private Collection<String> spaces = Collections.emptyList();
 
+    private Map<String, String> spaceTargets = Map.of();
+
     /**
      * @param request the request provided when started the job
      * @param parentJobStatus the status of the parent job
@@ -103,6 +105,27 @@ public class ConfluenceMigrationJobStatus extends DefaultJobStatus<ConfluenceMig
     public Collection<String> getSpaces()
     {
         return spaces;
+    }
+
+    /**
+     * Set the map of spaces that were renamed during the Migration.
+     * @param spaceTargets the map of spaces that were renamed
+     * @since 1.36.0
+     */
+    public void setSpaceTargets(Map<String, String> spaceTargets)
+    {
+        this.spaceTargets = spaceTargets;
+    }
+
+    /**
+     * Get the map of spaces that were renamed during the Migration.
+     *
+     * @return a map where the key is the original space name and the value is the current renamed space name
+     * @since 1.36.0
+     */
+    public Map<String, String> getSpaceTargets()
+    {
+        return spaceTargets;
     }
 
     @Override

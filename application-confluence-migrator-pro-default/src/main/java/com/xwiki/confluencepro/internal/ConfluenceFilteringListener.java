@@ -111,6 +111,9 @@ public class ConfluenceFilteringListener extends AbstractEventListener
 
         ConfluenceFilteringEvent ev = (ConfluenceFilteringEvent) event;
         Collection<String> spaces = new ArrayList<>(confluencePackage.getSpaceKeys(false));
+
+        status.setSpaceTargets(ev.getSpaceTargets());
+
         for (Long spaceId : ev.getDisabledSpaces()) {
             try {
                 spaces.remove(confluencePackage.getSpaceKey(spaceId));
