@@ -2,6 +2,8 @@ com.xwiki.confluencepro.converters.internal.AUIButtonMacroConverter
 com.xwiki.confluencepro.converters.internal.CardMacroConverter
 com.xwiki.confluencepro.converters.internal.DateMacroConverter
 com.xwiki.confluencepro.converters.internal.DeckMacroConverter
+com.xwiki.confluencepro.converters.internal.HorizontalNavGroupMacroConverter
+com.xwiki.confluencepro.converters.internal.HorizontalNavItemMacroConverter
 com.xwiki.confluencepro.converters.internal.UIExpandMacroConverter
 com.xwiki.confluencepro.converters.internal.MSStreamConverter
 com.xwiki.confluencepro.converters.internal.MultiExcerptMacroConverter
