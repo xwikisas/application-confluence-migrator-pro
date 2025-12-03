@@ -31,7 +31,7 @@ import org.xwiki.contrib.confluence.filter.ConversionException;
 
 /**
  * Macro converter for ui-expand.
- * @since 1.37.0
+ * @since 1.36.0
  * @version $Id$
  */
 @Component
