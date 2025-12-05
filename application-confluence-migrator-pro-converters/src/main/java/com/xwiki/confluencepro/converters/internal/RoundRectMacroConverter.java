@@ -29,7 +29,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 
 /**
- * Convert the confluence roundrect macro into a panel macro.
+ * Convert the confluence roundrect macro to a panel macro.
  *
  * @version $Id$
  * @since 1.23.2
@@ -37,7 +37,7 @@ import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 @Component
 @Singleton
 @Named("roundrect")
-public class RoundRectMacroConvertor extends AbstractMacroConverter
+public class RoundRectMacroConverter extends AbstractMacroConverter
 {
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -65,6 +65,6 @@ public class RoundRectMacroConvertor extends AbstractMacroConverter
     @Override
     public InlineSupport supportsInlineMode(String id, Map<String, String> parameters, String content)
     {
-        return null;
+        return InlineSupport.NO;
     }
 }

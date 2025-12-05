@@ -17,6 +17,6 @@ com.xwiki.confluencepro.converters.internal.ShowIfHideIfMacroConverter
 com.xwiki.confluencepro.converters.internal.ViewFileMacroConverter
 com.xwiki.confluencepro.converters.internal.UserListerMacroConverter
 com.xwiki.confluencepro.converters.internal.ListLabelsMacroConverter
-com.xwiki.confluencepro.converters.internal.RoundRectMacroConvertor
+com.xwiki.confluencepro.converters.internal.RoundRectMacroConverter
 com.xwiki.confluencepro.converters.internal.IncDrawIoMacroConverter
 com.xwiki.confluencepro.converters.internal.NavmapMacroConverter
