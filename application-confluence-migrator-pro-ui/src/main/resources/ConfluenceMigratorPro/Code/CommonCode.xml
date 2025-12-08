@@ -507,14 +507,78 @@
     }
   });
 
-  $(function() {
-    // Since the associated liveData is refreshed on file upload, we don't need a response container.
-    const input = document.querySelector('#addConfluencePackage input[type=file]');
-    if (input &amp;&amp; XWiki.FileUploader) {
-      new XWiki.FileUploader(input, {
-        'progressAutohide': true,
-        'responseContainer' : document.createElement('div')
+  $('#confluenceUploadFile').on('change', function () {
+    const file = this.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    const fileName = file.name;
+
+    if (!fileName.endsWith('.zip')) {
+      const fileExtension = fileName.split('.').pop();
+      new XWiki.widgets.Notification(
+          `It looks like you are trying to import a ${fileExtension} file. The Confluence Migrator Application only supports .zip file imports containing a confluence export!`,
+          "error"
+        );
+
+      return;
+    }
+
+    $("#addConfluencePackage").submit();
+  });
+
+  $('#addConfluencePackage').on("submit", async function (e) {
+    e.preventDefault();
+
+    const fileInput = $('#confluenceUploadFile');
+    const file = fileInput.prop('files')[0];
+
+    if (!file) {
+        new XWiki.widgets.Notification("No file selected", "error");
+        return;
+    }
+
+    const csrfToken = $('#upload_file_form_token').val();
+    const fileName = encodeURIComponent(file.name);
+    const storeDocumentRefString = $('#store_file_reference').val();
+
+    const storeDocumentRef = XWiki.Model.resolve(
+        storeDocumentRefString,
+        XWiki.EntityType.DOCUMENT,
+        XWiki.currentDocument.documentReference
+      );
+
+      const url = new XWiki.Document(storeDocumentRef).getRestURL(
+        `attachments/${fileName}`
+      );
+
+    try {
+      await $.ajax({
+        method: "PUT",
+        url: url,
+        headers: {
+          "XWiki-Form-Token": csrfToken
+        },
+        contentType: file.type || "application/zip",
+        processData: false,
+        data: file
       });
+
+      fileInput.val('');
+
+      $("#confluencePackages").data("liveData").updateEntries();
+
+      new XWiki.widgets.Notification(
+        "Package uploaded successfully!",
+        "done"
+      );
+    } catch (e) {
+        new XWiki.widgets.Notification(
+          e.responseText ?? "Upload failed",
+          "error"
+      );
     }
   });
 
