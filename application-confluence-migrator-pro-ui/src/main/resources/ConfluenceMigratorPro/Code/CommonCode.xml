@@ -363,13 +363,16 @@
   #end
   #set ($confluenceJob = $services.confluenceMigration.getLastJob($migrationDoc.documentReference))
   #set ($package = $obj.getProperty('package').value)
+  #set ($packagePathIsValid = $package != '' &amp;&amp; ($stringtool.endsWith($package, ".zip") || $package.substring($package.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
   #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
+  #set ($sourceInputProperty = "$!inputProperties.source")
+  #set ($sourceInputPropertyIsValid = $sourceInputProperty != '' &amp;&amp; ($stringtool.endsWith($sourceInputProperty, ".zip") || $sourceInputProperty.substring($sourceInputProperty.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
   #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
   #if ($startMigration &amp;&amp; ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED'))
-    #if ("$!package" != '' || "$!inputProperties.source" != '')
+    #if ($packagePathIsValid || $sourceInputPropertyIsValid)
       ## If the package is missing, then the migration will use the 'source' parameter of the input properties.
       #set ($attachmentInputStream = $NULL)
-      #if ("$!package" != '')
+      #if ($packagePathIsValid)
         #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
         #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
         #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
@@ -519,7 +522,7 @@
     if (!fileName.endsWith('.zip')) {
       const fileExtension = fileName.split('.').pop();
       new XWiki.widgets.Notification(
-          `It looks like you are trying to import a ${fileExtension} file. The Confluence Migrator Application only supports .zip file imports containing a confluence export!`,
+          `It looks like you are trying to import a ${fileExtension} file. The Confluence Migrator Application only supports .zip file imports containing a Confluence export!`,
           "error"
         );
 
