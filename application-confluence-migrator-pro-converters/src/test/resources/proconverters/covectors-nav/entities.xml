@@ -71,6 +71,56 @@
         </ac:structured-macro>
     </ac:rich-text-body>
 </ac:structured-macro>
+
+<ac:structured-macro ac:name="vertical-nav-group">
+    <ac:parameter ac:name="color">blue</ac:parameter>
+    <ac:rich-text-body>
+        <ac:structured-macro ac:name="vertical-nav-item">
+            <ac:parameter ac:name="name">Hello tab title</ac:parameter>
+            <ac:rich-text-body>
+                <p>Hello tab content.</p>
+            </ac:rich-text-body>
+        </ac:structured-macro>
+    </ac:rich-text-body>
+</ac:structured-macro>
+
+<ac:structured-macro ac:name="tabs-group" ac:schema-version="1" ac:macro-id="fd2e05ea-f8fc-40dc-938c-d2fc08e21dc3">
+    <ac:parameter ac:name="disposition">horizontal</ac:parameter>
+    <ac:parameter ac:name="color">red</ac:parameter>
+    <ac:rich-text-body>
+        <ac:structured-macro ac:name="tab-pane" ac:schema-version="1" ac:macro-id="9ed66f1e-6f2f-4107-8659-15946ec2c199">
+            <ac:parameter ac:name="name">Lorem</ac:parameter>
+            <ac:rich-text-body>
+                <p>Lorem ipsum</p>
+            </ac:rich-text-body>
+        </ac:structured-macro>
+        <ac:structured-macro ac:name="tab-pane" ac:schema-version="1" ac:macro-id="d4d169dd-3454-4c89-9aad-c87c993ab0d7">
+            <ac:parameter ac:name="name">dolor</ac:parameter>
+            <ac:rich-text-body>
+                <p>sit amet</p>
+            </ac:rich-text-body>
+        </ac:structured-macro>
+    </ac:rich-text-body>
+</ac:structured-macro>
+
+<ac:structured-macro ac:name="tabs-group" ac:schema-version="1" ac:macro-id="fd2e05ea-f8fc-40dc-938c-d2fc08e21dc3">
+    <ac:parameter ac:name="disposition">vertical</ac:parameter>
+    <ac:parameter ac:name="color">red</ac:parameter>
+    <ac:rich-text-body>
+        <ac:structured-macro ac:name="tab-pane" ac:schema-version="1" ac:macro-id="9ed66f1e-6f2f-4107-8659-15946ec2c199">
+            <ac:parameter ac:name="name">Lorem</ac:parameter>
+            <ac:rich-text-body>
+                <p>Lorem ipsum</p>
+            </ac:rich-text-body>
+        </ac:structured-macro>
+        <ac:structured-macro ac:name="tab-pane" ac:schema-version="1" ac:macro-id="d4d169dd-3454-4c89-9aad-c87c993ab0d7">
+            <ac:parameter ac:name="name">dolor</ac:parameter>
+            <ac:rich-text-body>
+                <p>sit amet</p>
+            </ac:rich-text-body>
+        </ac:structured-macro>
+    </ac:rich-text-body>
+</ac:structured-macro>
 ]]></property>
         <property name="content" class="Page" package="com.atlassian.confluence.pages">
             <id name="id">45809845</id>

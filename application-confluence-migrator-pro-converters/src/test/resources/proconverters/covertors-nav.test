@@ -45,6 +45,32 @@
 {{tab label="Hello tab title"}}
 Hello tab content.
 {{/tab}}
+{{/tab-group}}
+
+{{tab-group disposition="vertical"}}
+{{tab label="Hello tab title"}}
+Hello tab content.
+{{/tab}}
+{{/tab-group}}
+
+{{tab-group}}
+{{tab label="Lorem"}}
+Lorem ipsum
+{{/tab}}
+
+{{tab label="dolor"}}
+sit amet
+{{/tab}}
+{{/tab-group}}
+
+{{tab-group disposition="vertical"}}
+{{tab label="Lorem"}}
+Lorem ipsum
+{{/tab}}
+
+{{tab label="dolor"}}
+sit amet
+{{/tab}}
 {{/tab-group}}</string>
             </entry>
             <entry>
@@ -66,6 +92,6 @@ Hello tab content.
 </wikiSpace>
 .#------------------------------------------------------------------------------
 .input|confluence+xml
-.configuration.source=horizontal-nav
+.configuration.source=covectors-nav
 .configuration.storeConfluenceDetailsEnabled=false
 .#------------------------------------------------------------------------------

@@ -19,10 +19,9 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.Map;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
@@ -30,30 +29,33 @@ import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 import org.xwiki.contrib.confluence.filter.ConversionException;
 
 /**
- * Macro converter for horizontal-nav-item.
- * @since 1.36.0
+ * Macro converter for horizontal-nav-group.
+ * @since 1.37.0
  * @version $Id$
  */
-@Component
+@Component (hints = {"horizontal-nav-group", "vertical-nav-group", "tabs-group"})
 @Singleton
-@Named("horizontal-nav-item")
-public class HorizontalNavItemMacroConverter extends AbstractMacroConverter
+public class NavGroupMacroConverter extends AbstractMacroConverter
 {
+    private static final String VERTICAL = "vertical";
+    private static final String DISPOSITION = "disposition";
+
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
-        return "tab";
+        return "tab-group";
     }
 
     @Override
     protected Map<String, String> toXWikiParameters(String confluenceId, Map<String, String> confluenceParameters,
         String content) throws ConversionException
     {
-        Map<String, String> parameters = new LinkedHashMap<>(1);
-        saveParameter(confluenceParameters, parameters, "name", "label", true);
         //saveParameter(confluenceParameters, parameters, "color", true);
-        return parameters;
+
+        return (confluenceId.startsWith(VERTICAL) || VERTICAL.equals(confluenceParameters.get(DISPOSITION)))
+            ? Map.of(DISPOSITION, VERTICAL)
+            : Collections.emptyMap();
     }
 
     @Override
