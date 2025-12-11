@@ -49,6 +49,8 @@
 
 #set ($oldreverrors = $request.oldreverrors)
 
+#set ($packagePath = "$!request.package")
+#set ($packagePathIsValid = $packagePath != '' &amp;&amp; ($stringtool.endsWith($packagePath, ".zip") || $packagePath.substring($packagePath.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
 ## Start of macro ##
 
 #**
@@ -56,9 +58,7 @@
  * the package field of the object is populated.
  *#
 #macro(newDocView)
-
   #handlePrefilledValues
-
   {{html clean="false"}}
   &lt;label for="xwikidoctitleinput"&gt;
     &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.migration.title.label'))&lt;/h2&gt;
@@ -75,12 +75,12 @@
           placeholder="$!escapetool.xml($services.localization.render('confluencepro.migration.title.placeholder'))"&gt;
       &lt;/dd&gt;
     &lt;/dl&gt;
-    #if ("$!request.package" != '')
+    #if ($packagePathIsValid)
       #set ($discard = $prefilledValues['input'].remove('source'))
       &lt;input class="form-control" type="hidden"
         name="ConfluenceMigratorPro.Code.MigrationClass_0_package"
         id="ConfluenceMigratorPro.Code.MigrationClass_0_package"
-        value="$!escapetool.xml($request.package)" /&gt;
+        value="$!escapetool.xml($packagePath)" /&gt;
     #elseif ("$!request.isPath" == '1')
       &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.migration.source.title'))&lt;/h2&gt;
       &lt;dl&gt;
@@ -115,8 +115,8 @@
  *#
 #macro(docView)
   ## Handle the upload and selection of a package using the attachment picker.
-  #if ("$!request.package" != '' &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $hasAdmin)
-    #set ($discard = $doc.set('package', $request.package))
+  #if ($packagePathIsValid &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $hasAdmin)
+    #set ($discard = $doc.set('package', $packagePath))
     #set ($discard = $doc.save("Set the package field"))
   #end
   ## End of upload handling.
@@ -832,7 +832,10 @@
  *#
 #macro(displayJob $obj)
   #set ($package = $obj.getProperty('package').value)
-  #if ("$!package" == '' &amp;&amp; "$!inputProperties.source" == '')
+  #set ($sourceInputProperty = "$!inputProperties.source")
+  #set ($packageIsValid = $package != '' &amp;&amp; ($stringtool.endsWith($package, ".zip") || $package.substring($package.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
+  #set ($sourceInputPropertyIsValid = $sourceInputProperty != '' &amp;&amp; ($stringtool.endsWith($sourceInputProperty, ".zip") || $sourceInputProperty.substring($sourceInputProperty.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
+  #if (!$packageIsValid &amp;&amp; !$sourceInputPropertyIsValid)
     #displayZipPickerForm
   #else
     #set ($confluenceJob = $services.confluenceMigration.getLastJob($doc.documentReference))
@@ -902,11 +905,31 @@
   #end
 #end
 
+#macro (displayPackageWrongFormatWarning)
+  #set ($package = $obj.getProperty('package').value)
+  #set ($sourceInputProperty = "$!inputProperties.source")
+  #if ($package == "" &amp;&amp; $sourceInputProperty == "")
+   {{warning}}
+   $escapetool.xml($services.localization.render('confluencepro.zippicker.fileWarningEmpty'))
+   {{/warning}}
+  #else
+    #if ("$!package" != "")
+      #set($extension = $package.substring($package.lastIndexOf('.')))
+    #end
+    #if ("$!extension" == "" &amp;&amp; "$!sourceInputProperty" != "")
+      #set ($extension = $sourceInputProperty.substring($sourceInputProperty.lastIndexOf('.')))
+    #end
+    {{warning}}
+    $escapetool.xml($services.localization.render('confluencepro.zippicker.fileWarningWrongFormat', [$extension]))
+    {{/warning}}
+  #end
+#end
+
 #**
  * Display a form with a zip picker and a submit button.
  *#
 #macro(displayZipPickerForm)
-
+  #displayPackageWrongFormatWarning
   {{html clean="false"}}
   &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.zippicker.title'))&lt;/h2&gt;
   &lt;form class="xform"&gt;

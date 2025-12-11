@@ -116,20 +116,12 @@
     #showAttachmentsLiveData($storeDoc 'confluencePackages')
 
     #if ($hasEdit || $hasAdmin)
-      ## Hide the form because it comes from the platform, and we cannot customize its appearance. We are using a 'facade' button to trigger the upload via JS.
-      &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
-      &lt;div&gt;
-      ## CSRF prevention
-      &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
-      &lt;div&gt;
-        &lt;div class="fileupload-field"&gt;
-          &lt;label class="sr-only" for="confluenceUploadFile"&gt;$escapetool.xml(
-            $services.localization.render('core.viewers.attachments.upload.file'))&lt;/label&gt;
-          &lt;input id="confluenceUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems hidden"
-            data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
+      &lt;form id="addConfluencePackage"&gt;
+        ## CSRF prevention
+        &lt;input id="upload_file_form_token" type="hidden" name="upload_file_form_token" value="$!{services.csrf.getToken()}" /&gt;
+        &lt;input id="store_file_reference" name="store_file_reference" value="$storeDoc" type="hidden"&gt;
+        &lt;input id="confluenceUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems hidden"
+          data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;
       &lt;/form&gt;
     #end
 

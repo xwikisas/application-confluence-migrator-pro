@@ -363,13 +363,16 @@
   #end
   #set ($confluenceJob = $services.confluenceMigration.getLastJob($migrationDoc.documentReference))
   #set ($package = $obj.getProperty('package').value)
+  #set ($packagePathIsValid = $package != '' &amp;&amp; ($stringtool.endsWith($package, ".zip") || $package.substring($package.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
   #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
+  #set ($sourceInputProperty = "$!inputProperties.source")
+  #set ($sourceInputPropertyIsValid = $sourceInputProperty != '' &amp;&amp; ($stringtool.endsWith($sourceInputProperty, ".zip") || $sourceInputProperty.substring($sourceInputProperty.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
   #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
   #if ($startMigration &amp;&amp; ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED'))
-    #if ("$!package" != '' || "$!inputProperties.source" != '')
+    #if ($packagePathIsValid || $sourceInputPropertyIsValid)
       ## If the package is missing, then the migration will use the 'source' parameter of the input properties.
       #set ($attachmentInputStream = $NULL)
-      #if ("$!package" != '')
+      #if ($packagePathIsValid)
         #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
         #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
         #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
@@ -507,14 +510,78 @@
     }
   });
 
-  $(function() {
-    // Since the associated liveData is refreshed on file upload, we don't need a response container.
-    const input = document.querySelector('#addConfluencePackage input[type=file]');
-    if (input &amp;&amp; XWiki.FileUploader) {
-      new XWiki.FileUploader(input, {
-        'progressAutohide': true,
-        'responseContainer' : document.createElement('div')
+  $('#confluenceUploadFile').on('change', function () {
+    const file = this.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    const fileName = file.name;
+
+    if (!fileName.endsWith('.zip')) {
+      const fileExtension = fileName.split('.').pop();
+      new XWiki.widgets.Notification(
+          `It looks like you are trying to import a ${fileExtension} file. The Confluence Migrator Application only supports .zip file imports containing a Confluence export!`,
+          "error"
+        );
+
+      return;
+    }
+
+    $("#addConfluencePackage").submit();
+  });
+
+  $('#addConfluencePackage').on("submit", async function (e) {
+    e.preventDefault();
+
+    const fileInput = $('#confluenceUploadFile');
+    const file = fileInput.prop('files')[0];
+
+    if (!file) {
+        new XWiki.widgets.Notification("No file selected", "error");
+        return;
+    }
+
+    const csrfToken = $('#upload_file_form_token').val();
+    const fileName = encodeURIComponent(file.name);
+    const storeDocumentRefString = $('#store_file_reference').val();
+
+    const storeDocumentRef = XWiki.Model.resolve(
+        storeDocumentRefString,
+        XWiki.EntityType.DOCUMENT,
+        XWiki.currentDocument.documentReference
+      );
+
+      const url = new XWiki.Document(storeDocumentRef).getRestURL(
+        `attachments/${fileName}`
+      );
+
+    try {
+      await $.ajax({
+        method: "PUT",
+        url: url,
+        headers: {
+          "XWiki-Form-Token": csrfToken
+        },
+        contentType: file.type || "application/zip",
+        processData: false,
+        data: file
       });
+
+      fileInput.val('');
+
+      $("#confluencePackages").data("liveData").updateEntries();
+
+      new XWiki.widgets.Notification(
+        "Package uploaded successfully!",
+        "done"
+      );
+    } catch (e) {
+        new XWiki.widgets.Notification(
+          e.responseText ?? "Upload failed",
+          "error"
+      );
     }
   });
 
