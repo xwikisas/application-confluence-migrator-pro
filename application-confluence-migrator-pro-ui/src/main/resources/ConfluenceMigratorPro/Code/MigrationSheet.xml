@@ -49,8 +49,6 @@
 
 #set ($oldreverrors = $request.oldreverrors)
 
-#set ($packagePath = "$!request.package")
-#set ($packagePathIsValid = $packagePath != '' &amp;&amp; ($stringtool.endsWith($packagePath, ".zip") || $packagePath.substring($packagePath.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
 ## Start of macro ##
 
 #**
@@ -59,6 +57,7 @@
  *#
 #macro(newDocView)
   #handlePrefilledValues
+  #computePackagePathFormatValidity
   {{html clean="false"}}
   &lt;label for="xwikidoctitleinput"&gt;
     &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.migration.title.label'))&lt;/h2&gt;
@@ -114,6 +113,7 @@
  * report of the execution.
  *#
 #macro(docView)
+  #computePackagePathFormatValidity
   ## Handle the upload and selection of a package using the attachment picker.
   #if ($packagePathIsValid &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $hasAdmin)
     #set ($discard = $doc.set('package', $packagePath))
@@ -831,10 +831,8 @@
  * @param $confluenceJob the job that will be displayed.
  *#
 #macro(displayJob $obj)
-  #set ($package = $obj.getProperty('package').value)
-  #set ($sourceInputProperty = "$!inputProperties.source")
-  #set ($packageIsValid = $package != '' &amp;&amp; ($stringtool.endsWith($package, ".zip") || $package.substring($package.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
-  #set ($sourceInputPropertyIsValid = $sourceInputProperty != '' &amp;&amp; ($stringtool.endsWith($sourceInputProperty, ".zip") || $sourceInputProperty.substring($sourceInputProperty.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
+  #computePackageFormatValidity
+  #computeSourceFormatValidity
   #if (!$packageIsValid &amp;&amp; !$sourceInputPropertyIsValid)
     #displayZipPickerForm
   #else
@@ -906,21 +904,13 @@
 #end
 
 #macro (displayPackageWrongFormatWarning)
-  #set ($package = $obj.getProperty('package').value)
-  #set ($sourceInputProperty = "$!inputProperties.source")
   #if ($package == "" &amp;&amp; $sourceInputProperty == "")
    {{warning}}
    $escapetool.xml($services.localization.render('confluencepro.zippicker.fileWarningEmpty'))
    {{/warning}}
   #else
-    #if ("$!package" != "")
-      #set($extension = $package.substring($package.lastIndexOf('.')))
-    #end
-    #if ("$!extension" == "" &amp;&amp; "$!sourceInputProperty" != "")
-      #set ($extension = $sourceInputProperty.substring($sourceInputProperty.lastIndexOf('.')))
-    #end
     {{warning}}
-    $escapetool.xml($services.localization.render('confluencepro.zippicker.fileWarningWrongFormat', [$extension]))
+    $escapetool.xml($services.localization.render('confluencepro.zippicker.fileWarningWrongFormat'))
     {{/warning}}
   #end
 #end

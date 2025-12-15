@@ -48,8 +48,7 @@ confluencepro.zippicker.title=Select a confluence package to start the migration
 confluencepro.zippicker.placeholder=Pick a confluence export package...
 confluencepro.zippicker.button.submit=Migrate
 confluencepro.zippicker.fileWarningEmpty=It looks like you did not select any archive to import!
-confluencepro.zippicker.fileWarningWrongFormat=It looks like you are trying to import a {0} file. The Confluence
-    Migrator Application only supports .zip file imports containing the Confluence export!
+confluencepro.zippicker.fileWarningWrongFormat=The Confluence Migrator Pro only supports .ZIP file imports containing the Confluence export!
 
 confluencepro.norights=Only the admin can perform the migration.
 confluencepro.upload.submit=Upload new package

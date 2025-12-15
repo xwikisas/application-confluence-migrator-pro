@@ -362,17 +362,15 @@
     {{warning}}$services.localization.render('confluencepro.migration.missingLicense'){{/warning}}
   #end
   #set ($confluenceJob = $services.confluenceMigration.getLastJob($migrationDoc.documentReference))
-  #set ($package = $obj.getProperty('package').value)
-  #set ($packagePathIsValid = $package != '' &amp;&amp; ($stringtool.endsWith($package, ".zip") || $package.substring($package.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
   #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
-  #set ($sourceInputProperty = "$!inputProperties.source")
-  #set ($sourceInputPropertyIsValid = $sourceInputProperty != '' &amp;&amp; ($stringtool.endsWith($sourceInputProperty, ".zip") || $sourceInputProperty.substring($sourceInputProperty.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
+  #computeSourceFormatValidity
+  #computePackageFormatValidity
   #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
   #if ($startMigration &amp;&amp; ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED'))
-    #if ($packagePathIsValid || $sourceInputPropertyIsValid)
+    #if ($packageIsValid || $sourceInputPropertyIsValid)
       ## If the package is missing, then the migration will use the 'source' parameter of the input properties.
       #set ($attachmentInputStream = $NULL)
-      #if ($packagePathIsValid)
+      #if ($packageIsValid)
         #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
         #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
         #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
@@ -397,6 +395,21 @@
   {{info}}
     $message.replace('MAIN_LINK', $link)
   {{/info}}
+#end
+
+#macro(computePackageFormatValidity)
+  #set ($package = $obj.getProperty('package').value)
+  #set ($packageIsValid = $package != '' &amp;&amp; $stringtool.endsWith($package, ".zip"))
+#end
+
+#macro(computePackagePathFormatValidity)
+  #set ($packagePath = "$!request.package")
+  #set ($packagePathIsValid = $packagePath != '' &amp;&amp; ($stringtool.endsWith($packagePath, ".zip") || $packagePath.substring($packagePath.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
+#end
+
+#macro(computeSourceFormatValidity)
+ #set ($sourceInputProperty = "$!inputProperties.source")
+ #set ($sourceInputPropertyIsValid = $sourceInputProperty != '' &amp;&amp; ($stringtool.endsWith($sourceInputProperty, ".zip") ||   $sourceInputProperty.substring($sourceInputProperty.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
 #end
 {{/velocity}}</content>
   <object>
@@ -510,79 +523,28 @@
     }
   });
 
-  $('#confluenceUploadFile').on('change', function () {
-    const file = this.files[0];
+  $(function() {
+    const input = document.querySelector('#confluenceUploadFile');
 
-    if (!file) {
-      return;
-    }
+    if (!input || !XWiki.FileUploader) return;
 
-    const fileName = file.name;
+    new XWiki.FileUploader(input, {
+      progressAutohide: true,
+      responseContainer: document.createElement('div'),
+    });
 
-    if (!fileName.endsWith('.zip')) {
-      const fileExtension = fileName.split('.').pop();
-      new XWiki.widgets.Notification(
-          `It looks like you are trying to import a ${fileExtension} file. The Confluence Migrator Application only supports .zip file imports containing a Confluence export!`,
-          "error"
-        );
+    input.observe('xwiki:actions:beforeUpload', function(event) {
+      const file = input.files[0];
 
-      return;
-    }
-
-    $("#addConfluencePackage").submit();
-  });
-
-  $('#addConfluencePackage').on("submit", async function (e) {
-    e.preventDefault();
-
-    const fileInput = $('#confluenceUploadFile');
-    const file = fileInput.prop('files')[0];
-
-    if (!file) {
-        new XWiki.widgets.Notification("No file selected", "error");
-        return;
-    }
-
-    const csrfToken = $('#upload_file_form_token').val();
-    const fileName = encodeURIComponent(file.name);
-    const storeDocumentRefString = $('#store_file_reference').val();
-
-    const storeDocumentRef = XWiki.Model.resolve(
-        storeDocumentRefString,
-        XWiki.EntityType.DOCUMENT,
-        XWiki.currentDocument.documentReference
-      );
-
-      const url = new XWiki.Document(storeDocumentRef).getRestURL(
-        `attachments/${fileName}`
-      );
-
-    try {
-      await $.ajax({
-        method: "PUT",
-        url: url,
-        headers: {
-          "XWiki-Form-Token": csrfToken
-        },
-        contentType: file.type || "application/zip",
-        processData: false,
-        data: file
-      });
-
-      fileInput.val('');
-
-      $("#confluencePackages").data("liveData").updateEntries();
-
-      new XWiki.widgets.Notification(
-        "Package uploaded successfully!",
-        "done"
-      );
-    } catch (e) {
+      if (!file || !file.name.toLowerCase().endsWith('.zip')) {
+        event.preventDefault();
+        input.value = '';
         new XWiki.widgets.Notification(
-          e.responseText ?? "Upload failed",
-          "error"
-      );
-    }
+          `It looks like you are trying to import a file of an unexpected format. Confluence Migrator Pro currently only supports Confluence backup exports, which have a .zip extension.`,
+          "warning"
+        );
+      }
+    });
   });
 
   document.addEventListener("click", function (e) {
