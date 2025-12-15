@@ -541,7 +541,7 @@
         input.value = '';
         new XWiki.widgets.Notification(
           `It looks like you are trying to import a file of an unexpected format. Confluence Migrator Pro currently only supports Confluence backup exports, which have a .zip extension.`,
-          "warning"
+          "error"
         );
       }
     });
