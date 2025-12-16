@@ -362,15 +362,14 @@
     {{warning}}$services.localization.render('confluencepro.migration.missingLicense'){{/warning}}
   #end
   #set ($confluenceJob = $services.confluenceMigration.getLastJob($migrationDoc.documentReference))
+  #set ($package = $obj.getProperty('package').value)
   #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
-  #computeSourceFormatValidity
-  #computePackageFormatValidity
   #set ($outputProperties = $jsontool.fromString($obj.getProperty('outputProperties').value))
   #if ($startMigration &amp;&amp; ("$!confluenceJob" == "" || $confluenceJob.status.state == 'NONE' || $confluenceJob.status.state == 'FINISHED'))
-    #if ($packageIsValid || $sourceInputPropertyIsValid)
+    #if ("$!package" != '' || "$!inputProperties.source" != '')
       ## If the package is missing, then the migration will use the 'source' parameter of the input properties.
       #set ($attachmentInputStream = $NULL)
-      #if ($packageIsValid)
+      #if ("$!package" != '')
         #set ($confluenceHomeRef = $services.model.createDocumentReference('', 'ConfluenceMigratorPro', 'WebHome'))
         #set ($attachRef = $services.model.resolveAttachment($package, $confluenceHomeRef))
         #set ($attachDoc = $xwiki.getDocument($attachRef.documentReference))
@@ -395,21 +394,6 @@
   {{info}}
     $message.replace('MAIN_LINK', $link)
   {{/info}}
-#end
-
-#macro(computePackageFormatValidity)
-  #set ($package = $obj.getProperty('package').value)
-  #set ($packageIsValid = $package != '' &amp;&amp; $stringtool.endsWith($package, ".zip"))
-#end
-
-#macro(computePackagePathFormatValidity)
-  #set ($packagePath = "$!request.package")
-  #set ($packagePathIsValid = $packagePath != '' &amp;&amp; ($stringtool.endsWith($packagePath, ".zip") || $packagePath.substring($packagePath.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
-#end
-
-#macro(computeSourceFormatValidity)
- #set ($sourceInputProperty = "$!inputProperties.source")
- #set ($sourceInputPropertyIsValid = $sourceInputProperty != '' &amp;&amp; ($stringtool.endsWith($sourceInputProperty, ".zip") ||   $sourceInputProperty.substring($sourceInputProperty.lastIndexOf("/") + 1).lastIndexOf(".") == -1))
 #end
 {{/velocity}}</content>
   <object>
@@ -500,7 +484,15 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery'], function ($) {
+      <code>define("confluencemigratorpro.javascript", {
+  prefix: "confluencemigratorpro.javascript.",
+  keys: [
+    "unexpectedFormat",
+    "interruptMigrationConfirm"
+  ],
+});
+
+require(['jquery', 'xwiki-l10n!confluencemigratorpro.javascript'], function ($, l10n) {
 
   $(document).on("change", ".specified-migration", function () {
     let parent = $(this).closest(".migrationSettings");
@@ -540,7 +532,7 @@
         event.preventDefault();
         input.value = '';
         new XWiki.widgets.Notification(
-          `It looks like you are trying to import a file of an unexpected format. Confluence Migrator Pro currently only supports Confluence backup exports, which have a .zip extension.`,
+          l10n.get("unexpectedFormat"),
           "error"
         );
       }
@@ -552,7 +544,7 @@
     if (!a) {
       return;
     }
-    if (confirm("Are you sure you want to interrupt this migration?")) {
+    if (confirm(l10n.get("interruptMigrationConfirm"))) {
       location.href = a.href + "?interrupt=1";
     }
     e.preventDefault();
