@@ -58,6 +58,7 @@
 #macro(newDocView)
 
   #handlePrefilledValues
+
   {{html clean="false"}}
   &lt;label for="xwikidoctitleinput"&gt;
     &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.migration.title.label'))&lt;/h2&gt;
