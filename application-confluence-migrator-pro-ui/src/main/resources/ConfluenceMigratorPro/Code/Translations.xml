@@ -47,6 +47,7 @@ confluencepro.extension.notMainWiki.link.label=main wiki
 confluencepro.zippicker.title=Select a confluence package to start the migration
 confluencepro.zippicker.placeholder=Pick a confluence export package...
 confluencepro.zippicker.button.submit=Migrate
+confluencepro.zippicker.fileWarningEmpty=It looks like you did not select any archive to import!
 
 confluencepro.norights=Only the admin can perform the migration.
 confluencepro.upload.submit=Upload new package
@@ -214,6 +215,10 @@ confluencepro.yes=Yes
 
 ## Tabs javascript
 confluencemigratorpro.javascript.notifications.failedToLoad=The section couldn't be loaded. Please refresh the page, and if the error still persists, contact the XWiki team.
+
+## CommonCode javascript
+confluencemigratorpro.javascript.unexpectedFormat=It looks like you are trying to import a file of an unexpected format. Confluence Migrator Pro currently only supports Confluence backup exports, which have a .zip extension.
+confluencemigratorpro.javascript.interruptMigrationConfirm=Are you sure you want to interrupt this migration?
 
 ## Accessibility
 cmpMigrationOptionField={0} migration option

@@ -906,6 +906,9 @@
  * Display a form with a zip picker and a submit button.
  *#
 #macro(displayZipPickerForm)
+  {{warning}}
+  $escapetool.xml($services.localization.render('confluencepro.zippicker.fileWarningEmpty'))
+  {{/warning}}
 
   {{html clean="false"}}
   &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.zippicker.title'))&lt;/h2&gt;

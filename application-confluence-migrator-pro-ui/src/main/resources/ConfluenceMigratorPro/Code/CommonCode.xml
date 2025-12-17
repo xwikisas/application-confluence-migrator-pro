@@ -484,7 +484,15 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery'], function ($) {
+      <code>define("confluencemigratorpro.javascript", {
+  prefix: "confluencemigratorpro.javascript.",
+  keys: [
+    "unexpectedFormat",
+    "interruptMigrationConfirm"
+  ],
+});
+
+require(['jquery', 'xwiki-l10n!confluencemigratorpro.javascript'], function ($, l10n) {
 
   $(document).on("change", ".specified-migration", function () {
     let parent = $(this).closest(".migrationSettings");
@@ -508,14 +516,27 @@
   });
 
   $(function() {
-    // Since the associated liveData is refreshed on file upload, we don't need a response container.
-    const input = document.querySelector('#addConfluencePackage input[type=file]');
-    if (input &amp;&amp; XWiki.FileUploader) {
-      new XWiki.FileUploader(input, {
-        'progressAutohide': true,
-        'responseContainer' : document.createElement('div')
-      });
-    }
+    const input = document.querySelector('#confluenceUploadFile');
+
+    if (!input || !XWiki.FileUploader) return;
+
+    new XWiki.FileUploader(input, {
+      progressAutohide: true,
+      responseContainer: document.createElement('div'),
+    });
+
+    input.observe('xwiki:actions:beforeUpload', function(event) {
+      const file = input.files[0];
+
+      if (!file || !file.name.toLowerCase().endsWith('.zip')) {
+        event.preventDefault();
+        input.value = '';
+        new XWiki.widgets.Notification(
+          l10n.get("unexpectedFormat"),
+          "error"
+        );
+      }
+    });
   });
 
   document.addEventListener("click", function (e) {
@@ -523,7 +544,7 @@
     if (!a) {
       return;
     }
-    if (confirm("Are you sure you want to interrupt this migration?")) {
+    if (confirm(l10n.get("interruptMigrationConfirm"))) {
       location.href = a.href + "?interrupt=1";
     }
     e.preventDefault();

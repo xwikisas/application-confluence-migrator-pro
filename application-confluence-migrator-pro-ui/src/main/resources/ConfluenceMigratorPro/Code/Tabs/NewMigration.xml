@@ -113,8 +113,6 @@
     &lt;/div&gt;
 
     #set ($storeDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.PackagesStore'))
-    #showAttachmentsLiveData($storeDoc 'confluencePackages')
-
     #if ($hasEdit || $hasAdmin)
       ## Hide the form because it comes from the platform, and we cannot customize its appearance. We are using a 'facade' button to trigger the upload via JS.
       &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
@@ -132,6 +130,8 @@
       &lt;/div&gt;
       &lt;/form&gt;
     #end
+
+    #showAttachmentsLiveData($storeDoc 'confluencePackages')
 
     {{html}}
       #displayPrefillForm("cmpUploadPackageMigrationSettingsForm")
