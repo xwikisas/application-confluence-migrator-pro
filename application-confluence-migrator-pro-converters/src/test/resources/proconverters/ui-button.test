@@ -1,0 +1,120 @@
+.#------------------------------------------------------------------------------
+.expect|filter+xml
+.# Test that ascii char 28 is ignored
+.#------------------------------------------------------------------------------
+<wikiSpace name="MySpace">
+  <wikiDocument name="WebHome">
+    <wikiDocumentLocale>
+      <p>
+        <parameters>
+          <entry>
+            <string>creation_author</string>
+            <string>XWiki.Teo</string>
+          </entry>
+          <entry>
+            <string>creation_date</string>
+            <date>2012-08-21 15:37:47.0 UTC</date>
+          </entry>
+          <entry>
+            <string>lastrevision</string>
+            <string>1</string>
+          </entry>
+        </parameters>
+      </p>
+      <wikiDocumentRevision revision="1">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.Teo</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2016-10-11 14:47:37.0 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>My Space</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>{{button url="https://orion.agriculture/confluence/x/YANvI" label="Texte" icon="align-justify"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#ebd364" label="Link" icon="link"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#79c97b" label="Download" icon="download"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#eb64a3" label="mail" icon="envelope"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#ef7d58" label="home" icon="home"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#d968cd" label="idea" icon="lightbulb-o"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#ed707f" label="info" icon="info"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#43c5d0" label="question" icon="question"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="star" icon="star"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="settings" icon="cog"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="add" icon="add"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="edit" icon="edit"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="delete" icon="delete"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="news" icon="rss"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="blog" icon="rss"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="location" icon="map-marker"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="notification" icon="bell"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="calendar" icon="calendar"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="reminder" icon="clock-o"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="phone" icon="phone"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="trash" icon="trash"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="search" icon="search"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="facebook" icon="facebook"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="linkedin" icon="linkedin"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="twitter" icon="twitter"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="html" icon="html"/}}
+
+{{button url="https://orion.agriculture/confluence/x/YANvI" color="#71b0e0" label="label" icon="tag"/}}</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+      </wikiDocumentRevision>
+    </wikiDocumentLocale>
+  </wikiDocument>
+</wikiSpace>
+.#------------------------------------------------------------------------------
+.input|confluence+xml
+.configuration.storeConfluenceDetailsEnabled=false
+.configuration.source=ui-button
+.#------------------------------------------------------------------------------
