@@ -76,7 +76,7 @@ public class ConfluenceMigrationJob
 
     private static final String FALSE = "false";
 
-    private static final int TRIAL_PAGE_COUNT = 30;
+    private static final int TRIAL_PAGE_COUNT = 200;
 
     private static final String MAX_PAGE_COUNT = "maxPageCount";
 

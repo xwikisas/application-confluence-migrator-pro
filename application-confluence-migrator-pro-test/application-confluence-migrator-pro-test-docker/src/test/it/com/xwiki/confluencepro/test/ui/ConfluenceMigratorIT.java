@@ -294,14 +294,14 @@ public class ConfluenceMigratorIT
         int index = runningPage.getSpaceIndexByName("SPACE1");
 
         // The number of pages the space has before the import.
-        assertEquals(31, runningPage.getNumberOfDocuments(index));
+        assertEquals(201, runningPage.getNumberOfDocuments(index));
 
         runningPage.selectSpaceByLabel("SPACE1 - space1");
         runningPage.confirmSpacesToMigrate();
 
         MigrationRaportView reportView = runningPage.confirmSpacesToMigrate();
-        // The number of pages the space has after the import, the 30 pages limit was applied.
-        assertEquals(30, reportView.getPagesCount());
+        // The number of pages the space has after the import, the 200 pages limit was applied.
+        assertEquals(200, reportView.getPagesCount());
     }
 
     @Test
