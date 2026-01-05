@@ -47,9 +47,9 @@ import com.xwiki.confluencepro.test.po.MigrationRunningPage;
 import com.xwiki.confluencepro.test.po.QuestionSpace;
 import com.xwiki.licensing.test.TestLicensor;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @UITest(properties = {
     // Add the FileUploadPlugin which is needed by the test to upload attachment files
@@ -63,22 +63,17 @@ import static junit.framework.TestCase.assertTrue;
         )
     }
 )
-public class ConfluenceMigratorIT
+class ConfluenceMigratorIT
 {
     private static final String MIGRATION_TITLE = "NewMigration";
-
     private static final String USER_NAME = "JohnDoe";
-
     private static final String SINGLE_SPACE_PACKAGE = "confluence-package.zip";
-
     private static final String MULTI_SPACE_PACKAGE = "4.3.2.xml.zip";
-
     private static final String CONTENT_PACKAGE = "ContentTest.zip";
-
     private static final String TRIAL_LIMIT_PACKAGE = "trialLimit.zip";
 
     @BeforeEach
-    public void beforeEach()
+    void beforeEach()
     {
         TestLicensor.clearCustomLicenses();
     }
