@@ -400,6 +400,10 @@
       #addDocToDocTree($docTree, $docRef)
     #end
     &lt;div id="cfm-doc-tree"&gt;
+      &lt;p&gt;
+        &lt;button class="cfm-unfold-all btn" type="button"&gt;$services.localization.render('confluencepro.migration.raport.unfoldall')&lt;/button&gt;
+        &lt;button class="cfm-fold-all btn"   type="button"&gt;$services.localization.render('confluencepro.migration.raport.foldall')&lt;/button&gt;
+      &lt;/p&gt;
       #printDocTree($docTree, $invertedSpaceTargets, true)
     &lt;/div&gt;
     {{/html}}
@@ -1387,6 +1391,10 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
       for (const a of ul.querySelectorAll('a[aria-expanded="false"]')) {
         a.click();
       }
+
+      for (const details of ul.getElementsByTagName('details')) {
+        details.open = true;
+      }
     }
   });
 
@@ -1395,6 +1403,10 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
     if (ul) {
       for (const a of ul.querySelectorAll('a[aria-expanded="true"]')) {
         a.click();
+      }
+
+      for (const details of ul.getElementsByTagName('details')) {
+        details.open = false;
       }
     }
   });
