@@ -121,6 +121,17 @@
         </ac:structured-macro>
     </ac:rich-text-body>
 </ac:structured-macro>
+
+<ac:structured-macro ac:name="ui-tabs" ac:schema-version="1" ac:macro-id="a001cd1f-0f91-463b-ae30-65221f924b04">
+    <ac:rich-text-body>
+        <ac:structured-macro ac:name="ui-tab" ac:schema-version="1" ac:macro-id="73e8c3c3-c3c7-4522-a4ec-d5fed12681c2">
+            <ac:parameter ac:name="title">My tab title</ac:parameter>
+            <ac:rich-text-body>
+                <p>Hello content</p>
+            </ac:rich-text-body>
+        </ac:structured-macro>
+    </ac:rich-text-body>
+</ac:structured-macro>
 ]]></property>
         <property name="content" class="Page" package="com.atlassian.confluence.pages">
             <id name="id">45809845</id>

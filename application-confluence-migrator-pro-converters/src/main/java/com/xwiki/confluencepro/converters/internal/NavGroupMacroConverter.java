@@ -33,7 +33,7 @@ import org.xwiki.contrib.confluence.filter.ConversionException;
  * @since 1.37.0
  * @version $Id$
  */
-@Component (hints = {"horizontal-nav-group", "vertical-nav-group", "tabs-group"})
+@Component (hints = {"horizontal-nav-group", "vertical-nav-group", "tabs-group", "ui-tabs"})
 @Singleton
 public class NavGroupMacroConverter extends AbstractMacroConverter
 {

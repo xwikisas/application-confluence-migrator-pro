@@ -33,10 +33,12 @@ import org.xwiki.contrib.confluence.filter.ConversionException;
  * @since 1.37.0
  * @version $Id$
  */
-@Component (hints = {"horizontal-nav-item", "vertical-nav-item", "tab-pane"})
+@Component (hints = {"horizontal-nav-item", "vertical-nav-item", "tab-pane", "ui-tab"})
 @Singleton
 public class NavItemMacroConverter extends AbstractMacroConverter
 {
+    private static final String[] LABEL_PARAMETERS = {"name", "title"};
+
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
@@ -49,7 +51,7 @@ public class NavItemMacroConverter extends AbstractMacroConverter
         String content) throws ConversionException
     {
         Map<String, String> parameters = new LinkedHashMap<>(1);
-        saveParameter(confluenceParameters, parameters, "name", "label", true);
+        saveParameter(confluenceParameters, parameters, LABEL_PARAMETERS, "label", true);
         //saveParameter(confluenceParameters, parameters, "color", true);
         return parameters;
     }
