@@ -112,6 +112,8 @@
 ### Missing: confluencepro.migration.raport.pageTitle=Page title
 ### Missing: confluencepro.migration.raport.pleaseenablejs=Please enable JavaScript to see the logs
 ### Missing: confluencepro.migration.raport.displayFullLog=Display full logs
+### Missing: confluencepro.migration.raport.foldall=Fold all
+### Missing: confluencepro.migration.raport.unfoldall=Unfold all
 ### Missing: confluencepro.migration.title.label=Set the title of the migration
 ### Missing: confluencepro.migration.source.title=Set the source package of the migration
 ### Missing: confluencepro.migration.title.placeholder=Type the desired title...

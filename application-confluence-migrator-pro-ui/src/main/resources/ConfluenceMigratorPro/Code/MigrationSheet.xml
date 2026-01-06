@@ -763,8 +763,8 @@
  *#
 #macro(displayJson $category)
   &lt;p&gt;
-    &lt;button class="cfm-unfold-all btn" type="button"&gt;Unfold all&lt;/button&gt;
-    &lt;button class="cfm-fold-all btn"   type="button"&gt;Fold all&lt;/button&gt;
+    &lt;button class="cfm-unfold-all btn" type="button"&gt;$services.localization.render('confluencepro.migration.raport.unfoldall')&lt;/button&gt;
+    &lt;button class="cfm-fold-all btn"   type="button"&gt;$services.localization.render('confluencepro.migration.raport.foldall')&lt;/button&gt;
   &lt;/p&gt;
   &lt;ul class="cfm-problem-pages"&gt;
   #foreach ($entry in $jsonObject.entrySet())
