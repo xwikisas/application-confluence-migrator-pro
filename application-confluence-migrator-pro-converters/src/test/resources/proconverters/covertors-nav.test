@@ -71,6 +71,12 @@ Lorem ipsum
 {{tab label="dolor"}}
 sit amet
 {{/tab}}
+{{/tab-group}}
+
+{{tab-group}}
+{{tab label="My tab title"}}
+Hello content
+{{/tab}}
 {{/tab-group}}</string>
             </entry>
             <entry>
