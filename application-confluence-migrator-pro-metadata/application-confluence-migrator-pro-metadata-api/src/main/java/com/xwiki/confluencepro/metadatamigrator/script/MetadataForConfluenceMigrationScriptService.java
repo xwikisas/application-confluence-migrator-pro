@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -348,7 +349,7 @@ public class MetadataForConfluenceMigrationScriptService implements ScriptServic
         logger.info("Setting values in [{}] for set [{}]", valueDoc.getDocumentReference(), setRef);
         for (Map.Entry<String, Object> field : o.metadataFieldValues.entrySet()) {
             String fieldName = field.getKey();
-            String xwikiFieldName = getXWikiFieldName(fieldName);
+            String xwikiFieldName = getRawFieldName(fieldName);
             Object val = field.getValue();
             if (val != null) {
                 MetadataForConfluenceField fieldDescriptor = fields.get(field.getKey());
@@ -490,7 +491,7 @@ public class MetadataForConfluenceMigrationScriptService implements ScriptServic
                 logger.warn("Could not find field [{}] when importing set [{}]. Skipping.", fieldConf.key, set.key);
                 s.skippedFields++;
             } else {
-                String xwikiFieldName = getXWikiFieldName(fieldConf.key);
+                String xwikiFieldName = getRawFieldName(fieldConf.key);
                 if (addField(s, baseClass, xwikiFieldName, field, fieldConf)) {
                     logger.info("Imported field [{}] to [{}] as [{}]", fieldConf.key, setReference, xwikiFieldName);
                     importedFields++;
@@ -572,6 +573,21 @@ public class MetadataForConfluenceMigrationScriptService implements ScriptServic
             logger.error("Failed to write the default values. Fields won't have default values.");
         }
 
+        com.xpn.xwiki.api.Object confluenceObj = setDoc.getObject("Confluence.Code.ConfluenceMetadataSetClass", true);
+        List<String> fields = set.metadataFields
+            .stream()
+            .map(fc -> getRawFieldName(fc.key))
+            .collect(Collectors.toList());
+        String key = getRawSetKey(set);
+        confluenceObj.set("key", key);
+        confluenceObj.set("lowerKey", key.toLowerCase());
+        confluenceObj.set("spaceKey", set.spaceKey);
+        confluenceObj.set("lowerSpaceKey", set.spaceKey.toLowerCase());
+        confluenceObj.set("title", set.title);
+        confluenceObj.set("description", set.description);
+        confluenceObj.set("fields", fields);
+        confluenceObj.set("lowerFields", fields.stream().map(String::toLowerCase).collect(Collectors.toList()));
+
         try {
             setDoc.save("Import set from Metadata for Confluence");
             s.importedSets++;
@@ -583,7 +599,7 @@ public class MetadataForConfluenceMigrationScriptService implements ScriptServic
         }
     }
 
-    private static String getXWikiFieldName(String fieldName)
+    private static String getRawFieldName(String fieldName)
     {
         return StringUtils.removeStart(fieldName, "metadatafield.");
     }
@@ -696,6 +712,11 @@ public class MetadataForConfluenceMigrationScriptService implements ScriptServic
 
     private static String getSetName(MetadataForConfluenceSet set)
     {
-        return StringUtils.removeStart(set.key, "metadataset.").replace('.', '_');
+        return getRawSetKey(set).replace('.', '_');
+    }
+
+    private static String getRawSetKey(MetadataForConfluenceSet set)
+    {
+        return StringUtils.removeStart(set.key, "metadataset.");
     }
 }

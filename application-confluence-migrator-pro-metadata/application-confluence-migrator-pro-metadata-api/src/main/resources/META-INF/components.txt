@@ -1,1 +1,2 @@
+com.xwiki.confluencepro.metadatamigrator.internal.ConfluenceMetadataSetClassDocumentInitializer
 com.xwiki.confluencepro.metadatamigrator.script.MetadataForConfluenceMigrationScriptService
