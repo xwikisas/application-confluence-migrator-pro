@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.xwiki.confluencepro</groupId>
     <artifactId>application-confluence-migrator-pro</artifactId>
-    <version>1.39.0</version>
+    <version>1.39.1-SNAPSHOT</version>
   </parent>
   <packaging>pom</packaging>
   <artifactId>application-confluence-migrator-pro-reference-fixer-parent</artifactId>
