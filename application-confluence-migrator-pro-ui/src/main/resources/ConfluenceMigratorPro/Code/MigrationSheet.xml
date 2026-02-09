@@ -469,23 +469,28 @@
   #getJSON($obj, 'problems')
   #filterCurrentRevision()
   #if (!$jsonObject.isEmpty())
-    #displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.size()])
+    &lt;details class="cfm-foldable-section"&gt;
+      &lt;summary&gt;#displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.size()])&lt;/summary&gt;
     #displayJson('problems')
+    &lt;/details&gt;
   #end
 
   ## Skipped section
   #getJSON($obj, 'skipped')
   #filterCurrentRevision()
   #if (!$jsonObject.isEmpty())
-    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.size()])
-    #displayJson('skipped')
+    &lt;details class="cfm-foldable-section"&gt;
+      &lt;summary&gt;#displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.size()])&lt;/summary&gt;
+      #displayJson('skipped')
+    &lt;/details&gt;
   #end
 
   ## Confluence reference warnings section
   #getJSON($obj, 'confluenceRefWarnings')
   #filterCurrentRevision()
   #if (!$jsonObject.isEmpty())
-    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.confluencerefs.title', '', [$jsonObject.size()])
+    &lt;details class="cfm-foldable-section"&gt;
+    &lt;summary&gt;#displaySubtitle('cross', 'confluencepro.migration.raport.problems.confluencerefs.title', '', [$jsonObject.size()])&lt;/summary&gt;
     &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
     #displayFixLinks
     #displayJson('confluenceRefWarnings')
@@ -529,12 +534,14 @@
         $services.localization.render('confluencepro.migration.raport.problems.confluencerefids.list') $missingPagesIds
       #end
     &lt;/details&gt;
+    &lt;/details&gt;
   #end
 
   ## Legacy broken links section
   #getJSON($obj, 'brokenLinksPages')
   #if (!$jsonObject.isEmpty())
-    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.brokenLinks.title', '', [$jsonObject.size()])
+    &lt;details class="cfm-foldable-section"&gt;
+    &lt;summary&gt;#displaySubtitle('cross', 'confluencepro.migration.raport.problems.brokenLinks.title', '', [$jsonObject.size()])&lt;/summary&gt;
     &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
     #displayFixLinks
     #displayJson('brokenLinksPages')
@@ -559,6 +566,7 @@
         &lt;/details&gt;
       #end
     #end
+    &lt;/details&gt;
   #end
 
   ## Unhandled parameters
@@ -586,7 +594,8 @@
   #set ($unhandledParameterValues = $jsonObject)
   #if (!$unhandledParameters.isEmpty() || !$unhandledParameterValues.isEmpty())
     #set ($size = $unhandledParameters.size() + $unhandledParameterValues.size())
-    #displaySubtitle('cross', 'confluencepro.migration.raport.problems.unhandledParameters.title', '', [$size])
+    &lt;details class="cfm-foldable-section"&gt;
+    &lt;summary&gt;#displaySubtitle('cross', 'confluencepro.migration.raport.problems.unhandledParameters.title', '', [$size])&lt;/summary&gt;
     #if (!$unhandledParameters.isEmpty())
       #set ($jsonObject = $unhandledParameters)
       &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.unhandledParameters.info')&lt;/p&gt;
@@ -638,6 +647,7 @@
         #end
       #end
       &lt;/table&gt;
+    &lt;/details&gt;
     &lt;/details&gt;
   #end
 
@@ -702,8 +712,10 @@
   #filterCurrentRevision()
 
   #if (!$jsonObject.isEmpty())
-    #displaySubtitle('question', 'confluencepro.migration.raport.problems.other.title', '', [])
-    #displayJson('otherIssues')
+    &lt;details class="cfm-foldable-section"&gt;
+      &lt;summary&gt;#displaySubtitle('question', 'confluencepro.migration.raport.problems.other.title', '', [])&lt;/summary&gt;
+      #displayJson('otherIssues')
+    &lt;/details&gt;
   #end
 
   {{/html}}
@@ -1865,6 +1877,24 @@ details.cfm-details summary {
   /* Get back the default details and summary behavior */
   details, summary {
     display: revert;
+  }
+}
+
+.cfm-foldable-section {
+  &gt; summary {
+    display: list-item;
+
+    &amp;::marker {
+      font-size: 1.5em;
+    }
+
+    h2 {
+      display:inline-block;
+    }
+
+    .cfmTitleIcon {
+      display: none;
+    }
   }
 }</code>
     </property>
