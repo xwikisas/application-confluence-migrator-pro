@@ -60,21 +60,17 @@
   #handlePrefilledValues
 
   {{html clean="false"}}
-  &lt;label for="xwikidoctitleinput"&gt;
-    &lt;h2&gt;$escapetool.xml($services.localization.render('confluencepro.migration.title.label'))&lt;/h2&gt;
-  &lt;/label&gt;
+  &lt;h2&gt;&lt;label for="xwikidoctitleinput" style="font-weight:normal"&gt;$escapetool.xml($services.localization.render('confluencepro.migration.title.label'))&lt;/label&gt;&lt;/h2&gt;
   &lt;div class="xform"&gt;
     ## &lt;input type="hidden" name="form_token" value="$!escapetool.xml($services.csrf.token)" /&gt;
     #set ($docTitle = $doc.documentReference.name)
     #if ($docTitle == 'WebHome')
       #set ($docTitle = $doc.documentReference.parent.name)
     #end
-    &lt;dl id="titleinput" class="form-group"&gt;
-      &lt;dd&gt;
-        &lt;input type="text" id="xwikidoctitleinput" name="title" value="$docTitle" class=""
-          placeholder="$!escapetool.xml($services.localization.render('confluencepro.migration.title.placeholder'))"&gt;
-      &lt;/dd&gt;
-    &lt;/dl&gt;
+    &lt;p&gt;
+      &lt;input type="text" id="xwikidoctitleinput" name="title" value="$docTitle" class=""
+        placeholder="$!escapetool.xml($services.localization.render('confluencepro.migration.title.placeholder'))"&gt;
+    &lt;/p&gt;
     #if ("$!request.package" != '')
       #set ($discard = $prefilledValues['input'].remove('source'))
       &lt;input class="form-control" type="hidden"
@@ -473,7 +469,7 @@
                     &lt;summary&gt;$escapetool.xml($macroEntry.key) ($macroEntries.get($macroEntry.key))&lt;/summary&gt;
                     &lt;table&gt;
                       &lt;tr&gt;
-                        &lt;th class="cfm-macro-per-doc-count"&gt;$services.localization.render('confluencepro.migration.raport.macros.count')&lt;/th&gt;
+                        &lt;th class="cfm-macro--count"&gt;$services.localization.render('confluencepro.migration.raport.macros.count')&lt;/th&gt;
                         &lt;th&gt;$services.localization.render('confluencepro.migration.raport.macros.document')&lt;/th&gt;
                       &lt;/tr&gt;
                       #foreach ($pageEntry in $macroEntry.value.entrySet())
@@ -718,14 +714,14 @@
         &lt;dt&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.groups')&lt;/dt&gt;
         &lt;dd&gt;#foreach ($group in $jsonObject.groups)#if(!$foreach.first), #end$escapetool.xml($group)#end
         &lt;/dd&gt;
-      &lt;/ul&gt;
+      &lt;/dl&gt;
     #end
     #if (!$jsonObject.users.isEmpty())
       &lt;dl&gt;
         &lt;dt&gt;$services.localization.render('confluencepro.migration.raport.problems.missingUsersGroups.users')&lt;/dt&gt;
         &lt;dd&gt;#foreach ($user in $jsonObject.users)#if(!$foreach.first), #end$escapetool.xml($user)#end
         &lt;/dd&gt;
-      &lt;/ul&gt;
+      &lt;/dl&gt;
     #end
   #end
 
