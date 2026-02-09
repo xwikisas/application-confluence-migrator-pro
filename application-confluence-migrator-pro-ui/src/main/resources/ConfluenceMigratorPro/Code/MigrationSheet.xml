@@ -442,6 +442,63 @@
         &lt;/div&gt;
       #end
     &lt;/div&gt;
+
+    #if (!$notSupportedMacros.isEmpty())
+      #getJSON($obj, 'macroPages')
+      #if (!$jsonObject.isEmpty())
+        #set ($pageByMacro = {})
+        #set ($found = $false)
+        #foreach ($pageEntry in $jsonObject.entrySet())
+          #foreach ($macroEntry in $pageEntry.value.entrySet())
+            #set ($macro = $pageByMacro.get($macroEntry.key))
+            #if ($macro == $NULL)
+              #set ($macro = {})
+              #set ($discard = $pageByMacro.put($macroEntry.key, $macro))
+            #end
+            #set ($discard = $macro.put($pageEntry.key, $macroEntry.value))
+            #set ($found = true)
+          #end
+        #end
+        #if ($found)
+          &lt;details class="cfm-details"&gt;
+            &lt;summary&gt;&lt;h3&gt;$services.localization.render('confluencepro.migration.raport.macros.unsupportedMacroPages')&lt;/h3&gt;&lt;/summary&gt;
+            &lt;p&gt;
+              &lt;button class="cfm-unfold-all btn" type="button"&gt;$services.localization.render('confluencepro.migration.raport.unfoldall')&lt;/button&gt;
+              &lt;button class="cfm-fold-all btn"   type="button"&gt;$services.localization.render('confluencepro.migration.raport.foldall')&lt;/button&gt;
+            &lt;/p&gt;
+            &lt;ul&gt;
+              #foreach ($macroEntry in $pageByMacro.entrySet())
+                &lt;li&gt;
+                  &lt;details&gt;
+                    &lt;summary&gt;$escapetool.xml($macroEntry.key) ($macroEntries.get($macroEntry.key))&lt;/summary&gt;
+                    &lt;table&gt;
+                      &lt;tr&gt;
+                        &lt;th class="cfm-macro-per-doc-count"&gt;$services.localization.render('confluencepro.migration.raport.macros.count')&lt;/th&gt;
+                        &lt;th&gt;$services.localization.render('confluencepro.migration.raport.macros.document')&lt;/th&gt;
+                      &lt;/tr&gt;
+                      #foreach ($pageEntry in $macroEntry.value.entrySet())
+                        &lt;tr&gt;
+                          &lt;td&gt;$pageEntry.value&lt;/td&gt;
+                          &lt;td&gt;
+                            #set ($docRef = $services.model.resolveDocument($pageEntry.key))
+                            #if ($pageEntry.key.contains("."))
+                              #renderReferenceNicely($docRef)
+                            #else
+                              $escapetool.xml($pageEntry.key)
+                            #end
+                          &lt;/td&gt;
+                        &lt;/tr&gt;
+                      #end
+                    &lt;/table&gt;
+                  &lt;/details&gt;
+                &lt;/li&gt;
+              #end
+            &lt;/ul&gt;
+          &lt;/details&gt;
+        #end
+      #end
+    #end
+
     {{/html}}
 
     {{html wiki=true clean=false}}
@@ -1847,8 +1904,22 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
   content: '';
 }
 
-details.cfm-details summary {
-  display: list-item;
+details.cfm-details {
+  summary {
+    display: list-item;
+
+    h3 {
+      display: inline-block;
+    }
+
+    &amp;:has(&gt; h3)::marker {
+      font-size: 1.3em;
+    }
+  }
+
+  ul {
+    list-style: none;
+  }
 }
 
 .xcontent.job-status:has(&gt; dl.xform &gt; dt &gt; .collapsed) #partial-logs-note {
@@ -1896,6 +1967,10 @@ details.cfm-details summary {
       display: none;
     }
   }
+}
+
+.cfm-macro-per-doc-count {
+  width: 10ex;
 }</code>
     </property>
     <property>

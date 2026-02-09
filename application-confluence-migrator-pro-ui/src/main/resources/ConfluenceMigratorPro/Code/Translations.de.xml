@@ -83,6 +83,9 @@
 ### Missing: confluencepro.migration.raport.macros.notSupported.noMacros=There were no unsupported macros detected during the migration.
 ### Missing: confluencepro.migration.raport.macros.supported.noMacros=There were no supported macros detected during the migration.
 ### Missing: confluencepro.migration.raport.macros.link=See the list of all confluence macros and their XWiki counterpart.
+### Missing: confluencepro.migration.raport.macros.unsupportedMacroPages=The pages containing unsupported macros
+### Missing: confluencepro.migration.raport.macros.count=Count
+### Missing: confluencepro.migration.raport.macros.document=Document
 ### Missing: confluencepro.migration.raport.logs.title=The logs of the migration
 ### Missing: confluencepro.migration.raport.viewall.button=View all migrations
 ### Missing: confluencepro.migration.raport.viewtext=View in text format
