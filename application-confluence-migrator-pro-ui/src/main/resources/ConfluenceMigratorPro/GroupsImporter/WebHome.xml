@@ -252,12 +252,12 @@ if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
       // 1. prepare groups data from the groupsInGroups file
       def groupsWithGroups = makeListMapFromPairsFile(groupsInGroupsFile, 1, true, 0, true);
 
-      logger.info("Processed {} groups with subgroups", groupsWithGroups ? groupsWithGroups.size() : 0);
+      logger.info("Processed [{}] groups with subgroups", groupsWithGroups ? groupsWithGroups.size() : 0);
 
       // 2. prepare users data from usersInGroups file
       def groupsWithUsers = makeListMapFromPairsFile(usersInGroupsFile, 1, true, 0, false);
 
-      logger.info("Processed {} groups with users", groupsWithUsers ? groupsWithUsers.size() : 0);
+      logger.info("Processed [{}] groups with users", groupsWithUsers ? groupsWithUsers.size() : 0);
 
       // 3. read the list of groups to migrate and prepare the full list of groups to create (including child groups)
       List&lt;String&gt; allGroupsToMigrate = [];
@@ -275,7 +275,7 @@ if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
       groupsToMigrateFirstLevel.each { traverse(it, groupsWithGroups, allGroupsToMigrateSet) };
       allGroupsToMigrate = allGroupsToMigrateSet as List;
 
-      logger.info("Read {} groups, importing...", allGroupsToMigrate.size());
+      logger.info("Read [{}] groups, importing...", allGroupsToMigrate.size());
 
       // start processing
       services.progress.pushLevel(allGroupsToMigrate.size());
@@ -286,20 +286,20 @@ if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
         DocumentReference groupReference = new DocumentReference(g, XWIKISPACE);
         // check if it's admin without admin processing enabled
         if (groupReference.getName() == 'XWikiAdminGroup' &amp;&amp; !request.processadmin) {
-          logger.info("Skipping group {} as it's not scheduled for processing", groupReference, g);
+          logger.info("Skipping group [{}] as it's not scheduled for processing", groupReference, g);
           continue;
         }
 
         // get unified list of users and groups, since they're added the same way
         def childrenOfGroup = ((groupsWithGroups.get(g) ?: []) + (groupsWithUsers.get(g) ?: [])).unique();
 
-        logger.info("Importing group {} with children (users or groups) {}", g, childrenOfGroup);
+        logger.info("Importing group [{}] with children (users or groups) [{}]", g, childrenOfGroup);
 
         boolean wasCleaned = false;
         def groupDoc = xwiki.getDocument(groupReference);
         def groupNeedsSave = false;
         if (!groupDoc.isNew() &amp;&amp; request.cleangroups) {
-          logger.warn("Cleaning group {}", groupReference);
+          logger.warn("Cleaning group [{}]", groupReference);
           groupDoc.removeObjects(GROUPCLASS);
           groupDoc.save("Cleaning the group upon group import");
           wasCleaned = true;
@@ -325,10 +325,10 @@ if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
             existingMemberObj = groupDoc.getObject(GROUPCLASS, GROUPPROP, serializedChildToAddReferenceFull);
           }
           if (existingMemberObj != null) {
-            logger.info("Not adding child {} in group {} because it already exists", childToAddReference, groupReference);
+            logger.info("Not adding child [{}] in group [{}] because it already exists", childToAddReference, groupReference);
             continue;
           }
-          logger.debug("Adding child {} in group {}", childToAddReference, groupReference);
+          logger.debug("Adding child [{}] in group [{}]", childToAddReference, groupReference);
 
           def newMemberObj = groupDoc.newObject(GROUPCLASS);
           newMemberObj.set(GROUPPROP, serializedChildToAddReferenceLocal);
@@ -338,7 +338,7 @@ if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
         // save the data at the end
         if(groupNeedsSave) {
           groupDoc.save("Imported group");
-          logger.info("Saved group {} with {} children", groupReference, childrenOfGroup.size());
+          logger.info("Saved group [{}] with [{}] children", groupReference, childrenOfGroup.size());
         }
 
         services.progress.endStep();
@@ -349,7 +349,7 @@ if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
       logger.error("Failed to load or process mapping from CSV: ", e);
     }
   } else {
-    logger.error("Could not find one of files {}, {}, {} attached to this page", groupsInGroupsFilename, usersInGroupsFilename, groupToMigrateFilename);
+    logger.error("Could not find one of files [{}], [{}], [{}] attached to this page", groupsInGroupsFilename, usersInGroupsFilename, groupToMigrateFilename);
   }
 
   stop = new Date();
