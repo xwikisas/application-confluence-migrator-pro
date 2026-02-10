@@ -1,0 +1,361 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc xmlns:xwiki="http://www.xwiki.org" version="1.6" reference="ConfluenceMigratorPro.GroupsImporter.WebHome" locale="">
+  <web>ConfluenceMigratorPro.GroupsImporter</web>
+  <name>WebHome</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ConfluenceMigratorPro.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>Import Groups</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{warning}}
+This hidden feature is experimental and not supported. Use at your own risk.
+{{/warning}}
+
+{{info}}
+See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMigratorPro.GroupsImporter.ConfluenceSQLRequests]] to get the required CSV files.
+{{/info}}
+
+{{velocity}}
+#set($jobId = "GroupsImporter-$!{datetool.get('yyyyMMdd-HHmmssSSS')}")
+{{html clean="false"}}
+&lt;form class="xform" method="post" action="#"&gt;
+  &lt;dl&gt;
+    &lt;dt&gt;
+      &lt;label for="sourcePageName"&gt;Reference of the page containing the required attachments&lt;/label&gt;
+      &lt;span class="xHint"&gt;The reference of the page in which all attachments are provided.&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      #set ($pagePickerParams = {
+          'name': 'sourcePageName',
+          'value': $!{request.sourcePageName}
+      })
+      #pagePicker($pagePickerParams)
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="groupsparentsFilename"&gt;Attachment name for groups parents&lt;/label&gt;
+      &lt;span class="xHint"&gt;Name of the attachment from which to read data to import&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="groupsparentsFilename" name="groupsparentsFilename" value="$!escapetool.xml($!request.groupsparentsFilename)" placeholder='groupsparents.csv'/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="usersgroupsFilename"&gt;Attachment name for users groups&lt;/label&gt;
+      &lt;span class="xHint"&gt;Name of the attachment from which to read data to import&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="usersgroupsFilename" name="usersgroupsFilename" value="$!escapetool.xml($!request.usersgroupsFilename)" placeholder='usersgroups.csv'/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="groupToMigrateFilename"&gt;Attachment name for groups to migrate&lt;/label&gt;
+      &lt;span class="xHint"&gt;Name of the attachment from which to read data to import&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="groupToMigrateFilename" name="groupToMigrateFilename" value="$!escapetool.xml($!request.groupToMigrateFilename)" placeholder='groupstomigrate.csv'/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="cleangroups"&gt;Clean groups&lt;/label&gt;
+      &lt;span class="xHint"&gt;Whether groups should be reset before running this, if they already exist (deduplication is handled by the script, cleanup is not needed if another migration from the same data / a subset of the same data was ran previously).&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="checkbox" id="cleangroups" name="cleangroups" #if($request.cleangroups)checked="checked"#end/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="processadmin"&gt;Process admin group&lt;/label&gt;
+      &lt;span class="xHint"&gt;Whether the XWikiAdminGroup should be processed by this import. Not checking this box leaves the XWikiAdminGroup untouched.&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="checkbox" id="processadmin" name="processadmin" #if($request.processadmin)checked="checked"#end/&gt;
+    &lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;p class="buttonwrapper"&gt;
+    &lt;input type="hidden" name="form_token" value="${services.csrf.token}"/&gt;
+    &lt;input type="hidden" name="jobId" value="${jobId}"/&gt;
+    &lt;input type="hidden" name="confirm" value="true"/&gt;
+    &lt;input type="submit" class="btn" value="Import"/&gt;
+  &lt;/p&gt;
+&lt;/form&gt;
+{{/html}}
+
+#if($request.confirm == 'true')
+  #set($jobStatusURL = "$!{request.contextPath}/rest/jobstatus/$!{escapetool.url($request.jobId)}")
+  #set($jobLogURL = "$!{request.contextPath}/rest/joblog/$!{escapetool.url($request.jobId)}")
+  This import job is running with the ID **$!{request.jobId}**.
+
+  Access information about the job execution using the following REST endpoints :
+
+  * ${escapetool.h}${escapetool.h}[[$!{jobStatusURL}&gt;&gt;path:$!{jobStatusURL}||target="_blank"]]${escapetool.h}${escapetool.h}
+  * ${escapetool.h}${escapetool.h}[[$!{jobLogURL}&gt;&gt;path:$!{jobLogURL}||target="_blank"]]${escapetool.h}${escapetool.h}
+#else
+  The import job will be triggered with the ID **$!{jobId}**.
+#end
+{{/velocity}}
+
+{{job id="{{velocity~}~}${request.jobId}{{/velocity~}~}" start="{{velocity~}~}${request.confirm}{{/velocity~}~}" grouppath="GroupsImporter"}}
+{{groovy}}
+import com.xpn.xwiki.api.Attachment
+import org.xwiki.logging.LogLevel;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.RegExUtils;
+import org.apache.commons.csv.*;
+import org.xwiki.model.reference.*;
+import java.util.*;
+import groovy.time.TimeCategory;
+import groovy.time.TimeDuration;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+
+logger = services.logging.getLogger(doc.fullName);
+services.logging.setLevel(doc.fullName, LogLevel.INFO);
+
+XWIKISPACE = new SpaceReference("xwiki", "XWiki");
+ADMINGROUPNAMES = ["system-administrators", "site-admins", "administrators", "confluence-administrators"];
+GROUPCLASS = "XWiki.XWikiGroups";
+GROUPPROP = "member";
+
+/**
+ * Cleans a group name to make it conform to group naming and resolve it wrt the default mapping used on migration of
+ * permissions (admin groups, user groups).
+ *
+ * @param groupName the name of the group to clean and resolve
+ * @return the page name for the group page (admin if it's in the adminGroupNames)
+ */
+String cleanAndResolveGroupName(String groupName) {
+  // check if it's an admin group
+  if (ADMINGROUPNAMES.contains(groupName)) {
+    return "XWikiAdminGroup";
+  } else {
+  // cleanup the group name; equivalent of clean in org.xwiki.contrib.confluence.filter.internal.input.UsernameCleaner
+    return RegExUtils.removePattern(groupName, "[\\.\\:\\s,@\\^\\/]");
+  }
+}
+
+/**
+ * Processes the pairs file and groups the data in a map where the parent is the key and the children are the list
+ * associated to the parent.
+ *
+ * @param pairsFile the file to process
+ * @param parentColumn the index of the column where the parent is placed
+ * @param cleanParent whether the parent name from the file should be cleaned and resolved against the admin group names
+ * @param childColumn the index of the column where the parent is placed
+ * @param cleanChild whether the parent name from the file should be cleaned and resolved against the admin group names
+ * @return the map with parents as keys and lists of children as values
+ *
+ * @throws Exception if anything goes wrong while doing this - especially reading the file
+ */
+Map&lt;String, List&lt;String&gt;&gt; makeListMapFromPairsFile(Attachment pairsFile, int parentColumn, boolean cleanParent,
+  int childColumn, boolean cleanChild) throws Exception {
+  Map&lt;String, List&lt;String&gt;&gt; result = new TreeMap&lt;String, List&lt;String&gt;&gt;();
+
+  InputStream is = pairsFile.getContentInputStream();
+  InputStreamReader isr = new InputStreamReader(is);
+  CSVParser parser = CSVFormat.RFC4180.withFirstRecordAsHeader().withTrim().withDelimiter(";".charAt(0)).parse(isr);
+  for (CSVRecord record : parser) {
+    def currentItem = record.get(childColumn);
+    def currentGroup = record.get(parentColumn);
+
+    if (StringUtils.isBlank(currentGroup) || StringUtils.isBlank(currentItem)) {
+      // if any is empty, we cannot use this line, continue to the next one
+      continue;
+    }
+
+    def parentGroupClean = cleanParent ? cleanAndResolveGroupName(currentGroup) : currentGroup;
+    def childItemClean = cleanChild ? cleanAndResolveGroupName(currentItem) : currentItem;
+    // check if it's already in the map, else initialize
+    List&lt;String&gt; childItemsList = result.get(parentGroupClean);
+    if (childItemsList == null) {
+      childItemsList = new ArrayList&lt;String&gt;();
+      result.put(parentGroupClean, childItemsList);
+    }
+    // and add the user in the list
+    childItemsList.add(childItemClean);
+  }
+  return result;
+}
+
+/**
+ * Traverses the children of a group and collects all the descendants in the result set mutable parameter
+ *
+ * @param groupChildren the mapping with group children
+ * @param group the group to fetch descendants for
+ * @param result the variable where the result should be collected
+ */
+void traverse(String group, Map&lt;String, List&lt;String&gt;&gt; childrenMap, Set&lt;String&gt; result) {
+  if (!result.contains(group)) {
+    result.add(group);
+    List&lt;String&gt; children = childrenMap.get(group);
+    if (children != null) {
+      for (String child : children) {
+        traverse(child, childrenMap, result);
+      }
+    }
+  }
+}
+
+// groups file
+def groupsInGroupsFilename = request.groupsInGroupsFilename
+if (StringUtils.isEmpty(groupsInGroupsFilename)) {
+  groupsInGroupsFilename = "groupsparents.csv"
+}
+def usersInGroupsFilename = request.usersInGroupsFilename
+if (StringUtils.isEmpty(usersInGroupsFilename)) {
+  usersInGroupsFilename = "usersgroups.csv"
+}
+def groupToMigrateFilename = request.groupToMigrateFilename
+if (StringUtils.isEmpty(groupToMigrateFilename)) {
+  groupToMigrateFilename = "groupstomigrate.csv"
+}
+if (StringUtils.isEmpty(request.sourcePageName)) {
+  logger.error("Source page reference not set")
+  return
+}
+
+if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
+  start = new Date();
+
+  // read data from the CSVs attached to the job page
+  def groupImporterDoc = xwiki.getDocument(request.sourcePageName);
+  def groupsInGroupsFile = groupImporterDoc.getAttachment(groupsInGroupsFilename);
+  def usersInGroupsFile = groupImporterDoc.getAttachment(usersInGroupsFilename);
+  def groupsToMigrateFile = groupImporterDoc.getAttachment(groupToMigrateFilename);
+  if (groupsInGroupsFile != null &amp;&amp; usersInGroupsFile != null &amp;&amp; groupsToMigrateFile != null) {
+    try {
+      // 1. prepare groups data from the groupsInGroups file
+      def groupsWithGroups = makeListMapFromPairsFile(groupsInGroupsFile, 1, true, 0, true);
+
+      logger.info("Processed [{}] groups with subgroups", groupsWithGroups ? groupsWithGroups.size() : 0);
+
+      // 2. prepare users data from usersInGroups file
+      def groupsWithUsers = makeListMapFromPairsFile(usersInGroupsFile, 1, true, 0, false);
+
+      logger.info("Processed [{}] groups with users", groupsWithUsers ? groupsWithUsers.size() : 0);
+
+      // 3. read the list of groups to migrate and prepare the full list of groups to create (including child groups)
+      List&lt;String&gt; allGroupsToMigrate = [];
+
+      InputStream is = groupsToMigrateFile.getContentInputStream();
+      InputStreamReader isr = new InputStreamReader(is);
+      CSVParser parser = CSVFormat.RFC4180.withFirstRecordAsHeader().withTrim().withDelimiter(";".charAt(0)).parse(isr);
+
+      def groupsToMigrateFirstLevel = [];
+      parser.each { record -&gt;
+        groupsToMigrateFirstLevel &lt;&lt; cleanAndResolveGroupName(record.get(0));
+      }
+
+      Set&lt;String&gt; allGroupsToMigrateSet = new LinkedHashSet&lt;&gt;();
+      groupsToMigrateFirstLevel.each { traverse(it, groupsWithGroups, allGroupsToMigrateSet) };
+      allGroupsToMigrate = allGroupsToMigrateSet as List;
+
+      logger.info("Read [{}] groups, importing...", allGroupsToMigrate.size());
+
+      // start processing
+      services.progress.pushLevel(allGroupsToMigrate.size());
+      for(def g : allGroupsToMigrate) {
+        services.progress.startStep();
+
+        // compute group reference
+        DocumentReference groupReference = new DocumentReference(g, XWIKISPACE);
+        // check if it's admin without admin processing enabled
+        if (groupReference.getName() == 'XWikiAdminGroup' &amp;&amp; !request.processadmin) {
+          logger.info("Skipping group [{}] as it's not scheduled for processing", groupReference, g);
+          continue;
+        }
+
+        // get unified list of users and groups, since they're added the same way
+        def childrenOfGroup = ((groupsWithGroups.get(g) ?: []) + (groupsWithUsers.get(g) ?: [])).unique();
+
+        logger.info("Importing group [{}] with children (users or groups) [{}]", g, childrenOfGroup);
+
+        boolean wasCleaned = false;
+        def groupDoc = xwiki.getDocument(groupReference);
+        def groupNeedsSave = false;
+        if (!groupDoc.isNew() &amp;&amp; request.cleangroups) {
+          logger.warn("Cleaning group [{}]", groupReference);
+          groupDoc.removeObjects(GROUPCLASS);
+          groupDoc.save("Cleaning the group upon group import");
+          wasCleaned = true;
+          // reload group doc from the database, to reset object numbers
+          groupDoc = xwiki.getDocument(groupReference);
+        }
+        if (wasCleaned || groupDoc.isNew()) {
+          // initialize group with a first empty object
+          def emptyObj = groupDoc.newObject(GROUPCLASS);
+          emptyObj.set(GROUPPROP, "");
+          // set group as hidden, just in case it was not
+          groupDoc.setHidden(true);
+          groupNeedsSave = true;
+        }
+        // fill in all users and subgroups, if they're not already in the group
+        for (def c : childrenOfGroup) {
+          DocumentReference childToAddReference = new DocumentReference(c, XWIKISPACE);
+          String serializedChildToAddReferenceLocal = services.model.serialize(childToAddReference, "local", groupReference);
+          def existingMemberObj = groupDoc.getObject(GROUPCLASS, GROUPPROP, serializedChildToAddReferenceLocal);
+          // try with full reference if compact was not found
+          if (existingMemberObj == null) {
+            String serializedChildToAddReferenceFull = services.model.serialize(childToAddReference, "default");
+            existingMemberObj = groupDoc.getObject(GROUPCLASS, GROUPPROP, serializedChildToAddReferenceFull);
+          }
+          if (existingMemberObj != null) {
+            logger.info("Not adding child [{}] in group [{}] because it already exists", childToAddReference, groupReference);
+            continue;
+          }
+          logger.debug("Adding child [{}] in group [{}]", childToAddReference, groupReference);
+
+          def newMemberObj = groupDoc.newObject(GROUPCLASS);
+          newMemberObj.set(GROUPPROP, serializedChildToAddReferenceLocal);
+          groupNeedsSave = true;
+        }
+
+        // save the data at the end
+        if(groupNeedsSave) {
+          groupDoc.save("Imported group");
+          logger.info("Saved group [{}] with [{}] children", groupReference, childrenOfGroup.size());
+        }
+
+        services.progress.endStep();
+      }
+      services.progress.popLevel();
+
+    } catch (Exception e) {
+      logger.error("Failed to load or process mapping from CSV: ", e);
+    }
+  } else {
+    logger.error("Could not find one of files [{}], [{}], [{}] attached to this page", groupsInGroupsFilename, usersInGroupsFilename, groupToMigrateFilename);
+  }
+
+  stop = new Date();
+  TimeDuration duration = TimeCategory.minus( stop, start );
+  logger.info("Total duration : ${duration.getHours()}h ${duration.getMinutes()}m ${duration.getSeconds()}s");
+}
+{{/groovy}}
+{{/job}}</content>
+</xwikidoc>

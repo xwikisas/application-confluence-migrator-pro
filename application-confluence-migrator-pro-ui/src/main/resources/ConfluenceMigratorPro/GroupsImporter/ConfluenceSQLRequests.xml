@@ -1,0 +1,148 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc xmlns:xwiki="http://www.xwiki.org" version="1.6" reference="ConfluenceMigratorPro.GroupsImporter.ConfluenceSQLRequests" locale="">
+  <web>ConfluenceMigratorPro.GroupsImporter</web>
+  <name>ConfluenceSQLRequests</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ConfluenceMigratorPro.GroupsImporter.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>SQL requests to retrieve Confluence group data</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>== Generality ==
+
+The delimiter of the CSV file is expected to be {{code}};{{/code}} and the first line of the CSV is expected to be the header with the title of each column. The line return must be in Unix format so {{code}}\n{{/code}}. In Linux you can if needed to convert the file with {{code}}dos2unix{{/code}}.
+
+All {{code}}NULL{{/code}} value are expected to be just an empty field so for example if the column is empty we will have something like {{code}};value;;{{/code}} when the second column is null or empty. Some database exports could sometime set explicitly {{code}}NULL{{/code}} in the CSV export, in this case this must be fixed before being imported in XWiki.
+
+== SQL requests ==
+
+Here are the SQL requests to run on the Confluence database to retrieve the CSV files used for the [[Groups import&gt;&gt;ConfluenceMigratorPro.GroupsImporter.WebHome]].
+
+{{warning}}
+Note that these requests are written for PostgreSQL. For other database engines, they might require adjustments.
+{{/warning}}
+
+
+=== For {{code language="none"}}groupsparents.csv{{/code}} ===
+
+{{code language="sql"}}
+SELECT
+   child.group_name AS groupname,
+   parent.group_name AS parentgroupname
+FROM
+   confluence.cwd_group child
+JOIN
+   cwd_membership cm ON child.id = cm.child_group_id
+JOIN
+   confluence.cwd_group parent ON cm.parent_id = parent.id
+ORDER BY
+   parentgroupname;
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+groupname;parentgroupname
+group1;parentgroup
+...
+{{/code}}
+
+=== For {{code language="none"}}usersgroups.csv{{/code}} ===
+
+{{code language="sql"}}
+SELECT
+   u.user_name AS username,
+   parent.group_name AS groupname
+FROM
+   confluence.cwd_user u
+JOIN
+   cwd_membership cm ON u.id = cm.child_user_id
+JOIN
+   confluence.cwd_group parent ON cm.parent_id = parent.id
+ORDER BY
+   groupname;
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+username;groupname
+admin;confluence-administrators
+test1;confluence-users
+...
+{{/code}}
+
+=== For {{code language="none"}}groupstomigrate.csv{{/code}} ===
+
+In the query below, {{code language="none"}}&lt;spaces list here&gt;{{/code}} needs to be replaced with the list of space keys for which groups involved in permissions need to be migrated.
+
+{{code language="sql"}}
+SELECT distinct(g.group_name) AS Group
+FROM cwd_group g
+WHERE g.group_name in
+(WITH combined AS (
+        SELECT DISTINCT GROUPNAME AS name, SPACEKEY, 'page' as label
+        FROM CONTENT_PERM
+        INNER JOIN CONTENT_PERM_SET on CONTENT_PERM.CPS_ID = CONTENT_PERM_SET.ID
+        INNER JOIN CONTENT on CONTENT_PERM_SET.CONTENT_ID = CONTENT.CONTENTID
+        INNER JOIN SPACES on CONTENT.SPACEID = SPACES.SPACEID
+        WHERE GROUPNAME IS NOT NULL AND GROUPNAME NOT IN ('confluence-users')
+        UNION
+        SELECT DISTINCT PERMGROUPNAME as name, SPACEKEY, 'space' as label
+        FROM SPACEPERMISSIONS
+        INNER JOIN SPACES on SPACEPERMISSIONS.SPACEID = SPACES.SPACEID
+        WHERE PERMGROUPNAME IS NOT NULL AND PERMGROUPNAME NOT IN ('confluence-users')
+    )
+    SELECT DISTINCT name
+    FROM combined
+    WHERE name IS NOT NULL
+    and SPACEKEY in (&lt;spaces list here&gt;) -- Update the space list which need to be migrated
+)
+ORDER BY g.group_name;
+{{/code}}
+
+So the resulting CSV should look like this:
+
+{{code language="csv"}}
+group
+mygroup1
+othergroup
+...
+{{/code}}
+
+== Example of SQL request for CSV export with PostgreSQL ==
+
+Here are an example of SQL request which works with PostgreSQL to do a CSV export:
+
+{{code language="sql"}}
+COPY (&lt;The previously mentioned SQL requests&gt;) TO '&lt;output file name&gt;' DELIMITER ';' NULL '' CSV HEADER;
+{{/code}}</content>
+</xwikidoc>
