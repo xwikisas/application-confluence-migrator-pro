@@ -40,7 +40,7 @@
 
 The delimiter of the CSV file is expected to be {{code}};{{/code}} and the first line of the CSV is expected to be the header with the title of each column. The line return must be in Unix format so {{code}}\n{{/code}}. In Linux you can if needed to convert the file with {{code}}dos2unix{{/code}}.
 
-All {{code}}NULL{{/code}} value are expected to be just an empty field so by example if the column is empty we will have something like {{code}};value;;{{/code}} when the second column is null or empty. Some database export could sometime set explicitly {{code}}NULL{{/code}} in the CSV export, in this case this must be fixed before being imported in XWiki.
+All {{code}}NULL{{/code}} value are expected to be just an empty field so for example if the column is empty we will have something like {{code}};value;;{{/code}} when the second column is null or empty. Some database exports could sometime set explicitly {{code}}NULL{{/code}} in the CSV export, in this case this must be fixed before being imported in XWiki.
 
 == SQL requests ==
 

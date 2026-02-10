@@ -290,7 +290,7 @@ if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
           continue;
         }
 
-        // get unified list of users and groups, since they're added the same
+        // get unified list of users and groups, since they're added the same way
         def childrenOfGroup = ((groupsWithGroups.get(g) ?: []) + (groupsWithUsers.get(g) ?: [])).unique();
 
         logger.info("Importing group {} with children (users or groups) {}", g, childrenOfGroup);
@@ -351,7 +351,6 @@ if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
   } else {
     logger.error("Could not find one of files {}, {}, {} attached to this page", groupsInGroupsFilename, usersInGroupsFilename, groupToMigrateFilename);
   }
-
 
   stop = new Date();
   TimeDuration duration = TimeCategory.minus( stop, start );
