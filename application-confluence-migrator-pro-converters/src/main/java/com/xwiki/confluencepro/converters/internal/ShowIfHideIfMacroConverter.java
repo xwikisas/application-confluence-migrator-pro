@@ -125,9 +125,7 @@ public class ShowIfHideIfMacroConverter extends AbstractMacroConverter
                     parameters.put("contentType", v);
                     break;
                 case "display":
-                    if ("word".equalsIgnoreCase(v)) {
-                        v = DISPLAY_PARAM_VALUE_PRINTABLE;
-                    } else if ("pdf".equalsIgnoreCase(v)) {
+                    if ("word".equalsIgnoreCase(v) || "pdf".equalsIgnoreCase(v)) {
                         v = DISPLAY_PARAM_VALUE_PRINTABLE;
                     }
                     parameters.put("displayType", v.toUpperCase());
