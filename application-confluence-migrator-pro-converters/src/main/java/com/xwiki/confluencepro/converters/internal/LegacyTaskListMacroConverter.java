@@ -101,7 +101,7 @@ public class LegacyTaskListMacroConverter extends AbstractTaskConverter
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
         boolean inline)
     {
-        return shouldConvertToTaskbox(confluenceId, confluenceParameters, confluenceContent) ? TASKBOX : TASK;
+        return null;
     }
 
     @Override
