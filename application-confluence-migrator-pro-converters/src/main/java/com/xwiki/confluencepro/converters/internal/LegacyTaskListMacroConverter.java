@@ -110,16 +110,17 @@ public class LegacyTaskListMacroConverter extends AbstractTaskConverter
     {
         List<Map<String, String>> taskList = getConfluenceTasksFromContent(confluenceContent);
         SimpleDateFormat storageDateFormat = new SimpleDateFormat(dateMacroConfiguration.getStorageDateFormat());
-        String title = confluenceParameters.remove("title");
+        Map<String, String> parameters = new HashMap<>(confluenceParameters);
+        String title = parameters.remove("title");
         // It is possible that the title parameter has an empty name.
-        title = title == null || title.isEmpty() ? confluenceParameters.remove("") : title;
+        title = title == null || title.isEmpty() ? parameters.remove("") : title;
         // Can't handle these parameters.
-        confluenceParameters.remove("promptOnDelete");
-        confluenceParameters.remove("enableLocking");
-        listener.beginGroup(confluenceParameters);
+        parameters.remove("promptOnDelete");
+        parameters.remove("enableLocking");
+        listener.beginGroup(parameters);
         maybeTraverseTitle(listener, title);
         for (Map<String, String> task : taskList) {
-            if (shouldConvertToTaskbox(confluenceId, confluenceParameters, confluenceContent)) {
+            if (shouldConvertToTaskbox(confluenceId, parameters, confluenceContent)) {
                 toXWikiTaskbox(task);
                 listener.onMacro(TASKBOX, task, task.remove(Task.NAME), false);
             } else {
@@ -131,7 +132,7 @@ public class LegacyTaskListMacroConverter extends AbstractTaskConverter
                 listener.onMacro(TASK, task, task.remove(Task.NAME), false);
             }
         }
-        listener.endGroup(confluenceParameters);
+        listener.endGroup(parameters);
     }
 
     @Override
