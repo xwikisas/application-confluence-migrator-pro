@@ -38,64 +38,65 @@
   <hidden>true</hidden>
   <content>confluencepro.panel.title=Confluence Migrator Pro
 ### Missing: confluencepro.extension.name=Confluence Migrator Pro
-### Missing: confluencepro.extension.missingLicense=The application is running in trial mode. In order to unlock the full capabilities please obtain a license from the {0}.
-### Missing: confluencepro.extension.missingLicense.label=administration section
-### Missing: confluencepro.extension.notMainWiki=Confluence Migrations are managed on the {0}.
-### Missing: confluencepro.extension.notMainWiki.link.label=main wiki
-### Missing: confluencepro.zippicker.title=Select a confluence package to start the migration
-### Missing: confluencepro.zippicker.placeholder=Pick a confluence export package...
-### Missing: confluencepro.zippicker.button.submit=Migrate
-### Missing: confluencepro.norights=Only the admin can perform the migration.
-### Missing: confluencepro.upload.submit=Upload new package
-### Missing: confluencepro.upload.cancel=Cancel selection
-### Missing: confluencepro.packages.title=Step 2 - Choose an export package
-### Missing: confluencepro.packages.hint=To start a migration, select an existing package or upload a new one.
-### Missing: confluencepro.packages.serverPath={0}Select from server{1}
-### Missing: confluencepro.packages.prefillUsing=For parameter values, prefill using:
-### Missing: confluencepro.packages.prefillUsingDefaults=the default parameter values
-### Missing: confluencepro.packages.prefillUsingLast=the parameter values used during the last migration
-### Missing: confluencepro.packages.prefillUsingSpecified=the parameter values used during the following migration:
-### Missing: confluencepro.packages.rememberPrefillConfig=Remember this choice for next time
-### Missing: confluencepro.migrations.title=Your migrations
-### Missing: confluencepro.prerequisites.title=Step 1 - Prerequisites
-### Missing: confluencepro.prerequisites.hint=It is highly recommended to have all the prerequisites satisfied before proceeding with the migration.
-### Missing: confluencepro.prerequisites.completed=completed
-### Missing: confluencepro.prerequisites.incomplete=not completed
-### Missing: confluencepro.prerequisites.memory=Set -Xmx ({0}) and -Xms ({1}) to at least half the memory of the machine ({2} for {3} RAM).
-### Missing: confluencepro.prerequisites.notifications=Deactivate notifications in "xwiki.properties": "notifications.enabled" and "notifications.emails.enabled" (optional).
-### Missing: confluencepro.prerequisites.userNotifications=Deactivate notifications on your own profile ("never" for automatic page watching, disable page notifications).
-### Missing: confluencepro.prerequisites.userNotificationsCleanup=Clean the Notification Preferences (optional).
-### Missing: confluencepro.prerequisites.solr=To minimize migration duration, we recommend to ensure that the Solr queue is empty before starting the migration. Check the Solr queue size in the Wiki Administration, Solr Search Section (optional).
-### Missing: confluencepro.prerequisites.listener.docMoved=Deactivate Document Moved Listener (important for large spaces).
-### Missing: confluencepro.prerequisites.listener.automaticWatch=Deactivate Automatic Watch Mode Listener (important for large spaces).
-### Missing: confluencepro.prerequisites.listener.liveNotification=Deactivate Live Notification Email Listener (important for large spaces).
-### Missing: confluencepro.migration.raport.imported.success=Migration complete. See your report below.
-### Missing: confluencepro.migration.raport.imported.died=This migration died. This can happen if XWiki was restarted during the migration, or if something wrong happened.
-### Missing: confluencepro.migration.raport.imported.errored=A serious error prevented the migration from finishing. Please see the logs for details.
-### Missing: confluencepro.migration.raport.imported.canceled=This migration was canceled.
-### Missing: confluencepro.migration.raport.imported.title=The {0} imported pages from the {2} selected Confluence space(s) ({1} revisions)
-### Missing: confluencepro.migration.raport.imported.onespace.title=The {0} imported pages ({1} revisions)
-### Missing: confluencepro.migration.raport.macros.title=Macros found during the migration
-### Missing: confluencepro.migration.raport.macros.supported=Supported macros
-### Missing: confluencepro.migration.raport.macros.notSupported=Unsupported macros
-### Missing: confluencepro.migration.raport.macros.supported.icon.title=These macros are present in the XWiki instance and are either supported or partially supported.
-### Missing: confluencepro.migration.raport.macros.notSupported.icon.title=These macros are not present in the XWiki Instance but might be installable through the Extension Manager.
-### Missing: confluencepro.migration.raport.macros.notSupported.noMacros=There were no unsupported macros detected during the migration.
-### Missing: confluencepro.migration.raport.macros.supported.noMacros=There were no supported macros detected during the migration.
-### Missing: confluencepro.migration.raport.macros.link=See the list of all confluence macros and their XWiki counterpart.
-### Missing: confluencepro.migration.raport.macros.unsupportedMacroPages=The pages containing unsupported macros
-### Missing: confluencepro.migration.raport.macros.count=Count
+confluencepro.extension.missingLicense=Cette application fonctionne en version d''essai. Pour déverrouiller toutes les fonctionnalités, merci d''obtenir une licence depuis la {0}.
+confluencepro.extension.missingLicense.label=section d'administration
+confluencepro.extension.notMainWiki=Les migrations Confluence sont gérées depuis le {0}.
+confluencepro.extension.notMainWiki.link.label=wiki principal
+confluencepro.zippicker.title=Sélectionnez un paquet Confluence pour commencer la migration
+confluencepro.zippicker.placeholder=Sélectionnez un export Confluence...
+confluencepro.zippicker.button.submit=Migrer
+confluencepro.zippicker.fileWarningEmpty=Il semble que vous n'ayez sélectionné aucune archive à importer !
+confluencepro.norights=Seul un admin peut réaliser la migration.
+confluencepro.upload.submit=Télécharger un nouveau paquet
+confluencepro.upload.cancel=Annuler la sélection
+confluencepro.packages.title=Étape 2 - Choisissez un export
+confluencepro.packages.hint=Pour commencer une migration, sélectionnez un paquet existant ou téléchargez-en un nouveau.
+confluencepro.packages.serverPath={0}Choisir depuis le serveur{1}
+confluencepro.packages.prefillUsing=Pour les paramètres, pré-remplir avec :
+confluencepro.packages.prefillUsingDefaults=les paramètres par défaut
+confluencepro.packages.prefillUsingLast=les paramètres utilisés lors de la dernière migration
+confluencepro.packages.prefillUsingSpecified=les paramètres utilisés pour la migration suivante :
+confluencepro.packages.rememberPrefillConfig=Se souvenir de ce choix pour la prochaine fois
+confluencepro.migrations.title=Vos migrations
+confluencepro.prerequisites.title=Étape 1 - Prérequis
+confluencepro.prerequisites.hint=Il est hautement recommandé de satisfaire à tous les prérequis avant de procéder à une migration.
+confluencepro.prerequisites.completed=complétés
+confluencepro.prerequisites.incomplete=non complets
+confluencepro.prerequisites.memory=Configurez -Xmx ({0}) et -Xms ({1}) afin d''atteindre au moins la moitié de la mémoire de la machine ({2} pour {3} de RAM).
+confluencepro.prerequisites.notifications=Désactivez les notifications dans "xwiki.properties" : "notifications.enabled" et "notifications.emails.enabled" (optionnel).
+confluencepro.prerequisites.userNotifications=Désactivez les notifications dans votre propre profil ("jamais" pour le suivi automatique des pages, désactivez les notifications de pages).
+confluencepro.prerequisites.userNotificationsCleanup=Nettoyez les préférences de notification (optionnel).
+confluencepro.prerequisites.solr=Pour minimiser la durée de migration, nous recommandons de s'assurer que la queue d'indexation de Solr est vide avant de démarrer une migration. Vérifiez la taille de la queue d'indexation Solr dans l'Administration du Wiki, Section Solr Search Section (optionnel).
+confluencepro.prerequisites.listener.docMoved=Désactivez la surveillance (listener) des mouvements de page (important pour les gros espaces).
+confluencepro.prerequisites.listener.automaticWatch=Désactivez la surveillance (listener) du mode de suivi automatique (Automatic Watch) (important pour les gros espaces).
+confluencepro.prerequisites.listener.liveNotification=Désactivez la surveillance (listener) des notifications mails live (important pour les gros espaces).
+confluencepro.migration.raport.imported.success=Migration terminée. Veuillez trouver votre rapport ci-dessous.
+confluencepro.migration.raport.imported.died=Cette migration a échoué. Cela peut arriver si XWiki est redémarré pendant la migration, ou si un évènement anormal s'est produit.
+confluencepro.migration.raport.imported.errored=Une erreur sérieuse a empêché la migration de se terminer. Merci de consulter les logs pour plus de détails.
+confluencepro.migration.raport.imported.canceled=Cette migration a été annulée.
+confluencepro.migration.raport.imported.title=Les {0} page(s) importée(s) de {2} l''espace Confluence sélectionné ({1} revision(s))
+confluencepro.migration.raport.imported.onespace.title=Les {0} pages importées ({1} révisions)
+confluencepro.migration.raport.macros.title=Macro trouvées pendant la migration
+confluencepro.migration.raport.macros.supported=Macros supportées
+confluencepro.migration.raport.macros.notSupported=Macros non supportées
+confluencepro.migration.raport.macros.supported.icon.title=Ces macros sont présentes dans l'instance XWiki et sont supportées ou partiellement supportées.
+confluencepro.migration.raport.macros.notSupported.icon.title=Ces macros ne sont pas présentes dans l'instance XWiki mais pourraient être insallées grâce au gestionnaire d'extensions.
+confluencepro.migration.raport.macros.notSupported.noMacros=Il n'y a pas eu de macros non supportées détectées pendant la migration.
+confluencepro.migration.raport.macros.supported.noMacros=Il n'y a pas eu de macros supportées détectées pendant la migration.
+confluencepro.migration.raport.macros.link=Liste de toutes les macros confluence et leur équivalent XWiki.
+confluencepro.migration.raport.macros.unsupportedMacroPages=Pages contenant des macros non supportées
+confluencepro.migration.raport.macros.count=Compteur
 ### Missing: confluencepro.migration.raport.macros.document=Document
-### Missing: confluencepro.migration.raport.logs.title=The logs of the migration
-### Missing: confluencepro.migration.raport.viewall.button=View all migrations
+confluencepro.migration.raport.logs.title=Logs de la migration
+confluencepro.migration.raport.viewall.button=Voir toutes les migrations
 ### Missing: confluencepro.migration.raport.viewtext=View in text format
-### Missing: confluencepro.migration.raport.problems.skipped.title={0} page(s) have encountered critical issues during the import
-### Missing: confluencepro.migration.raport.problems.confluencerefs.title={0} page(s) contain references to missing pages
-### Missing: confluencepro.migration.raport.problems.confluencerefs.info=This usually means that these pages link to pages from other spaces, and the Confluence package you used doesn't contain those spaces. Confluence reference were used to work around this issue. To avoid this, import the target spaces, and then reimport this one. We advice converting these Confluence references to proper links when the targeted pages are available.
-### Missing: confluencepro.migration.raport.problems.brokenLinks.title={0} page(s) have encountered link issues during the import
-### Missing: confluencepro.migration.raport.problems.brokenLinks.info=This usually means that these pages link to pages from other spaces, and the Confluence package you used doesn't contain those spaces. Newer migrations will issue confluence reference to work around this issue. To avoid this, import the target spaces, and then reimport this one. We advice fixing these broken links when the targeted pages are available.
-### Missing: confluencepro.migration.raport.problems.missingUsersGroups.title=Missing users and groups
-### Missing: confluencepro.migration.raport.problems.collisions.title=Reference collisions
+confluencepro.migration.raport.problems.skipped.title={0} page(s) ont rencontré un problème pendant l''import
+confluencepro.migration.raport.problems.confluencerefs.title={0} page(s) contiennent des références à des pages manquantes
+confluencepro.migration.raport.problems.confluencerefs.info=Cela signifie généralement que ces pages offrent des liens vers d'autres espaces, et le paquet Confluence que vous avez utilisé ne contient pas ces espaces. Les références Confluence ont été utilisées pour contourner ce souci. Pour éviter cela, importez les espaces concernés, puis réimportez celui-ci. Nous invitons à convertir ces références Confluence en liens liens adéquats lorsque les pages cibles seront disponibles.
+confluencepro.migration.raport.problems.brokenLinks.title={0} page(s) ont rencontré des problèmes de liens durant l''import
+confluencepro.migration.raport.problems.brokenLinks.info=Cela signifie généralement que ces pages offrent des liens vers d'autres espaces, et le paquet Confluence que vous avez utilisé ne contient pas ces espaces. De nouvelles migrations fourniront les références confluence our contourner ce problème. Pour éviter cela, importez les espaces concernés, puis réimportez celui-ci. Nous invitons à corriger ces liens cassés lorsque les pages cibles seront disponibles.
+confluencepro.migration.raport.problems.missingUsersGroups.title=Utilsateurs et groupes manquants
+confluencepro.migration.raport.problems.collisions.title=Collisions de références
 ### Missing: confluencepro.migration.raport.problems.collisions.info=The following references relate to several Confluence page titles. This means that those titles were translated to the same reference, and that the related pages overwrote each others during the migration
 ### Missing: confluencepro.migration.raport.problems.missingUsersGroups.info=These users and groups appear in rights imported from the Confluence package, but were not present the wiki in which Confluence Migrator Pro ran. This is only an issue if you expected all the users and groups to exist in this wiki before migrating this content.
 ### Missing: confluencepro.migration.raport.problems.missingUsersGroups.users=Missing users:
@@ -103,11 +104,13 @@
 ### Missing: confluencepro.migration.raport.problems.done.title={0} page(s) have encountered issues during the import
 ### Missing: confluencepro.migration.raport.problems.other.title=Other issue were encountered during the import
 ### Missing: confluencepro.migration.raport.problems.confluencerefs.list=List of targeted but missing pages
+confluencepro.migration.raport.problems.confluencerefids.list=Liste des identifiants de pages ciblés mais manquants :
 ### Missing: confluencepro.migration.raport.problems.brokenLinks.list=List of pages targeted by potentially broken links
 ### Missing: confluencepro.migration.raport.problems.unhandledParameters.title=There are {0} unhandled macro parameters or parameter values
 ### Missing: confluencepro.migration.raport.problems.unhandledParameters.info=Unhandled parameter warnings:
 ### Missing: confluencepro.migration.raport.problems.unhandledParameterValues.info=Unhandled parameter values warnings:
 ### Missing: confluencepro.migration.raport.problems.unhandledParameters.list=The unhandled parameter (values), per macro
+confluencepro.migration.raport.renamingSpace=(clé d''espace d''origine : {0})
 ### Missing: confluencepro.migration.raport.macroName=Macro
 ### Missing: confluencepro.migration.raport.parameterName=Parameter
 ### Missing: confluencepro.migration.raport.parameterValues=Value(s)
@@ -183,15 +186,44 @@
 ### Missing: confluencepro.job.linkmapping.description=Link Mapping lets the migrator collect information about spaces and documents as Confluence packages are analysed in order to produce the right links when pages link to other pages that are not in the same Confluence export package (for instance when using space exports).
 ### Missing: confluencepro.job.savelinkmapping.question.title=Update link mapping
 ### Missing: confluencepro.job.savelinkmapping.question.hint=Save information about documents in this package so links to these documents in migrations will work. This includes documents that are not in the spaces selected for import. You can disable this behavior by setting this to false.
+confluencepro.job.emptyActionsToCheckboxes.question.title=Migrer les tâches vides vers des cases à cocher
+confluencepro.job.emptyActionsToCheckboxes.question.hint=Cela migrera toutes les tâches vides (ac:task-body&lt;/ac:task-body) vers des cases à cocher. Cela signifie que si une tâche n'a pas de description, même si elle a un responsable et une date de fin, elle sera migrée vers une case à cocher.
+confluencepro.job.actionsToCheckboxes.question.title=Migrer toutes les tâches vers des cases à cocher
+confluencepro.job.actionsToCheckboxes.question.hint=Cela convertira toutes les tâches Confluence vers des cases à cocher.
+### Missing: ac:task-bodymy task description&lt;/ac:task-body should be migrated to the checkboxes's content.
 
 ##Confluence Pro UI translations
 ### Missing: confluencemigratorpro.homepage.tab.newMigration.title=New migration
 ### Missing: confluencemigratorpro.homepage.tab.allMigrations.title=All migrations
 ### Missing: confluencemigratorpro.homepage.tab.importedMacros.title=Imported macros
 ### Missing: confluencemigratorpro.homepage.tab.postMigrationFixes.title=Post migration fixes
+confluencemigratorpro.homepage.tab.otherTools.title=Autres outils de migration
 ### Missing: confluencepro.howToMigrate.upload.title=Upload a Confluence export (or use an already uploaded one)
 ### Missing: confluencepro.howToMigrate.server.title=Select from your server a Confluence export
 ### Missing: confluencepro.uploadFacadeButton=Upload export
 ### Missing: confluencepro.lastMigration=Last migration
+confluencepro.no=Non
+confluencepro.yes=Oui
+
+## Tabs javascript
+confluencemigratorpro.javascript.notifications.failedToLoad=La section n'a pas pu être chargée. Merci de recharger la page, et si l'erreur persiste, contactez l'équipe XWiki.
+
+## CommonCode javascript
+confluencemigratorpro.javascript.unexpectedFormat=Il semble que vous essayiez d'importer un fichier dans un format non supporté. Confluence Migrator Pro supporte uniquement les exports de backups Confluence, qui ont une extension .zip.
+confluencemigratorpro.javascript.interruptMigrationConfirm=Êtes-vous certain de vouloir interrompre cette migration ?
+
+## Accessibility
+cmpMigrationOptionField={0} options de migration
+
+## Screen reader
+cfm.sr-only.newBatch.packages=Sélectionnez les packages Confluence.
+cfm.sr-only.migrationSheet.missingReferences=Cliquez pour déplier la liste des pages avec des références manquantes.
+cfm.sr-only.migrationSheet.expandMigratedSpaces=Cliquez pour déplier une liste de tous les espaces migrés.
+
+##Confluence Pro configs
+ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=IDs des extensions
+ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs.hint=Liste des identifiants des extensions séparés par des virgules.
+admin.cmp.section.title=Confluence Migrator Pro
+cmp.extraDetails.title=Détails Supplémentaires
 </content>
 </xwikidoc>
