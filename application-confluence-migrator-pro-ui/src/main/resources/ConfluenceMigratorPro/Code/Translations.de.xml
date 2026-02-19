@@ -45,6 +45,7 @@
 ### Missing: confluencepro.zippicker.title=Select a confluence package to start the migration
 ### Missing: confluencepro.zippicker.placeholder=Pick a confluence export package...
 ### Missing: confluencepro.zippicker.button.submit=Migrate
+### Missing: confluencepro.zippicker.fileWarningEmpty=It looks like you did not select any archive to import!
 ### Missing: confluencepro.norights=Only the admin can perform the migration.
 ### Missing: confluencepro.upload.submit=Upload new package
 ### Missing: confluencepro.upload.cancel=Cancel selection
@@ -97,17 +98,19 @@
 ### Missing: confluencepro.migration.raport.problems.missingUsersGroups.title=Missing users and groups
 ### Missing: confluencepro.migration.raport.problems.collisions.title=Reference collisions
 ### Missing: confluencepro.migration.raport.problems.collisions.info=The following references relate to several Confluence page titles. This means that those titles were translated to the same reference, and that the related pages overwrote each others during the migration
-### Missing: confluencepro.migration.raport.problems.missingUsersGroups.info=These users and groups appear in rights imported from the Confluence package, but were not present the wiki in which Confluence Migrator Pro ran. This is only an issue if you expected all the users and groups to exist in this wiki before migrating this content.
+confluencepro.migration.raport.problems.missingUsersGroups.info=These users and groups appear in rights imported from the Confluence package, but were not present the wiki in which Confluence Migrator Pro ran. This is only an issue if you expected all the users and groups to exist in this wiki before migrating this content.
 ### Missing: confluencepro.migration.raport.problems.missingUsersGroups.users=Missing users:
 ### Missing: confluencepro.migration.raport.problems.missingUsersGroups.groups=Missing groups:
 ### Missing: confluencepro.migration.raport.problems.done.title={0} page(s) have encountered issues during the import
 ### Missing: confluencepro.migration.raport.problems.other.title=Other issue were encountered during the import
 ### Missing: confluencepro.migration.raport.problems.confluencerefs.list=List of targeted but missing pages
+### Missing: confluencepro.migration.raport.problems.confluencerefids.list=List of targeted but missing page IDs:
 ### Missing: confluencepro.migration.raport.problems.brokenLinks.list=List of pages targeted by potentially broken links
 ### Missing: confluencepro.migration.raport.problems.unhandledParameters.title=There are {0} unhandled macro parameters or parameter values
 ### Missing: confluencepro.migration.raport.problems.unhandledParameters.info=Unhandled parameter warnings:
 ### Missing: confluencepro.migration.raport.problems.unhandledParameterValues.info=Unhandled parameter values warnings:
 ### Missing: confluencepro.migration.raport.problems.unhandledParameters.list=The unhandled parameter (values), per macro
+### Missing: confluencepro.migration.raport.renamingSpace=(original space key: {0})
 ### Missing: confluencepro.migration.raport.macroName=Macro
 ### Missing: confluencepro.migration.raport.parameterName=Parameter
 ### Missing: confluencepro.migration.raport.parameterValues=Value(s)
@@ -158,8 +161,8 @@
 ### Missing: confluencepro.job.question.showMore.message={0} more spaces available.
 ### Missing: confluencepro.job.question.showMore.link=Load more..
 ### Missing: confluencepro.job.interrupt.button=Interrupt
-### Missing: confluencepro.job.status.readingPackage=Importing the Confluence package. This may take a while..
-### Missing: confluencepro.job.status.runningJob=Your pages are being imported and moved into the correct location. This may take a while..
+confluencepro.job.status.readingPackage=Importing the Confluence package. This may take a while..
+confluencepro.job.status.runningJob=Your pages are being imported and moved into the correct location. This may take a while..
 ### Missing: confluencepro.job.question.advanced.link=Advanced migration options
 ### Missing: confluencepro.job.question.advanced.input=Properties of the input filter stream (Confluence XML)
 ### Missing: confluencepro.job.question.advanced.output=Properties of the output filter stream (XWiki instance)
@@ -179,15 +182,43 @@
 ### Missing: confluencepro.job.savelinkmapping.question.hint=Save information about documents in this package so links to these documents in migrations will work. This includes documents that are not in the spaces selected for import. You can disable this behavior by setting this to false.
 ### Missing: confluencepro.job.onlylinkmapping.question.title=Only build link mapping
 ### Missing: confluencepro.job.onlylinkmapping.question.hint=Set this to true if this migration should exclusively be used for building link mapping. No spaces will be imported.
+### Missing: confluencepro.job.emptyActionsToCheckboxes.question.title=Migrate empty action items to checkboxes
+### Missing: confluencepro.job.emptyActionsToCheckboxes.question.hint=This will migrate all empty tasks (ac:task-body&lt;/ac:task-body) to checkboxes. This will mean that if an action item has no description, even if it has an assignee or due date, it will be migrated to a checkbox.
+### Missing: confluencepro.job.actionsToCheckboxes.question.title=Migrate all action items to checkboxes
+### Missing: confluencepro.job.actionsToCheckboxes.question.hint=This will convert all Confluence action items into checkboxes.
 
 ##Confluence Pro UI translations
 ### Missing: confluencemigratorpro.homepage.tab.newMigration.title=New migration
 ### Missing: confluencemigratorpro.homepage.tab.allMigrations.title=All migrations
 ### Missing: confluencemigratorpro.homepage.tab.importedMacros.title=Imported macros
 ### Missing: confluencemigratorpro.homepage.tab.postMigrationFixes.title=Post migration fixes
+### Missing: confluencemigratorpro.homepage.tab.otherTools.title=Other migration tools
 ### Missing: confluencepro.howToMigrate.upload.title=Upload a Confluence export (or use an already uploaded one)
 ### Missing: confluencepro.howToMigrate.server.title=Select from your server a Confluence export
 ### Missing: confluencepro.uploadFacadeButton=Upload export
 ### Missing: confluencepro.lastMigration=Last migration
+### Missing: confluencepro.no=No
+### Missing: confluencepro.yes=Yes
+
+## Tabs javascript
+### Missing: confluencemigratorpro.javascript.notifications.failedToLoad=The section couldn't be loaded. Please refresh the page, and if the error still persists, contact the XWiki team.
+
+## CommonCode javascript
+### Missing: confluencemigratorpro.javascript.unexpectedFormat=It looks like you are trying to import a file of an unexpected format. Confluence Migrator Pro currently only supports Confluence backup exports, which have a .zip extension.
+### Missing: confluencemigratorpro.javascript.interruptMigrationConfirm=Are you sure you want to interrupt this migration?
+
+## Accessibility
+### Missing: cmpMigrationOptionField={0} migration option
+
+## Screen reader
+### Missing: cfm.sr-only.newBatch.packages=Select confluence packages.
+### Missing: cfm.sr-only.migrationSheet.missingReferences=Click to expand a list of pages that have missing references.
+### Missing: cfm.sr-only.migrationSheet.expandMigratedSpaces=Click to expand a list with all the migrated spaces.
+
+##Confluence Pro configs
+### Missing: ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=Extension IDs
+### Missing: ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs.hint=List of extension ids separated by a comma.
+### Missing: admin.cmp.section.title=Confluence Migrator Pro
+### Missing: cmp.extraDetails.title=Extra Details
 </content>
 </xwikidoc>
