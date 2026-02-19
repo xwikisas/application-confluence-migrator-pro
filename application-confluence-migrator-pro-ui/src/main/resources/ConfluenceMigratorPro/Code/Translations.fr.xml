@@ -186,7 +186,6 @@ confluencepro.job.emptyActionsToCheckboxes.question.title=Migrer les tâches vid
 confluencepro.job.emptyActionsToCheckboxes.question.hint=Cela migrera toutes les tâches vides (ac:task-body&lt;/ac:task-body) vers des cases à cocher. Cela signifie que si une tâche n'a pas de description, même si elle a un responsable et une date de fin, elle sera migrée vers une case à cocher.
 confluencepro.job.actionsToCheckboxes.question.title=Migrer toutes les tâches vers des cases à cocher
 confluencepro.job.actionsToCheckboxes.question.hint=Cela convertira toutes les tâches Confluence vers des cases à cocher.
-### Missing: ac:task-bodymy task description&lt;/ac:task-body should be migrated to the checkboxes's content.
 
 ##Confluence Pro UI translations
 ### Missing: confluencemigratorpro.homepage.tab.newMigration.title=New migration
