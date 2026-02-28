@@ -38,21 +38,17 @@
   <hidden>true</hidden>
   <content>confluencepro.panel.title=Confluence Migrator Pro
 confluencepro.extension.name=Confluence Migrator Pro
-
 confluencepro.extension.missingLicense=The application is running in trial mode. In order to unlock the full capabilities please obtain a license from the {0}.
 confluencepro.extension.missingLicense.label=administration section
 confluencepro.extension.notMainWiki=Confluence Migrations are managed on the {0}.
 confluencepro.extension.notMainWiki.link.label=main wiki
-
 confluencepro.zippicker.title=Select a confluence package to start the migration
 confluencepro.zippicker.placeholder=Pick a confluence export package...
 confluencepro.zippicker.button.submit=Migrate
 confluencepro.zippicker.fileWarningEmpty=It looks like you did not select any archive to import!
-
 confluencepro.norights=Only the admin can perform the migration.
 confluencepro.upload.submit=Upload new package
 confluencepro.upload.cancel=Cancel selection
-
 confluencepro.packages.title=Step 2 - Choose an export package
 confluencepro.packages.hint=To start a migration, select an existing package or upload a new one.
 confluencepro.packages.serverPath={0}Select from server{1}
@@ -61,9 +57,7 @@ confluencepro.packages.prefillUsingDefaults=the default parameter values
 confluencepro.packages.prefillUsingLast=the parameter values used during the last migration
 confluencepro.packages.prefillUsingSpecified=the parameter values used during the following migration:
 confluencepro.packages.rememberPrefillConfig=Remember this choice for next time
-
 confluencepro.migrations.title=Your migrations
-
 confluencepro.prerequisites.title=Step 1 - Prerequisites
 confluencepro.prerequisites.hint=It is highly recommended to have all the prerequisites satisfied before proceeding with the migration.
 confluencepro.prerequisites.completed=completed
@@ -76,7 +70,6 @@ confluencepro.prerequisites.solr=To minimize migration duration, we recommend to
 confluencepro.prerequisites.listener.docMoved=Deactivate Document Moved Listener (important for large spaces).
 confluencepro.prerequisites.listener.automaticWatch=Deactivate Automatic Watch Mode Listener (important for large spaces).
 confluencepro.prerequisites.listener.liveNotification=Deactivate Live Notification Email Listener (important for large spaces).
-
 confluencepro.migration.raport.imported.success=Migration complete. See your report below.
 confluencepro.migration.raport.imported.died=This migration died. This can happen if XWiki was restarted during the migration, or if something wrong happened.
 confluencepro.migration.raport.imported.errored=A serious error prevented the migration from finishing. Please see the logs for details.
@@ -105,7 +98,7 @@ confluencepro.migration.raport.problems.brokenLinks.info=This usually means that
 confluencepro.migration.raport.problems.missingUsersGroups.title=Missing users and groups
 confluencepro.migration.raport.problems.collisions.title=Reference collisions
 confluencepro.migration.raport.problems.collisions.info=The following references relate to several Confluence page titles. This means that those titles were translated to the same reference, and that the related pages overwrote each others during the migration
-confluencepro.migration.raport.problems.missingUsersGroups.info=These users and groups appear in rights imported from the Confluence package, but were not present the wiki in which Confluence Migrator Pro ran. This is only an issue if you expected all the users and groups to exist in this wiki before migrating this content.
+confluencepro.migration.raport.problems.missingUsersGroups.info=These users and groups appear in rights imported from the Confluence package, but were not present in the wiki in which Confluence Migrator Pro ran. This is only an issue if you expected all the users and groups to exist in this wiki before migrating this content.
 confluencepro.migration.raport.problems.missingUsersGroups.users=Missing users:
 confluencepro.migration.raport.problems.missingUsersGroups.groups=Missing groups:
 confluencepro.migration.raport.problems.done.title={0} page(s) have encountered issues during the import
@@ -131,11 +124,9 @@ confluencepro.migration.title.label=Set the title of the migration
 confluencepro.migration.source.title=Set the source package of the migration
 confluencepro.migration.title.placeholder=Type the desired title...
 confluencepro.migration.missingLicense=As part of a trial, you can migrate one space per migration. In order to unlock the full capabilities please obtain a license.
-
 confluencepro.migration.migratepropsdocsave=Migrated JSON properties to attachments
 confluencepro.migration.propertiessuccessfullymigrated=Migrated properties to attachments.
 confluencepro.migration.nopropertiestomigrate=No properties to migrate.
-
 confluencepro.migration.livetable.doc.title=Migration
 confluencepro.migration.livetable._actions=Actions
 confluencepro.migration.livetable._actions.select=Select package
@@ -150,22 +141,18 @@ confluencepro.migration.livetable.state.errored=Errored
 confluencepro.migration.livetable.state.none=Not started
 confluencepro.migration.livetable.state.waiting=Waiting
 confluencepro.migration.livetable.state.done=Done
-
 confluencepro.migration.popup.title=Insert the title of the migration
 confluencepro.migration.popup.placeholder=Type the migration title...
 confluencepro.migration.popup.startMigration=Start migration
-
 confluencepro.macros.title=Imported macros
 confluencepro.macros.link=For more information about supported and unsupported macros, please visit our dedicated page.
 confluencepro.macros.livetable.name=Macro name
 confluencepro.macros.livetable.occurrences=Occurrences
 confluencepro.macros.livetable.pages=Present in pages
 confluencepro.macros.livetable.supported=Is supported?
-
 confluencepro.macros.pages.title=The pages where "{0}" macro is present
 confluencepro.macros.pages.noMacro=No macro selected.
 confluencepro.macros.pages.missingData=There is no data on this macro.
-
 confluencepro.job.question.title=Select the Confluence spaces you want to import.
 confluencepro.job.question.additionalInfo.documentsCount=Documents:
 confluencepro.job.question.additionalInfo.attachmentsCount=Attachments:
@@ -174,8 +161,8 @@ confluencepro.job.question.search.placeholder=Search for a space...
 confluencepro.job.question.showMore.message={0} more spaces available.
 confluencepro.job.question.showMore.link=Load more..
 confluencepro.job.interrupt.button=Interrupt
-confluencepro.job.status.readingPackage=Importing the Confluence package. This may take a while..
-confluencepro.job.status.runningJob=Your pages are being imported and moved into the correct location. This may take a while..
+confluencepro.job.status.readingPackage=Importing the Confluence package. This may take a while…
+confluencepro.job.status.runningJob=Your pages are being imported and moved into the correct location. This may take a while...
 confluencepro.job.question.advanced.link=Advanced migration options
 confluencepro.job.question.advanced.input=Properties of the input filter stream (Confluence XML)
 confluencepro.job.question.advanced.output=Properties of the output filter stream (XWiki instance)
@@ -232,7 +219,8 @@ cfm.sr-only.migrationSheet.expandMigratedSpaces=Click to expand a list with all 
 ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=Extension IDs
 ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs.hint=List of extension ids separated by a comma.
 admin.cmp.section.title=Confluence Migrator Pro
-cmp.extraDetails.title=Extra Details</content>
+cmp.extraDetails.title=Extra Details
+</content>
   <object>
     <name>ConfluenceMigratorPro.Code.Translations</name>
     <number>0</number>

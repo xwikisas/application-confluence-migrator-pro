@@ -36,7 +36,7 @@
   <minorEdit>false</minorEdit>
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
-  <content>### Missing: ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.doc.name=
+  <content>ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.doc.name=Nom
 ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.batch=Lot
 ### Missing: ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.executed=Executed
 ### Missing: ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.doc.date=Date
