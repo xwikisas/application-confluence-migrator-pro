@@ -73,8 +73,8 @@
 ### Missing: confluencepro.migration.raport.imported.died=This migration died. This can happen if XWiki was restarted during the migration, or if something wrong happened.
 ### Missing: confluencepro.migration.raport.imported.errored=A serious error prevented the migration from finishing. Please see the logs for details.
 ### Missing: confluencepro.migration.raport.imported.canceled=This migration was canceled.
-### Missing: confluencepro.migration.raport.imported.title=The {0} imported pages from the {2} selected Confluence space(s) ({1} revisions)
-### Missing: confluencepro.migration.raport.imported.onespace.title=The {0} imported pages ({1} revisions)
+### Missing: confluencepro.migration.raport.imported.title=The {0} imported page(s) and {2} template(s) from the {3} selected Confluence spaces ({1} revisions)
+### Missing: confluencepro.migration.raport.imported.onespace.title=The {0} imported pages and {2} templates ({1} revisions)
 ### Missing: confluencepro.migration.raport.macros.title=Macros found during the migration
 ### Missing: confluencepro.migration.raport.macros.supported=Supported macros
 ### Missing: confluencepro.migration.raport.macros.notSupported=Unsupported macros
