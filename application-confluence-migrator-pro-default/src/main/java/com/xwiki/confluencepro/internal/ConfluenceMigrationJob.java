@@ -198,9 +198,8 @@ public class ConfluenceMigrationJob
             return;
         }
 
-        // If there is no license, the user can still trial the application by importing one space and 30 of its pages.
-        String wiki = request.getStatusDocumentReference()
-            .getWikiReference().getName();
+        // If there is no license, the user can still trial the application by importing one space and 200 of its pages.
+        String wiki = request.getStatusDocumentReference().getWikiReference().getName();
 
         DocumentReference mainRef = new DocumentReference(wiki, Arrays.asList(
             "ConfluenceMigratorPro", "Code"), "MigrationClass");
