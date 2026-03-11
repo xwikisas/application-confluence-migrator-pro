@@ -39,41 +39,40 @@
   <content>ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.doc.name=Nom
 ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.batch=Lot
 ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.executed=Exécuté
-### Missing: ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.doc.date=Date
-### Missing: ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.
+ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.doc.date=Date
 
 ## Main batch livedata
-### Missing: confluencemigratorpro.batches.header.pageName=Name
+confluencemigratorpro.batches.header.pageName=Nom de la page
 confluencemigratorpro.batches.header.totalSize=Taille du lot
-### Missing: confluencemigratorpro.batches.header.creationDate=Date
+confluencemigratorpro.batches.header.creationDate=Date
 confluencemigratorpro.batches.header.author=Créé par
-### Missing: confluencemigratorpro.batches.header.actions=Actions
+confluencemigratorpro.batches.header.actions=Actions
 confluencemigratorpro.baches.uploadButton=Nouveau lot
 confluencemigratorpro.baches.copyButton=Copier le lot
 
 ## Batch livedata
-### Missing: confluencepro.migration.batch.livetable.header.doc.name=Name
-### Missing: confluencepro.migration.batch.livetable.header.job_status=Status
+confluencepro.migration.batch.livetable.header.doc.name=Nom
+confluencepro.migration.batch.livetable.header.job_status=État
 confluencepro.migration.batch.livetable.header.executed=Exécuté
-### Missing: confluencepro.migration.batch.livetable.header.doc.date=Date
-### Missing: confluencepro.migration.batch.livetable.header.doc.author=Author
-### Missing: confluencepro.migration.batch.livetable.header.actions=Actions
+confluencepro.migration.batch.livetable.header.doc.date=Date
+confluencepro.migration.batch.livetable.header.doc.author=Auteur
+confluencepro.migration.batch.livetable.header.actions=Actions
 
 ## Create batch
 confluencemigratorpro.batches.createForm.selectAll=Tout sélectionner
 confluencemigratorpro.batches.createForm.selectNone=Tout déselectionner
 confluencemigratorpro.batches.createForm.invertSelect=Inverser la sélection
-### Missing: confluencemigratorpro.batches.createForm.filterPlaceholder=Filter...
-### Missing: confluencemigratorpro.batches.create.batchName=BATCH NAME
-### Missing: confluencemigratorpro.batches.create.sources=SOURCES
-### Missing: confluencemigratorpro.batches.create.inputProperties=INPUT PROPERTIES
-### Missing: confluencemigratorpro.batches.create.outputProperties=OUTPUT PROPERTIES
-### Missing: confluencemigratorpro.batches.create.linkMappingPass=LINK MAPPING PASS
-### Missing: confluencemigratorpro.batches.create.dryRun=DRY RUN
+confluencemigratorpro.batches.createForm.filterPlaceholder=Filtrer...
+confluencemigratorpro.batches.create.batchName=NOM DU BATCH
+confluencemigratorpro.batches.create.sources=SOURCES
+confluencemigratorpro.batches.create.inputProperties=PROPRIÉTÉS D'ENTRÉE
+confluencemigratorpro.batches.create.outputProperties=PROPRIÉTÉS DE SORTIE
+confluencemigratorpro.batches.create.linkMappingPass=PASSE CORRESPONDANCE DE LIENS
+confluencemigratorpro.batches.create.dryRun=ESSAI
 confluencemigratorpro.batches.create.button.title=Nouveau lot
 confluencemigratorpro.batches.create.warn.missingParameters=Des paramètres sont manquants.
 confluencemigratorpro.batches.create.filesThatCouldBeCreated=CELA CRÉERA LES PAGES DE MIGRATION SUIVANTES :
-### Missing: confluencemigratorpro.batches.create.batchPage=BATCH PAGE
+confluencemigratorpro.batches.create.batchPage=PAGE DU BATCH
 confluencemigratorpro.batches.createForm.linkMapping.hint=Réaliser une passe sur la correspondance des liens pour tous les imports avant d'importer effectivement le contenu.
 confluencemigratorpro.batches.createForm.linkMapping.title=Revue des correspondances de liens
 confluencemigratorpro.batches.createForm.dryRun.hint=Ne pas réellement créer le lot et exécuter les migrations, mais indiquer ce qui sera fait.
@@ -88,16 +87,16 @@ confluencemigratorpro.baches.section.hint=Vous pouvez également sélectionner u
 ## Batch sheet
 confluencemigratorpro.batches.batch.refreshLivedata.hint=L'état du processus dans la table ci-dessus n'est pas rafraichi automatiquement, vous devez le faire manuellement
 confluencemigratorpro.batches.batch.refreshLivedata.button=Rafraichir
-### Missing: confluencemigratorpro.batches.batchSheet.stats=Stats
+confluencemigratorpro.batches.batchSheet.stats=Statistiques
 confluencemigratorpro.batches.batchSheet.fixReferences=Corriger les références
 confluencemigratorpro.batches.batchSheet.copyBatch=Copier le lot
 confluencemigratorpro.batches.batchSheet.runBatch=Exécuter le lot
 confluencemigratorpro.batches.batchSheet.resumeBatch=Reprendre le lot
 
 ## Batch fix references
-### Missing: confluencebatches.referencefixing.livetable.doc.name=Name
+confluencebatches.referencefixing.livetable.doc.name=Nom
 confluencebatches.referencefixing.livetable.batch=Lot
 confluencebatches.referencefixing.livetable.executed=Exécuté
-### Missing: confluencebatches.referencefixing.livetable.doc.date=Date
+confluencebatches.referencefixing.livetable.doc.date=Date
 </content>
 </xwikidoc>

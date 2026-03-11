@@ -37,7 +37,7 @@
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
   <content>### Missing: confluencepro.diagramconverter.livedata.emptyvalue=
-confluencepro.diagramconverter.livedata.dryRun=Essai à blanc
+confluencepro.diagramconverter.livedata.dryRun=Exécution à blanc
 ### Missing: confluencepro.diagramconverter.livedata.updateInPlace=Update in place
 ### Missing: confluencepro.diagramconverter.livedata.migrations=Migrations
 ### Missing: confluencepro.diagramconverter.livedata.spaces=Spaces

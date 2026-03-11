@@ -40,7 +40,6 @@
 ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.batch=Batch
 ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.executed=Executed
 ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.doc.date=Date
-ConfluenceMigratorPro.ConfluenceBatches.referencefixing.livetable.
 
 ## Main batch livedata
 confluencemigratorpro.batches.header.pageName=Name
