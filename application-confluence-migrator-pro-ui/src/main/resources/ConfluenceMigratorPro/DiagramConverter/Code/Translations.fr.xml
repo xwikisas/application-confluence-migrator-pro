@@ -38,12 +38,12 @@
   <hidden>true</hidden>
   <content>### Missing: confluencepro.diagramconverter.livedata.emptyvalue=
 confluencepro.diagramconverter.livedata.dryRun=Essai à blanc
-### Missing: confluencepro.diagramconverter.livedata.updateInPlace=Update in place
+confluencepro.diagramconverter.livedata.updateInPlace=Changé sur place
 ### Missing: confluencepro.diagramconverter.livedata.migrations=Migrations
-### Missing: confluencepro.diagramconverter.livedata.spaces=Spaces
-### Missing: confluencepro.diagramconverter.livedata.executed=Execution status
+confluencepro.diagramconverter.livedata.spaces=Espaces
+confluencepro.diagramconverter.livedata.executed=Statut de l'exécution
 ### Missing: confluencepro.diagramconverter.livedata.doc.name=Name
-### Missing: confluencepro.diagramconverter.livedata.doc.creationDate=Created
-### Missing: confluencepro.diagramconverter.livedata.doc.date=Updated
+confluencepro.diagramconverter.livedata.doc.creationDate=Créé
+confluencepro.diagramconverter.livedata.doc.date=Mis à jour
 </content>
 </xwikidoc>
