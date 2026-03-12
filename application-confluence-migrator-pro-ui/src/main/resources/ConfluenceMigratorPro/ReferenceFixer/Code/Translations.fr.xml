@@ -36,12 +36,12 @@
   <minorEdit>false</minorEdit>
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
-  <content>confluencepro.referencefixer.livedata.emptyvalue=
+  <content>### Missing: confluencepro.referencefixer.livedata.emptyvalue=
 confluencepro.referencefixer.livedata.dryRun=Exécution à blanc
 confluencepro.referencefixer.livedata.updateInPlace=Changé sur place
 confluencepro.referencefixer.livedata.migrations=Migrations
 confluencepro.referencefixer.livedata.spaces=Espaces
-confluencepro.referencefixer.livedata.executed=État
+confluencepro.referencefixer.livedata.executed=État de l'exécution
 confluencepro.referencefixer.livedata.doc.name=Nom
 confluencepro.referencefixer.livedata.doc.creationDate=Créé
 confluencepro.referencefixer.livedata.doc.date=Changé
