@@ -42,6 +42,7 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.WikiReference;
+import org.xwiki.notifications.preferences.email.NotificationEmailUserPreferenceManager;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
@@ -114,6 +115,10 @@ class ConfluenceReferenceFixerTestBase
 
     @InjectComponentManager
     private MockitoComponentManager componentManager;
+
+    // Prevents the failure to lookup component IntervalUsersManagerInvalidator
+    @MockComponent
+    private NotificationEmailUserPreferenceManager notificationEmailUserPreferenceManager;
 
     @AfterComponent
     void setup() throws ConfluenceResolverException

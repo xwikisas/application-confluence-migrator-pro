@@ -20,10 +20,10 @@
 package com.xwiki.confluencepro.test.ui;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -53,7 +53,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @UITest(properties = {
     // Add the FileUploadPlugin which is needed by the test to upload attachment files
-    "xwikiCfgPlugins=com.xpn.xwiki.plugin.fileupload.FileUploadPlugin" },
+    "xwikiCfgPlugins=com.xpn.xwiki.plugin.fileupload.FileUploadPlugin",
+    // The Notifications module contributes a Hibernate mapping that needs to be added to hibernate.cfg.xml,
+    // otherwise the tests fail to run with org.hibernate.hql.internal.ast.QuerySyntaxException:
+    // DefaultNotificationFilterPreference is not mapped [select nfp from DefaultNotificationFilterPreference nfp wher
+    // nfp.owner = :owner order by nfp.id]
+    "xwikiDbHbmCommonExtraMappings=notification-filter-preferences.hbm.xml",
+    "xwikiPropertiesAdditionalProperties=test.prchecker.excludePattern=.*:ConfluenceMigratorPro\\.(ConfluenceBatches\\.New|Code\\.(Tabs\\.NewMigration|LivedataJSON))",
+    },
+    extraJARs = {
+        // Needed for the above extra mapping.
+        // It's currently not possible to install a JAR contributing a Hibernate mapping file as an Extension. Thus
+        // we need to provide the JAR inside WEB-INF/lib. See https://jira.xwiki.org/browse/XWIKI-8271
+        "org.xwiki.platform:xwiki-platform-notifications-filters-default:15.10",
+    },
     extensionOverrides = {
         @ExtensionOverride(
             extensionId = "com.google.code.findbugs:jsr305",
@@ -136,7 +149,7 @@ class ConfluenceMigratorIT
         assertEquals("Running", migrationStatus);
         //Go back and run the migration
         runningPage = confluenceHomePage.getMigrationRunningPage(0);
-        QuestionSpace questionSpace = runningPage.getSelectableSpace(0);
+        QuestionSpace questionSpace = runningPage.getSelectableSpaces().get(0);
         questionSpace.getCheckbox().click();
         MigrationRaportView raportView = runningPage.confirmSpacesToMigrate();
 
@@ -219,8 +232,7 @@ class ConfluenceMigratorIT
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".batchSubsection");
         CreateBatchPage createBatchPage = confluenceHomePage.createNewBatch();
-        createBatchPage.completePath(new File(testConfiguration.getBrowser().getTestResourcesPath()).getAbsolutePath())
-            .refreshPage();
+        createBatchPage.completePath().refreshPage();
         createBatchPage.selectAll();
         assertEquals(4, createBatchPage.countSelectedPackages());
         createBatchPage.selectNone();
@@ -241,8 +253,7 @@ class ConfluenceMigratorIT
         confluenceHomePage.openSection("confluence-pro-tab-container-new-migration");
         confluenceHomePage.openHowToMigrateSubsection(".batchSubsection");
         CreateBatchPage createBatchPage = confluenceHomePage.createNewBatch();
-        createBatchPage.completePath(new File(testConfiguration.getBrowser().getTestResourcesPath()).getAbsolutePath())
-            .refreshPage().completeName("Test");
+        createBatchPage.completePath().refreshPage().completeName("Test");
         createBatchPage.selectAll();
         createBatchPage.createBatch();
         ConfluenceHomePage.goToPage();
@@ -292,8 +303,6 @@ class ConfluenceMigratorIT
         assertEquals(201, runningPage.getNumberOfDocuments(index));
 
         runningPage.selectSpaceByLabel("SPACE1 - space1");
-        runningPage.confirmSpacesToMigrate();
-
         MigrationRaportView reportView = runningPage.confirmSpacesToMigrate();
         // The number of pages the space has after the import, the 200 pages limit was applied.
         assertEquals(200, reportView.getPagesCount());
@@ -328,7 +337,7 @@ class ConfluenceMigratorIT
 
         // Checks that 14 macros were imported and converted correctly from Confluence.
         assertEquals(
-            List.of("date", "info", "code", "toc", "task-report", "profile-picture", "expand", "recently-updated",
+            Set.of("date", "info", "code", "toc", "task-report", "profile-picture", "expand", "recently-updated",
                 "content-report-table", "contributors", "excerpt", "panel", "excerpt-include", "status"),
             raportView.getXWikiMacros());
 

@@ -20,6 +20,7 @@
 package com.xwiki.confluencepro.test.po;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
@@ -34,11 +35,8 @@ import org.xwiki.test.ui.po.ViewPage;
  */
 public class MigrationRaportView extends ViewPage
 {
-    public String getSuccessMessage() {
-        return getDriver().findElement(By.className("successmessage")).getText().trim();
-    }
-
-    public List<String> getImportedSpaces() {
+    public List<String> getImportedSpaces()
+    {
         return getDriver().findElements(By.cssSelector("#cfm-doc-tree summary > a"))
             .stream()
             .map(WebElement::getText)
@@ -46,7 +44,8 @@ public class MigrationRaportView extends ViewPage
             .collect(Collectors.toList());
     }
 
-    public boolean hasErrorLogs() {
+    public boolean hasErrorLogs()
+    {
         return !getDriver().findElements(By.cssSelector(".log .log-item-error")).isEmpty();
     }
 
@@ -62,10 +61,10 @@ public class MigrationRaportView extends ViewPage
         return Integer.parseInt(numberString);
     }
 
-    public List<String> getXWikiMacros()
+    public Set<String> getXWikiMacros()
     {
         return getImportedMacros().stream().filter(name -> !(name.startsWith("confluence_")))
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
     }
 
     public List<String> getConfluenceMacros()

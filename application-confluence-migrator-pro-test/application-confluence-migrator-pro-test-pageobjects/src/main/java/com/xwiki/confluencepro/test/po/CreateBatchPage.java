@@ -20,7 +20,6 @@
 package com.xwiki.confluencepro.test.po;
 
 import java.io.File;
-import java.sql.SQLOutput;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -35,13 +34,10 @@ import org.xwiki.test.ui.po.ViewPage;
  */
 public class CreateBatchPage extends ViewPage
 {
-    public CreateBatchPage()
+    public CreateBatchPage completePath()
     {
-    }
-
-    public CreateBatchPage completePath(String testResourcePath){
         WebElement element = getDriver().findElement(By.cssSelector("#path"));
-        element.sendKeys(getBatchFolderPath(testResourcePath));
+        element.sendKeys(getBatchFolderPath());
         return this;
     }
 
@@ -78,16 +74,19 @@ public class CreateBatchPage extends ViewPage
         return this;
     }
 
-    public int countSelectedPackages(){
+    public int countSelectedPackages()
+    {
         return getDriver().findElements(By.cssSelector(".confluence-export-checkbox:checked")).size();
     }
 
-    public CreateBatchPage createBatch(){
+    public CreateBatchPage createBatch()
+    {
         getDriver().findElement(By.cssSelector(".createBatch")).click();
         return this;
     }
 
-    private String getBatchFolderPath(String testResourcePath){
+    private String getBatchFolderPath()
+    {
         return new File("src/test/resources/ConfluenceMigratorIT").getAbsolutePath();
     }
 }
