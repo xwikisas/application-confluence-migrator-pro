@@ -32,6 +32,10 @@
   <properties>
     <xwiki.jacoco.skip>false</xwiki.jacoco.skip>
     <xwiki.jacoco.instructionRatio>0.71</xwiki.jacoco.instructionRatio>
+    <!--We disable capture because there's a warning since the upgrade to the 15.10 parent:
+        "A Java agent has been loaded dynamically" (byte-buddy-agent)
+        Please try to remove this during the next parent upgrade to see if it's still an issue -->
+    <xwiki.surefire.captureconsole.skip>true</xwiki.surefire.captureconsole.skip>
   </properties>
   <dependencies>
     <dependency>

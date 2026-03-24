@@ -36,7 +36,10 @@ import org.xwiki.test.ui.po.ViewPage;
  */
 public class MigrationRunningPage extends ViewPage
 {
-    public MigrationRunningPage() {
+    private static final String AVAILABLE_SPACE = "available-space";
+
+    public MigrationRunningPage()
+    {
         getDriver().waitUntilElementIsVisible(By.cssSelector(".available-spaces .available-space:nth-child(2) input"));
     }
 
@@ -51,30 +54,23 @@ public class MigrationRunningPage extends ViewPage
     public List<QuestionSpace> getSelectableSpaces()
     {
         List<QuestionSpace> spaces = new ArrayList<>();
-        List<WebElement> spaceWebElements = getDriver().findElements(By.className("available-space"));
+        List<WebElement> spaceWebElements = getDriver().findElements(By.className(AVAILABLE_SPACE));
         for (int i = 1; i < spaceWebElements.size(); i++) {
             spaces.add(new QuestionSpace(i + 1));
         }
         return spaces;
     }
 
-    public QuestionSpace getSelectableSpace(int index) {
-        return getSelectableSpaces().get(index);
-    }
-
-    public void selectSpace(int index) {
-        getSelectableSpaces().get(index).getCheckbox().click();
-    }
-
-    public MigrationRaportView confirmSpacesToMigrate() {
-        getDriver().findElement(By.className("btn-primary")).click();
+    public MigrationRaportView confirmSpacesToMigrate()
+    {
+        getDriver().findElement(By.className("btAnswerConfirm")).click();
         getDriver().waitUntilElementIsVisible(By.id("cfm-doc-tree"));
         return new MigrationRaportView();
     }
 
     public int getNumberOfDocuments(int index)
     {
-        List<WebElement> spaces = getDriver().findElements(By.className("available-space"));
+        List<WebElement> spaces = getDriver().findElements(By.className(AVAILABLE_SPACE));
         WebElement space = spaces.get(index);
 
         WebElement properties = space.findElement(By.className("cfmProperties"));
@@ -85,7 +81,7 @@ public class MigrationRunningPage extends ViewPage
 
     public int getSpaceIndexByName(String spaceName)
     {
-        List<WebElement> spaces = getDriver().findElements(By.className("available-space"));
+        List<WebElement> spaces = getDriver().findElements(By.className(AVAILABLE_SPACE));
 
         for (int i = 0; i < spaces.size(); i++) {
             WebElement label = spaces.get(i).findElement(By.tagName("label"));
@@ -99,7 +95,7 @@ public class MigrationRunningPage extends ViewPage
 
     public void selectSpaceByLabel(String spaceLabel)
     {
-        List<WebElement> spaces = getDriver().findElements(By.className("available-space"));
+        List<WebElement> spaces = getDriver().findElements(By.className(AVAILABLE_SPACE));
 
         for (WebElement space : spaces) {
             WebElement labelElement = space.findElement(By.tagName("label"));
