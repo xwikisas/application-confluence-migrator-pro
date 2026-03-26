@@ -428,39 +428,6 @@ public class LinkMappingStore implements Initializable
         }
     }
 
-    /**
-     * @return the number of entries.
-     */
-    public long getEntryCount()
-    {
-        long res = 0;
-        Session session = beginTransaction();
-        try {
-            if (!areTableAbsent(session)) {
-                res += getCount(session, TABLE_BY_ID);
-                res += getCount(session, TABLE_BY_TITLE);
-            }
-        } finally {
-            endTransaction(true);
-        }
-        return res;
-    }
-
-    private long getCount(Session session, String table)
-    {
-        Optional<?> r = session.createNativeQuery("select count(reference) from " + table)
-            .getResultStream()
-            .findFirst();
-        if (r.isPresent()) {
-            Object res = r.get();
-            if (res instanceof Number) {
-                return ((Number) res).longValue();
-            }
-        }
-        logger.error("Could not count entries in " + TABLE_BY_ID);
-        return 0;
-    }
-
     private void empty(Session session)
     {
         session.createNativeQuery(DROP_TABLE + TABLE_BY_ID).executeUpdate();
