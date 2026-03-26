@@ -112,12 +112,13 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         ConfluenceFilteringEvent ev = (ConfluenceFilteringEvent) event;
         setSpaces(confluencePackage, status, ev, job);
 
+        LinkMappingStore lms = linkMappingStore.isSupported() ? linkMappingStore : null;
 
         if (status.isCanceled()) {
             ev.cancel();
         } else if (isPropertyEnabled(status, ONLY_LINK_MAPPING)) {
             // This is a link mapping only phase, let's store the link mapping and cancel the import
-            updateLinkMappingAndLookForCollisions(linkMappingStore);
+            updateLinkMappingAndLookForCollisions(lms);
             ev.cancel();
         } else if (isInputPropertyEnabled(status, "storeConfluenceDetailsEnabled")) {
             // This is the happy path / normal situation.
@@ -125,12 +126,16 @@ public class ConfluenceFilteringListener extends AbstractEventListener
             // also disabled storeConfluenceDetailsEnabled on the previous import, which is not supported nor likely.
             // We clean up the link mapping which may have been imported in a link-mapping only phase, we don't want
             // this data hanging around for nothing.
-            linkMappingStore.removeSpaces(status.getSpaces());
+            if (lms != null) {
+                lms.removeSpaces(status.getSpaces());
+            }
             updateLinkMappingAndLookForCollisions(null);
         } else if (isPropertyEnabled(status, "saveLinkMapping")) {
             // We are asked to save the link mapping and storeConfluenceDetailsEnabled is disabled, let's store the
             // link mapping
-            updateLinkMappingAndLookForCollisions(linkMappingStore);
+            if (lms != null) {
+                updateLinkMappingAndLookForCollisions(lms);
+            }
         } else {
             updateLinkMappingAndLookForCollisions(null);
         }

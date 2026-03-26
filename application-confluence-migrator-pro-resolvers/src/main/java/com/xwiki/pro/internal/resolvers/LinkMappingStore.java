@@ -100,6 +100,8 @@ public class LinkMappingStore implements Initializable
 
     private boolean needsConversion = true;
 
+    private boolean supported = true;
+
     @Override
     public void initialize()
     {
@@ -114,6 +116,10 @@ public class LinkMappingStore implements Initializable
 
     private boolean areTableAbsent()
     {
+        if (!supported) {
+            return true;
+        }
+
         boolean res;
         Session session = beginTransaction();
         try {
@@ -126,6 +132,10 @@ public class LinkMappingStore implements Initializable
 
     private boolean areTableAbsent(Session session)
     {
+        if (!supported) {
+            return true;
+        }
+
         if (dontExist) {
             return true;
         }
@@ -157,6 +167,10 @@ public class LinkMappingStore implements Initializable
      */
     public Session beginTransaction()
     {
+        if (!supported) {
+            return null;
+        }
+
         XWikiContext context = contextProvider.get();
         try {
             XWikiHibernateStore store = XWiki.getMainXWiki(context).getHibernateStore();
@@ -175,6 +189,10 @@ public class LinkMappingStore implements Initializable
      */
     public void endTransaction(boolean commit)
     {
+        if (!supported) {
+            return;
+        }
+
         XWikiContext context = contextProvider.get();
         XWikiHibernateStore store = context.getWiki().getHibernateStore();
         store.endTransaction(context, commit);
@@ -461,6 +479,10 @@ public class LinkMappingStore implements Initializable
      */
     public void add(Session session, long pageId, String spaceKey, String pageTitle, EntityReference reference)
     {
+        if (!supported) {
+            return;
+        }
+
         String ref = serializer.serialize(reference);
         add(session, pageId, ref);
         add(session, spaceKey, pageTitle, ref);
@@ -474,6 +496,10 @@ public class LinkMappingStore implements Initializable
      */
     public void add(Session session, long pageId, String reference)
     {
+        if (!supported) {
+            return;
+        }
+
         createTableIfNotExists(session);
 
         session.createNativeQuery(DELETE_FROM + TABLE_BY_ID + WHERE_PAGE_ID)
@@ -495,6 +521,10 @@ public class LinkMappingStore implements Initializable
      */
     public void add(Session session, String spaceKey, String pageTitle, String reference)
     {
+        if (!supported) {
+            return;
+        }
+
         createTableIfNotExists(session);
 
         session.createNativeQuery(DELETE_FROM + TABLE_BY_TITLE + WHERE_SPACE_KEY_AND_PAGE_TITLE)
@@ -511,10 +541,19 @@ public class LinkMappingStore implements Initializable
 
     private void convertOldMappings()
     {
+        DatabaseProduct p = contextProvider.get().getWiki().getHibernateStore().getDatabaseProductName();
+        supported = !p.equals(DatabaseProduct.ORACLE);
+        if (!supported) {
+            needsConversion = false;
+            return;
+        }
+
         List<Object[]> res = getOldMappings();
         if (res == null || res.isEmpty()) {
-            needsConversion = false; return;
+            needsConversion = false;
+            return;
         }
+
         List<XWikiDocument> documentsToDelete = new ArrayList<>(res.size());
         Session session = beginTransaction();
         try {
@@ -626,5 +665,16 @@ public class LinkMappingStore implements Initializable
         } catch (JsonProcessingException e) {
             logger.error("Failed to parse old mapping", e);
         }
+    }
+
+    /**
+     * @return whether the link mapping store can run on this setup. Notably, Oracle database is not supported.
+     */
+    public boolean isSupported()
+    {
+        if (needsConversion) {
+            convertOldMappings();
+        }
+        return supported;
     }
 }
