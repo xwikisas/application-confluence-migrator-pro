@@ -110,22 +110,8 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         ConfluenceXMLPackage confluencePackage = (ConfluenceXMLPackage) data;
 
         ConfluenceFilteringEvent ev = (ConfluenceFilteringEvent) event;
-        Collection<String> spaces = new ArrayList<>(confluencePackage.getSpaceKeys(false));
+        setSpaces(confluencePackage, status, ev, job);
 
-        status.setSpaceTargets(ev.getSpaceTargets());
-
-        for (Long spaceId : ev.getDisabledSpaces()) {
-            try {
-                spaces.remove(confluencePackage.getSpaceKey(spaceId));
-            } catch (ConfigurationException e) {
-                logger.error("Failed to disable import for space id [{}]. This is unexpected.", spaceId, e);
-            }
-        }
-        status.setSpaces(spaces);
-
-        if (shouldAskQuestions(status, job, spaces)) {
-            askSpacesQuestion(ev, confluencePackage, status, spaces);
-        }
 
         if (status.isCanceled()) {
             ev.cancel();
@@ -147,6 +133,28 @@ public class ConfluenceFilteringListener extends AbstractEventListener
             updateLinkMappingAndLookForCollisions(linkMappingStore);
         } else {
             updateLinkMappingAndLookForCollisions(null);
+        }
+    }
+
+    private void setSpaces(ConfluenceXMLPackage confluencePackage, ConfluenceMigrationJobStatus status,
+        ConfluenceFilteringEvent ev, Job job)
+    {
+        Collection<String> spaces = new ArrayList<>(confluencePackage.getSpaceKeys(false));
+
+        status.setSpaceTargets(ev.getSpaceTargets());
+
+        for (Long spaceId : ev.getDisabledSpaces()) {
+            try {
+                spaces.remove(confluencePackage.getSpaceKey(spaceId));
+            } catch (ConfigurationException e) {
+                logger.error("Failed to disable import for space id [{}]. This is unexpected.", spaceId, e);
+            }
+        }
+
+        status.setSpaces(spaces);
+
+        if (shouldAskQuestions(status, job, spaces)) {
+            askSpacesQuestion(ev, confluencePackage, status, spaces);
         }
     }
 
