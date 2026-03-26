@@ -73,7 +73,7 @@
 ### Missing: confluencemigratorpro.batches.create.warn.missingParameters=Some parameters are missing.
 ### Missing: confluencemigratorpro.batches.create.filesThatCouldBeCreated=WILL CREATE THE FOLLOWING MIGRATION PAGES:
 ### Missing: confluencemigratorpro.batches.create.batchPage=BATCH PAGE
-### Missing: confluencemigratorpro.batches.createForm.linkMapping.hint=Perform a link mapping pass for all imports before actually importing the content.
+confluencemigratorpro.batches.createForm.linkMapping.hint=Perform a link mapping pass for all imports before actually importing the content.
 ### Missing: confluencemigratorpro.batches.createForm.linkMapping.title=Link Mapping Pass
 ### Missing: confluencemigratorpro.batches.createForm.dryRun.hint=Don't actually create the batch and run the migrations, but say what will be done.
 ### Missing: confluencemigratorpro.batches.createForm.dryRun.title=Dry run
