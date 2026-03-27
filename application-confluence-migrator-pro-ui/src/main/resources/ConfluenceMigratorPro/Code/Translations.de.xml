@@ -98,7 +98,7 @@
 ### Missing: confluencepro.migration.raport.problems.missingUsersGroups.title=Missing users and groups
 ### Missing: confluencepro.migration.raport.problems.collisions.title=Reference collisions
 ### Missing: confluencepro.migration.raport.problems.collisions.info=The following references relate to several Confluence page titles. This means that those titles were translated to the same reference, and that the related pages overwrote each others during the migration
-### Missing: confluencepro.migration.raport.problems.missingUsersGroups.info=These users and groups appear in rights imported from the Confluence package, but were not present the wiki in which Confluence Migrator Pro ran. This is only an issue if you expected all the users and groups to exist in this wiki before migrating this content.
+confluencepro.migration.raport.problems.missingUsersGroups.info=These users and groups appear in rights imported from the Confluence package, but were not present in the wiki in which Confluence Migrator Pro ran. This is only an issue if you expected all the users and groups to exist in this wiki before migrating this content.
 ### Missing: confluencepro.migration.raport.problems.missingUsersGroups.users=Missing users:
 ### Missing: confluencepro.migration.raport.problems.missingUsersGroups.groups=Missing groups:
 ### Missing: confluencepro.migration.raport.problems.done.title={0} page(s) have encountered issues during the import
@@ -159,9 +159,9 @@
 ### Missing: confluencepro.job.question.selectAll=Select all
 ### Missing: confluencepro.job.question.search.placeholder=Search for a space…
 ### Missing: confluencepro.job.question.showMore.message={0} more spaces available.
-### Missing: confluencepro.job.question.showMore.link=Load more..
+confluencepro.job.question.showMore.link=Load more…
 ### Missing: confluencepro.job.interrupt.button=Interrupt
-### Missing: confluencepro.job.status.readingPackage=Importing the Confluence package. This may take a while..
+confluencepro.job.status.readingPackage=Importing the Confluence package. This may take a while…
 ### Missing: confluencepro.job.status.runningJob=Your pages are being imported. This may take a while..
 ### Missing: confluencepro.job.question.advanced.link=Advanced migration options
 ### Missing: confluencepro.job.question.advanced.input=Properties of the input filter stream (Confluence XML)
@@ -177,7 +177,7 @@
 ### Missing: confluencepro.job.onlyattachments.question.hint=If you have already migrated your content and wish to import attachments (and attachment history) without modifying the content, you can do so setting this option to "true". Existing attachments won't be replaced. Note: make sure to import history if you want to import the attachment history.
 ### Missing: confluencepro.job.onlyattachments.question.title=Only import attachments
 ### Missing: confluencepro.job.linkmapping.title=Link Mapping
-confluencepro.job.linkmapping.description=Link Mapping lets the migrator collect information about spaces and documents as Confluence packages are analysed in order to produce the right links when pages link to other pages that are not in the same Confluence export package (for instance when using space exports).
+confluencepro.job.linkmapping.description=Link Mapping lets the migrator collect information about spaces and documents as Confluence packages are analysed in order to produce the right links when pages link to other pages that are not in the same Confluence export package (for instance when using space exports). This doesn't work on Oracle database.
 ### Missing: confluencepro.job.savelinkmapping.question.title=Update link mapping
 ### Missing: confluencepro.job.savelinkmapping.question.hint=Save information about documents in this package so links to these documents in migrations will work. This includes documents that are not in the spaces selected for import. You can disable this behavior by setting this to false.
 ### Missing: confluencepro.job.onlylinkmapping.question.title=Only build link mapping
