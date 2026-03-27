@@ -949,21 +949,19 @@
       #else
         #jobFinishedMessage($status, $translationPrefix)
       #end
-      #if ($showLogs || $isAdvancedUser || $isSuperAdmin)
-        #set ($collapseLogs = !$request.fulljoblogs)
-        #displayJobStatusLog($jobStatus, $collapseLogs)
-        #if (!$finished)
-          #if (!$request.fulljoblogs)
-          &lt;form method="get"&gt;
-            &lt;div class="box note" id="partial-logs-note"&gt;
-              &lt;p&gt;For performance and stability reasons, logs are only shown partially and lines might be missing. &lt;button id="display-full-job-logs" class="btn btn-secondary" value="1" name="fulljoblogs"&gt;$services.localization.render('confluencepro.migration.raport.displayFullLog')&lt;/button&gt;&lt;/p&gt;
-            &lt;/div&gt;
-          &lt;/form&gt;
-          #end
-          &lt;p style="text-align:right"&gt;
-            &lt;input type="button" class="btn btn-danger" value="$services.localization.render('confluencepro.job.interrupt.button')" name="interrupt" id="cfmInterrupt"/&gt;
-          &lt;/p&gt;
+      #set ($collapseLogs = !$request.fulljoblogs)
+      #displayJobStatusLog($jobStatus, $collapseLogs)
+      #if (!$finished)
+        #if (!$request.fulljoblogs)
+        &lt;form method="get"&gt;
+          &lt;div class="box note" id="partial-logs-note"&gt;
+            &lt;p&gt;For performance and stability reasons, logs are only shown partially and lines might be missing. &lt;button id="display-full-job-logs" class="btn btn-secondary" value="1" name="fulljoblogs"&gt;$services.localization.render('confluencepro.migration.raport.displayFullLog')&lt;/button&gt;&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/form&gt;
         #end
+        &lt;p style="text-align:right"&gt;
+          &lt;input type="button" class="btn btn-danger" value="$services.localization.render('confluencepro.job.interrupt.button')" name="interrupt" id="cfmInterrupt"/&gt;
+        &lt;/p&gt;
       #end
     &lt;/div&gt;
     {{/html}}
