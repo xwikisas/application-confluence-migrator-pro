@@ -64,6 +64,7 @@ public class MigrationRunningPage extends ViewPage
     public MigrationRaportView confirmSpacesToMigrate()
     {
         getDriver().findElement(By.className("btAnswerConfirm")).click();
+        getDriver().waitUntilPageIsReloaded();
         getDriver().waitUntilElementIsVisible(By.id("cfm-doc-tree"));
         return new MigrationRaportView();
     }
