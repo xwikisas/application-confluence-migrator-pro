@@ -163,7 +163,6 @@ public class DefaultBatchCreator extends AbstractBatchCreator
     {
         outputProperties.put("onlyLinkMapping", FALSE);
         outputProperties.put("saveLinkMapping", FALSE);
-        outputProperties.put("useLinkMapping", TRUE);
     }
 
     /**

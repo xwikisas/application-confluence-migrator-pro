@@ -78,7 +78,7 @@ public class ReferenceFixingJob
         DocumentReference statusDocumentReference = request.getStatusDocumentReference();
         XWikiContext context = contextProvider.get();
         XWiki wiki = context.getWiki();
-        XWikiDocument document = wiki.getDocument(statusDocumentReference, context);
+        XWikiDocument document = wiki.getDocument(statusDocumentReference, context).clone();
         document.setIntValue(REFERENCE_FIXING_CLASS, EXECUTED, 2);
         wiki.saveDocument(document, "Start session", context);
 
@@ -95,12 +95,12 @@ public class ReferenceFixingJob
                 request.isDryRun()
             );
         } catch (Exception e) {
-            document = wiki.getDocument(statusDocumentReference, context);
+            document = wiki.getDocument(statusDocumentReference, context).clone();
             document.setIntValue(REFERENCE_FIXING_CLASS, EXECUTED, 3);
             wiki.saveDocument(document, "End failed session", context);
             logger.error("Reference fixing job failed with an exception", e);
         } finally {
-            document = wiki.getDocument(statusDocumentReference, context);
+            document = wiki.getDocument(statusDocumentReference, context).clone();
             document.setIntValue(REFERENCE_FIXING_CLASS, EXECUTED, 1);
             if (s != null) {
                 addAttachment("stats.json", s.toJSON(), document);
