@@ -54,7 +54,7 @@ eventsFieldsMap = [
     'eventInvitee'       : 'event invitee'
 ]
 eventsAndCalendarsFieldsMap = calendarsFieldsMap + eventsFieldsMap
-{{/groovy }}
+{{/groovy}}
 
 {{info}}
 See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMigratorPro.CalendarMigration.ConfluenceSQLRequests]] to get the required CSV files. 
@@ -113,7 +113,12 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
       &lt;span class="xHint"&gt;$spanXHint&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
-      &lt;input type="text" id="groupFormat" name="groupFormat" value="$!escapetool.xml($request.get("groupFormat"))" placeholder='$escapetool.d{group._clean}'/&gt;
+      #if ("$!request.get('groupFormat')" == '')
+        #set ($groupFormatValue = '${group._clean}')
+      #else
+        #set ($groupFormatValue = $request.get("groupFormat"))
+      #end
+      &lt;input type="text" id="groupFormat" name="groupFormat" value="$!escapetool.xml($groupFormatValue)"/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
       &lt;label for="groupMapping"&gt;Group name mapping&lt;/label&gt;
@@ -187,8 +192,15 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
 {{groovy}}
 import groovy.time.TimeCategory
 import groovy.time.TimeDuration
+
 import org.apache.commons.lang3.StringUtils
+import org.xwiki.component.util.DefaultParameterizedType
+import org.xwiki.contrib.confluence.filter.Mapping
+import org.xwiki.contrib.confluence.filter.input.ConfluenceInputContext
+import org.xwiki.contrib.confluence.filter.input.ConfluenceInputProperties
+import org.xwiki.contrib.confluence.filter.internal.input.DefaultConfluenceInputContext
 import org.xwiki.logging.LogLevel
+import org.xwiki.properties.converter.Converter
 
 final String documentName = "ConfluenceMigratorPro.CalendarMigration.WebHome"
 
@@ -204,13 +216,6 @@ try {
     def calendarsAttachements = [:]
     def eventsAttachements = [:]
     List&lt;String&gt; spaceFilter = null
-
-    String groupFormat
-    if (StringUtils.isEmpty(request.groupFormat)) {
-        groupFormat = '${group._clean}'
-    } else {
-        groupFormat = request.groupFormat
-    }
 
     for (String i in calendarsFieldsMap.keySet()) {
         def filename = request.get(i)
@@ -251,16 +256,29 @@ try {
     if (hasProgramming &amp;&amp; hasAdmin &amp;&amp; 'true' == request.confirm) {
         start = new Date();
 
-        def userGroupMappingContext =
-            services.calendarmigrator.getUserGroupMappingContext(request.parameterMap, groupFormat)
+        // Parameter the confluence context so the user and group mapping are handled in a correct way
+        def converterMappingType = new DefaultParameterizedType(null, Converter.class, Mapping.class);
+        Converter mappingConverter = services.component.getInstance(converterMappingType)
+        def userMapping = mappingConverter.&lt;Mapping&gt; convert(Mapping.class, request.get('userMapping') ?: '')
+        def groupMapping = mappingConverter.&lt;Mapping&gt; convert(Mapping.class, request.get('groupMapping') ?: '')
+
+        ConfluenceInputContext confluenceInputContext = services.component.getInstance(ConfluenceInputContext.class)
+        def confluenceProperties = new ConfluenceInputProperties() {
+            {
+                setUserIdMapping(userMapping)
+                setGroupMapping(groupMapping)
+                setUserFormat(request.get('userFormat'))
+                setGroupFormat(request.get('groupFormat'))
+            }
+        }
+        (confluenceInputContext as DefaultConfluenceInputContext).set(null, confluenceProperties)
 
         if (request.importType == "calendars") {
             services.calendarmigrator.migrateCalendars(services.progress, calendarsAttachements, dontCleanRights,
-                userGroupMappingContext,
                 dryRun, spaceFilter)
         } else if (request.importType == "events") {
             services.calendarmigrator.migrateEvents(services.progress, calendarsAttachements, eventsAttachements,
-                cleanEvents, userGroupMappingContext,
+                cleanEvents,
                 dryRun, spaceFilter)
         } else {
             logger.error("Invalid import type [{}]", request.importType)
@@ -354,12 +372,11 @@ import com.xpn.xwiki.objects.LargeStringProperty
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord
-import org.apache.commons.lang3.RegExUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateUtils
-import org.apache.commons.text.StringSubstitutor
 import org.slf4j.Logger
 import org.xwiki.component.annotation.Component
+import org.xwiki.contrib.confluence.filter.ConfluenceFilterReferenceConverter
 import org.xwiki.contrib.confluence.filter.Mapping
 import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceKeyResolver
 import org.xwiki.job.script.ProgressScripService
@@ -367,7 +384,6 @@ import org.xwiki.localization.LocalizationManager
 import org.xwiki.model.EntityType
 import org.xwiki.model.reference.*
 import org.xwiki.model.validation.EntityNameValidationManager
-import org.xwiki.properties.converter.Converter
 import org.xwiki.query.Query
 import org.xwiki.query.QueryManager
 import org.xwiki.rendering.block.MacroBlock
@@ -387,15 +403,12 @@ import javax.inject.Singleton
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
-import java.util.regex.Pattern
 
 @Component
 @Named("calendarmigrator")
 @Singleton
 public class CalendarMigratorScriptService implements ScriptService
 {
-    private static final Pattern FORBIDDEN_USER_CHARACTERS = Pattern.compile("[. /]");
-
     private final static EntityReference CALENDAR_CLASS_REF = new LocalDocumentReference(
         "MoccaCalendar", "MoccaCalendarClass")
 
@@ -475,19 +488,6 @@ public class CalendarMigratorScriptService implements ScriptService
         RecurrentEventInfo.WeekDay.THU,
         RecurrentEventInfo.WeekDay.FRI)
 
-    private static final String XWIKI_ADMIN_GROUP_NAME = "XWikiAdminGroup";
-
-    private static final String XWIKI_ALL_GROUP_NAME = "XWikiAllGroup";
-
-    private Mapping DEFAULT_GROUP_MAPPING = new Mapping(Map.of(
-        "confluence-administrators", XWIKI_ADMIN_GROUP_NAME,
-        "administrators", XWIKI_ADMIN_GROUP_NAME,
-        "site-admins", XWIKI_ADMIN_GROUP_NAME,
-        "system-administrators", XWIKI_ADMIN_GROUP_NAME,
-        "confluence-users", XWIKI_ALL_GROUP_NAME,
-        "users", XWIKI_ALL_GROUP_NAME
-    ));
-
     @Inject
     private Provider&lt;XWikiContext&gt; contextProvider;
 
@@ -513,29 +513,13 @@ public class CalendarMigratorScriptService implements ScriptService
     private EntityReferenceSerializer&lt;String&gt; serializer;
 
     @Inject
-    private Converter&lt;Mapping&gt; mappingConverter
-
-    @Inject
     private LocalizationManager localization
 
-    UserGroupMappingContext getUserGroupMappingContext(Map&lt;String, String[]&gt; requestParameters, String groupFormat)
-    {
-        String userFormat = requestParameters.get("userFormat")[0]
-        String userMappingStr = requestParameters.get("userMapping")[0]
-        String groupMappingStr = requestParameters.get("groupMapping")[0]
-
-        Mapping userMapping = mappingConverter.convert(Mapping.class, userMappingStr)
-        Mapping groupMapping
-        if (StringUtils.isEmpty(groupMappingStr)) {
-            groupMapping = DEFAULT_GROUP_MAPPING
-        } else {
-            groupMapping = mappingConverter.convert(Mapping.class, groupMappingStr)
-        }
-        return new UserGroupMappingContext(userFormat, groupFormat, userMapping, groupMapping)
-    }
+    @Inject
+    private ConfluenceFilterReferenceConverter confluenceConverter;
 
     void migrateCalendars(ProgressScripService progress, Map&lt;String, Attachment&gt; attachments, boolean dontCleanRights,
-        UserGroupMappingContext userGroupMappingContext, boolean dryRun, List&lt;String&gt; spaceFilter)
+        boolean dryRun, List&lt;String&gt; spaceFilter)
     {
         XWikiContext context = contextProvider.get()
         XWiki xwiki = context.getWiki()
@@ -577,7 +561,7 @@ public class CalendarMigratorScriptService implements ScriptService
             doc.setContent(xdom)
 
             DocumentUserReference creatorRef = new DocumentUserReference(
-                getUserRefFromConfluence(entry.get("CREATOR"), userGroupMappingContext), true)
+                getUserRefFromConfluence(entry.get("CREATOR")), true)
             doc.setAuthor(creatorRef)
             doc.getAuthors().setCreator(creatorRef)
             doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
@@ -621,7 +605,8 @@ public class CalendarMigratorScriptService implements ScriptService
                 }
             }
             groupsRights.getOrDefault(calendarId, [:]).entrySet().each { right -&gt;
-                DocumentReference groupReference = getGroupRefFromConfluence(right.key, userGroupMappingContext)
+                String groupName = confluenceConverter.toGroupReferenceName(right.key)
+                DocumentReference groupReference = new DocumentReference("xwiki", "XWiki", groupName)
                 String groupReferenceStr = serializer.serialize(groupReference)
 
                 int matchingObjectIndex = groupRef.indexOf(groupReferenceStr)
@@ -652,7 +637,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 }
             }
             usersRights.getOrDefault(calendarId, [:]).entrySet().each { right -&gt;
-                DocumentReference userReference = getUserRefFromConfluence(right.key, userGroupMappingContext)
+                DocumentReference userReference = getUserRefFromConfluence(right.key)
                 String userReferenceStr = serializer.serialize(userReference)
 
                 int matchingObjectIndex = userRef.indexOf(userReferenceStr)
@@ -728,7 +713,7 @@ public class CalendarMigratorScriptService implements ScriptService
             calendarObj.set("description", parent.description(), context)
 
             DocumentUserReference creatorRef = new DocumentUserReference(
-                getUserRefFromConfluence(entry.get("CREATOR"), userGroupMappingContext), true)
+                getUserRefFromConfluence(entry.get("CREATOR")), true)
             doc.setAuthor(creatorRef)
             doc.getAuthors().setCreator(creatorRef)
             doc.setCreationDate(getDateFromConfuence(entry.get("CREATED"), false))
@@ -753,7 +738,7 @@ public class CalendarMigratorScriptService implements ScriptService
 
     void migrateEvents(ProgressScripService progress, Map&lt;String, Attachment&gt; calendarsAttachments,
         Map&lt;String, Attachment&gt; eventsAttachments, boolean cleanEvents,
-        UserGroupMappingContext userGroupMappingContext, boolean dryRun, List&lt;String&gt; spaceFilter)
+        boolean dryRun, List&lt;String&gt; spaceFilter)
     {
         XWikiContext context = contextProvider.get()
         XWiki xwiki = context.getWiki()
@@ -761,8 +746,7 @@ public class CalendarMigratorScriptService implements ScriptService
         def loadCal =
             loadCalendars(calendarsAttachments['parentCalendars'], calendarsAttachments['subCalendars'],
                 calendarsAttachments['calendarSpaceMapping'], spaceFilter)
-        def loadEv = loadEvents(eventsAttachments['events'], eventsAttachments['eventInvitee'], loadCal,
-            userGroupMappingContext)
+        def loadEv = loadEvents(eventsAttachments['events'], eventsAttachments['eventInvitee'], loadCal)
 
         List&lt;ParentCalendar&gt; parents = loadCal.result()
         Set&lt;String&gt; ignoredSubCalendars = loadCal.ignoredSubCalendars()
@@ -945,7 +929,7 @@ public class CalendarMigratorScriptService implements ScriptService
 
             if (StringUtils.isNotEmpty(entry.get("ORGANISER"))) {
                 DocumentUserReference creatorRef = new DocumentUserReference(
-                    getUserRefFromConfluence(entry.get("ORGANISER"), userGroupMappingContext), true)
+                    getUserRefFromConfluence(entry.get("ORGANISER")), true)
                 doc.setAuthor(creatorRef)
                 doc.getAuthors().setCreator(creatorRef)
             }
@@ -1506,7 +1490,7 @@ public class CalendarMigratorScriptService implements ScriptService
     }
 
     private LoadEventResult loadEvents(Attachment events, Attachment invitees,
-        LoadCalendarResult loadCalendarResult, UserGroupMappingContext userGroupMappingContext)
+        LoadCalendarResult loadCalendarResult)
     {
         Map&lt;String, List&lt;DocumentReference&gt;&gt; inviteeMap = [:]
         HashMap&lt;String, Event&gt; result = [:]
@@ -1528,7 +1512,7 @@ public class CalendarMigratorScriptService implements ScriptService
                 refList = []
                 inviteeMap[eventId] = refList
             }
-            DocumentReference userReference = getUserRefFromConfluence(entry.get("username"), userGroupMappingContext)
+            DocumentReference userReference = getUserRefFromConfluence(entry.get("username"))
             refList.add(userReference)
         }
         isr.close()
@@ -1651,37 +1635,10 @@ public class CalendarMigratorScriptService implements ScriptService
         }
     }
 
-    private static DocumentReference getUserRefFromConfluence(String rawUsername,
-        UserGroupMappingContext mappingContext)
+    private DocumentReference getUserRefFromConfluence(String rawUsername)
     {
-        String username = mappingContext.userMapping().get(rawUsername)
-        if (username == null) {
-            // code inspired from https://github.com/xwiki-contrib/confluence/blob/933ccec7f941b04bed3f69f53e1e5c22e4e46414/confluence-xml/src/main/java/org/xwiki/contrib/confluence/filter/internal/input/ConfluenceConverter.java#L219
-            String userFormat = mappingContext.userFormat()
-            if (StringUtils.isEmpty(userFormat)) {
-                // Do some minimal cleanup which is backward compatible with older versions of the filter.
-                username = FORBIDDEN_USER_CHARACTERS.matcher(rawUsername).replaceAll("_");
-            } else {
-                username = UsernameCleaner.format(userFormat, Map.of("username", rawUsername))
-            }
-        }
+        String username = confluenceConverter.convertUserNameToReferenceName(rawUsername)
         return new DocumentReference("xwiki", "XWiki", username)
-    }
-
-    private static DocumentReference getGroupRefFromConfluence(String rawGroupname,
-        UserGroupMappingContext mappingContext)
-    {
-        String groupname = mappingContext.groupMapping().get(rawGroupname)
-        if (groupname == null) {
-            // code inspired from https://github.com/xwiki-contrib/confluence/blob/933ccec7f941b04bed3f69f53e1e5c22e4e46414/confluence-xml/src/main/java/org/xwiki/contrib/confluence/filter/internal/input/ConfluenceConverter.java#L186
-            String groupFormat = mappingContext.groupFormat()
-            if (StringUtils.isEmpty(groupFormat)) {
-                groupname = rawGroupname
-            } else {
-                groupname = UsernameCleaner.format(groupFormat, Map.of("group", rawGroupname))
-            }
-        }
-        return new DocumentReference("xwiki", "XWiki", groupname)
     }
 }
 
@@ -2025,106 +1982,6 @@ final class RecurrentEventInfo
     public int nthWeekdayOfMonth()
     {
         return nthWeekdayOfMonth
-    }
-}
-
-final class UserGroupMappingContext
-{
-    private final String userFormat;
-
-    private final String groupFormat;
-
-    private final Map&lt;String, String&gt; userMapping;
-
-    private final Map&lt;String, String&gt; groupMapping;
-
-    UserGroupMappingContext(
-        String userFormat,
-        String groupFormat,
-        Map&lt;String, String&gt; userMapping,
-        Map&lt;String, String&gt; groupMapping
-    )
-    {
-        this.userFormat = userFormat;
-        this.groupFormat = groupFormat;
-        this.userMapping = userMapping;
-        this.groupMapping = groupMapping;
-    }
-
-    public String userFormat()
-    {
-        return userFormat;
-    }
-
-    public String groupFormat()
-    {
-        return groupFormat;
-    }
-
-    public Map&lt;String, String&gt; userMapping()
-    {
-        return userMapping;
-    }
-
-    public Map&lt;String, String&gt; groupMapping()
-    {
-        return groupMapping;
-    }
-}
-
-/**
- * Code past from https://github.com/xwiki-contrib/confluence/blob/41658372197b3890e2b71ece14deb876897cb318/confluence-xml/src/main/java/org/xwiki/contrib/confluence/filter/internal/input/UsernameCleaner.java
- * FIXME We should use a shared code instead of a full copy past of this class
- */
-final class UsernameCleaner
-{
-    private UsernameCleaner()
-    {
-        // empty
-    }
-
-    private static String clean(String str)
-    {
-        return RegExUtils.removePattern(str, "[\\.\\:\\s,@\\^\\/]");
-    }
-
-    private static void putVariable(Map&lt;String, String&gt; map, String key, String value)
-    {
-        if (value != null) {
-            map.put(key, value);
-
-            map.put(key + ".lowerCase", value.toLowerCase());
-            map.put(key + "._lowerCase", value.toLowerCase());
-            map.put(key + ".upperCase", value.toUpperCase());
-            map.put(key + "._upperCase", value.toUpperCase());
-
-            String cleanValue = clean(value);
-            map.put(key + ".clean", cleanValue);
-            map.put(key + "._clean", cleanValue);
-            map.put(key + ".clean.lowerCase", cleanValue.toLowerCase());
-            map.put(key + "._clean._lowerCase", cleanValue.toLowerCase());
-            map.put(key + ".clean.upperCase", cleanValue.toUpperCase());
-            map.put(key + "._clean._upperCase", cleanValue.toUpperCase());
-        }
-    }
-
-    private static Map&lt;String, String&gt; createFormatMap(Map&lt;String, String&gt; variables)
-    {
-        Map&lt;String, String&gt; formatMap = new HashMap&lt;&gt;();
-        for (Map.Entry&lt;String, String&gt; variable : variables.entrySet()) {
-            putVariable(formatMap, variable.getKey(), variable.getValue());
-        }
-        return formatMap;
-    }
-
-    private static String formatSubject(StringSubstitutor substitutor, String format)
-    {
-        return substitutor.replace(format);
-    }
-
-    static String format(String format, Map&lt;String, String&gt; variables)
-    {
-        return formatSubject(new StringSubstitutor(createFormatMap(variables)), format);
     }
 }
 </script_content>
