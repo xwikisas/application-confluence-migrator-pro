@@ -82,6 +82,41 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
       &lt;input type="text" id="groupToMigrateFilename" name="groupToMigrateFilename" value="$!escapetool.xml($!request.groupToMigrateFilename)" placeholder='groupstomigrate.csv'/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
+      &lt;label for="userFormat"&gt;User format&lt;/label&gt;
+      #set ($spanXHint = 'The format to use to transform a Confluence user name to a XWiki user name for usersthat are not in the user id mapping.String ${username} will be replaced with the Confluence user name; String ${username._clean} same with the special characters removed (recommended).String ${username._lowerCase} will be replaced with the lowercased Confluence user name; String ${username._upperCase} will be replaced with the uppercased Confluence user name; String ${username._clean._lowerCase} will be replaced with the cleaned, lowercased Confluence user name; String ${username._clean._upperCase} will be replaced with the uppercased Confluence user name. By default, for backward compatibility reasons, special characters are replaced with underscores and spaces are kept.')
+      &lt;span class="xHint"&gt;$spanXHint&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="userFormat" name="userFormat" value="$!escapetool.xml($!request.get("userFormat"))"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="userMapping"&gt;User id mapping&lt;/label&gt;
+      &lt;span class="xHint"&gt;A mapping between Confluence user id located in the package and wanted ids. The format is confluenceuser=XWikiUser pairs separated by pipes ("|"). For instance: myuser=MyUser|user2=User2&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="userMapping" name="userMapping" value="$!escapetool.xml($!request.get("userMapping"))"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="groupFormat"&gt;Group format&lt;/label&gt;
+      #set ($spanXHint = 'The format to use to transform a Confluence group name to a XWiki group name for groupsthat are not in the group mapping.String ${group} will be replaced with the Confluence group name; String ${group._clean} same with the special characters removed.String ${group._lowerCase} will be replaced with the lowercased Confluence group name; String ${group._upperCase} will be replaced with the uppercased Confluence group name; String ${group._clean._lowerCase} will be replaced with the cleaned, lowercased Confluence group name; String ${group._clean._upperCase} will be replaced with the uppercased Confluence group name. Default format: ${group._clean}')
+      &lt;span class="xHint"&gt;$spanXHint&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      #if ("$!request.get('groupFormat')" == '')
+        #set ($groupFormatValue = '${group._clean}')
+      #else
+        #set ($groupFormatValue = $request.get("groupFormat"))
+      #end
+      &lt;input type="text" id="groupFormat" name="groupFormat" value="$!escapetool.xml($groupFormatValue)"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
+      &lt;label for="groupMapping"&gt;Group name mapping&lt;/label&gt;
+      &lt;span class="xHint"&gt;A mapping between Confluence group names and XWiki group names. The format is confluencegroup=XWikiGroup pairs separated by pipes ("|"). Use an empty value to ignore the group.For instance: atlassian-addons=|balsamiq-mockups-editors=MockupEditors|administrators=XWikiAdminGroup|site-admins=XWikiAdminGroup|_licensed-confluence=|confluence-users=XWikiAllGroup|confluence-administrators=XWikiAdminGroup|system-administrators=XWikiAdminGroup|group 1=MyGroup&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" id="groupMapping" name="groupMapping" value="$!escapetool.xml($!request.get("groupMapping"))"/&gt;
+    &lt;/dd&gt;
+    &lt;dt&gt;
       &lt;label for="cleangroups"&gt;Clean groups&lt;/label&gt;
       &lt;span class="xHint"&gt;Whether groups should be reset before running this, if they already exist (deduplication is handled by the script, cleanup is not needed if another migration from the same data / a subset of the same data was ran previously).&lt;/span&gt;
     &lt;/dt&gt;
@@ -121,241 +156,387 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
 
 {{job id="{{velocity~}~}${request.jobId}{{/velocity~}~}" start="{{velocity~}~}${request.confirm}{{/velocity~}~}" grouppath="GroupsImporter"}}
 {{groovy}}
-import com.xpn.xwiki.api.Attachment
-import org.xwiki.logging.LogLevel;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.RegExUtils;
-import org.apache.commons.csv.*;
-import org.xwiki.model.reference.*;
-import java.util.*;
-import groovy.time.TimeCategory;
-import groovy.time.TimeDuration;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import groovy.time.TimeCategory
+import groovy.time.TimeDuration
 
+import org.apache.commons.lang3.StringUtils
+import org.xwiki.component.util.DefaultParameterizedType
+import org.xwiki.contrib.confluence.filter.Mapping
+import org.xwiki.contrib.confluence.filter.input.ConfluenceInputContext
+import org.xwiki.contrib.confluence.filter.input.ConfluenceInputProperties
+import org.xwiki.contrib.confluence.filter.internal.input.DefaultConfluenceInputContext
+import org.xwiki.logging.LogLevel
+import org.xwiki.properties.converter.Converter
 
 logger = services.logging.getLogger(doc.fullName);
 services.logging.setLevel(doc.fullName, LogLevel.INFO);
 
-XWIKISPACE = new SpaceReference("xwiki", "XWiki");
-ADMINGROUPNAMES = ["system-administrators", "site-admins", "administrators", "confluence-administrators"];
-GROUPCLASS = "XWiki.XWikiGroups";
-GROUPPROP = "member";
-
-/**
- * Cleans a group name to make it conform to group naming and resolve it wrt the default mapping used on migration of
- * permissions (admin groups, user groups).
- *
- * @param groupName the name of the group to clean and resolve
- * @return the page name for the group page (admin if it's in the adminGroupNames)
- */
-String cleanAndResolveGroupName(String groupName) {
-  // check if it's an admin group
-  if (ADMINGROUPNAMES.contains(groupName)) {
-    return "XWikiAdminGroup";
-  } else {
-  // cleanup the group name; equivalent of clean in org.xwiki.contrib.confluence.filter.internal.input.UsernameCleaner
-    return RegExUtils.removePattern(groupName, "[\\.\\:\\s,@\\^\\/]");
-  }
-}
-
-/**
- * Processes the pairs file and groups the data in a map where the parent is the key and the children are the list
- * associated to the parent.
- *
- * @param pairsFile the file to process
- * @param parentColumn the index of the column where the parent is placed
- * @param cleanParent whether the parent name from the file should be cleaned and resolved against the admin group names
- * @param childColumn the index of the column where the parent is placed
- * @param cleanChild whether the parent name from the file should be cleaned and resolved against the admin group names
- * @return the map with parents as keys and lists of children as values
- *
- * @throws Exception if anything goes wrong while doing this - especially reading the file
- */
-Map&lt;String, List&lt;String&gt;&gt; makeListMapFromPairsFile(Attachment pairsFile, int parentColumn, boolean cleanParent,
-  int childColumn, boolean cleanChild) throws Exception {
-  Map&lt;String, List&lt;String&gt;&gt; result = new TreeMap&lt;String, List&lt;String&gt;&gt;();
-
-  InputStream is = pairsFile.getContentInputStream();
-  InputStreamReader isr = new InputStreamReader(is);
-  CSVParser parser = CSVFormat.RFC4180.withFirstRecordAsHeader().withTrim().withDelimiter(";".charAt(0)).parse(isr);
-  for (CSVRecord record : parser) {
-    def currentItem = record.get(childColumn);
-    def currentGroup = record.get(parentColumn);
-
-    if (StringUtils.isBlank(currentGroup) || StringUtils.isBlank(currentItem)) {
-      // if any is empty, we cannot use this line, continue to the next one
-      continue;
+try {
+    // groups file
+    def groupsInGroupsFilename = request.groupsInGroupsFilename
+    if (StringUtils.isEmpty(groupsInGroupsFilename)) {
+        groupsInGroupsFilename = "groupsparents.csv"
     }
-
-    def parentGroupClean = cleanParent ? cleanAndResolveGroupName(currentGroup) : currentGroup;
-    def childItemClean = cleanChild ? cleanAndResolveGroupName(currentItem) : currentItem;
-    // check if it's already in the map, else initialize
-    List&lt;String&gt; childItemsList = result.get(parentGroupClean);
-    if (childItemsList == null) {
-      childItemsList = new ArrayList&lt;String&gt;();
-      result.put(parentGroupClean, childItemsList);
+    def usersInGroupsFilename = request.usersInGroupsFilename
+    if (StringUtils.isEmpty(usersInGroupsFilename)) {
+        usersInGroupsFilename = "usersgroups.csv"
     }
-    // and add the user in the list
-    childItemsList.add(childItemClean);
-  }
-  return result;
-}
-
-/**
- * Traverses the children of a group and collects all the descendants in the result set mutable parameter
- *
- * @param groupChildren the mapping with group children
- * @param group the group to fetch descendants for
- * @param result the variable where the result should be collected
- */
-void traverse(String group, Map&lt;String, List&lt;String&gt;&gt; childrenMap, Set&lt;String&gt; result) {
-  if (!result.contains(group)) {
-    result.add(group);
-    List&lt;String&gt; children = childrenMap.get(group);
-    if (children != null) {
-      for (String child : children) {
-        traverse(child, childrenMap, result);
-      }
+    def groupToMigrateFilename = request.groupToMigrateFilename
+    if (StringUtils.isEmpty(groupToMigrateFilename)) {
+        groupToMigrateFilename = "groupstomigrate.csv"
     }
-  }
-}
-
-// groups file
-def groupsInGroupsFilename = request.groupsInGroupsFilename
-if (StringUtils.isEmpty(groupsInGroupsFilename)) {
-  groupsInGroupsFilename = "groupsparents.csv"
-}
-def usersInGroupsFilename = request.usersInGroupsFilename
-if (StringUtils.isEmpty(usersInGroupsFilename)) {
-  usersInGroupsFilename = "usersgroups.csv"
-}
-def groupToMigrateFilename = request.groupToMigrateFilename
-if (StringUtils.isEmpty(groupToMigrateFilename)) {
-  groupToMigrateFilename = "groupstomigrate.csv"
-}
-if (StringUtils.isEmpty(request.sourcePageName)) {
-  logger.error("Source page reference not set")
-  return
-}
-
-if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
-  start = new Date();
-
-  // read data from the CSVs attached to the job page
-  def groupImporterDoc = xwiki.getDocument(request.sourcePageName);
-  def groupsInGroupsFile = groupImporterDoc.getAttachment(groupsInGroupsFilename);
-  def usersInGroupsFile = groupImporterDoc.getAttachment(usersInGroupsFilename);
-  def groupsToMigrateFile = groupImporterDoc.getAttachment(groupToMigrateFilename);
-  if (groupsInGroupsFile != null &amp;&amp; usersInGroupsFile != null &amp;&amp; groupsToMigrateFile != null) {
-    try {
-      // 1. prepare groups data from the groupsInGroups file
-      def groupsWithGroups = makeListMapFromPairsFile(groupsInGroupsFile, 1, true, 0, true);
-
-      logger.info("Processed [{}] groups with subgroups", groupsWithGroups ? groupsWithGroups.size() : 0);
-
-      // 2. prepare users data from usersInGroups file
-      def groupsWithUsers = makeListMapFromPairsFile(usersInGroupsFile, 1, true, 0, false);
-
-      logger.info("Processed [{}] groups with users", groupsWithUsers ? groupsWithUsers.size() : 0);
-
-      // 3. read the list of groups to migrate and prepare the full list of groups to create (including child groups)
-      List&lt;String&gt; allGroupsToMigrate = [];
-
-      InputStream is = groupsToMigrateFile.getContentInputStream();
-      InputStreamReader isr = new InputStreamReader(is);
-      CSVParser parser = CSVFormat.RFC4180.withFirstRecordAsHeader().withTrim().withDelimiter(";".charAt(0)).parse(isr);
-
-      def groupsToMigrateFirstLevel = [];
-      parser.each { record -&gt;
-        groupsToMigrateFirstLevel &lt;&lt; cleanAndResolveGroupName(record.get(0));
-      }
-
-      Set&lt;String&gt; allGroupsToMigrateSet = new LinkedHashSet&lt;&gt;();
-      groupsToMigrateFirstLevel.each { traverse(it, groupsWithGroups, allGroupsToMigrateSet) };
-      allGroupsToMigrate = allGroupsToMigrateSet as List;
-
-      logger.info("Read [{}] groups, importing...", allGroupsToMigrate.size());
-
-      // start processing
-      services.progress.pushLevel(allGroupsToMigrate.size());
-      for(def g : allGroupsToMigrate) {
-        services.progress.startStep();
-
-        // compute group reference
-        DocumentReference groupReference = new DocumentReference(g, XWIKISPACE);
-        // check if it's admin without admin processing enabled
-        if (groupReference.getName() == 'XWikiAdminGroup' &amp;&amp; !request.processadmin) {
-          logger.info("Skipping group [{}] as it's not scheduled for processing", groupReference, g);
-          continue;
-        }
-
-        // get unified list of users and groups, since they're added the same way
-        def childrenOfGroup = ((groupsWithGroups.get(g) ?: []) + (groupsWithUsers.get(g) ?: [])).unique();
-
-        logger.info("Importing group [{}] with children (users or groups) [{}]", g, childrenOfGroup);
-
-        boolean wasCleaned = false;
-        def groupDoc = xwiki.getDocument(groupReference);
-        def groupNeedsSave = false;
-        if (!groupDoc.isNew() &amp;&amp; request.cleangroups) {
-          logger.warn("Cleaning group [{}]", groupReference);
-          groupDoc.removeObjects(GROUPCLASS);
-          groupDoc.save("Cleaning the group upon group import");
-          wasCleaned = true;
-          // reload group doc from the database, to reset object numbers
-          groupDoc = xwiki.getDocument(groupReference);
-        }
-        if (wasCleaned || groupDoc.isNew()) {
-          // initialize group with a first empty object
-          def emptyObj = groupDoc.newObject(GROUPCLASS);
-          emptyObj.set(GROUPPROP, "");
-          // set group as hidden, just in case it was not
-          groupDoc.setHidden(true);
-          groupNeedsSave = true;
-        }
-        // fill in all users and subgroups, if they're not already in the group
-        for (def c : childrenOfGroup) {
-          DocumentReference childToAddReference = new DocumentReference(c, XWIKISPACE);
-          String serializedChildToAddReferenceLocal = services.model.serialize(childToAddReference, "local", groupReference);
-          def existingMemberObj = groupDoc.getObject(GROUPCLASS, GROUPPROP, serializedChildToAddReferenceLocal);
-          // try with full reference if compact was not found
-          if (existingMemberObj == null) {
-            String serializedChildToAddReferenceFull = services.model.serialize(childToAddReference, "default");
-            existingMemberObj = groupDoc.getObject(GROUPCLASS, GROUPPROP, serializedChildToAddReferenceFull);
-          }
-          if (existingMemberObj != null) {
-            logger.info("Not adding child [{}] in group [{}] because it already exists", childToAddReference, groupReference);
-            continue;
-          }
-          logger.debug("Adding child [{}] in group [{}]", childToAddReference, groupReference);
-
-          def newMemberObj = groupDoc.newObject(GROUPCLASS);
-          newMemberObj.set(GROUPPROP, serializedChildToAddReferenceLocal);
-          groupNeedsSave = true;
-        }
-
-        // save the data at the end
-        if(groupNeedsSave) {
-          groupDoc.save("Imported group");
-          logger.info("Saved group [{}] with [{}] children", groupReference, childrenOfGroup.size());
-        }
-
-        services.progress.endStep();
-      }
-      services.progress.popLevel();
-
-    } catch (Exception e) {
-      logger.error("Failed to load or process mapping from CSV: ", e);
+    if (StringUtils.isEmpty(request.sourcePageName)) {
+        logger.error("Source page reference not set")
+        return
     }
-  } else {
-    logger.error("Could not find one of files [{}], [{}], [{}] attached to this page", groupsInGroupsFilename, usersInGroupsFilename, groupToMigrateFilename);
-  }
+    def sourcePageName = services.model.resolveDocument(request.sourcePageName)
 
-  stop = new Date();
-  TimeDuration duration = TimeCategory.minus( stop, start );
-  logger.info("Total duration : ${duration.getHours()}h ${duration.getMinutes()}m ${duration.getSeconds()}s");
+    if (hasProgramming &amp;&amp; 'true'.equals(request.confirm)) {
+        def start = new Date();
+
+        // Parameter the confluence context so the user and group mapping are handled in a correct way
+        def converterMappingType = new DefaultParameterizedType(null, Converter.class, Mapping.class);
+        Converter mappingConverter = services.component.getInstance(converterMappingType)
+        def userMapping = mappingConverter.&lt;Mapping&gt; convert(Mapping.class, request.get('userMapping') ?: '')
+        def groupMapping = mappingConverter.&lt;Mapping&gt; convert(Mapping.class, request.get('groupMapping') ?: '')
+
+        ConfluenceInputContext confluenceInputContext = services.component.getInstance(ConfluenceInputContext.class)
+        def confluenceProperties = new ConfluenceInputProperties() {
+            {
+                setUserIdMapping(userMapping)
+                setGroupMapping(groupMapping)
+                setUserFormat(request.get('userFormat'))
+                setGroupFormat(request.get('groupFormat'))
+            }
+        }
+        (confluenceInputContext as DefaultConfluenceInputContext).set(null, confluenceProperties)
+
+        def processAdmin = request.processadmin == 'on'
+        def cleangroups = request.cleangroups == 'on'
+
+        services.confluencegroupmigrator.importGroups(services.progress, processAdmin, cleangroups,
+            groupsInGroupsFilename, usersInGroupsFilename, groupToMigrateFilename, sourcePageName)
+
+        def stop = new Date();
+        TimeDuration duration = TimeCategory.minus(stop, start);
+        logger.info("Total duration : ${duration.getHours()}h ${duration.getMinutes()}m ${duration.getSeconds()}s");
+    }
+} catch (Exception e) {
+    logger.error("Script crashed with error: ", e)
 }
 {{/groovy}}
 {{/job}}</content>
+  <object>
+    <name>ConfluenceMigratorPro.GroupsImporter.WebHome</name>
+    <number>0</number>
+    <className>XWiki.ScriptComponentClass</className>
+    <guid>17fcd764-a259-4a8e-83ed-c960adfa663f</guid>
+    <class>
+      <name>XWiki.ScriptComponentClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <scope>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>scope</name>
+        <number>2</number>
+        <prettyName>Scope</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>|wiki|global|user</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </scope>
+      <script_content>
+        <disabled>0</disabled>
+        <editor>Text</editor>
+        <name>script_content</name>
+        <number>3</number>
+        <prettyName>Script</prettyName>
+        <restricted>0</restricted>
+        <rows>20</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </script_content>
+      <script_language>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>script_language</name>
+        <number>1</number>
+        <prettyName>Language</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>groovy|python</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </script_language>
+    </class>
+    <property>
+      <scope>wiki</scope>
+    </property>
+    <property>
+      <script_content>package com.xwiki.confluencepro
+
+import com.xpn.xwiki.XWiki
+import com.xpn.xwiki.XWikiContext
+import com.xpn.xwiki.doc.XWikiAttachment
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVParser
+import org.apache.commons.csv.CSVRecord
+import org.apache.commons.lang3.StringUtils
+import org.slf4j.Logger
+import org.xwiki.component.annotation.Component
+import org.xwiki.contrib.confluence.filter.ConfluenceFilterReferenceConverter
+import org.xwiki.job.script.ProgressScripService
+import org.xwiki.model.reference.DocumentReference
+import org.xwiki.model.reference.EntityReferenceSerializer
+import org.xwiki.model.reference.LocalDocumentReference
+import org.xwiki.model.reference.SpaceReference
+import org.xwiki.script.service.ScriptService
+
+import javax.inject.Inject
+import javax.inject.Named
+import javax.inject.Provider
+import javax.inject.Singleton
+
+@Component
+@Named("confluencegroupmigrator")
+@Singleton
+public class GroupMigratorScriptService implements ScriptService
+{
+    private static final SpaceReference XWIKI_SPACE = new SpaceReference("xwiki", "XWiki")
+
+    private static final LocalDocumentReference GROUP_CLASS = new LocalDocumentReference('XWiki', 'XWikiGroups')
+
+    private static final String GROUP_PROP = "member"
+
+    @Inject
+    private EntityReferenceSerializer&lt;String&gt; serializer;
+
+    @Inject
+    private Provider&lt;XWikiContext&gt; contextProvider;
+
+    @Inject
+    private ConfluenceFilterReferenceConverter confluenceConverter;
+
+    @Inject
+    private Logger logger
+
+    void importGroups(ProgressScripService progress, boolean processAdmin, boolean cleanGroups,
+        String groupsInGroupsFilename, String usersInGroupsFilename, String groupToMigrateFilename,
+        DocumentReference sourcePageRef)
+    {
+        XWikiContext context = contextProvider.get()
+        XWiki xwiki = context.getWiki()
+
+        // read data from the CSVs attached to the job page
+        def groupImporterDoc = xwiki.getDocument(sourcePageRef, context)
+        def groupsInGroupsFile = groupImporterDoc.getAttachment(groupsInGroupsFilename)
+        def usersInGroupsFile = groupImporterDoc.getAttachment(usersInGroupsFilename)
+        def groupsToMigrateFile = groupImporterDoc.getAttachment(groupToMigrateFilename)
+
+        if (groupsInGroupsFile != null &amp;&amp; usersInGroupsFile != null &amp;&amp; groupsToMigrateFile != null) {
+            try {
+                // 1. prepare groups data from the groupsInGroups file
+                def groupsWithGroups = makeListMapFromPairsFile(groupsInGroupsFile, true)
+
+                logger.info("Processed [{}] groups with subgroups", groupsWithGroups ? groupsWithGroups.size() : 0)
+
+                // 2. prepare users data from usersInGroups file
+                def groupsWithUsers = makeListMapFromPairsFile(usersInGroupsFile, false)
+
+                logger.info("Processed [{}] groups with users", groupsWithUsers ? groupsWithUsers.size() : 0)
+
+                // 3. read the list of groups to migrate and prepare the full list of groups to create (including child groups)
+                InputStream is = groupsToMigrateFile.getContentInputStream(context);
+                InputStreamReader isr = new InputStreamReader(is);
+                CSVParser parser = CSVFormat.RFC4180.builder()
+                    .setHeader().setSkipHeaderRecord(true).setTrim(true).setDelimiter(';')
+                    .build()
+                    .parse(isr)
+
+                List&lt;String&gt; groupsToMigrateFirstLevel = [];
+                parser.each { record -&gt;
+                    groupsToMigrateFirstLevel &lt;&lt; confluenceConverter.toGroupReferenceName(record.get(0));
+                }
+                isr.close()
+
+                Set&lt;String&gt; allGroupsToMigrateSet = new LinkedHashSet&lt;&gt;();
+                groupsToMigrateFirstLevel.each { traverse(it, groupsWithGroups, allGroupsToMigrateSet) };
+                List&lt;String&gt; allGroupsToMigrate = allGroupsToMigrateSet as List;
+
+                logger.info("Read [{}] groups, importing...", allGroupsToMigrate.size());
+
+                // start processing
+                progress.pushLevel(allGroupsToMigrate.size());
+                for (def g : allGroupsToMigrate) {
+                    progress.startStep();
+
+                    // compute group reference
+                    DocumentReference groupReference = new DocumentReference(g, XWIKI_SPACE);
+                    // check if it's admin without admin processing enabled
+                    if (groupReference.getName() == 'XWikiAdminGroup' &amp;&amp; !processAdmin) {
+                        logger.info("Skipping group [{}] as it's not scheduled for processing", groupReference, g);
+                        continue;
+                    }
+
+                    // get unified list of users and groups, since they're added the same way
+                    def childrenOfGroup = ((groupsWithGroups.get(g) ?: []) + (groupsWithUsers.get(g) ?: [])).unique();
+
+                    logger.info("Importing group [{}] with children (users or groups) [{}]", g, childrenOfGroup);
+
+                    boolean wasCleaned = false
+                    def groupDoc = xwiki.getDocument(groupReference, context).clone()
+                    def groupNeedsSave = false;
+                    if (!groupDoc.isNew() &amp;&amp; cleanGroups) {
+                        logger.warn("Cleaning group [{}]", groupReference);
+                        groupDoc.removeXObjects(GROUP_CLASS)
+                        xwiki.saveDocument(groupDoc, "Cleaning the group upon group import", context)
+                        wasCleaned = true;
+                        // reload group doc from the database, to reset object numbers
+                        groupDoc = xwiki.getDocument(groupReference, context).clone();
+                    }
+                    if (wasCleaned || groupDoc.isNew()) {
+                        // initialize group with a first empty object
+                        def emptyObj = groupDoc.newXObject(GROUP_CLASS, context);
+                        emptyObj.set(GROUP_PROP, "", context);
+                        // set group as hidden, just in case it was not
+                        groupDoc.setHidden(true);
+                        groupNeedsSave = true;
+                    }
+                    // fill in all users and subgroups, if they're not already in the group
+                    for (def c : childrenOfGroup) {
+                        DocumentReference childToAddReference = new DocumentReference(c, XWIKI_SPACE);
+                        String serializedChildToAddReferenceLocal =
+                            serializer.serialize(childToAddReference, "local", groupReference);
+                        def existingMemberObj =
+                            groupDoc.getXObject(GROUP_CLASS, GROUP_PROP, serializedChildToAddReferenceLocal, false)
+                        // try with full reference if compact was not found
+                        if (existingMemberObj == null) {
+                            String serializedChildToAddReferenceFull =
+                                serializer.serialize(childToAddReference, "default")
+                            existingMemberObj =
+                                groupDoc.getXObject(GROUP_CLASS, GROUP_PROP, serializedChildToAddReferenceFull, false)
+                        }
+                        if (existingMemberObj != null) {
+                            logger.info("Not adding child [{}] in group [{}] because it already exists",
+                                childToAddReference, groupReference);
+                            continue;
+                        }
+                        logger.debug("Adding child [{}] in group [{}]", childToAddReference, groupReference);
+
+                        def newMemberObj = groupDoc.newXObject(GROUP_CLASS, context);
+                        newMemberObj.set(GROUP_PROP, serializedChildToAddReferenceLocal, context);
+                        groupNeedsSave = true;
+                    }
+
+                    // save the data at the end
+                    if (groupNeedsSave) {
+                        xwiki.saveDocument(groupDoc, "Imported group", context);
+                        logger.info("Saved group [{}] with [{}] children", groupReference, childrenOfGroup.size());
+                    }
+
+                    progress.endStep();
+                }
+                progress.popLevel();
+            } catch (Exception e) {
+                logger.error("Failed to load or process mapping from CSV: ", e);
+            }
+        } else {
+            logger.error("Could not find one of files [{}], [{}], [{}] attached to this page", groupsInGroupsFilename,
+                usersInGroupsFilename, groupToMigrateFilename);
+        }
+    }
+    /**
+     * Processes the pairs file and groups the data in a map where the parent is the key and the children are the list
+     * associated to the parent.
+     *
+     * @param pairsFile the file to process
+     * @param parentColumn the index of the column where the parent is placed
+     * @param cleanParent whether the parent name from the file should be cleaned and resolved against the admin group names
+     * @param childColumn the index of the column where the parent is placed
+     * @param cleanChild whether the parent name from the file should be cleaned and resolved against the admin group names
+     * @return the map with parents as keys and lists of children as values
+     *
+     * @throws Exception if anything goes wrong while doing this - especially reading the file
+     */
+    private Map&lt;String, List&lt;String&gt;&gt; makeListMapFromPairsFile(XWikiAttachment pairsFile,
+        boolean isSubGroup) throws Exception
+    {
+        Map&lt;String, List&lt;String&gt;&gt; result = new TreeMap&lt;String, List&lt;String&gt;&gt;();
+
+        InputStream is = pairsFile.getContentInputStream(contextProvider.get());
+        InputStreamReader isr = new InputStreamReader(is);
+        CSVParser parser = CSVFormat.RFC4180.builder()
+            .setHeader().setSkipHeaderRecord(true).setTrim(true).setDelimiter(';')
+            .build()
+            .parse(isr);
+        for (CSVRecord record : parser) {
+            def currentItem = record.get(isSubGroup ? 'groupname' : 'username');
+            def currentGroup = record.get(isSubGroup ? 'parentgroupname' : 'groupname');
+
+            if (StringUtils.isBlank(currentGroup) || StringUtils.isBlank(currentItem)) {
+                // if any is empty, we cannot use this line, continue to the next one
+                continue;
+            }
+
+            def parentGroupClean = confluenceConverter.toGroupReferenceName(currentGroup)
+            def childItemClean = isSubGroup
+                ? confluenceConverter.toGroupReferenceName(currentItem)
+                : confluenceConverter.convertUserNameToReferenceName(currentItem)
+            // check if it's already in the map, else initialize
+            List&lt;String&gt; childItemsList = result.get(parentGroupClean);
+            if (childItemsList == null) {
+                childItemsList = new ArrayList&lt;String&gt;();
+                result.put(parentGroupClean, childItemsList);
+            }
+            // and add the user in the list
+            childItemsList.add(childItemClean);
+        }
+        isr.close()
+        return result
+    }
+    /**
+     * Traverses the children of a group and collects all the descendants in the result set mutable parameter
+     *
+     * @param groupChildren the mapping with group children
+     * @param group the group to fetch descendants for
+     * @param result the variable where the result should be collected
+     */
+    private void traverse(String group, Map&lt;String, List&lt;String&gt;&gt; childrenMap, Set&lt;String&gt; result)
+    {
+        if (!result.contains(group)) {
+            result.add(group);
+            List&lt;String&gt; children = childrenMap.get(group);
+            if (children != null) {
+                for (String child : children) {
+                    traverse(child, childrenMap, result);
+                }
+            }
+        }
+    }
+}</script_content>
+    </property>
+    <property>
+      <script_language>groovy</script_language>
+    </property>
+  </object>
 </xwikidoc>
