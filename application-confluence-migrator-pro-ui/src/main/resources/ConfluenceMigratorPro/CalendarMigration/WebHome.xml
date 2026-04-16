@@ -94,23 +94,21 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
     #end
     &lt;dt&gt;
       &lt;label for="userFormat"&gt;User format&lt;/label&gt;
-      #set ($spanXHint = 'The format to use to transform a Confluence user name to a XWiki user name for usersthat are not in the user id mapping.String ${username} will be replaced with the Confluence user name; String ${username._clean} same with the special characters removed (recommended).String ${username._lowerCase} will be replaced with the lowercased Confluence user name; String ${username._upperCase} will be replaced with the uppercased Confluence user name; String ${username._clean._lowerCase} will be replaced with the cleaned, lowercased Confluence user name; String ${username._clean._upperCase} will be replaced with the uppercased Confluence user name. By default, for backward compatibility reasons, special characters are replaced with underscores and spaces are kept.')
-      &lt;span class="xHint"&gt;$spanXHint&lt;/span&gt;
+      &lt;span class="xHint"&gt;The format to use to transform a Confluence user name to a XWiki user name for users that are not in the user id mapping. String &lt;code&gt;${username}&lt;/code&gt; will be replaced with the Confluence user name; String &lt;code&gt;${username._clean}&lt;/code&gt; same with the special characters removed (recommended); String &lt;code&gt;${username._lowerCase}&lt;/code&gt; will be replaced with the lowercased Confluence user name; String &lt;code&gt;${username._upperCase}&lt;/code&gt; will be replaced with the uppercased Confluence user name; String &lt;code&gt;${username._clean._lowerCase}&lt;/code&gt; will be replaced with the cleaned, lowercased Confluence user name; String &lt;code&gt;${username._clean._upperCase}&lt;/code&gt; will be replaced with the uppercased Confluence user name. By default, for backward compatibility reasons, dots, spaces and slashes are replaced with underscores.&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
       &lt;input type="text" id="userFormat" name="userFormat" value="$!escapetool.xml($!request.get("userFormat"))"/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
       &lt;label for="userMapping"&gt;User id mapping&lt;/label&gt;
-      &lt;span class="xHint"&gt;A mapping between Confluence user id located in the package and wanted ids. The format is confluenceuser=XWikiUser pairs separated by pipes ("|"). For instance: myuser=MyUser|user2=User2&lt;/span&gt;
+      &lt;span class="xHint"&gt;A mapping between Confluence user id located in the package and wanted ids. The format is &lt;code&gt;confluenceuser=XWikiUser&lt;/code&gt; pairs separated by pipes ("|"). For instance: &lt;code&gt;myuser=MyUser|user2=User2&lt;/code&gt;&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
       &lt;input type="text" id="userMapping" name="userMapping" value="$!escapetool.xml($!request.get("userMapping"))"/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
       &lt;label for="groupFormat"&gt;Group format&lt;/label&gt;
-      #set ($spanXHint = 'The format to use to transform a Confluence group name to a XWiki group name for groupsthat are not in the group mapping.String ${group} will be replaced with the Confluence group name; String ${group._clean} same with the special characters removed.String ${group._lowerCase} will be replaced with the lowercased Confluence group name; String ${group._upperCase} will be replaced with the uppercased Confluence group name; String ${group._clean._lowerCase} will be replaced with the cleaned, lowercased Confluence group name; String ${group._clean._upperCase} will be replaced with the uppercased Confluence group name. Default format: ${group._clean}')
-      &lt;span class="xHint"&gt;$spanXHint&lt;/span&gt;
+      &lt;span class="xHint"&gt;The format to use to transform a Confluence group name to a XWiki group name for groups that are not in the group mapping. String &lt;code&gt;${group}&lt;/code&gt; will be replaced with the Confluence group name; String &lt;code&gt;${group._clean}&lt;/code&gt; same with the special characters removed; String &lt;code&gt;${group._lowerCase}&lt;/code&gt; will be replaced with the lowercased Confluence group name; String &lt;code&gt;${group._upperCase}&lt;/code&gt; will be replaced with the uppercased Confluence group name; String &lt;code&gt;${group._clean._lowerCase}&lt;/code&gt; will be replaced with the cleaned, lowercased Confluence group name; String &lt;code&gt;${group._clean._upperCase}&lt;/code&gt; will be replaced with the uppercased Confluence group name. Default format: &lt;code&gt;${group._clean}&lt;/code&gt;&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
       #if ("$!request.get('groupFormat')" == '')
@@ -122,7 +120,7 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
     &lt;/dd&gt;
     &lt;dt&gt;
       &lt;label for="groupMapping"&gt;Group name mapping&lt;/label&gt;
-      &lt;span class="xHint"&gt;A mapping between Confluence group names and XWiki group names. The format is confluencegroup=XWikiGroup pairs separated by pipes ("|"). Use an empty value to ignore the group.For instance: atlassian-addons=|balsamiq-mockups-editors=MockupEditors|administrators=XWikiAdminGroup|site-admins=XWikiAdminGroup|_licensed-confluence=|confluence-users=XWikiAllGroup|confluence-administrators=XWikiAdminGroup|system-administrators=XWikiAdminGroup|group 1=MyGroup&lt;/span&gt;
+      &lt;span class="xHint"&gt;A mapping between Confluence group names and XWiki group names. The format is &lt;code&gt;confluencegroup=XWikiGroup&lt;/code&gt; pairs separated by pipes ("|"). Use an empty value to ignore the group. For instance: &lt;code&gt;atlassian-addons=|balsamiq-mockups-editors=MockupEditors|administrators=XWikiAdminGroup|site-admins=XWikiAdminGroup|_licensed-confluence=|confluence-users=XWikiAllGroup|confluence-administrators=XWikiAdminGroup|system-administrators=XWikiAdminGroup|group 1=MyGroup&lt;/code&gt;&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
       &lt;input type="text" id="groupMapping" name="groupMapping" value="$!escapetool.xml($!request.get("groupMapping"))"/&gt;
