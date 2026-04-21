@@ -170,6 +170,10 @@ logger = services.logging.getLogger(doc.fullName);
 services.logging.setLevel(doc.fullName, LogLevel.INFO);
 
 try {
+    if (!services.csrf.isTokenValid(request.get("form_token"))) {
+        logger.error("Invalid csrf token")
+        throw new Exception("Invalid token")
+    }
     // groups file
     def groupsInGroupsFilename = request.groupsInGroupsFilename
     if (StringUtils.isEmpty(groupsInGroupsFilename)) {

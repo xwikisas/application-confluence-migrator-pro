@@ -206,6 +206,10 @@ def logger = services.logging.getLogger(documentName);
 services.logging.setLevel(doc.fullName, LogLevel.DEBUG)
 
 try {
+    if (!services.csrf.isTokenValid(request.get("form_token"))) {
+        logger.error("Invalid csrf token")
+        throw new Exception("Invalid token")
+    }
     if (StringUtils.isEmpty(request.sourcePageName)) {
         logger.error("Source page reference not set")
         return
