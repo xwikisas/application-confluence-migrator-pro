@@ -83,7 +83,7 @@
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_1" status="InProgress"}}
+{{task reference="/Tasks/Task_1" reporter="XWiki.camille_dupont@xwiki_com" status="InProgress" completeDate="2023/03/06 12:17:13" createDate="2023/03/06 12:16:9"}}
 This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 )))</string>
@@ -127,7 +127,7 @@ This task was created at 14:16! created by the assignee {{mention reference="XWi
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_1" status="Done"}}
+{{task reference="/Tasks/Task_1" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/06 12:17:13" createDate="2023/03/06 12:16:9"}}
 This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 )))</string>
@@ -171,7 +171,7 @@ This task was created at 14:16! created by the assignee {{mention reference="XWi
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_1" status="Done"}}
+{{task reference="/Tasks/Task_1" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/06 12:17:13" createDate="2023/03/06 12:16:9"}}
 This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 )))
@@ -217,7 +217,7 @@ NEW edit of the page at 14:18!</string>
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_1" status="Done"}}
+{{task reference="/Tasks/Task_1" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/06 12:17:13" createDate="2023/03/06 12:16:9"}}
 This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 )))
@@ -226,7 +226,7 @@ NEW edit of the page at 14:18!
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_2" status="InProgress"}}
+{{task reference="/Tasks/Task_2" reporter="XWiki.camille_dupont@xwiki_com" status="InProgress" completeDate="2023/03/06 12:20:23" createDate="2023/03/06 12:19:19"}}
 This task was created at 14:19 {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 )))</string>
@@ -270,7 +270,7 @@ This task was created at 14:19 {{mention reference="XWiki.camille_dupont@xwiki_c
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_1" status="Done"}}
+{{task reference="/Tasks/Task_1" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/06 12:17:13" createDate="2023/03/06 12:16:9"}}
 This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 )))
@@ -279,7 +279,7 @@ NEW edit of the page at 14:18!
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_2" status="Done"}}
+{{task reference="/Tasks/Task_2" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/06 12:20:23" createDate="2023/03/06 12:19:19"}}
 This task was created at 14:19 {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 )))</string>
@@ -323,7 +323,7 @@ This task was created at 14:19 {{mention reference="XWiki.camille_dupont@xwiki_c
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_1" status="Done"}}
+{{task reference="/Tasks/Task_1" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/06 12:17:13" createDate="2023/03/06 12:16:9"}}
 This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 )))
@@ -332,7 +332,7 @@ NEW edit of the page at 14:18!
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_2" status="Done"}}
+{{task reference="/Tasks/Task_2" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/06 12:20:23" createDate="2023/03/06 12:19:19"}}
 This task was created at 14:19 {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 )))
@@ -411,7 +411,7 @@ Last edit: 2:21</string>
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_4" status="InProgress"}}
+{{task reference="/Tasks/Task_4" reporter="XWiki.camille_dupont@xwiki_com" status="InProgress" completeDate="2023/03/13 14:32:45" createDate="2023/03/13 14:3:40"}}
 Do this pls! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-13" format="yyyy-MM-dd"/}}
 {{/task}}
 )))
@@ -420,11 +420,11 @@ Some more tasks here
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_5" status="InProgress"}}
+{{task reference="/Tasks/Task_5" reporter="XWiki.camille_dupont@xwiki_com" status="InProgress" completeDate="2023/03/13 14:32:20" createDate="2023/03/13 14:3:40"}}
 DO this as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 
-{{task reference="/Tasks/Task_6" status="InProgress"}}
+{{task reference="/Tasks/Task_6" reporter="XWiki.camille_dupont@xwiki_com" status="InProgress" createDate="2023/03/13 14:3:40"}}
 And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
 {{/task}}
 )))</string>
@@ -468,7 +468,7 @@ And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAM
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_4" status="InProgress"}}
+{{task reference="/Tasks/Task_4" reporter="XWiki.camille_dupont@xwiki_com" status="InProgress" completeDate="2023/03/13 14:32:45" createDate="2023/03/13 14:3:40"}}
 Do this pls! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-13" format="yyyy-MM-dd"/}}
 {{/task}}
 )))
@@ -477,11 +477,11 @@ Some more tasks here
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_5" status="Done"}}
+{{task reference="/Tasks/Task_5" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/13 14:32:20" createDate="2023/03/13 14:3:40"}}
 DO this as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 
-{{task reference="/Tasks/Task_6" status="InProgress"}}
+{{task reference="/Tasks/Task_6" reporter="XWiki.camille_dupont@xwiki_com" status="InProgress" createDate="2023/03/13 14:3:40"}}
 And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
 {{/task}}
 )))</string>
@@ -525,7 +525,7 @@ And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAM
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_4" status="InProgress"}}
+{{task reference="/Tasks/Task_4" reporter="XWiki.camille_dupont@xwiki_com" status="InProgress" completeDate="2023/03/13 14:32:45" createDate="2023/03/13 14:3:40"}}
 Do this pls! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-13" format="yyyy-MM-dd"/}}
 {{/task}}
 )))
@@ -534,11 +534,11 @@ Some more tasks here
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_5" status="Done"}}
+{{task reference="/Tasks/Task_5" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/13 14:32:20" createDate="2023/03/13 14:3:40"}}
 DO this as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 
-{{task reference="/Tasks/Task_6" status="InProgress"}}
+{{task reference="/Tasks/Task_6" reporter="XWiki.camille_dupont@xwiki_com" status="InProgress" createDate="2023/03/13 14:3:40"}}
 And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
 {{/task}}
 )))
@@ -584,7 +584,7 @@ Some more editing!!!</string>
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_4" status="Done"}}
+{{task reference="/Tasks/Task_4" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/13 14:32:45" createDate="2023/03/13 14:3:40"}}
 Do this pls! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-13" format="yyyy-MM-dd"/}}
 {{/task}}
 )))
@@ -593,11 +593,11 @@ Some more tasks here
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_5" status="Done"}}
+{{task reference="/Tasks/Task_5" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/13 14:32:20" createDate="2023/03/13 14:3:40"}}
 DO this as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
 {{/task}}
 
-{{task reference="/Tasks/Task_6" status="InProgress"}}
+{{task reference="/Tasks/Task_6" reporter="XWiki.camille_dupont@xwiki_com" status="InProgress" createDate="2023/03/13 14:3:40"}}
 And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
 {{/task}}
 )))
@@ -701,7 +701,7 @@ Some more editing!!!</string>
 
 (% class="task-list" %)
 (((
-{{task reference="/Tasks/Task_1" status="Done"}}
+{{task reference="/Tasks/Task_1" reporter="XWiki.camille_dupont@xwiki_com" status="Done" completeDate="2023/03/13 14:43:18" createDate="2023/03/13 14:43:18"}}
 Task done a while ago by {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-05" format="yyyy-MM-dd"/}}
 {{/task}}
 )))</string>
