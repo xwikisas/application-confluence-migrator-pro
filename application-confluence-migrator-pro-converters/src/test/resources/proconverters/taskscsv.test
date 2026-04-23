@@ -1,0 +1,732 @@
+.#------------------------------------------------------------------------------
+.expect|filter+xml
+.# Content conversions
+.#------------------------------------------------------------------------------
+<wikiSpace name="~6321bed3051efc6985671eed">
+  <wikiDocument name="WebHome">
+    <wikiDocumentLocale>
+      <p>
+        <parameters>
+          <entry>
+            <string>creation_author</string>
+            <string>XWiki.camille_dupont@xwiki_com</string>
+          </entry>
+          <entry>
+            <string>creation_date</string>
+            <date>2023-03-06 12:14:22.305 UTC</date>
+          </entry>
+          <entry>
+            <string>lastrevision</string>
+            <string>7</string>
+          </entry>
+        </parameters>
+      </p>
+      <wikiDocumentRevision revision="1">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.camille_dupont@xwiki_com</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2023-03-06 12:15:05.149 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>TestTaskPage</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>I created the page!</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+      </wikiDocumentRevision>
+      <wikiDocumentRevision revision="2">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.camille_dupont@xwiki_com</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2023-03-06 12:16:09.600 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>TestTaskPage</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>I created the page!
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_1" status="InProgress"}}
+This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+)))</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+      </wikiDocumentRevision>
+      <wikiDocumentRevision revision="3">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.camille_dupont@xwiki_com</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2023-03-06 12:17:13.317 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>TestTaskPage</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>I created the page!
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_1" status="Done"}}
+This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+)))</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+      </wikiDocumentRevision>
+      <wikiDocumentRevision revision="4">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.camille_dupont@xwiki_com</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2023-03-06 12:18:03.400 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>TestTaskPage</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>I created the page!
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_1" status="Done"}}
+This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+)))
+
+NEW edit of the page at 14:18!</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+      </wikiDocumentRevision>
+      <wikiDocumentRevision revision="5">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.camille_dupont@xwiki_com</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2023-03-06 12:19:19.536 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>TestTaskPage</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>I created the page!
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_1" status="Done"}}
+This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+)))
+
+NEW edit of the page at 14:18!
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_2" status="InProgress"}}
+This task was created at 14:19 {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+)))</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+      </wikiDocumentRevision>
+      <wikiDocumentRevision revision="6">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.camille_dupont@xwiki_com</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2023-03-06 12:20:23.681 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>TestTaskPage</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>I created the page!
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_1" status="Done"}}
+This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+)))
+
+NEW edit of the page at 14:18!
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_2" status="Done"}}
+This task was created at 14:19 {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+)))</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+      </wikiDocumentRevision>
+      <wikiDocumentRevision revision="7">
+        <p>
+          <parameters>
+            <entry>
+              <string>revision_author</string>
+              <string>XWiki.camille_dupont@xwiki_com</string>
+            </entry>
+            <entry>
+              <string>revision_date</string>
+              <date>2023-03-06 12:21:07.35 UTC</date>
+            </entry>
+            <entry>
+              <string>revision_comment</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>title</string>
+              <string>CamilleSpace2</string>
+            </entry>
+            <entry>
+              <string>content</string>
+              <string>I created the page!
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_1" status="Done"}}
+This task was created at 14:16! created by the assignee {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+)))
+
+NEW edit of the page at 14:18!
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_2" status="Done"}}
+This task was created at 14:19 {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+)))
+
+Last edit: 2:21</string>
+            </entry>
+            <entry>
+              <string>syntax</string>
+              <org.xwiki.rendering.syntax.Syntax>
+                <type>
+                  <name>XWiki</name>
+                  <id>xwiki</id>
+                  <variants class="empty-list"/>
+                </type>
+                <version>2.1</version>
+              </org.xwiki.rendering.syntax.Syntax>
+            </entry>
+          </parameters>
+        </p>
+        <userFavorite>
+          <p>
+            <userRef>
+              <name>camille_dupont@xwiki_com</name>
+              <parent>
+                <name>XWiki</name>
+                <type>SPACE</type>
+              </parent>
+              <type>DOCUMENT</type>
+            </userRef>
+          </p>
+        </userFavorite>
+      </wikiDocumentRevision>
+    </wikiDocumentLocale>
+  </wikiDocument>
+  <wikiSpace name="Child Page">
+    <wikiDocument name="WebHome">
+      <wikiDocumentLocale>
+        <p>
+          <parameters>
+            <entry>
+              <string>creation_author</string>
+              <string>XWiki.camille_dupont@xwiki_com</string>
+            </entry>
+            <entry>
+              <string>creation_date</string>
+              <date>2023-03-13 14:01:46.336 UTC</date>
+            </entry>
+            <entry>
+              <string>lastrevision</string>
+              <string>4</string>
+            </entry>
+          </parameters>
+        </p>
+        <wikiDocumentRevision revision="1">
+          <p>
+            <parameters>
+              <entry>
+                <string>revision_author</string>
+                <string>XWiki.camille_dupont@xwiki_com</string>
+              </entry>
+              <entry>
+                <string>revision_date</string>
+                <date>2023-03-13 14:03:40.68 UTC</date>
+              </entry>
+              <entry>
+                <string>revision_comment</string>
+                <string></string>
+              </entry>
+              <entry>
+                <string>title</string>
+                <string>Child Page</string>
+              </entry>
+              <entry>
+                <string>content</string>
+                <string>I will add some tasks
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_4" status="InProgress"}}
+Do this pls! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-13" format="yyyy-MM-dd"/}}
+{{/task}}
+)))
+
+Some more tasks here
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_5" status="InProgress"}}
+DO this as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+
+{{task reference="/Tasks/Task_6" status="InProgress"}}
+And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
+{{/task}}
+)))</string>
+              </entry>
+              <entry>
+                <string>syntax</string>
+                <org.xwiki.rendering.syntax.Syntax>
+                  <type>
+                    <name>XWiki</name>
+                    <id>xwiki</id>
+                    <variants class="empty-list"/>
+                  </type>
+                  <version>2.1</version>
+                </org.xwiki.rendering.syntax.Syntax>
+              </entry>
+            </parameters>
+          </p>
+        </wikiDocumentRevision>
+        <wikiDocumentRevision revision="2">
+          <p>
+            <parameters>
+              <entry>
+                <string>revision_author</string>
+                <string>XWiki.camille_dupont@xwiki_com</string>
+              </entry>
+              <entry>
+                <string>revision_date</string>
+                <date>2023-03-13 14:32:20.19 UTC</date>
+              </entry>
+              <entry>
+                <string>revision_comment</string>
+                <string></string>
+              </entry>
+              <entry>
+                <string>title</string>
+                <string>Child Page</string>
+              </entry>
+              <entry>
+                <string>content</string>
+                <string>I will add some tasks
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_4" status="InProgress"}}
+Do this pls! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-13" format="yyyy-MM-dd"/}}
+{{/task}}
+)))
+
+Some more tasks here
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_5" status="Done"}}
+DO this as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+
+{{task reference="/Tasks/Task_6" status="InProgress"}}
+And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
+{{/task}}
+)))</string>
+              </entry>
+              <entry>
+                <string>syntax</string>
+                <org.xwiki.rendering.syntax.Syntax>
+                  <type>
+                    <name>XWiki</name>
+                    <id>xwiki</id>
+                    <variants class="empty-list"/>
+                  </type>
+                  <version>2.1</version>
+                </org.xwiki.rendering.syntax.Syntax>
+              </entry>
+            </parameters>
+          </p>
+        </wikiDocumentRevision>
+        <wikiDocumentRevision revision="3">
+          <p>
+            <parameters>
+              <entry>
+                <string>revision_author</string>
+                <string>XWiki.camille_dupont@xwiki_com</string>
+              </entry>
+              <entry>
+                <string>revision_date</string>
+                <date>2023-03-13 14:32:38.180 UTC</date>
+              </entry>
+              <entry>
+                <string>revision_comment</string>
+                <string></string>
+              </entry>
+              <entry>
+                <string>title</string>
+                <string>Child Page</string>
+              </entry>
+              <entry>
+                <string>content</string>
+                <string>I will add some tasks
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_4" status="InProgress"}}
+Do this pls! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-13" format="yyyy-MM-dd"/}}
+{{/task}}
+)))
+
+Some more tasks here
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_5" status="Done"}}
+DO this as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+
+{{task reference="/Tasks/Task_6" status="InProgress"}}
+And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
+{{/task}}
+)))
+
+Some more editing!!!</string>
+              </entry>
+              <entry>
+                <string>syntax</string>
+                <org.xwiki.rendering.syntax.Syntax>
+                  <type>
+                    <name>XWiki</name>
+                    <id>xwiki</id>
+                    <variants class="empty-list"/>
+                  </type>
+                  <version>2.1</version>
+                </org.xwiki.rendering.syntax.Syntax>
+              </entry>
+            </parameters>
+          </p>
+        </wikiDocumentRevision>
+        <wikiDocumentRevision revision="4">
+          <p>
+            <parameters>
+              <entry>
+                <string>revision_author</string>
+                <string>XWiki.camille_dupont@xwiki_com</string>
+              </entry>
+              <entry>
+                <string>revision_date</string>
+                <date>2023-03-13 14:32:45.200 UTC</date>
+              </entry>
+              <entry>
+                <string>revision_comment</string>
+                <string></string>
+              </entry>
+              <entry>
+                <string>title</string>
+                <string>Child Page</string>
+              </entry>
+              <entry>
+                <string>content</string>
+                <string>I will add some tasks
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_4" status="Done"}}
+Do this pls! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-13" format="yyyy-MM-dd"/}}
+{{/task}}
+)))
+
+Some more tasks here
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_5" status="Done"}}
+DO this as well! {{date value="2023-03-16" format="yyyy-MM-dd"/}}{{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}
+{{/task}}
+
+{{task reference="/Tasks/Task_6" status="InProgress"}}
+And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-20" format="yyyy-MM-dd"/}}
+{{/task}}
+)))
+
+Some more editing!!!</string>
+              </entry>
+              <entry>
+                <string>syntax</string>
+                <org.xwiki.rendering.syntax.Syntax>
+                  <type>
+                    <name>XWiki</name>
+                    <id>xwiki</id>
+                    <variants class="empty-list"/>
+                  </type>
+                  <version>2.1</version>
+                </org.xwiki.rendering.syntax.Syntax>
+              </entry>
+            </parameters>
+          </p>
+        </wikiDocumentRevision>
+      </wikiDocumentLocale>
+    </wikiDocument>
+    <wikiSpace name="This is one more page!">
+      <wikiDocument name="WebHome">
+        <wikiDocumentLocale>
+          <p>
+            <parameters>
+              <entry>
+                <string>creation_author</string>
+                <string>XWiki.camille_dupont@xwiki_com</string>
+              </entry>
+              <entry>
+                <string>creation_date</string>
+                <date>2023-03-13 14:32:54.874 UTC</date>
+              </entry>
+              <entry>
+                <string>lastrevision</string>
+                <string>2</string>
+              </entry>
+            </parameters>
+          </p>
+          <wikiDocumentRevision revision="1">
+            <p>
+              <parameters>
+                <entry>
+                  <string>revision_author</string>
+                  <string>XWiki.camille_dupont@xwiki_com</string>
+                </entry>
+                <entry>
+                  <string>revision_date</string>
+                  <date>2023-03-13 14:33:14.547 UTC</date>
+                </entry>
+                <entry>
+                  <string>revision_comment</string>
+                  <string></string>
+                </entry>
+                <entry>
+                  <string>title</string>
+                  <string>This is one more page!</string>
+                </entry>
+                <entry>
+                  <string>content</string>
+                  <string>Initial content</string>
+                </entry>
+                <entry>
+                  <string>syntax</string>
+                  <org.xwiki.rendering.syntax.Syntax>
+                    <type>
+                      <name>XWiki</name>
+                      <id>xwiki</id>
+                      <variants class="empty-list"/>
+                    </type>
+                    <version>2.1</version>
+                  </org.xwiki.rendering.syntax.Syntax>
+                </entry>
+              </parameters>
+            </p>
+          </wikiDocumentRevision>
+          <wikiDocumentRevision revision="2">
+            <p>
+              <parameters>
+                <entry>
+                  <string>revision_author</string>
+                  <string>XWiki.camille_dupont@xwiki_com</string>
+                </entry>
+                <entry>
+                  <string>revision_date</string>
+                  <date>2023-03-13 14:43:18.736 UTC</date>
+                </entry>
+                <entry>
+                  <string>revision_comment</string>
+                  <string></string>
+                </entry>
+                <entry>
+                  <string>title</string>
+                  <string>This is one more page!</string>
+                </entry>
+                <entry>
+                  <string>content</string>
+                  <string>Initial content
+
+(% class="task-list" %)
+(((
+{{task reference="/Tasks/Task_1" status="Done"}}
+Task done a while ago by {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAME" anchor="XWiki-camille_dupont@xwiki_com"/}}{{date value="2023-03-05" format="yyyy-MM-dd"/}}
+{{/task}}
+)))</string>
+                </entry>
+                <entry>
+                  <string>syntax</string>
+                  <org.xwiki.rendering.syntax.Syntax>
+                    <type>
+                      <name>XWiki</name>
+                      <id>xwiki</id>
+                      <variants class="empty-list"/>
+                    </type>
+                    <version>2.1</version>
+                  </org.xwiki.rendering.syntax.Syntax>
+                </entry>
+              </parameters>
+            </p>
+          </wikiDocumentRevision>
+        </wikiDocumentLocale>
+      </wikiDocument>
+    </wikiSpace>
+  </wikiSpace>
+</wikiSpace>
+.#------------------------------------------------------------------------------
+.input|confluence+xml
+.configuration.source=taskscsv
+.configuration.storeConfluenceDetailsEnabled=false
+.#------------------------------------------------------------------------------
