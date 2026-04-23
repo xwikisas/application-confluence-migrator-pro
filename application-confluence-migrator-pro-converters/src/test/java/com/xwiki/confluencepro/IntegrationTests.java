@@ -69,7 +69,7 @@ public class IntegrationTests
     public void initialized(MockitoComponentManager componentManager) throws Exception
     {
         Environment environment = componentManager.registerMockComponent(Environment.class);
-        ConfluenceSpaceHelpers spaceHelpers = componentManager.registerMockComponent(ConfluenceSpaceHelpers.class);
+        componentManager.registerMockComponent(ConfluenceSpaceHelpers.class);
         when(environment.getTemporaryDirectory()).thenReturn(XWikiTempDirUtil.createTemporaryDirectory());
 
         DateMacroConfiguration dateConfig = componentManager.registerMockComponent(DateMacroConfiguration.class);

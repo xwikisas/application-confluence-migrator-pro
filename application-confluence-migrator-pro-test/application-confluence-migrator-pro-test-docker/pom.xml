@@ -69,11 +69,6 @@
       <scope>test</scope>
     </dependency>
     <!-- Remove to here -->
-    <dependency>
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-component-wiki</artifactId>
-      <version>${platform.version}</version>
-    </dependency>
   <!-- TODO remove this when moving the batches code from groovy to java -->
     <dependency>
       <groupId>org.xwiki.platform</groupId>
