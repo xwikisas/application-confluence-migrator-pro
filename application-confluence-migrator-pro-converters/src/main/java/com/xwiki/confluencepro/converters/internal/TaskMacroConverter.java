@@ -19,6 +19,8 @@
  */
 package com.xwiki.confluencepro.converters.internal;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,10 +28,17 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.xwiki.date.DateMacroConfiguration;
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 
 import com.xwiki.task.TaskConfiguration;
 import com.xwiki.task.model.Task;
+import org.xwiki.contrib.confluence.filter.ConfluenceFilterReferenceConverter;
+import org.xwiki.contrib.confluence.filter.input.ConfluenceInputContext;
+import org.xwiki.contrib.confluence.filter.input.ConfluenceXMLPackage;
+import org.xwiki.contrib.confluence.filter.task.ConfluenceTask;
+import org.xwiki.filter.FilterException;
 
 /**
  * Convert task macros.
@@ -55,7 +64,19 @@ public class TaskMacroConverter extends AbstractTaskConverter
     private static final String TASKBOX_CHECKED_PARAMETER = "checked";
 
     @Inject
+    private DateMacroConfiguration dateMacroConfiguration;
+
+    @Inject
     private TaskConfiguration taskConfiguration;
+
+    @Inject
+    private ConfluenceInputContext context;
+
+    @Inject
+    private ConfluenceFilterReferenceConverter converter;
+
+    @Inject
+    private Logger log;
 
     @Override
     public String toXWikiId(String confluenceId, Map<String, String> confluenceParameters, String confluenceContent,
@@ -115,6 +136,37 @@ public class TaskMacroConverter extends AbstractTaskConverter
 
         params.put(TASK_STATUS_PARAMETER, xwikiStatus);
         params.put(TASK_REFERENCE_PARAMETER, xwikiIdParam);
+        maybeImportDetailsFromCSV(confluenceTaskId, params);
         return params;
+    }
+
+    private void maybeImportDetailsFromCSV(String confluenceTaskId, Map<String, String> params)
+    {
+        ConfluenceXMLPackage confluencePackage = context.getConfluencePackage();
+        Long pageId = context.getCurrentPage();
+        if (confluencePackage != null && confluenceTaskId != null && pageId != null) {
+            int taskId = Integer.parseInt(confluenceTaskId);
+            try {
+                ConfluenceTask task = confluencePackage.getTask(pageId, taskId);
+                if (task != null) {
+                    String creatorUserKey = task.getCreatorUserKey();
+                    String creator = converter.convertUserReference(creatorUserKey);
+                    params.put("reporter", creator);
+                    params.put("completeDate", formatDate(task.getCompleteDate()));
+                    params.put("createDate", formatDate(task.getCreateDate()));
+                }
+            } catch (FilterException e) {
+                log.warn("Failed to get task [{}] in page [{}], details might be missing", taskId, pageId, e);
+            }
+        }
+    }
+
+    private String formatDate(Date date)
+    {
+        if (date == null) {
+            return null;
+        }
+
+        return new SimpleDateFormat(dateMacroConfiguration.getStorageDateFormat()).format(date);
     }
 }
