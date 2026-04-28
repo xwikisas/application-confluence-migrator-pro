@@ -43,7 +43,7 @@
     <tag>application-confluence-migrator-pro-1.41.1</tag>
   </scm>
   <properties>
-    <licensing.version>1.32.1</licensing.version>
+    <licensing.version>1.32.2</licensing.version>
     <listeneradmin.version>1.0.2</listeneradmin.version>
     <xwiki.extension.category>application</xwiki.extension.category>
     <confluence.version>9.93.0</confluence.version>
