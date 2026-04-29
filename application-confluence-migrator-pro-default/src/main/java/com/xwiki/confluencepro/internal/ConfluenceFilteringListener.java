@@ -45,6 +45,7 @@ import org.xwiki.contrib.confluence.filter.event.ConfluenceFilteringEvent;
 import org.xwiki.contrib.confluence.filter.input.ConfluenceXMLPackage;
 import org.xwiki.contrib.confluence.filter.input.LinkMapper;
 import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceLinkMappingReceiver;
+import org.xwiki.filter.FilterException;
 import org.xwiki.job.AbstractJobStatus;
 import org.xwiki.job.Job;
 import org.xwiki.job.JobContext;
@@ -138,6 +139,12 @@ public class ConfluenceFilteringListener extends AbstractEventListener
             }
         } else {
             updateLinkMappingAndLookForCollisions(null);
+        }
+
+        try {
+            confluencePackage.readTasks();
+        } catch (FilterException e) {
+            logger.warn("Failed to read tasks, the tasks may lack some details", e);
         }
     }
 

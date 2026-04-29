@@ -150,8 +150,10 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     @Inject
     private EntityReferenceResolver<String> referenceResolver;
+
     @Inject
     private MigrationExtraDetails migrationExtraDetails;
+
     @Override
     public void updateAndSaveMigration(ConfluenceMigrationJobStatus jobStatus)
     {

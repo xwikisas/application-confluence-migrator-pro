@@ -34,7 +34,7 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.confluence.filter.internal.input.ConfluenceConverter;
+import org.xwiki.contrib.confluence.filter.ConfluenceFilterReferenceConverter;
 import org.xwiki.contrib.confluence.filter.AbstractMacroConverter;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 
@@ -89,7 +89,7 @@ public class TasksReportMacroConverter extends AbstractMacroConverter
     private Logger logger;
 
     @Inject
-    private ConfluenceConverter converter;
+    private ConfluenceFilterReferenceConverter converter;
 
     @Inject
     private EntityReferenceSerializer<String> serializer;
