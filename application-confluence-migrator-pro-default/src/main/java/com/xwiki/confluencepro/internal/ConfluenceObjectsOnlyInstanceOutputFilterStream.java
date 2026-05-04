@@ -100,7 +100,7 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
 
     private BaseObject currentObject;
 
-    private List<BaseObject> currentObjects = new ArrayList<>();
+    private final List<BaseObject> currentObjects = new ArrayList<>();
 
     private DocumentInstanceOutputProperties properties;
 
@@ -148,15 +148,6 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
     public void disable()
     {
         enabled = false;
-    }
-
-    private EntityReference getDefaultDocumentReference()
-    {
-        if (this.properties != null && this.properties.getDefaultReference() != null) {
-            return this.properties.getDefaultReference();
-        }
-
-        return null;
     }
 
     @Override
@@ -295,11 +286,55 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
 
     private <T> T get(Type type, String key, FilterEventParameters parameters, T def)
     {
-        return get(type, key, parameters, def, true, true);
+        if (parameters == null) {
+            return def;
+        }
+
+        if (!parameters.containsKey(key)) {
+            return def;
+        }
+
+        Object value = parameters.get(key);
+
+        if (value == null) {
+            return def;
+        }
+
+        if (TypeUtils.isInstance(value, type)) {
+            return (T) value;
+        }
+
+        return this.converter.convert(type, value);
     }
 
-    private <T> T get(Type type, String key, FilterEventParameters parameters, T def, boolean replaceNull,
-                        boolean convert)
+    private int getInt(String key, FilterEventParameters parameters, int def)
+    {
+        return get(int.class, key, parameters, def);
+    }
+
+    private DocumentReference getDocumentReference(String key, FilterEventParameters parameters,
+        DocumentReference def)
+    {
+        DocumentReference result;
+        if (parameters == null) {
+            result = def;
+        } else if (!parameters.containsKey(key)) {
+            result = def;
+        } else {
+            Object value = parameters.get(key);
+            if (value == null) {
+                result = null;
+            } else if (TypeUtils.isInstance(value, Object.class)) {
+                result = (DocumentReference) value;
+            } else {
+                result = (DocumentReference) value;
+            }
+        }
+
+        return result;
+    }
+
+    private EntityReference getEntityReference(String key, FilterEventParameters parameters, EntityReference def)
     {
         if (parameters == null) {
             return def;
@@ -312,47 +347,14 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
         Object value = parameters.get(key);
 
         if (value == null) {
-            return replaceNull ? def : null;
+            return null;
         }
 
-        if (TypeUtils.isInstance(value, type)) {
-            return (T) value;
+        if (TypeUtils.isInstance(value, Object.class)) {
+            return (EntityReference) value;
         }
 
-        return convert ? this.converter.convert(type, value) : (T) value;
-    }
-
-    private int getInt(String key, FilterEventParameters parameters, int def)
-    {
-        return get(int.class, key, parameters, def);
-    }
-
-    private DocumentReference getDocumentReference(String key, FilterEventParameters parameters,
-        DocumentReference def)
-    {
-        Object reference = get(Object.class, key, parameters, def, false, false);
-
-        if (reference != null && !(reference instanceof DocumentReference)) {
-            if (reference instanceof EntityReference) {
-                reference =
-                    this.documentEntityResolver.resolve((EntityReference) reference, this.currentEntityReference);
-            } else {
-                reference = this.documentStringResolver.resolve(reference.toString(), this.currentEntityReference);
-            }
-        }
-
-        return (DocumentReference) reference;
-    }
-
-    private EntityReference getEntityReference(String key, FilterEventParameters parameters, EntityReference def)
-    {
-        Object reference = get(Object.class, key, parameters, def, false, false);
-
-        if (reference != null && !(reference instanceof EntityReference)) {
-            reference = this.relativeResolver.resolve(reference.toString(), EntityType.DOCUMENT);
-        }
-
-        return (EntityReference) reference;
+        return (EntityReference) value;
     }
 
     private String getString(String key, FilterEventParameters parameters, String def)
