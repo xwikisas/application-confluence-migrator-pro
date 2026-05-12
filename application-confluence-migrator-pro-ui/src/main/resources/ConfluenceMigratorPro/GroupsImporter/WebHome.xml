@@ -303,6 +303,7 @@ import com.xpn.xwiki.doc.XWikiAttachment
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord
+import org.apache.commons.io.input.BOMInputStream
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.xwiki.component.annotation.Component
@@ -367,19 +368,19 @@ public class GroupMigratorScriptService implements ScriptService
 
                 logger.info("Processed [{}] groups with users", groupsWithUsers ? groupsWithUsers.size() : 0)
 
-                // 3. read the list of groups to migrate and prepare the full list of groups to create (including child groups)
-                InputStream is = groupsToMigrateFile.getContentInputStream(context);
-                InputStreamReader isr = new InputStreamReader(is);
-                CSVParser parser = CSVFormat.RFC4180.builder()
-                    .setHeader().setSkipHeaderRecord(true).setTrim(true).setDelimiter(';')
-                    .build()
-                    .parse(isr)
+            logger.info("Processed [{}] groups with users", groupsWithUsers ? groupsWithUsers.size() : 0)
 
-                List&lt;String&gt; groupsToMigrateFirstLevel = [];
-                parser.each { record -&gt;
-                    groupsToMigrateFirstLevel &lt;&lt; confluenceConverter.toGroupReferenceName(record.get(0));
-                }
-                isr.close()
+            // 3. read the list of groups to migrate and prepare the full list of groups to create (including child groups)
+            // Take care of wrapping it into a BOMInputStream to avoid any issue
+            // in case of the input file contains BOM header. Note that the apache common parser don't support BOM header and
+            // and raise strange issue in case of BOM headers. Note that microsoft except can generate CSV with BOM.
+            InputStream is =
+                BOMInputStream.builder().setInputStream(groupsToMigrateFile.getContentInputStream(context)).get()
+            InputStreamReader isr = new InputStreamReader(is);
+            CSVParser parser = CSVFormat.RFC4180.builder()
+                .setHeader().setSkipHeaderRecord(true).setTrim(true).setDelimiter(';')
+                .build()
+                .parse(isr)
 
                 Set&lt;String&gt; allGroupsToMigrateSet = new LinkedHashSet&lt;&gt;();
                 groupsToMigrateFirstLevel.each { traverse(it, groupsWithGroups, allGroupsToMigrateSet) };
@@ -485,7 +486,11 @@ public class GroupMigratorScriptService implements ScriptService
     {
         Map&lt;String, List&lt;String&gt;&gt; result = new TreeMap&lt;String, List&lt;String&gt;&gt;();
 
-        InputStream is = pairsFile.getContentInputStream(contextProvider.get());
+        // Take care of wrapping it into a BOMInputStream to avoid any issue
+        // in case of the input file contains BOM header. Note that the apache common parser don't support BOM header and
+        // and raise strange issue in case of BOM headers. Note that microsoft except can generate CSV with BOM.
+        InputStream is =
+            BOMInputStream.builder().setInputStream(pairsFile.getContentInputStream(contextProvider.get())).get()
         InputStreamReader isr = new InputStreamReader(is);
         CSVParser parser = CSVFormat.RFC4180.builder()
             .setHeader().setSkipHeaderRecord(true).setTrim(true).setDelimiter(';')

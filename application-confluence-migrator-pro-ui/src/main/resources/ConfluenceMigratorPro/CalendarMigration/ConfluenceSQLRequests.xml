@@ -38,7 +38,7 @@
   <hidden>true</hidden>
   <content>== Generality ==
 
-The delimiter of the CSV file is expected to be {{code}};{{/code}} and the first line of the CSV is expected to be the header with the title of each column. The line return must be in Unix format so {{code}}\n{{/code}}. In Linux you can if needed convert the file with {{code}}dos2unix{{/code}}.
+The delimiter of the CSV file is expected to be {{code}};{{/code}} and the first line of the CSV is expected to be the header with the title of each column. It's recommended to have the line return in Unix format so {{code}}\n{{/code}}. In Linux you can if needed to convert the file with {{code}}dos2unix{{/code}}.
 
 All dates are expected to be provided in milliseconds since the Epoch of 1970-01-01T00:00:00Z. So by example {{code}}1747062480020{{/code}} will mean {{code}}Mon May 12 15:08:00 UTC 2025{{/code}}. Note it's the date format used in Java when we create a date with {{code language="java"}}new Date(&lt;value&gt;){{/code}}
 

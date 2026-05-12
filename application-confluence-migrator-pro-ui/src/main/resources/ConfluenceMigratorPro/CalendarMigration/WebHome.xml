@@ -374,12 +374,12 @@ import com.xpn.xwiki.objects.LargeStringProperty
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord
+import org.apache.commons.io.input.BOMInputStream
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateUtils
 import org.slf4j.Logger
 import org.xwiki.component.annotation.Component
 import org.xwiki.contrib.confluence.filter.ConfluenceFilterReferenceConverter
-import org.xwiki.contrib.confluence.filter.Mapping
 import org.xwiki.contrib.confluence.resolvers.ConfluenceSpaceKeyResolver
 import org.xwiki.job.script.ProgressScripService
 import org.xwiki.localization.LocalizationManager
@@ -540,7 +540,7 @@ public class CalendarMigratorScriptService implements ScriptService
         logger.info("Number of parents [{}], number of sub-calendars [{}]", parents.size(), subCalendarNumber)
         logger.info("Creating parent calendars")
 
-        InputStreamReader isr = new InputStreamReader(attachments['parentCalendars'].getContentInputStream())
+        InputStreamReader isr = getInputStreamReader(attachments['parentCalendars'])
         getCsvParser(isr).each { entry -&gt;
             def calendarId = entry.get("ID")
             ParentCalendar parentCalendar = parents.find { it.confluenceId() == calendarId }
@@ -683,7 +683,7 @@ public class CalendarMigratorScriptService implements ScriptService
         logger.info("Creating parent calendars done")
         logger.info("Creating sub-calendars")
 
-        isr = new InputStreamReader(attachments['subCalendars'].getContentInputStream())
+        isr = getInputStreamReader(attachments['subCalendars'])
         getCsvParser(isr).each { entry -&gt;
             ParentCalendar parent = parents.find { it.confluenceId() == entry.get("PARENT_ID") }
             if (parent == null) {
@@ -757,8 +757,7 @@ public class CalendarMigratorScriptService implements ScriptService
         Set&lt;String&gt; ignoredEventByVUID = loadEv.ignoredEventByVUID()
         List&lt;SubCalendar&gt; allCalendars = parents.collectMany { it.subCalendars() }
 
-        InputStream is = eventsAttachments['eventExclusion'].getContentInputStream()
-        InputStreamReader isr = new InputStreamReader(is)
+        InputStreamReader isr = getInputStreamReader(eventsAttachments['eventExclusion'])
         int lineCount = 0
         isr.eachLine { it -&gt; lineCount++ }
         isr.close()
@@ -800,7 +799,7 @@ public class CalendarMigratorScriptService implements ScriptService
 
         logger.info("Creating events")
 
-        isr = new InputStreamReader(eventsAttachments['events'].getContentInputStream())
+        isr = getInputStreamReader(eventsAttachments['events'])
         int counter = 1
         getCsvParser(isr).each { entry -&gt;
             if (StringUtils.isNotEmpty(entry.get("RECURRENCE_ID_TIMESTAMP"))) {
@@ -953,7 +952,7 @@ public class CalendarMigratorScriptService implements ScriptService
         logger.info("Loading events override data")
 
         Map&lt;String, List&lt;Map&lt;String, String&gt;&gt;&gt; eventOverrides = [:]
-        isr = new InputStreamReader(eventsAttachments['events'].getContentInputStream())
+        isr = getInputStreamReader(eventsAttachments['events'])
         getCsvParser(isr).each { entry -&gt;
             if (StringUtils.isEmpty(entry.get("RECURRENCE_ID_TIMESTAMP"))) {
                 // When 'RECURRENCE_ID_TIMESTAMP' is not set, it's a "normal" event, ignoring it here
@@ -1021,7 +1020,7 @@ public class CalendarMigratorScriptService implements ScriptService
         logger.info("Loading events exclusion data")
 
         Map&lt;String, List&lt;String&gt;&gt; eventExclusion = [:]
-        isr = new InputStreamReader(eventsAttachments['eventExclusion'].getContentInputStream())
+        isr = getInputStreamReader(eventsAttachments['eventExclusion'])
         getCsvParser(isr).each { entry -&gt;
             String eventId = entry.get("EVENT_ID")
             if (ignoredEvents.contains(eventId)) {
@@ -1295,7 +1294,7 @@ public class CalendarMigratorScriptService implements ScriptService
         Set&lt;String&gt; ignoredSubCalendars = new HashSet&lt;&gt;()
 
         logger.info("Load calendar space mapping")
-        InputStreamReader isr = new InputStreamReader(spaceMapping.getContentInputStream())
+        InputStreamReader isr = getInputStreamReader(spaceMapping)
         getCsvParser(isr).each { entry -&gt;
             String spaceKey = entry.get("SPACE_KEY")
             String id = entry.get("SUB_CALENDAR_ID")
@@ -1309,7 +1308,7 @@ public class CalendarMigratorScriptService implements ScriptService
 
         logger.info("Load parents calendars")
 
-        isr = new InputStreamReader(parents.getContentInputStream())
+        isr = getInputStreamReader(parents)
         getCsvParser(isr).each { entry -&gt;
             String spaceKey = entry.get("SPACE_KEY")
             String name = entry.get("NAME")
@@ -1405,7 +1404,7 @@ public class CalendarMigratorScriptService implements ScriptService
 
         logger.info("Load sub calendars")
 
-        isr = new InputStreamReader(children.getContentInputStream())
+        isr = getInputStreamReader(children)
         getCsvParser(isr).each { entry -&gt;
             String id = entry.get("ID")
             logger.debug("Loading sub calendar ID [{}]", id)
@@ -1448,7 +1447,7 @@ public class CalendarMigratorScriptService implements ScriptService
         Map&lt;String, Map&lt;String, HashSet&lt;String&gt;&gt;&gt; result = [:]
 
         logger.info("Load group rights")
-        InputStreamReader isr = new InputStreamReader(groupRigths.getContentInputStream())
+        InputStreamReader isr = getInputStreamReader(groupRigths)
         getCsvParser(isr).each { entry -&gt;
             String calendarId = entry.get("SUB_CALENDAR_ID")
             String groupName = entry.get("GROUP_NAME")
@@ -1472,7 +1471,7 @@ public class CalendarMigratorScriptService implements ScriptService
         Map&lt;String, Map&lt;String, HashSet&lt;String&gt;&gt;&gt; result = [:]
 
         logger.info("Load user rights")
-        InputStreamReader isr = new InputStreamReader(userRights.getContentInputStream())
+        InputStreamReader isr = getInputStreamReader(userRights)
         getCsvParser(isr).each { entry -&gt;
             String calendarId = entry.get("SUB_CALENDAR_ID")
             String userName = entry.get("username")
@@ -1505,7 +1504,7 @@ public class CalendarMigratorScriptService implements ScriptService
 
         logger.info("Load events invitees")
 
-        InputStreamReader isr = new InputStreamReader(invitees.getContentInputStream())
+        InputStreamReader isr = getInputStreamReader(invitees)
         getCsvParser(isr).each { entry -&gt;
             String eventId = entry.get("EVENT_ID")
             logger.debug("Loading event invitee ID [{}]", eventId)
@@ -1524,7 +1523,7 @@ public class CalendarMigratorScriptService implements ScriptService
         Map&lt;String, SubCalendar&gt; subCalendarsByIds =
             loadCalendarResult.result().collectMany { it.subCalendars() }.collectEntries { [it.confluenceId(), it] }
 
-        isr = new InputStreamReader(events.getContentInputStream())
+        isr = getInputStreamReader(events)
         getCsvParser(isr).each { entry -&gt;
             String name = entry.get("SUMMARY")
             String id = entry.get("ID")
@@ -1605,6 +1604,18 @@ public class CalendarMigratorScriptService implements ScriptService
         // converted to a date that we can store in XWiki
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"))
         return sdf
+    }
+    /**
+     * Get InputStreamReader from attachment and also take care of wrapping it into a BOMInputStream to avoid any issue
+     * in case of the input file contains BOM header. Note that the apache common parser don't support BOM header and
+     * and raise strange issue in case of BOM headers. Note that microsoft except can generate CSV with BOM.
+     *
+     * @param attachment
+     * @return
+     */
+    protected static InputStreamReader getInputStreamReader(Attachment attachment)
+    {
+        return new InputStreamReader(BOMInputStream.builder().setInputStream(attachment.getContentInputStream()).get())
     }
 
     protected static CSVParser getCsvParser(InputStreamReader isr)
