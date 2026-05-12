@@ -203,7 +203,7 @@ import org.xwiki.properties.converter.Converter
 final String documentName = "ConfluenceMigratorPro.CalendarMigration.WebHome"
 
 def logger = services.logging.getLogger(documentName);
-services.logging.setLevel(doc.fullName, LogLevel.DEBUG)
+services.logging.setLevel(doc.fullName, LogLevel.INFO)
 
 try {
     if (!services.csrf.isTokenValid(request.get("form_token"))) {

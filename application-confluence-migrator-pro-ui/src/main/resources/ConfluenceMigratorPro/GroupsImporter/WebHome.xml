@@ -347,6 +347,11 @@ public class GroupMigratorScriptService implements ScriptService
         String groupsInGroupsFilename, String usersInGroupsFilename, String groupToMigrateFilename,
         DocumentReference sourcePageRef)
     {
+        logger.debug('Calling group import with params: processAdmin [{}], cleanGroups [{}], ' +
+            'groupsInGroupsFilename [{}], usersInGroupsFilename [{}], groupToMigrateFilename [{}], sourcePageRef [{}]',
+            processAdmin, cleanGroups, groupsInGroupsFilename, usersInGroupsFilename, groupToMigrateFilename,
+            sourcePageRef)
+
         XWikiContext context = contextProvider.get()
         XWiki xwiki = context.getWiki()
 
