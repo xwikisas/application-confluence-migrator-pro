@@ -61,18 +61,18 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
       #pagePicker($pagePickerParams)
     &lt;/dd&gt;
     &lt;dt&gt;
-      &lt;label for="groupsparentsFilename"&gt;Attachment name for groups parents&lt;/label&gt;
+      &lt;label for="groupsInGroupsFilename"&gt;Attachment name for groups parents&lt;/label&gt;
       &lt;span class="xHint"&gt;Name of the attachment from which to read data to import&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
-      &lt;input type="text" id="groupsparentsFilename" name="groupsparentsFilename" value="$!escapetool.xml($!request.groupsparentsFilename)" placeholder='groupsparents.csv'/&gt;
+      &lt;input type="text" id="groupsInGroupsFilename" name="groupsInGroupsFilename" value="$!escapetool.xml($!request.groupsInGroupsFilename)" placeholder='groupsparents.csv'/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
-      &lt;label for="usersgroupsFilename"&gt;Attachment name for users groups&lt;/label&gt;
+      &lt;label for="usersInGroupsFilename"&gt;Attachment name for users groups&lt;/label&gt;
       &lt;span class="xHint"&gt;Name of the attachment from which to read data to import&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
-      &lt;input type="text" id="usersgroupsFilename" name="usersgroupsFilename" value="$!escapetool.xml($!request.usersgroupsFilename)" placeholder='usersgroups.csv'/&gt;
+      &lt;input type="text" id="usersInGroupsFilename" name="usersInGroupsFilename" value="$!escapetool.xml($!request.usersInGroupsFilename)" placeholder='usersgroups.csv'/&gt;
     &lt;/dd&gt;
     &lt;dt&gt;
       &lt;label for="groupToMigrateFilename"&gt;Attachment name for groups to migrate&lt;/label&gt;
