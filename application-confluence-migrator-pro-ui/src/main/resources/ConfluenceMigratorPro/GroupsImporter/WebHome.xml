@@ -356,17 +356,24 @@ public class GroupMigratorScriptService implements ScriptService
         def usersInGroupsFile = groupImporterDoc.getAttachment(usersInGroupsFilename)
         def groupsToMigrateFile = groupImporterDoc.getAttachment(groupToMigrateFilename)
 
-        if (groupsInGroupsFile != null &amp;&amp; usersInGroupsFile != null &amp;&amp; groupsToMigrateFile != null) {
-            try {
-                // 1. prepare groups data from the groupsInGroups file
-                def groupsWithGroups = makeListMapFromPairsFile(groupsInGroupsFile, true)
+        if (groupsInGroupsFile == null) {
+            throw new Exception("Can't load file ${groupsInGroupsFilename} in document ${sourcePageRef}")
+        }
+        if (usersInGroupsFile == null) {
+            throw new Exception("Can't load file ${usersInGroupsFilename} in document ${sourcePageRef}")
+        }
+        if (groupsToMigrateFile == null) {
+            throw new Exception("Can't load file ${groupToMigrateFilename} in document ${sourcePageRef}")
+        }
 
-                logger.info("Processed [{}] groups with subgroups", groupsWithGroups ? groupsWithGroups.size() : 0)
+        try {
+            // 1. prepare groups data from the groupsInGroups file
+            def groupsWithGroups = makeListMapFromPairsFile(groupsInGroupsFile, true)
 
-                // 2. prepare users data from usersInGroups file
-                def groupsWithUsers = makeListMapFromPairsFile(usersInGroupsFile, false)
+            logger.info("Processed [{}] groups with subgroups", groupsWithGroups ? groupsWithGroups.size() : 0)
 
-                logger.info("Processed [{}] groups with users", groupsWithUsers ? groupsWithUsers.size() : 0)
+            // 2. prepare users data from usersInGroups file
+            def groupsWithUsers = makeListMapFromPairsFile(usersInGroupsFile, false)
 
             logger.info("Processed [{}] groups with users", groupsWithUsers ? groupsWithUsers.size() : 0)
 
@@ -382,90 +389,92 @@ public class GroupMigratorScriptService implements ScriptService
                 .build()
                 .parse(isr)
 
-                Set&lt;String&gt; allGroupsToMigrateSet = new LinkedHashSet&lt;&gt;();
-                groupsToMigrateFirstLevel.each { traverse(it, groupsWithGroups, allGroupsToMigrateSet) };
-                List&lt;String&gt; allGroupsToMigrate = allGroupsToMigrateSet as List;
+            List&lt;String&gt; groupsToMigrateFirstLevel = [];
+            parser.each { record -&gt;
+                groupsToMigrateFirstLevel &lt;&lt; confluenceConverter.toGroupReferenceName(record.get(0));
+            }
+            isr.close()
 
-                logger.info("Read [{}] groups, importing...", allGroupsToMigrate.size());
+            Set&lt;String&gt; allGroupsToMigrateSet = new LinkedHashSet&lt;&gt;();
+            groupsToMigrateFirstLevel.each { traverse(it, groupsWithGroups, allGroupsToMigrateSet) };
+            List&lt;String&gt; allGroupsToMigrate = allGroupsToMigrateSet as List;
 
-                // start processing
-                progress.pushLevel(allGroupsToMigrate.size());
-                for (def g : allGroupsToMigrate) {
-                    progress.startStep();
+            logger.info("Read [{}] groups, importing...", allGroupsToMigrate.size());
 
-                    // compute group reference
-                    DocumentReference groupReference = new DocumentReference(g, XWIKI_SPACE);
-                    // check if it's admin without admin processing enabled
-                    if (groupReference.getName() == 'XWikiAdminGroup' &amp;&amp; !processAdmin) {
-                        logger.info("Skipping group [{}] as it's not scheduled for processing", groupReference, g);
+            // start processing
+            progress.pushLevel(allGroupsToMigrate.size());
+            for (def g : allGroupsToMigrate) {
+                progress.startStep();
+
+                // compute group reference
+                DocumentReference groupReference = new DocumentReference(g, XWIKI_SPACE);
+                // check if it's admin without admin processing enabled
+                if (groupReference.getName() == 'XWikiAdminGroup' &amp;&amp; !processAdmin) {
+                    logger.info("Skipping group [{}] as it's not scheduled for processing", groupReference, g);
+                    continue;
+                }
+
+                // get unified list of users and groups, since they're added the same way
+                def childrenOfGroup = ((groupsWithGroups.get(g) ?: []) + (groupsWithUsers.get(g) ?: [])).unique();
+
+                logger.info("Importing group [{}] with children (users or groups) [{}]", g, childrenOfGroup);
+
+                boolean wasCleaned = false
+                def groupDoc = xwiki.getDocument(groupReference, context).clone()
+                def groupNeedsSave = false;
+                if (!groupDoc.isNew() &amp;&amp; cleanGroups) {
+                    logger.warn("Cleaning group [{}]", groupReference);
+                    groupDoc.removeXObjects(GROUP_CLASS)
+                    xwiki.saveDocument(groupDoc, "Cleaning the group upon group import", context)
+                    wasCleaned = true;
+                    // reload group doc from the database, to reset object numbers
+                    groupDoc = xwiki.getDocument(groupReference, context).clone();
+                }
+                if (wasCleaned || groupDoc.isNew()) {
+                    // initialize group with a first empty object
+                    def emptyObj = groupDoc.newXObject(GROUP_CLASS, context);
+                    emptyObj.set(GROUP_PROP, "", context);
+                    // set group as hidden, just in case it was not
+                    groupDoc.setHidden(true);
+                    groupNeedsSave = true;
+                }
+                // fill in all users and subgroups, if they're not already in the group
+                for (def c : childrenOfGroup) {
+                    DocumentReference childToAddReference = new DocumentReference(c, XWIKI_SPACE);
+                    String serializedChildToAddReferenceLocal =
+                        serializer.serialize(childToAddReference, "local", groupReference);
+                    def existingMemberObj =
+                        groupDoc.getXObject(GROUP_CLASS, GROUP_PROP, serializedChildToAddReferenceLocal, false)
+                    // try with full reference if compact was not found
+                    if (existingMemberObj == null) {
+                        String serializedChildToAddReferenceFull =
+                            serializer.serialize(childToAddReference, "default")
+                        existingMemberObj =
+                            groupDoc.getXObject(GROUP_CLASS, GROUP_PROP, serializedChildToAddReferenceFull, false)
+                    }
+                    if (existingMemberObj != null) {
+                        logger.info("Not adding child [{}] in group [{}] because it already exists",
+                            childToAddReference, groupReference);
                         continue;
                     }
+                    logger.debug("Adding child [{}] in group [{}]", childToAddReference, groupReference);
 
-                    // get unified list of users and groups, since they're added the same way
-                    def childrenOfGroup = ((groupsWithGroups.get(g) ?: []) + (groupsWithUsers.get(g) ?: [])).unique();
-
-                    logger.info("Importing group [{}] with children (users or groups) [{}]", g, childrenOfGroup);
-
-                    boolean wasCleaned = false
-                    def groupDoc = xwiki.getDocument(groupReference, context).clone()
-                    def groupNeedsSave = false;
-                    if (!groupDoc.isNew() &amp;&amp; cleanGroups) {
-                        logger.warn("Cleaning group [{}]", groupReference);
-                        groupDoc.removeXObjects(GROUP_CLASS)
-                        xwiki.saveDocument(groupDoc, "Cleaning the group upon group import", context)
-                        wasCleaned = true;
-                        // reload group doc from the database, to reset object numbers
-                        groupDoc = xwiki.getDocument(groupReference, context).clone();
-                    }
-                    if (wasCleaned || groupDoc.isNew()) {
-                        // initialize group with a first empty object
-                        def emptyObj = groupDoc.newXObject(GROUP_CLASS, context);
-                        emptyObj.set(GROUP_PROP, "", context);
-                        // set group as hidden, just in case it was not
-                        groupDoc.setHidden(true);
-                        groupNeedsSave = true;
-                    }
-                    // fill in all users and subgroups, if they're not already in the group
-                    for (def c : childrenOfGroup) {
-                        DocumentReference childToAddReference = new DocumentReference(c, XWIKI_SPACE);
-                        String serializedChildToAddReferenceLocal =
-                            serializer.serialize(childToAddReference, "local", groupReference);
-                        def existingMemberObj =
-                            groupDoc.getXObject(GROUP_CLASS, GROUP_PROP, serializedChildToAddReferenceLocal, false)
-                        // try with full reference if compact was not found
-                        if (existingMemberObj == null) {
-                            String serializedChildToAddReferenceFull =
-                                serializer.serialize(childToAddReference, "default")
-                            existingMemberObj =
-                                groupDoc.getXObject(GROUP_CLASS, GROUP_PROP, serializedChildToAddReferenceFull, false)
-                        }
-                        if (existingMemberObj != null) {
-                            logger.info("Not adding child [{}] in group [{}] because it already exists",
-                                childToAddReference, groupReference);
-                            continue;
-                        }
-                        logger.debug("Adding child [{}] in group [{}]", childToAddReference, groupReference);
-
-                        def newMemberObj = groupDoc.newXObject(GROUP_CLASS, context);
-                        newMemberObj.set(GROUP_PROP, serializedChildToAddReferenceLocal, context);
-                        groupNeedsSave = true;
-                    }
-
-                    // save the data at the end
-                    if (groupNeedsSave) {
-                        xwiki.saveDocument(groupDoc, "Imported group", context);
-                        logger.info("Saved group [{}] with [{}] children", groupReference, childrenOfGroup.size());
-                    }
-
-                    progress.endStep();
+                    def newMemberObj = groupDoc.newXObject(GROUP_CLASS, context);
+                    newMemberObj.set(GROUP_PROP, serializedChildToAddReferenceLocal, context);
+                    groupNeedsSave = true;
                 }
-                progress.popLevel();
-            } catch (Exception e) {
-                logger.error("Failed to load or process mapping from CSV: ", e);
+
+                // save the data at the end
+                if (groupNeedsSave) {
+                    xwiki.saveDocument(groupDoc, "Imported group", context);
+                    logger.info("Saved group [{}] with [{}] children", groupReference, childrenOfGroup.size());
+                }
+
+                progress.endStep();
             }
-        } else {
-            logger.error("Could not find one of files [{}], [{}], [{}] attached to this page", groupsInGroupsFilename,
-                usersInGroupsFilename, groupToMigrateFilename);
+            progress.popLevel();
+        } catch (Exception e) {
+            logger.error("Failed to load or process mapping from CSV: ", e);
         }
     }
     /**

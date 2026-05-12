@@ -89,7 +89,7 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
         &lt;span class="xHint"&gt;Name of the attachment from which to read data to import calendar pages&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;
-        &lt;input type="text" id="${i.key}Filename" name="${i.key}Filename" value="$!escapetool.xml($!request.get("${i.key}FileName"))" placeholder='${i.key}.csv'/&gt;
+        &lt;input type="text" id="${i.key}Filename" name="${i.key}Filename" value="$!escapetool.xml($!request.get("${i.key}Filename"))" placeholder='${i.key}.csv'/&gt;
       &lt;/dd&gt;
     #end
     &lt;dt&gt;
@@ -220,7 +220,7 @@ try {
     List&lt;String&gt; spaceFilter = null
 
     for (String i in calendarsFieldsMap.keySet()) {
-        def filename = request.get(i)
+        def filename = request.get("${i}Filename")
         if (StringUtils.isEmpty(filename)) {
             filename = "${i}.csv"
         }
@@ -234,7 +234,7 @@ try {
     }
     if (request.importType == "events") {
         for (String i in eventsFieldsMap.keySet()) {
-            def filename = request.get(i)
+            def filename = request.get("${i}Filename")
             if (StringUtils.isEmpty(filename)) {
                 filename = "${i}.csv"
             }
