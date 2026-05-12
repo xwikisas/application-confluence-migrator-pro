@@ -154,17 +154,11 @@ See [[the SQL requests to perform on the Confluence database&gt;&gt;ConfluenceMi
 
 {{job id="{{velocity~}~}${request.jobId}{{/velocity~}~}" start="{{velocity~}~}${request.confirm}{{/velocity~}~}" grouppath="GroupsImporter"}}
 {{groovy}}
+import com.xwiki.confluencepro.internal.ExtraImportTools
 import groovy.time.TimeCategory
 import groovy.time.TimeDuration
-
 import org.apache.commons.lang3.StringUtils
-import org.xwiki.component.util.DefaultParameterizedType
-import org.xwiki.contrib.confluence.filter.Mapping
-import org.xwiki.contrib.confluence.filter.input.ConfluenceInputContext
-import org.xwiki.contrib.confluence.filter.input.ConfluenceInputProperties
-import org.xwiki.contrib.confluence.filter.internal.input.DefaultConfluenceInputContext
 import org.xwiki.logging.LogLevel
-import org.xwiki.properties.converter.Converter
 
 logger = services.logging.getLogger(doc.fullName);
 services.logging.setLevel(doc.fullName, LogLevel.INFO);
@@ -197,21 +191,10 @@ try {
         def start = new Date();
 
         // Parameter the confluence context so the user and group mapping are handled in a correct way
-        def converterMappingType = new DefaultParameterizedType(null, Converter.class, Mapping.class);
-        Converter mappingConverter = services.component.getInstance(converterMappingType)
-        def userMapping = mappingConverter.&lt;Mapping&gt; convert(Mapping.class, request.get('userMapping') ?: '')
-        def groupMapping = mappingConverter.&lt;Mapping&gt; convert(Mapping.class, request.get('groupMapping') ?: '')
-
-        ConfluenceInputContext confluenceInputContext = services.component.getInstance(ConfluenceInputContext.class)
-        def confluenceProperties = new ConfluenceInputProperties() {
-            {
-                setUserIdMapping(userMapping)
-                setGroupMapping(groupMapping)
-                setUserFormat(request.get('userFormat'))
-                setGroupFormat(request.get('groupFormat'))
-            }
-        }
-        (confluenceInputContext as DefaultConfluenceInputContext).set(null, confluenceProperties)
+        ExtraImportTools extraImportTools = services.component.getInstance(ExtraImportTools.class)
+        extraImportTools.configureUserGroupMapping(
+            request.get('userMapping') ?: '', request.get('groupMapping') ?: '',
+            request.get('userFormat'), request.get('groupFormat'))
 
         def processAdmin = request.processadmin == 'on'
         def cleangroups = request.cleangroups == 'on'
@@ -300,10 +283,9 @@ try {
 import com.xpn.xwiki.XWiki
 import com.xpn.xwiki.XWikiContext
 import com.xpn.xwiki.doc.XWikiAttachment
-import org.apache.commons.csv.CSVFormat
+import com.xwiki.confluencepro.internal.ExtraImportTools
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord
-import org.apache.commons.io.input.BOMInputStream
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.xwiki.component.annotation.Component
@@ -339,6 +321,9 @@ public class GroupMigratorScriptService implements ScriptService
 
     @Inject
     private ConfluenceFilterReferenceConverter confluenceConverter;
+
+    @Inject
+    private ExtraImportTools extraImportTools
 
     @Inject
     private Logger logger
@@ -383,16 +368,8 @@ public class GroupMigratorScriptService implements ScriptService
             logger.info("Processed [{}] groups with users", groupsWithUsers ? groupsWithUsers.size() : 0)
 
             // 3. read the list of groups to migrate and prepare the full list of groups to create (including child groups)
-            // Take care of wrapping it into a BOMInputStream to avoid any issue
-            // in case of the input file contains BOM header. Note that the apache common parser don't support BOM header and
-            // and raise strange issue in case of BOM headers. Note that microsoft except can generate CSV with BOM.
-            InputStream is =
-                BOMInputStream.builder().setInputStream(groupsToMigrateFile.getContentInputStream(context)).get()
-            InputStreamReader isr = new InputStreamReader(is);
-            CSVParser parser = CSVFormat.RFC4180.builder()
-                .setHeader().setSkipHeaderRecord(true).setTrim(true).setDelimiter(';')
-                .build()
-                .parse(isr)
+            InputStreamReader isr = extraImportTools.getInputStreamReader(groupsToMigrateFile)
+            CSVParser parser = extraImportTools.getCsvParser(isr)
 
             List&lt;String&gt; groupsToMigrateFirstLevel = [];
             parser.each { record -&gt;
@@ -479,7 +456,7 @@ public class GroupMigratorScriptService implements ScriptService
             }
             progress.popLevel();
         } catch (Exception e) {
-            logger.error("Failed to load or process mapping from CSV: ", e);
+            logger.error("Failed to load or process mapping from CSV", e);
         }
     }
     /**
@@ -500,16 +477,8 @@ public class GroupMigratorScriptService implements ScriptService
     {
         Map&lt;String, List&lt;String&gt;&gt; result = new TreeMap&lt;String, List&lt;String&gt;&gt;();
 
-        // Take care of wrapping it into a BOMInputStream to avoid any issue
-        // in case of the input file contains BOM header. Note that the apache common parser don't support BOM header and
-        // and raise strange issue in case of BOM headers. Note that microsoft except can generate CSV with BOM.
-        InputStream is =
-            BOMInputStream.builder().setInputStream(pairsFile.getContentInputStream(contextProvider.get())).get()
-        InputStreamReader isr = new InputStreamReader(is);
-        CSVParser parser = CSVFormat.RFC4180.builder()
-            .setHeader().setSkipHeaderRecord(true).setTrim(true).setDelimiter(';')
-            .build()
-            .parse(isr);
+        InputStreamReader isr = extraImportTools.getInputStreamReader(pairsFile)
+        CSVParser parser = extraImportTools.getCsvParser(isr)
         for (CSVRecord record : parser) {
             def currentItem = record.get(isSubGroup ? 'groupname' : 'username');
             def currentGroup = record.get(isSubGroup ? 'parentgroupname' : 'groupname');
