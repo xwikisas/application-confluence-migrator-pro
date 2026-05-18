@@ -19,10 +19,12 @@
  */
 package com.xwiki.confluencepro.test.po;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.xwiki.test.ui.po.ViewPage;
@@ -51,7 +53,7 @@ public class MigrationRaportView extends ViewPage
 
     public int getPagesCount()
     {
-        WebElement span = getDriver().findElement(By.xpath("//div/span[contains(text(),'imported pages')]"));
+        WebElement span = getDriver().findElement(By.xpath("//span[contains(text(),'imported pages')]"));
 
         String text = span.getText();
         int index = text.indexOf(" imported pages");
@@ -59,18 +61,6 @@ public class MigrationRaportView extends ViewPage
         String numberString = before.replaceAll("\\D+", "");
 
         return Integer.parseInt(numberString);
-    }
-
-    public Set<String> getXWikiMacros()
-    {
-        return getImportedMacros().stream().filter(name -> !(name.startsWith("confluence_")))
-            .collect(Collectors.toSet());
-    }
-
-    public List<String> getConfluenceMacros()
-    {
-        return getImportedMacros().stream().filter(name -> name.startsWith("confluence_"))
-            .collect(Collectors.toList());
     }
 
     public ViewPage clickPageLink(String spaceName, String pageName)
@@ -98,11 +88,16 @@ public class MigrationRaportView extends ViewPage
         return new ViewPage();
     }
 
-    private List<String> getImportedMacros()
+    public Set<String> getImportedMacros()
     {
-        List<WebElement> macroElements = getDriver().findElements(By.cssSelector(".imported-macros-list span"));
+        Set<String> r = new HashSet<>();
+        List<WebElement> macroElements = getDriver().findElements(By.cssSelector(".imported-macros-list"));
+        for (WebElement macroElement : macroElements) {
+            for (String macro : StringUtils.split(macroElement.getText(), ',')) {
+                r.add(StringUtils.split(macro.trim(), ' ')[0]);
+            }
+        }
 
-        return macroElements.stream().map(WebElement::getText).map(text -> text.replaceAll("\\s*\\(\\d+\\)\\s*", ""))
-            .collect(Collectors.toList());
+        return r;
     }
 }

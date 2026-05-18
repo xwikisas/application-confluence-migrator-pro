@@ -22,6 +22,7 @@ package com.xwiki.confluencepro.test.ui;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -335,15 +336,14 @@ class ConfluenceMigratorIT
         assertEquals(1, raportView.getImportedSpaces().size());
         assertFalse(raportView.hasErrorLogs());
 
-        // Checks that 14 macros were imported and converted correctly from Confluence.
+        // Checks that macros were imported and converted correctly from Confluence.
+        List<String> actual = new ArrayList<>(raportView.getImportedMacros());
+        actual.sort(String::compareTo);
         assertEquals(
-            Set.of("date", "info", "code", "toc", "task-report", "profile-picture", "expand", "recently-updated",
-                "content-report-table", "contributors", "excerpt", "panel", "excerpt-include", "status"),
-            raportView.getXWikiMacros());
-
-        // Checks that the Confluence create-from-template macro has been imported but not converted (it's not
-        // supported by XWiki).
-        assertTrue(raportView.getConfluenceMacros().contains("confluence_create-from-template"));
+                List.of("code", "confluence_confluence-adf-extension", "confluence_create-from-template",
+                        "content-report-table", "contributors", "date", "excerpt", "excerpt-include", "expand", "info",
+                        "panel", "profile-picture", "recently-updated", "status", "task-report", "toc"),
+                actual);
 
         ViewPage page = raportView.clickPageLink("MigrationC", "ContentTest");
         DocumentReference documentReference = new DocumentReference("Xwiki", "MigrationC", page.getDocumentTitle());
