@@ -19,8 +19,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
-
-<xwikidoc version="1.5" reference="ConfluenceMigratorPro.Code.MigrationSheet" locale="">
+<xwikidoc version="1.6" reference="ConfluenceMigratorPro.Code.MigrationSheet" locale="">
   <web>ConfluenceMigratorPro.Code</web>
   <name>MigrationSheet</name>
   <language/>
@@ -264,69 +263,6 @@
   &lt;/div&gt;
 #end
 
-#macro (addSpaceToDocTree $docTree $spaceRef)
-  #set ($initialParentSpace = $parentSpace)
-  #set ($p = $spaceRef.getParent())
-  #if ($objecttool.isNull($p) || $p.equals($rootSpace) || "$p.getType()" == "WIKI")
-    #set ($parentSpace = $docTree)
-  #else
-    #addSpaceToDocTree($docTree, $p)
-    #set ($parentSpace = $space)
-  #end
-  #set ($n = $spaceRef.getName())
-  #set ($space = $parentSpace.get($n))
-  #if ($objecttool.isNull($space))
-    #set ($space = {})
-    #set ($parentSpace[$n] = $space)
-  #end
-  #set ($parentSpace = $initialParentSpace)
-#end
-
-#macro (addDocToDocTree $docTree $docRef)
-  #set ($p = $docRef.getParent())
-  #if ($objecttool.isNull($p) || $p.equals($rootSpace) ||  "$p.getType()" == "WIKI")
-    #set ($space = $docTree)
-  #else
-    #addSpaceToDocTree($docTree, $p)
-  #end
-  #set ($space[$docRef.getName()] = $docRef)
-#end
-
-#macro (displayRenaming $name $spaceTargets)
-  #set ($nameEscaped = $escapetool.xml($name))
-  #set ($spaceTarget = $spaceTargets.get($name))
-  #if(!$name.equals($spaceTarget))
-    $services.localization.render('confluencepro.migration.raport.renamingSpace', $escapetool.xml($spaceTarget))
-  #end
-#end
-
-#macro (printDocTree $tree $spaceTargets $isRoot)
-  &lt;ul&gt;
-    #foreach ($name in $tree.keySet())
-      #if ($name != "WebHome")
-        #set ($nameEscaped = $escapetool.xml($name))
-        #set ($child = $tree[$name])
-        #if ("$!child.getName()" != "")
-         &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$xwiki.getURL($child)"&gt;$nameEscaped&lt;/a&gt;&lt;/li&gt;
-        #elseif ($child.containsKey("WebHome") &amp;&amp; $child.size() == 1)
-         &lt;li class="cfm-doc-tree-leaf"&gt;&lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;#if($isRoot)#displayRenaming($name, $spaceTargets)#end&lt;/li&gt;
-        #else
-          &lt;li&gt;&lt;details&gt;
-            &lt;summary&gt;##
-              #if ($child.containsKey("WebHome"))
-                &lt;a href="$xwiki.getURL($child["WebHome"])"&gt;$nameEscaped&lt;/a&gt;
-              #else
-                $nameEscaped#if($isRoot)#displayRenaming($name, $spaceTargets)#end
-              #end##
-            &lt;/summary&gt;
-              #printDocTree($child $spaceTargets, false)
-          &lt;/details&gt;&lt;/li&gt;
-        #end
-      #end
-    #end
-  &lt;/ul&gt;
-#end
-
 #macro(displayMigrationInfo)
 
   {{html clean=false}}
@@ -358,7 +294,6 @@
   #set ($inputProperties = $jsontool.fromString($obj.getProperty('inputProperties').value))
   #computeRootSpace
   #set ($docsAttachment = $doc.getAttachment('docs.json'))
-  #set ($spaceTargetsAttachment = $doc.getAttachment('spaceTargets.json'))
   #if ($objecttool.isNull($docsAttachment))
     {{html wiki=true clean=false}}
     &lt;ul class="imported-spaces"&gt;
@@ -385,114 +320,49 @@
     {{/html}}
   #else
     {{html clean=false}}
-    #set ($docTree = {})
-    #set ($spaceTargets = $jsontool.fromString($spaceTargetsAttachment.getContentAsString()))
-    #set ($invertedSpaceTargets = {})
-    #foreach ($entry in $spaceTargets.entrySet())
-      #set ($discard = $invertedSpaceTargets.put($entry.getValue(), $entry.getKey()))
-    #end
-    #foreach ($docRefStr in $jsontool.fromString($docsAttachment.getContentAsString()))
-      #set($docRef = $services.model.resolveDocument($docRefStr))
-      #addDocToDocTree($docTree, $docRef)
-    #end
-    &lt;div id="cfm-doc-tree"&gt;
-      &lt;p&gt;
-        &lt;button class="cfm-unfold-all btn" type="button"&gt;$services.localization.render('confluencepro.migration.raport.unfoldall')&lt;/button&gt;
-        &lt;button class="cfm-fold-all btn"   type="button"&gt;$services.localization.render('confluencepro.migration.raport.foldall')&lt;/button&gt;
-      &lt;/p&gt;
-      #printDocTree($docTree, $invertedSpaceTargets, true)
-    &lt;/div&gt;
+    &lt;div id="cfm-doc-tree" data-root-space="$escapetool.xml($services.model.serialize($rootSpace))"&gt;&lt;/div&gt;
     {{/html}}
   #end
 
   {{html wiki=false clean=false}}
   ## Missing macros
   &lt;div class="imported-macros-section"&gt;
-    #displaySubtitle('list', 'confluencepro.migration.raport.macros.title', '', [])
-    &lt;div class="imported-macros"&gt;
-      #fillSupportedAndUnsupportedMacros
-      #if (!$supportedMacros.isEmpty())
-        &lt;div class="imported-macros-title"&gt;
-          &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported'))&lt;/span&gt;
-        &lt;/div&gt;
-        &lt;div class="imported-macros-icon supported" title="$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported.icon.title'))"&gt;
-          $services.icon.renderHTML('check')
-        &lt;/div&gt;
-        &lt;div class="imported-macros-list"&gt;
-          #foreach ($macro in $supportedMacros)
-            &lt;span&gt;$macro&lt;/span&gt;
-          #end
-        &lt;/div&gt;
-      #end
-      #if (!$notSupportedMacros.isEmpty())
-        &lt;div class="imported-macros-title"&gt;
-          &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.notSupported'))&lt;/span&gt;
-        &lt;/div&gt;
-        &lt;div class="imported-macros-icon not-supported" title="$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.notSupported.icon.title'))"&gt;
-          $services.icon.renderHTML('warning')
-        &lt;/div&gt;
-        &lt;div class="imported-macros-list"&gt;
-          #foreach ($macro in $notSupportedMacros)
-            &lt;span&gt;$macro&lt;/span&gt;
-          #end
-        &lt;/div&gt;
-      #end
-    &lt;/div&gt;
+     #displaySubtitle('list', 'confluencepro.migration.raport.macros.title', '', [])
+     &lt;div class="imported-macros"&gt;
+       #fillSupportedAndUnsupportedMacros
+        #if (!$supportedMacros.isEmpty())
+          &lt;div class="imported-macros-title"&gt;
+            &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported'))&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div class="imported-macros-icon supported" title="$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.supported.icon.title'))"&gt;
+            $services.icon.renderHTML('check')
+          &lt;/div&gt;
+          &lt;div class="imported-macros-list"&gt;
+            $supportedMacros
+          &lt;/div&gt;
+        #end
+        #if (!$notSupportedMacros.isEmpty())
+          &lt;div class="imported-macros-title"&gt;
+            &lt;span&gt;$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.notSupported'))&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div class="imported-macros-icon not-supported" title="$escapetool.xml($services.localization.render('confluencepro.migration.raport.macros.notSupported.icon.title'))"&gt;
+            $services.icon.renderHTML('warning')
+          &lt;/div&gt;
+          &lt;div id="cfm-unsupported-macros" class="imported-macros-list"&gt;
+            $notSupportedMacros
+          &lt;/div&gt;
+        #end
+     &lt;/div&gt;
 
     #if (!$notSupportedMacros.isEmpty())
-      #getJSON($obj, 'macroPages')
-      #if (!$jsonObject.isEmpty())
-        #set ($pageByMacro = {})
-        #set ($found = $false)
-        #foreach ($pageEntry in $jsonObject.entrySet())
-          #foreach ($macroEntry in $pageEntry.value.entrySet())
-            #set ($macro = $pageByMacro.get($macroEntry.key))
-            #if ($macro == $NULL)
-              #set ($macro = {})
-              #set ($discard = $pageByMacro.put($macroEntry.key, $macro))
-            #end
-            #set ($discard = $macro.put($pageEntry.key, $macroEntry.value))
-            #set ($found = true)
-          #end
-        #end
-        #if ($found)
-          &lt;details class="cfm-details"&gt;
-            &lt;summary&gt;&lt;h3&gt;$services.localization.render('confluencepro.migration.raport.macros.unsupportedMacroPages')&lt;/h3&gt;&lt;/summary&gt;
-            &lt;p&gt;
-              &lt;button class="cfm-unfold-all btn" type="button"&gt;$services.localization.render('confluencepro.migration.raport.unfoldall')&lt;/button&gt;
-              &lt;button class="cfm-fold-all btn"   type="button"&gt;$services.localization.render('confluencepro.migration.raport.foldall')&lt;/button&gt;
-            &lt;/p&gt;
-            &lt;ul&gt;
-              #foreach ($macroEntry in $pageByMacro.entrySet())
-                &lt;li&gt;
-                  &lt;details&gt;
-                    &lt;summary&gt;$escapetool.xml($macroEntry.key) ($macroEntries.get($macroEntry.key))&lt;/summary&gt;
-                    &lt;table&gt;
-                      &lt;tr&gt;
-                        &lt;th class="cfm-macro--count"&gt;$services.localization.render('confluencepro.migration.raport.macros.count')&lt;/th&gt;
-                        &lt;th&gt;$services.localization.render('confluencepro.migration.raport.macros.document')&lt;/th&gt;
-                      &lt;/tr&gt;
-                      #foreach ($pageEntry in $macroEntry.value.entrySet())
-                        &lt;tr&gt;
-                          &lt;td&gt;$pageEntry.value&lt;/td&gt;
-                          &lt;td&gt;
-                            #set ($docRef = $services.model.resolveDocument($pageEntry.key))
-                            #if ($pageEntry.key.contains("."))
-                              #renderReferenceNicely($docRef)
-                            #else
-                              $escapetool.xml($pageEntry.key)
-                            #end
-                          &lt;/td&gt;
-                        &lt;/tr&gt;
-                      #end
-                    &lt;/table&gt;
-                  &lt;/details&gt;
-                &lt;/li&gt;
-              #end
-            &lt;/ul&gt;
-          &lt;/details&gt;
-        #end
-      #end
+      &lt;details class="cfm-details" id="cfm-unsupported-macros-details"&gt;
+        &lt;summary&gt;&lt;h3&gt;$services.localization.render('confluencepro.migration.raport.macros.unsupportedMacroPages')&lt;/h3&gt;&lt;/summary&gt;
+        &lt;p&gt;
+          &lt;button class="cfm-unfold-all btn" type="button"&gt;$services.localization.render('confluencepro.migration.raport.unfoldall')&lt;/button&gt;
+          &lt;button class="cfm-fold-all btn"   type="button"&gt;$services.localization.render('confluencepro.migration.raport.foldall')&lt;/button&gt;
+        &lt;/p&gt;
+        &lt;noscript&gt;Displaying this section requires JavaScript&lt;/noscript&gt;
+      &lt;/details&gt;
     #end
 
     {{/html}}
@@ -518,75 +388,17 @@
     &lt;/p&gt;
   &lt;/div&gt;
   
-  ## Issues section
-  #getJSON($obj, 'problems')
-  #filterCurrentRevision()
-  #if (!$jsonObject.isEmpty())
-    &lt;details class="cfm-foldable-section"&gt;
-      &lt;summary&gt;#displaySubtitle('warning', 'confluencepro.migration.raport.problems.done.title', '', [$jsonObject.size()])&lt;/summary&gt;
-    #displayJson('problems')
-    &lt;/details&gt;
-  #end
-
-  ## Skipped section
-  #getJSON($obj, 'skipped')
-  #filterCurrentRevision()
-  #if (!$jsonObject.isEmpty())
-    &lt;details class="cfm-foldable-section"&gt;
-      &lt;summary&gt;#displaySubtitle('cross', 'confluencepro.migration.raport.problems.skipped.title', '', [$jsonObject.size()])&lt;/summary&gt;
-      #displayJson('skipped')
-    &lt;/details&gt;
-  #end
+  #displayProblemsSection('problems', 'warning', 'confluencepro.migration.raport.problems.done.title')
+  #displayProblemsSection('skipped', 'cross', 'confluencepro.migration.raport.problems.skipped.title')
 
   ## Confluence reference warnings section
-  #getJSON($obj, 'confluenceRefWarnings')
-  #filterCurrentRevision()
-  #if (!$jsonObject.isEmpty())
-    &lt;details class="cfm-foldable-section"&gt;
-    &lt;summary&gt;#displaySubtitle('cross', 'confluencepro.migration.raport.problems.confluencerefs.title', '', [$jsonObject.size()])&lt;/summary&gt;
-    &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
-    #displayFixLinks
-    #displayJson('confluenceRefWarnings')
-    #set ($missingPages = $collectiontool.getSortedSet())
-    #set ($missingPagesIds = $collectiontool.getSortedSet())
-    #foreach ($entry in $jsonObject.entrySet())
-      #foreach ($log in $entry.getValue())
-        #set ($args = $log.get("args"))
-        #if ($args.size() == 1)
-          #set ($spaceKey = $args.get(0))
-          #set ($pageTitle = "")
-        #else
-          #set ($spaceKey = $args.get(1))
-          #set ($pageTitle = $args.get(0))
-        #end
-        #if ($spaceKey.class.name != "java.lang.String")
-          #set ($discard = $missingPagesIds.add($spaceKey))
-        #else
-          #set ($discard = $missingPages.add("${spaceKey}.${pageTitle}"))
-        #end
-      #end
-    #end
-    &lt;details class="cfm-details"&gt;
-      &lt;summary&gt;$services.localization.render('confluencepro.migration.raport.problems.confluencerefs.list')&lt;/summary&gt;
-      #if (!$missingPages.isEmpty())
-      &lt;table&gt;
-        &lt;tr&gt;
-          &lt;th&gt;$services.localization.render('confluencepro.migration.raport.confluencespace')&lt;/th&gt;
-          &lt;th&gt;$services.localization.render('confluencepro.migration.raport.pageTitle')&lt;/th&gt;
-        &lt;/tr&gt;
-      #foreach ($missingPage in $missingPages)
-        #set ($p = $missingPage.split('\.', 2))
-        &lt;tr&gt;
-          &lt;td&gt;$escapetool.xml($p[0])&lt;/td&gt;
-          &lt;td&gt;$escapetool.xml($p[1])&lt;/td&gt;
-        &lt;/tr&gt;
-      #end
-      &lt;/table&gt;
-      #end
-      #if (!$missingPagesIds.isEmpty())
-        $services.localization.render('confluencepro.migration.raport.problems.confluencerefids.list') $missingPagesIds
-      #end
-    &lt;/details&gt;
+  #set ($a = $doc.getAttachment("confluenceRefWarnings.json"))
+  #if (!$objecttool.isNull($a) &amp;&amp; $a.getLongSize() &gt; 2)
+    &lt;details class="cfm-foldable-section" id="cfm-reference-warnings"&gt;
+      &lt;summary&gt;#displaySubtitle('cross', 'confluencepro.migration.raport.problems.confluencerefs.title', '', [])&lt;/summary&gt;
+      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.brokenLinks.info')&lt;/p&gt;
+      #displayFixLinks
+      &lt;noscript&gt;Displaying this section requires JavaScript&lt;/noscript&gt;
     &lt;/details&gt;
   #end
 
@@ -622,85 +434,15 @@
     &lt;/details&gt;
   #end
 
-  ## Unhandled parameters
-  #macro (addUnknownParameterWithValue $macroName, $parameterName, $parameterValue)
-    #set ($byMacro = $problematicParameters.get($macroName))
-    #if ($objecttool.isNull($byMacro))
-      #set ($byMacro = {})
-      #set ($discard = $problematicParameters.put($macroName, $byMacro))
-    #end
-    #set ($byParam = $byMacro.get($parameterName))
-    #if ($objecttool.isNull($byParam))
-      #set ($byParam = $collectiontool.getSortedSet())
-      #set ($discard = $byMacro.put($parameterName, $byParam))
-    #end
-    #if ($objecttool.isNull($parameterValue))
-      #set ($parameterValue = 'null')
-    #end
-    #set ($discard = $byParam.add($parameterValue))
-  #end
-  #getJSON($obj, 'unhandledParameters')
-  #filterCurrentRevision()
-  #set ($unhandledParameters = $jsonObject)
-  #getJSON($obj, 'unhandledParameterValues')
-  #filterCurrentRevision()
-  #set ($unhandledParameterValues = $jsonObject)
-  #if (!$unhandledParameters.isEmpty() || !$unhandledParameterValues.isEmpty())
-    #set ($size = $unhandledParameters.size() + $unhandledParameterValues.size())
-    &lt;details class="cfm-foldable-section"&gt;
-    &lt;summary&gt;#displaySubtitle('cross', 'confluencepro.migration.raport.problems.unhandledParameters.title', '', [$size])&lt;/summary&gt;
-    #if (!$unhandledParameters.isEmpty())
-      #set ($jsonObject = $unhandledParameters)
-      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.unhandledParameters.info')&lt;/p&gt;
-      #displayJson('unhandledParameters')
-    #end
-    #if (!$unhandledParameterValues.isEmpty())
-      #set ($jsonObject = $unhandledParameterValues)
-      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.unhandledParameterValues.info')&lt;/p&gt;
-      #displayJson('unhandledParameterValues')
-    #end
-    #set ($problematicParameters = {})
-    #foreach ($entry in $unhandledParameters.entrySet())
-      #foreach ($log in $entry.getValue())
-        #set ($args = $log.get("args"))
-        #if ($args.size() == 3)
-          #set ($parameterName = $args.get(0))
-          #set ($parameterValue = $args.get(1))
-          #set ($macroName = $args.get(2))
-          #addUnknownParameterWithValue($macroName, $parameterName, $parameterValue)
-        #end
-      #end
-    #end
-    #foreach ($entry in $unhandledParameterValues.entrySet())
-      #foreach ($log in $entry.getValue())
-        #set ($args = $log.get("args"))
-        #if ($args.size() == 3)
-          #set ($parameterValue = $args.get(0))
-          #set ($parameterName = $args.get(1))
-          #set ($macroName = $args.get(2))
-          #addUnknownParameterWithValue($macroName, $parameterName, $parameterValue)
-        #end
-      #end
-    #end
-    &lt;details class="cfm-details"&gt;
-      &lt;summary&gt;$services.localization.render('confluencepro.migration.raport.problems.unhandledParameters.list')&lt;/summary&gt;
-      &lt;table&gt;
-        &lt;tr&gt;
-          &lt;th&gt;$services.localization.render('confluencepro.migration.raport.macroName')&lt;/th&gt;
-          &lt;th&gt;$services.localization.render('confluencepro.migration.raport.parameterName')&lt;/th&gt;
-          &lt;th&gt;$services.localization.render('confluencepro.migration.raport.parameterValues')&lt;/th&gt;
-        &lt;/tr&gt;
-      #foreach ($macroEntry in $problematicParameters.entrySet())
-        #foreach ($paramEntry in $macroEntry.getValue().entrySet())
-          &lt;tr&gt;
-            &lt;td&gt;$escapetool.xml($macroEntry.getKey())&lt;/td&gt;
-            &lt;td&gt;$escapetool.xml($paramEntry.getKey())&lt;/td&gt;
-            &lt;td&gt;$escapetool.xml($paramEntry.getValue().toString())&lt;/td&gt;
-          &lt;/tr&gt;
-        #end
-      #end
-      &lt;/table&gt;
-    &lt;/details&gt;
+  #set ($a = $doc.getAttachment("unhandledParameters.json"))
+  #set ($thereAreUnhandledParameters = !$objecttool.isNull($a) &amp;&amp; $a.getLongSize() &gt; 2)
+  #set ($a = $doc.getAttachment("unhandledParameterValues.json"))
+  #set ($thereAreUnhandledParameterValues = !$objecttool.isNull($a) &amp;&amp; $a.getLongSize() &gt; 2)
+  #if ($thereAreUnhandledParameters || $thereAreUnhandledParameterValues)
+    &lt;details class="cfm-foldable-section" id="cfm-unhandled-parameters"&gt;
+      &lt;summary&gt;#displaySubtitle('cross', 'confluencepro.migration.raport.problems.unhandledParameters.title', '', [])&lt;/summary&gt;
+      &lt;p&gt;$services.localization.render('confluencepro.migration.raport.problems.unhandledParameters.list')&lt;/p&gt;
+      &lt;noscript&gt;Displaying this section requires JavaScript&lt;/noscript&gt;
     &lt;/details&gt;
   #end
 
@@ -760,16 +502,7 @@
     &lt;/table&gt;
   #end
 
-  ## Other issues section
-  #getJSON($obj, 'otherIssues')
-  #filterCurrentRevision()
-
-  #if (!$jsonObject.isEmpty())
-    &lt;details class="cfm-foldable-section"&gt;
-      &lt;summary&gt;#displaySubtitle('question', 'confluencepro.migration.raport.problems.other.title', '', [])&lt;/summary&gt;
-      #displayJson('otherIssues')
-    &lt;/details&gt;
-  #end
+  #displayProblemsSection('otherIssues', 'question', 'confluencepro.migration.raport.problems.other.title')
 
   {{/html}}
 
@@ -874,6 +607,28 @@
     &lt;/li&gt;
   #end
   &lt;/ul&gt;
+#end
+
+#macro (displayProblemsSection $name $icon $trString)
+  #set ($a = $doc.getAttachment("${name}.json"))
+  #if (!$objecttool.isNull($a) &amp;&amp; $a.getLongSize() &lt;= 2)
+    ## the attachment is empty, let's pretend it doesn't exist
+    #set ($a = $NULL)
+  #end
+  #if (!$objecttool.isNull($a) || "$!doc.getValue($name)" != "")
+    &lt;details class="cfm-foldable-section" data-problems-name="$name"&gt;
+      &lt;summary&gt;#displaySubtitle($icon, $trString, '', [$jsonObject.size()])&lt;/summary&gt;
+      #if ($objecttool.isNull($a))
+        #getJSON($obj, $name)
+        #filterCurrentRevision()
+        #if (!$jsonObject.isEmpty())
+          #displayJson($name)
+        #end
+      #else
+        &lt;noscript&gt;Displaying this section requires JavaScript&lt;/noscript&gt;
+      #end
+    &lt;/details&gt;
+  #end
 #end
 
 #macro(displayBrokenLinks $jsonObject, $l10nkey)
@@ -1036,8 +791,8 @@
 #end
 
 #macro(fillSupportedAndUnsupportedMacros)
-  #set ($supportedMacros = [])
-  #set ($notSupportedMacros = [])
+  #set ($supportedMacros = "")
+  #set ($notSupportedMacros = "")
   #set ($macroEntries = $jsontool.fromString($obj.getProperty('macros').value))
   #set ($macroKeys = $macroEntries.keySet())
   #if ($objecttool.isNotNull($macroKeys))
@@ -1052,10 +807,17 @@
       #set ($macro = "${macro} (${macroEntries.get($macro)})")
     #end
     #if ($supported)
-      #set ($discard = $supportedMacros.add($macro))
+      #set ($supportedMacros = $supportedMacros + ', ' + $macro)
     #else
-      #set ($discard = $notSupportedMacros.add($macro))
+      #set ($notSupportedMacros = $notSupportedMacros + ', ' + $macro)
     #end
+  #end
+  ## remove the leading ", "
+  #if (!$supportedMacros.isEmpty())
+    #set ($supportedMacros = $supportedMacros.substring(2))
+  #end
+  #if (!$notSupportedMacros.isEmpty())
+    #set ($notSupportedMacros = $notSupportedMacros.substring(2))
   #end
 #end
 
@@ -1291,9 +1053,30 @@
     "status.runningJob",
   ],
 });
-require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
+define("confluencepro-migration-raport", {
+  prefix: "confluencepro.migration.raport.",
+  keys: [
+    "macros.count",
+    "macros.document",
+    "unfoldall",
+    "foldall",
+    "problems.confluencerefs.list",
+    "problems.confluencerefids.list",
+    "doctreefailure",
+    "loadsectionfailure",
+    "renamingSpace",
+    "confluencespace",
+    "pageTitle",
+    "macroName",
+    "parameterName",
+    "parameterValues",
+  ],
+});
+
+require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migration-raport", "xwiki-job-runner"], function (
   $,
   l10n,
+  i18n,
   JobRunner,
 ) {
   let checkedValues = new Set();
@@ -1448,7 +1231,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
       }
     });
 
-  $(".cfm-unfold-all").on("click", function (e) {
+  function handleUnfoldAll(e) {
     const ul = e?.target?.parentNode?.nextElementSibling;
     if (ul) {
       for (const a of ul.querySelectorAll('a[aria-expanded="false"]')) {
@@ -1459,9 +1242,9 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
         details.open = true;
       }
     }
-  });
+  }
 
-  $(".cfm-fold-all").on("click", function (e) {
+  function handleFoldAll(e) {
     const ul = e?.target?.parentNode?.nextElementSibling;
     if (ul) {
       for (const a of ul.querySelectorAll('a[aria-expanded="true"]')) {
@@ -1472,7 +1255,10 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
         details.open = false;
       }
     }
-  });
+  }
+
+  $(".cfm-unfold-all").on("click", handleUnfoldAll);
+  $(".cfm-fold-all").on("click", handleFoldAll);
 
   function format(message, args) {
     const m = message.split("{}");
@@ -1520,6 +1306,22 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
     }
   }
 
+  function renderReferenceNicely(ref) {
+    if (ref.includes(".")) {
+      const r = XWiki.Model.resolve(ref, XWiki.EntityType.DOCUMENT);
+      const d = new XWiki.Document(r);
+      const a = document.createElement("a");
+      a.href = d.getURL();
+      a.textContent = r.getReversedReferenceChain()
+        .filter(({type}) =&gt; type == XWiki.EntityType.SPACE)
+        .map(({name}) =&gt; name)
+        .join(" &gt; ")
+      return a;
+    }
+
+    return ref;
+  }
+
   function getLogs() {
     // if method === "attachment", the logs were saved as an attachments (old
     // migrations, we don't do it like this anymore), and we shall use it
@@ -1563,6 +1365,601 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
       logs.appendChild(ul);
     });
   }
+
+  function displayFoldingButtons() {
+    const p = document.createElement("p");
+    const unfold = document.createElement("button");
+    unfold.className = "cfm-unfold-all btn";
+    const fold = document.createElement("button");
+    fold.className = "cfm-fold-all btn";
+    fold.type = unfold.type = "button";
+    unfold.textContent = i18n.get("unfoldall");
+    fold.textContent = i18n.get("foldall");
+    $(unfold).click(handleUnfoldAll);
+    $(fold).click(handleFoldAll);
+    p.append(unfold, " ", fold);
+    return p;
+  }
+
+  function renderSerializedReference(r) {
+    const p = (r.parent ? (renderSerializedReference(r.parent) + (r.parent.type === "WIKI" ? ":" :  ".")) : '');
+    return p + (r.name || "").replaceAll('.', '\\.');
+  }
+
+  function formatProblem(msg, args) {
+    let res = msg;
+    for (const arg of args) {
+      let renderedArg = arg;
+      if (typeof arg !== "string") {
+        renderedArg = (arg.parent &amp;&amp; arg.name)
+          ? renderSerializedReference(arg)
+          : JSON.stringify(arg);
+      }
+      res = res.replace("{}", renderedArg);
+    }
+    return res;
+  }
+
+  function filterCurrentRevision(json) {
+    const oldreverrors = document.location.search.includes("oldreverrors=1");
+    const res = {};
+    for (const [k, v] of Object.entries(json)) {
+      const lines = [];
+      if (v) {
+        for (const logline of v) {
+          const data = logline.data;
+          if (!data) {
+            // Old report without data about old revisions
+            return json;
+          }
+          if (oldreverrors || (!logline.originalVersion || logline.originalVersion == logline.pageId)) {
+            lines.push(data);
+          }
+        }
+
+        if (lines.length &gt; 0) {
+          res[k] = lines;
+        }
+      }
+    }
+
+    return res;
+  }
+
+  function displayJSON(json) {
+    const f = document.createDocumentFragment();
+    const foldingButtons = displayFoldingButtons();
+    const ul = document.createElement("ul");
+    ul.className = "cfm-problem-pages";
+    for (const [k, problems] of Object.entries(json)) {
+      if (problems.length == 0) {
+        continue;
+      }
+      const li = document.createElement("li");
+      const details = document.createElement("details");
+      details.className = "cfm-details";
+      const summary = document.createElement("summary");
+      summary.append(renderReferenceNicely(k));
+      const problemsUL = document.createElement("ul");
+      problemsUL.className = "cfm-problems";
+      details.append(summary, problemsUL);
+      li.append(details);
+      ul.append(li);
+      for (const problem of problems) {
+        const problemLI = document.createElement("li");
+        problemLI.className = "cfm-problem";
+        problemLI.textContent = problem.msg ? formatProblem(problem.msg, problem.args) : JSON.stringify(problem);
+        problemsUL.append(problemLI);
+      }
+    }
+    f.append(foldingButtons, ul);
+    return f;
+  }
+
+  async function getAndDisplayJSON(name) {
+    const response = await fetch(XWiki.currentDocument.getURL("download") + "/" + name + ".json");
+    if (response.ok) {
+      const json = filterCurrentRevision(await response.json());
+      return displayJSON(json);
+    } else {
+      alert(i18n.get("loadsectionfailure"));
+    }
+
+    return i18n.get("loadsectionfailure");
+  }
+
+  function getLoadingIcon() {
+    const loading = document.createElement("div");
+    loading.className = "loading-icon loading";
+    return loading;
+  }
+
+  function entitiesEqual(a, b) {
+    if (a == null &amp;&amp; b == null) {
+      return true;
+    }
+
+    return a?.name === b?.name &amp;&amp; entitiesEqual(a.parent, b.parent);
+  }
+
+  function addSpaceToDocTree(rootSpace, context, docTree, spaceRef) {
+    const initialParentSpace = context.parentSpace;
+    const p = spaceRef.parent;
+    if (!p || entitiesEqual(p, rootSpace) ||  p.type === XWiki.EntityType.WIKI) {
+      context.parentSpace = docTree;
+    } else {
+       addSpaceToDocTree(rootSpace, context, docTree, p);
+       context.parentSpace = context.space;
+    }
+    const n = spaceRef.getName();
+    context.space = context.parentSpace.get(n);
+    if (!context.space) {
+      context.space = new Map();
+      context.parentSpace.set(n,context.space);
+    }
+    context.parentSpace = initialParentSpace;
+  }
+
+  function addDocToDocTree(rootSpace, context, docTree,  docRef) {
+    const p = docRef.parent;
+    if (!p || entitiesEqual(p, rootSpace) ||  p.type === XWiki.EntityType.WIKI) {
+      context.space = docTree;
+    } else {
+      addSpaceToDocTree(rootSpace, context, docTree, p);
+    }
+    context.space.set(docRef.getName(), docRef);
+  }
+
+  function displayRenaming(name, spaceTargets) {
+    return name === spaceTargets[name]
+      ? ""
+      : " " + i18n.get('renamingSpace', spaceTargets[name]);
+  }
+
+  function printDocTree(tree, spaceTargets, isRoot) {
+    const ul = document.createElement("ul");
+    for (const [name, child] of tree.entries()) {
+      if (name === "WebHome") {
+        continue;
+      }
+
+      const li = document.createElement("li");
+      ul.append(li);
+      if (child instanceof Map) {
+        const webHome = child.get("WebHome");
+        if (webHome &amp;&amp; child.size == 1) {
+          li.className = "cfm-doc-tree-leaf";
+          const a = document.createElement("a");
+          li.append(a);
+          a.href = new XWiki.Document(webHome).getURL();
+          a.textContent = name;
+          if (isRoot) {
+            const renaming = displayRenaming(name, spaceTargets);
+            if (renaming) {
+              li.append(renaming);
+            }
+          }
+        } else {
+          const details = document.createElement("details");
+          li.append(details);
+          const summary = document.createElement("summary");
+          details.append(summary);
+          if (webHome) {
+            const a = document.createElement("a");
+            summary.append(a);
+            a.href = new XWiki.Document(webHome).getURL();
+            a.textContent = name;
+          } else {
+            summary.textContent = name;
+            if (isRoot) {
+              const renaming = displayRenaming(name, spaceTargets);
+              if (renaming) {
+                summary.append(renaming);
+              }
+            }
+          }
+          details.append(printDocTree(child, spaceTargets, false));
+        }
+      } else {
+        li.className = "cfm-doc-tree-leaf";
+        const a = document.createElement("a");
+        li.append(a);
+        a.href = new XWiki.Document(child).getURL();
+        a.textContent = name;
+      }
+    }
+    return ul;
+  }
+
+  (async function loadDocTree() {
+    const divDocTree = document.getElementById("cfm-doc-tree");
+    if (!divDocTree) {
+      return;
+    }
+
+    const loading = getLoadingIcon();
+
+    try {
+      divDocTree.append(loading);
+      let response = await fetch(XWiki.currentDocument.getURL("download") + "/spaceTargets.json");
+      if (response.ok) {
+        const spaceTargets = await response.json();
+        const docTree = new Map();
+        const invertedSpaceTargets = {};
+        for (const [k, v] of Object.entries(spaceTargets)) {
+          invertedSpaceTargets[v] = k;
+        }
+
+        response = await fetch(XWiki.currentDocument.getURL("download") + "/docs.json");
+        if (response.ok) {
+          const rootSpace = XWiki.Model.resolve(divDocTree.dataset.rootSpace, XWiki.EntityType.SPACE);
+          for (const docRefStr of await response.json()) {
+            const docRef = XWiki.Model.resolve(docRefStr, XWiki.EntityType.DOCUMENT);
+            addDocToDocTree(rootSpace, {}, docTree, docRef);
+          }
+
+          loading.remove();
+          divDocTree.append(displayFoldingButtons(), printDocTree(docTree, invertedSpaceTargets, true));
+        }
+      } else {
+        divDocTree.append(i18n.get("doctreefailure"));
+      }
+    } catch (e) {
+      divDocTree.append(i18n.get("doctreefailure"));
+      console.error(e);
+    } finally {
+      if (loading.parentNode) {
+        loading.remove();
+      }
+    }
+  })();
+
+  (async function problemSections() {
+    function handleProblemsSection(details) {
+      async function handleToggle() {
+        if (!details.open || details.dataset.loading) {
+          // We load stuff only on open, not on close
+          return;
+        }
+
+        const loading = getLoadingIcon();
+        details.dataset.loading = 1;
+        try {
+          details.append(loading);
+
+          const content = await getAndDisplayJSON(details.dataset.problemsName);
+          loading.remove();
+          details.append(content);
+        } catch (e) {
+          alert(i18n.get("loadsectionfailure"));
+          console.error(e);
+        } finally {
+          delete details.dataset.loading;
+          if (loading.parentNode) {
+            loading.remove();
+          }
+        }
+        details.removeEventListener("toggle", handleToggle);
+      }
+
+      details.addEventListener("toggle", handleToggle);
+      if (details.open) {
+        handleToggle();
+      }
+    }
+
+    for (const details of document.querySelectorAll("[data-problems-name]")) {
+      if (!details.querySelector("cfm-problem-pages")) {
+        // Only handle sections not already loaded
+        handleProblemsSection(details);
+      }
+    }
+  })();
+
+  (function unsupportedMacroDetails() {
+    const details = document.getElementById("cfm-unsupported-macros-details");
+    async function handleToggle() {
+      if (!details.open || details.dataset.loading) {
+        // We load stuff only on open, not on close
+        return;
+      }
+
+      const unsupportedMacros = new Set(document.getElementById("cfm-unsupported-macros").textContent.split(",").map(s =&gt; s.trim().split(" ", 1)[0]));
+
+
+      const loading = getLoadingIcon();
+      details.dataset.loading = 1;
+      try {
+        details.append(loading);
+
+        const response = await fetch(XWiki.currentDocument.getURL("download") + "/macroPages.json");
+        if (response.ok) {
+          const macroPages = await response.json();
+          loading.remove();
+          let found = false;
+          let pageByMacro = {};
+          for (const [documentReference, macroEntries] of Object.entries(macroPages)) {
+            for ([macroName, count] of Object.entries(macroEntries)) {
+              if (unsupportedMacros.has(macroName)) {
+                let macro = pageByMacro[macroName]
+                if (!macro) {
+                  macro = pageByMacro[macroName] = {};
+                }
+                macro[documentReference] = count;
+                found = true;
+              }
+            }
+          }
+          if (found) {
+            const ul = document.createElement("ul");
+            for (const [macroName, countByDocumentReference] of Object.entries(pageByMacro)) {
+              const li = document.createElement("li");
+              const innerDetails = document.createElement("details");
+              innerDetails.className = "cfm-details";
+              const summary = document.createElement("summary");
+              const table = document.createElement("table");
+              const tbody = document.createElement("tbody");
+              table.append(tbody);
+              const trHeader = document.createElement("tr");
+              let th = document.createElement("th");
+              th.className = "cfm-macro--count";
+              th.textContent = i18n.get('macros.count');
+              trHeader.append(th);
+              th = document.createElement("th");
+              th.textContent = i18n.get("macros.document");
+              trHeader.append(th);
+              tbody.append(trHeader);
+              let total = 0;
+              for ([documentReference, count] of Object.entries(countByDocumentReference)) {
+                total += count;
+                const tr = document.createElement("tr");
+                let td = document.createElement("td");
+                td.textContent = count;
+                tr.append(td);
+                td = document.createElement("td");
+                td.append(renderReferenceNicely(documentReference));
+                tr.append(td);
+                tbody.append(tr);
+              }
+              summary.textContent = macroName + " (" + total + ")";
+              innerDetails.append(summary, table);
+              li.append(innerDetails);
+              ul.append(li);
+            }
+
+            details.append(ul);
+          } else {
+            // Should not really happen
+            const p = document.createElement("p");
+            p.textContent = i18n.get("loadsectionfailure");
+            details.append(p);
+          }
+
+          details.removeEventListener("toggle", handleToggle);
+        }
+      } catch (e) {
+        alert(i18n.get("loadsectionfailure"));
+        console.error(e);
+      } finally {
+        delete details.dataset.loading;
+        if (loading.parentNode) {
+          loading.remove();
+        }
+      }
+    }
+
+    if (details) {
+      details.addEventListener("toggle", handleToggle);
+
+      if (details.open) {
+        handleToggle();
+      }
+    }
+  })();
+
+  (function referenceWarnings() {
+    const details = document.getElementById("cfm-reference-warnings");
+    async function handleToggle() {
+      if (!details.open || details.dataset.loading) {
+        return;
+      }
+
+      const loading = getLoadingIcon();
+      details.dataset.loading = 1;
+      try {
+        details.append(loading);
+
+        const response = await fetch(XWiki.currentDocument.getURL("download") + "/confluenceRefWarnings.json");
+        if (response.ok) {
+          loading.remove();
+          const json = filterCurrentRevision(await response.json());
+          const missingPages = new Set();
+          const missingPagesIds = new Set();
+          for (const v of Object.values(json)) {
+            for (const log of v) {
+               let pageTitle, spaceKey;
+               if (log?.args?.length == 1) {
+                 spaceKey = log.args[0];
+                 pageTitle = "";
+               } else {
+                 [pageTitle, spaceKey] = log.args;
+               }
+
+               if (typeof spaceKey === "string") {
+                 missingPages.add(spaceKey + "." + pageTitle);
+               } else {
+                 missingPagesIds.add(spaceKey);
+               }
+            }
+          }
+          const p = document.createElement("p");
+          p.textContent = i18n.get("problems.confluencerefs.list");
+          const d = document.createDocumentFragment();
+          d.append(p);
+          if (missingPages.size &gt; 0) {
+            const table = document.createElement("table");
+            d.append(table);
+            const tbody = document.createElement("tbody");
+            table.append(tbody);
+            const tr = document.createElement("tr");
+            tbody.append(tr);
+            let th = document.createElement("th");
+            th.textContent = i18n.get("confluencespace");
+            tr.append(th);
+            th = document.createElement("th");
+            th.textContent = i18n.get("pageTitle");
+            tr.append(th);
+            const sortedMissingPages = Array.from(missingPages);
+            sortedMissingPages.sort();
+            for (const missingPage of sortedMissingPages) {
+              const p = missingPage.split('.', 2);
+              const tr2 = document.createElement("tr");
+              td = document.createElement("td");
+              td.textContent = p[0];
+              tr2.append(td);
+              td = document.createElement("td");
+              td.textContent = p[1];
+              tr2.append(td);
+              tbody.append(tr2);
+            }
+          }
+
+          if (missingPagesIds.size &gt; 0) {
+            const sortedMissingPagesIds = Array.from(missingPagesIds);
+            sortedMissingPagesIds.sort();
+            d.append(l10n.get("problems.confluencerefids.list") + " " + sortedMissingPagesIds.join(", "));
+          }
+          details.append(d);
+          details.removeEventListener("toggle", handleToggle);
+        } else {
+          alert(i18n.get("loadsectionfailure"));
+        }
+      } catch (e) {
+        alert(i18n.get("loadsectionfailure"));
+        console.error(e);
+      } finally {
+        delete details.dataset.loading;
+        if (loading.parentNode) {
+          loading.remove();
+        }
+      }
+    }
+
+    details.addEventListener("toggle", handleToggle);
+    if (details.open) {
+      handleToggle();
+    }
+  })();
+
+  function addUnknownParameterWithValue(problematicParameters, macroName, paramName, paramValue) {
+    let byMacro = problematicParameters[macroName];
+    if (!byMacro) {
+      byMacro = problematicParameters[macroName] = {};
+    }
+
+    let byParam = byMacro[paramName];
+    if (!byParam) {
+      byParam = byMacro[paramName] = new Set();
+    }
+
+    byParam.add((paramValue === null || typeof paramName === undefined) ? 'null' : paramValue)
+  }
+
+  (function unhandledParameters() {
+    const details = document.getElementById("cfm-unhandled-parameters");
+    async function handleToggle() {
+      if (!this.open || details.dataset.loading) {
+        return;
+      }
+
+      const loading = getLoadingIcon();
+      details.dataset.loading = 1;
+      try {
+        details.append(loading);
+
+        const problematicParameters = {};
+        let response = await fetch(XWiki.currentDocument.getURL("download") + "/unhandledParameters.json");
+        if (response.ok) {
+          let json = filterCurrentRevision(await response.json());
+          for (const v of Object.values(json)) {
+            for (const log of v) {
+              if (log.args.length === 3) {
+                const [paramName, paramValue, macroName] = log.args;
+                addUnknownParameterWithValue(problematicParameters, macroName, paramName, paramValue);
+              }
+            }
+          }
+
+          response = await fetch(XWiki.currentDocument.getURL("download") + "/unhandledParameterValues.json");
+          if (response.ok) {
+            json = filterCurrentRevision(await response.json());
+            for (const v of Object.values(json)) {
+              for (const log of v) {
+                if (log.args.length === 3) {
+                  const [paramValue, paramName, macroName] = log.args;
+                  addUnknownParameterWithValue(problematicParameters, macroName, paramName, paramValue)
+                }
+              }
+            }
+
+            loading.remove();
+
+            const table = document.createElement("table");
+            const tbody = document.createElement("tbody");
+            table.append(tbody);
+            const trHeader = document.createElement("tr");
+            tbody.append(trHeader);
+            let th = document.createElement("th");
+            th.textContent = i18n.get("macroName");
+            trHeader.append(th);
+            th = document.createElement("th");
+            th.textContent = i18n.get("parameterName");
+            trHeader.append(th);
+            th = document.createElement("th");
+            th.textContent = i18n.get("parameterValues");
+            trHeader.append(th);
+
+            for (const [macroName, macroValue] of Object.entries(problematicParameters)) {
+              for (const [paramName, paramValue] of Object.entries(macroValue)) {
+                const tr = document.createElement("tr");
+                tbody.append(tr);
+                let td = document.createElement("td");
+                td.textContent = macroName;
+                tr.append(td);
+                td = document.createElement("td");
+                td.textContent = paramName;
+                tr.append(td);
+                td = document.createElement("td");
+                const v = Array.from(paramValue);
+                v.sort();
+                td.textContent = v.join(', ');
+                tr.append(td);
+              }
+            }
+            details.append(table);
+            details.removeEventListener("toggle", handleToggle);
+          } else {
+            alert(i18n.get("loadsectionfailure"));
+          }
+        } else {
+          alert(i18n.get("loadsectionfailure"));
+        }
+      } catch (e) {
+        alert(i18n.get("loadsectionfailure"));
+        console.error(e);
+      } finally {
+        delete details.dataset.loading;
+        if (loading.parentNode) {
+          loading.remove();
+        }
+      }
+    }
+
+    details.addEventListener("toggle", handleToggle);
+    if (details.open) {
+      handleToggle();
+    }
+  })();
 });</code>
     </property>
     <property>
@@ -1861,7 +2258,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-job-runner"], function (
   align-items: center;
 }
 
-.job-loading-status .loading-icon {
+.loading-icon {
   height: 1em;
   width: 1em;
   margin-right: 1em;
@@ -1903,7 +2300,7 @@ details.cfm-details {
     display: list-item;
 
     h3 {
-      display: inline-block;
+      display: inline;
     }
 
     &amp;:has(&gt; h3)::marker {
@@ -1946,6 +2343,8 @@ details.cfm-details {
 }
 
 .cfm-foldable-section {
+  margin-bottom: 2rem;
+  margin-top: 2rem;
   &gt; summary {
     display: list-item;
 
@@ -1954,7 +2353,7 @@ details.cfm-details {
     }
 
     h2 {
-      display:inline-block;
+      display:inline;
     }
 
     .cfmTitleIcon {
