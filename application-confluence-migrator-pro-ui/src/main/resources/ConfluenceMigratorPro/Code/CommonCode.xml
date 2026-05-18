@@ -49,14 +49,14 @@
  *#
 #macro (displaySubtitle $icon $key $class $params)
 &lt;h2 class="cfmTitle $!class"&gt;
-  &lt;div&gt;
+  &lt;span&gt;
     &lt;span class="cfmTitleIcon"&gt;
       $services.icon.renderHTML($icon)
     &lt;/span&gt;
     &lt;span&gt;
       $escapetool.xml($services.localization.render($key, $params))
     &lt;/span&gt;
-  &lt;/div&gt;
+  &lt;/span&gt;
 &lt;/h2&gt;
 #end
 #**
