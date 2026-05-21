@@ -345,6 +345,10 @@
   content: "(${services.localization.render('confluencepro.prerequisites.incomplete')})"
 }
 
+details[open] &gt; summary .cfmTitleIcon {
+  transform: rotate(180deg);
+}
+
 #confluencePackages .attachmentActions a:nth-last-child(2)
 {
   margin: 5px;

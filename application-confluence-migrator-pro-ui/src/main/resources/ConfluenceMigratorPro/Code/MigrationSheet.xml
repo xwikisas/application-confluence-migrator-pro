@@ -91,15 +91,19 @@
     #end
   &lt;/div&gt;
   ## Advanced options
-  &lt;a data-toggle="collapse" href="#advancedInputFields" role="button" aria-expanded="false" aria-controls="advancedInputFields" class="advanced-fields collapsed"&gt;
-    &lt;div class="cfmTitleIcon"&gt;
+ &lt;details class="advancedInputFieldsDetails"&gt;
+  &lt;summary class="advanced-fields"&gt;
+    &lt;span class="cfmTitleIcon"&gt;
       $services.icon.renderHTML('caret-down')
-    &lt;/div&gt;
-    $escapetool.xml($services.localization.render('confluencepro.job.question.advanced.link'))
-  &lt;/a&gt;
-  &lt;div class="xform collapse confluence-migrator-collapse" id="advancedInputFields"&gt;
+    &lt;/span&gt;
+    &lt;span class="advanced-fields-label"&gt;
+      $escapetool.xml($services.localization.render('confluencepro.job.question.advanced.link'))
+    &lt;/span&gt;
+  &lt;/summary&gt;
+  &lt;span class="xform confluence-migrator" id="advancedInputFields"&gt;
     #displayMigrationParameterFormFields
-  &lt;/div&gt;
+  &lt;/span&gt;
+  &lt;/details&gt;
   {{/html}}
 
 #end
