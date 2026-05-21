@@ -325,20 +325,25 @@
   list-style: none;
 }
 
-.cfmTitle::after {
+.cfmTitleSummary {
+  font-size:1.7rem;
+  line-height:1.3rem;
+  margin:0 0 1rem 0;
+}
+
+.cfmTitleSummary::after {
   font-style: italic;
   color: #bbb;
   margin-left: 0.5em;
 }
 
-.cfmTitle.completed::after {
+.cfmTitleSummary.completed::after {
   content: "(${services.localization.render('confluencepro.prerequisites.completed')})"
 }
 
-.cfmTitle.incomplete::after {
+.cfmTitleSummary.incomplete::after {
   content: "(${services.localization.render('confluencepro.prerequisites.incomplete')})"
 }
-
 
 #confluencePackages .attachmentActions a:nth-last-child(2)
 {
@@ -388,6 +393,17 @@
 
 .confluence-pro-tab-container-new-migration &gt; p {
   display: none !important;
+}
+
+summary.cfmTitleSection {
+  cursor: pointer;
+  list-style: none;
+  font-weight: normal;
+}
+
+details[open] &gt; summary.cfmTitleSection {
+  font-weight: bold;
+  text-decoration: underline;
 }</code>
     </property>
     <property>

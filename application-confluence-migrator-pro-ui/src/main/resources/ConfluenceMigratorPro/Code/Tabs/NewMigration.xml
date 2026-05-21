@@ -45,17 +45,17 @@
 #template('attachment_macros.vm')
 {{/velocity}}
 {{velocity}}
-#macro (displaySubsection $icon $key $class $params)
-&lt;div class="cfmTitle $!class"&gt;
-  &lt;div&gt;
+#macro (displaySubsection $icon $key $class $params $summaryClass)
+&lt;summary class="$summaryClass $!class"&gt;
+  &lt;span&gt;
     &lt;span class="cfmTitleIcon"&gt;
       $services.icon.renderHTML($icon)
     &lt;/span&gt;
     &lt;span&gt;
       $escapetool.xml($services.localization.render($key, $params))
     &lt;/span&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
+  &lt;/span&gt;
+&lt;/summary&gt;
 #end
 #macro (addPrerequisiteToList $list $icon $translationKey $url $params)
   #if ($icon != 'check')
@@ -75,11 +75,9 @@
 
 {{html}}
 &lt;div class="cfmTitle"&gt;
-  &lt;a role="button" data-toggle="collapse" href="#cfmPrerequisitesCollapse" aria-expanded="false" aria-controls="cfmPrerequisitesCollapse"&gt;
-    #displaySubtitle('caret-down', 'confluencepro.prerequisites.title', $prerequisitesComplete, {})
-  &lt;/a&gt;
-&lt;/div&gt;
-&lt;div id="cfmPrerequisitesCollapse" class="cfmPrerequisites collapse"&gt;
+  &lt;details class="cfmPrerequisitesDetails"&gt;
+    #displaySubsection('caret-down', 'confluencepro.prerequisites.title', $prerequisitesComplete, {}, 'cfmTitleSummary')
+  &lt;div class="cfmPrerequisites"&gt;
   &lt;div class="box infomessage"&gt;
     &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.prerequisites.hint'))&lt;/p&gt;
   &lt;/div&gt;
@@ -98,15 +96,14 @@
   #end
   &lt;/ul&gt;
 &lt;/div&gt;
+&lt;/details&gt;
 {{/html}}
 #end
 #macro (howToMigrateUploadSubsection)
 &lt;div class="howToMigrateSubsection"&gt;
-  &lt;a class="collapsed uploadSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateUploadCollapse"
-    aria-expanded="false" aria-controls="cfmHowToMigrateUploadCollapse"&gt;
-  #displaySubsection('caret-down', 'confluencepro.howToMigrate.upload.title', '', {})
-  &lt;/a&gt;
-    &lt;div id="cfmHowToMigrateUploadCollapse" class="collapse"&gt;
+ &lt;details class ="uploadSubsection"&gt;
+  #displaySubsection('caret-down', 'confluencepro.howToMigrate.upload.title', '', {}, 'cfmTitleSection')
+    &lt;div id="cfmHowToMigrateUploadCollapse"&gt;
     &lt;div&gt;
       &lt;button id="facade-upload-button" class="btn btn-primary"&gt;$services.icon.renderHTML('add') $escapetool.xml($services.localization.render('confluencepro.uploadFacadeButton'))&lt;/button&gt;
       &lt;div id='facade-upload-progress'&gt;&lt;/div&gt;
@@ -138,15 +135,14 @@
     {{/html}}
 
   &lt;/div&gt;
+  &lt;/details&gt;
 &lt;/div&gt;
 #end
 #macro (howToMigrateServerSection)
 &lt;div class="howToMigrateSubsection"&gt;
-  &lt;a class="collapsed serverSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateServerCollapse"
-    aria-expanded="false" aria-controls="cfmHowToMigrateServerCollapse"&gt;
-  #displaySubsection('caret-down', 'confluencepro.howToMigrate.server.title', '', {})
-  &lt;/a&gt;
-    &lt;div id="cfmHowToMigrateServerCollapse" class="cfmPrerequisites collapse"&gt;
+  &lt;details class = "serverSubsection"&gt;
+  #displaySubsection('caret-down', 'confluencepro.howToMigrate.server.title', '', {}, 'cfmTitleSection')
+    &lt;div id="cfmHowToMigrateServerCollapse" class="cfmPrerequisites"&gt;
       #set ($escapedMessage = $escapetool.xml($services.localization.render('confluencepro.packages.serverPath')))
       #set ($editURL = $xwiki.getURL("ConfluenceMigratorPro.Migrations.Migration${datetool.date.time}", 'edit', $escapetool.url({
         'template': 'ConfluenceMigratorPro.Code.MigrationTemplate',
@@ -167,15 +163,14 @@
 
       &lt;/form&gt;
     &lt;/div&gt;
+  &lt;/details&gt;
 &lt;/div&gt;
 #end
 #macro (howToMigrateBatches)
 &lt;div class="howToMigrateSubsection"&gt;
-  &lt;a class="collapsed batchSubsection" role="button" data-toggle="collapse" href="#cfmHowToMigrateBatchesCollapse"
-    aria-expanded="false" aria-controls="cfmHowToMigrateBatchesCollapse"&gt;
-  #displaySubsection('caret-down', 'confluencepro.howToMigrate.batch.title', '', {})
-  &lt;/a&gt;
-    &lt;div id="cfmHowToMigrateBatchesCollapse" class="cfmPrerequisites collapse"&gt;
+  &lt;details class="batchSubsection"&gt;
+  #displaySubsection('caret-down', 'confluencepro.howToMigrate.batch.title', '', {}, 'cfmTitleSection')
+    &lt;div id="cfmHowToMigrateBatchesCollapse" class="cfmPrerequisites"&gt;
 &lt;div&gt;
   &lt;a href="$xwiki.getURL('ConfluenceMigratorPro.ConfluenceBatches.New')"&gt;
     &lt;button id="createNewBatchButton" class='btn btn-primary'&gt;$services.icon.renderHTML('add')
@@ -215,6 +210,7 @@
   	limit="10"}}$jsontool.serialize($liveDataConfig){{/liveData}}
 
     &lt;/div&gt;
+  &lt;/details&gt;
 &lt;/div&gt;
 #end
 #macro (howToMigrate)
@@ -343,33 +339,30 @@ $xwiki.jsfx.use('js/xwiki/viewers/attachments.js', {'forceSkinAction': true, 'la
       <code>require(['jquery'], function($){
   $('#facade-upload-button').on('click', function(){
     $('#confluenceUploadFile').click();
-  })
+  });
 
-  function areAllCollapsed() {
-    return $('.howToMigrateSubsection &gt; a').toArray().some(el =&gt; !$(el).hasClass('collapsed'));
-}
+  function isAnyOpen() {
+    return $('.howToMigrateSubsection &gt; details').toArray().some(el =&gt; el.open);
+  }
 
   function updateFontWeight() {
-    let collapsed = areAllCollapsed();
-    if (collapsed) {
-      $('.howToMigrateSubsection &gt; a').css('font-weight', 'bold');
-    } else {
-      $('.howToMigrateSubsection &gt; a').css('font-weight', 'normal');
-    }
+    let anyOpen = isAnyOpen();
+    $('.howToMigrateSubsection &gt; details &gt; summary.cfmTitleSection').css(
+      'font-weight', anyOpen ? 'bold' : 'normal'
+    );
   }
 
   // We use an observer because the collapse class is added via js and we might
   // reach some cases were the on click event is handled before the class is added/removed.
   const observer = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
-      if (mutation.type === 'attributes' &amp;&amp; mutation.attributeName === 'class') {
+      if (mutation.type === 'attributes' &amp;&amp; mutation.attributeName === 'open') {
         updateFontWeight(); // Run the function when class is changed
       }
     });
   });
 
-  $('.howToMigrateSubsection &gt; a').each(function() {
-    console.info('Observer registred');
+  $('.howToMigrateSubsection &gt; details').each(function() {
     observer.observe(this, { attributes: true });
   });
 });</code>
