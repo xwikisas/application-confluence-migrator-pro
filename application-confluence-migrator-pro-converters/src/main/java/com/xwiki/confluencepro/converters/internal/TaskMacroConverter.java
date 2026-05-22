@@ -137,6 +137,8 @@ public class TaskMacroConverter extends AbstractTaskConverter
         params.put(TASK_STATUS_PARAMETER, xwikiStatus);
         params.put(TASK_REFERENCE_PARAMETER, xwikiIdParam);
         maybeImportDetailsFromCSV(confluenceTaskId, params);
+        // Let's ignore the uuid parameter
+        markHandledParameter(confluenceParameters, "uuid", true);
         return params;
     }
 
