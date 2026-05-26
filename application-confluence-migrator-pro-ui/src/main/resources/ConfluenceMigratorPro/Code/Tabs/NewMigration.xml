@@ -45,8 +45,8 @@
 #template('attachment_macros.vm')
 {{/velocity}}
 {{velocity}}
-#macro (displaySubsection $icon $key $class $params $summaryClass)
-&lt;summary class="$summaryClass $!class"&gt;
+#macro (displaySubsection $icon $key $class $params)
+&lt;summary class="$cfmTitle $!class"&gt;
   &lt;span&gt;
     &lt;span class="cfmTitleIcon"&gt;
       $services.icon.renderHTML($icon)
@@ -76,72 +76,72 @@
 {{html}}
 &lt;div class="cfmTitle"&gt;
   &lt;details class="cfmPrerequisitesDetails"&gt;
-    #displaySubsection('caret-down', 'confluencepro.prerequisites.title', $prerequisitesComplete, {}, 'cfmTitleSummary')
-  &lt;div class="cfmPrerequisites"&gt;
-  &lt;div class="box infomessage"&gt;
-    &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.prerequisites.hint'))&lt;/p&gt;
-  &lt;/div&gt;
-  &lt;ul&gt;
-  #foreach($prerequisite in $prerequisites)
-    &lt;li&gt;
-      $services.icon.renderHTML($prerequisite.icon)
-      #if ("$prerequisite.url" != '')
-        &lt;a href="$prerequisite.url" target="_blank"&gt;
-          $escapetool.xml($services.localization.render($prerequisite.translationKey, $prerequisite.params))
-        &lt;/a&gt;
-      #else
-        $escapetool.xml($services.localization.render($prerequisite.translationKey, $prerequisite.params))
-      #end
-    &lt;/li&gt;
-  #end
-  &lt;/ul&gt;
+    #displaySubsection('caret-down', 'confluencepro.prerequisites.title', "cfmTitleSummary $prerequisitesComplete", {})
+    &lt;div class="cfmPrerequisites"&gt;
+      &lt;div class="box infomessage"&gt;
+        &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.prerequisites.hint'))&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;ul&gt;
+        #foreach($prerequisite in $prerequisites)
+        &lt;li&gt;
+          $services.icon.renderHTML($prerequisite.icon)
+          #if ("$prerequisite.url" != '')
+            &lt;a href="$prerequisite.url" target="_blank"&gt;
+              $escapetool.xml($services.localization.render($prerequisite.translationKey, $prerequisite.params))
+            &lt;/a&gt;
+          #else
+            $escapetool.xml($services.localization.render($prerequisite.translationKey, $prerequisite.params))
+          #end
+        &lt;/li&gt;
+        #end
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/details&gt;
 &lt;/div&gt;
-&lt;/details&gt;
 {{/html}}
 #end
 #macro (howToMigrateUploadSubsection)
 &lt;div class="howToMigrateSubsection"&gt;
- &lt;details class ="uploadSubsection"&gt;
-  #displaySubsection('caret-down', 'confluencepro.howToMigrate.upload.title', '', {}, 'cfmTitleSection')
+  &lt;details class="uploadSubsection"&gt;
+    #displaySubsection('caret-down', 'confluencepro.howToMigrate.upload.title', 'cfmTitleSection', {})
     &lt;div id="cfmHowToMigrateUploadCollapse"&gt;
-    &lt;div&gt;
-      &lt;button id="facade-upload-button" class="btn btn-primary"&gt;$services.icon.renderHTML('add') $escapetool.xml($services.localization.render('confluencepro.uploadFacadeButton'))&lt;/button&gt;
-      &lt;div id='facade-upload-progress'&gt;&lt;/div&gt;
+      &lt;div&gt;
+        &lt;button id="facade-upload-button" class="btn btn-primary"&gt;$services.icon.renderHTML('add') $escapetool.xml($services.localization.render('confluencepro.uploadFacadeButton'))&lt;/button&gt;
+        &lt;div id='facade-upload-progress'&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      #set ($storeDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.PackagesStore'))
+      #if ($hasEdit || $hasAdmin)
+        ## Hide the form because it comes from the platform, and we cannot customize its appearance. We are using a 'facade' button to trigger the upload via JS.
+        &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
+          &lt;div&gt;
+            ## CSRF prevention
+            &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
+            &lt;div&gt;
+              &lt;div class="fileupload-field"&gt;
+                &lt;label class="sr-only" for="confluenceUploadFile"&gt;$escapetool.xml(
+                    $services.localization.render('core.viewers.attachments.upload.file'))&lt;/label&gt;
+                &lt;input id="confluenceUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems hidden"
+                    data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/form&gt;
+      #end
+
+      #showAttachmentsLiveData($storeDoc 'confluencePackages')
+
+      {{html}}
+        #displayPrefillForm("cmpUploadPackageMigrationSettingsForm")
+      {{/html}}
+
     &lt;/div&gt;
-
-    #set ($storeDoc = $xwiki.getDocument('ConfluenceMigratorPro.Code.PackagesStore'))
-    #if ($hasEdit || $hasAdmin)
-      ## Hide the form because it comes from the platform, and we cannot customize its appearance. We are using a 'facade' button to trigger the upload via JS.
-      &lt;form action="$storeDoc.getURL("upload")" enctype="multipart/form-data" method="post" id="addConfluencePackage"&gt;
-      &lt;div&gt;
-      ## CSRF prevention
-      &lt;input type="hidden" name="form_token" value="$!{services.csrf.getToken()}" /&gt;
-      &lt;div&gt;
-        &lt;div class="fileupload-field"&gt;
-          &lt;label class="sr-only" for="confluenceUploadFile"&gt;$escapetool.xml(
-            $services.localization.render('core.viewers.attachments.upload.file'))&lt;/label&gt;
-          &lt;input id="confluenceUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems hidden"
-            data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" accept=".zip"/&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;/form&gt;
-    #end
-
-    #showAttachmentsLiveData($storeDoc 'confluencePackages')
-
-    {{html}}
-      #displayPrefillForm("cmpUploadPackageMigrationSettingsForm")
-    {{/html}}
-
-  &lt;/div&gt;
   &lt;/details&gt;
 &lt;/div&gt;
 #end
 #macro (howToMigrateServerSection)
 &lt;div class="howToMigrateSubsection"&gt;
-  &lt;details class = "serverSubsection"&gt;
-  #displaySubsection('caret-down', 'confluencepro.howToMigrate.server.title', '', {}, 'cfmTitleSection')
+  &lt;details class="serverSubsection"&gt;
+    #displaySubsection('caret-down', 'confluencepro.howToMigrate.server.title', 'cfmTitleSection', {})
     &lt;div id="cfmHowToMigrateServerCollapse" class="cfmPrerequisites"&gt;
       #set ($escapedMessage = $escapetool.xml($services.localization.render('confluencepro.packages.serverPath')))
       #set ($editURL = $xwiki.getURL("ConfluenceMigratorPro.Migrations.Migration${datetool.date.time}", 'edit', $escapetool.url({
@@ -169,46 +169,45 @@
 #macro (howToMigrateBatches)
 &lt;div class="howToMigrateSubsection"&gt;
   &lt;details class="batchSubsection"&gt;
-  #displaySubsection('caret-down', 'confluencepro.howToMigrate.batch.title', '', {}, 'cfmTitleSection')
+    #displaySubsection('caret-down', 'confluencepro.howToMigrate.batch.title', 'cfmTitleSection', {})
     &lt;div id="cfmHowToMigrateBatchesCollapse" class="cfmPrerequisites"&gt;
-&lt;div&gt;
-  &lt;a href="$xwiki.getURL('ConfluenceMigratorPro.ConfluenceBatches.New')"&gt;
-    &lt;button id="createNewBatchButton" class='btn btn-primary'&gt;$services.icon.renderHTML('add')
-    $escapetool.xml($services.localization.render('confluencemigratorpro.baches.uploadButton'))&lt;/button&gt;
-  &lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-  &lt;br/&gt;
-  &lt;span&gt;$escapetool.xml($services.localization.render('confluencemigratorpro.baches.section.hint'))&lt;/span&gt;
-  &lt;br/&gt;
-&lt;/div&gt;
-  #set ($parameters = $escapetool.url({
-    'resultPage': 'ConfluenceMigratorPro.ConfluenceBatches.Code.BatchesLiveDataSource',
-    'translationPrefix': 'confluencemigratorpro.batches.header.'
-  }))
-  #set ($liveDataConfig= {
-    'meta': {
-      'propertyDescriptors': [
-        {'id': 'pageName', 'displayer': 'html'},
-        {'id': 'totalSize', 'displayer': 'html'},
-        {'id': 'creationDate', 'displayer': 'date'},
-        {'id': 'author', 'displayer': 'html'},
-        {'id': 'actions', 'displayer': 'html'}
-      ],
-      'entryDescriptor': {
-        'idProperty': 'pageName'
-      }
-    }
-  })
+      &lt;div&gt;
+        &lt;a href="$xwiki.getURL('ConfluenceMigratorPro.ConfluenceBatches.New')"&gt;
+          &lt;button id="createNewBatchButton" class='btn btn-primary'&gt;$services.icon.renderHTML('add')
+          $escapetool.xml($services.localization.render('confluencemigratorpro.baches.uploadButton'))&lt;/button&gt;
+        &lt;/a&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;br/&gt;
+        &lt;span&gt;$escapetool.xml($services.localization.render('confluencemigratorpro.baches.section.hint'))&lt;/span&gt;
+        &lt;br/&gt;
+      &lt;/div&gt;
+      #set ($parameters = $escapetool.url({
+        'resultPage': 'ConfluenceMigratorPro.ConfluenceBatches.Code.BatchesLiveDataSource',
+        'translationPrefix': 'confluencemigratorpro.batches.header.'
+      }))
+      #set ($liveDataConfig= {
+        'meta': {
+          'propertyDescriptors': [
+            {'id': 'pageName', 'displayer': 'html'},
+            {'id': 'totalSize', 'displayer': 'html'},
+            {'id': 'creationDate', 'displayer': 'date'},
+            {'id': 'author', 'displayer': 'html'},
+            {'id': 'actions', 'displayer': 'html'}
+          ],
+          'entryDescriptor': {
+            'idProperty': 'pageName'
+          }
+        }
+      })
 
-  {{liveData
-    id="confluenceMigratorProBatches"
-    properties="pageName,totalSize, creationDate, author, actions"
-    source='liveTable'
-    sourceParameters="$parameters"
-    sort='creationDate:desc'
-  	limit="10"}}$jsontool.serialize($liveDataConfig){{/liveData}}
-
+      {{liveData
+        id="confluenceMigratorProBatches"
+        properties="pageName,totalSize, creationDate, author, actions"
+        source='liveTable'
+        sourceParameters="$parameters"
+        sort='creationDate:desc'
+        limit="10"}}$jsontool.serialize($liveDataConfig){{/liveData}}
     &lt;/div&gt;
   &lt;/details&gt;
 &lt;/div&gt;

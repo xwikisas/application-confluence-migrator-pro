@@ -106,7 +106,7 @@ public class ConfluenceHomePage extends ViewPage
     public void openHowToMigrateSubsection(String subsectionClass)
     {
         getDriver().setDriverImplicitWait();
-        WebElement subsections = getDriver().findElement(By.cssSelector(subsectionClass + " > summary"));
+        WebElement subsections = getDriver().findElement(By.cssSelector(subsectionClass + " summary.cfmTitleSection"));
         subsections.click();
     }
 

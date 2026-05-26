@@ -91,18 +91,18 @@
     #end
   &lt;/div&gt;
   ## Advanced options
- &lt;details class="advancedInputFieldsDetails"&gt;
-  &lt;summary class="advanced-fields"&gt;
-    &lt;span class="cfmTitleIcon"&gt;
-      $services.icon.renderHTML('caret-down')
+  &lt;details class="advancedInputFieldsDetails"&gt;
+    &lt;summary class="advanced-fields"&gt;
+      &lt;span class="cfmTitleIcon"&gt;
+        $services.icon.renderHTML('caret-down')
+      &lt;/span&gt;
+      &lt;span class="advanced-fields-label"&gt;
+        $escapetool.xml($services.localization.render('confluencepro.job.question.advanced.link'))
+      &lt;/span&gt;
+    &lt;/summary&gt;
+    &lt;span class="xform confluence-migrator" id="advancedInputFields"&gt;
+      #displayMigrationParameterFormFields
     &lt;/span&gt;
-    &lt;span class="advanced-fields-label"&gt;
-      $escapetool.xml($services.localization.render('confluencepro.job.question.advanced.link'))
-    &lt;/span&gt;
-  &lt;/summary&gt;
-  &lt;span class="xform confluence-migrator" id="advancedInputFields"&gt;
-    #displayMigrationParameterFormFields
-  &lt;/span&gt;
   &lt;/details&gt;
   {{/html}}
 
@@ -372,18 +372,19 @@
         #set ($spaceHomeEntityReference = $services.modelvalidation.transformEntityReference($services.model.createDocumentReference("WebHome", $spaceRef)))
         #set ($spaceHomeRef = $services.model.serialize($spaceHomeEntityReference))
         &lt;li&gt;
-        &lt;details class="imported-space"&gt;
-          &lt;summary&gt;
-            $services.icon.renderHTML('caret-down')
-            &lt;p class="sr-only"&gt;$services.localization.render("cfm.sr-only.migrationSheet.expandMigratedSpaces")&lt;p&gt;
-          &lt;/a&gt;
-          [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$services.rendering.escape($spaceHomeRef, $xwiki.currentContentSyntaxId)]]
-          &lt;/summary&gt;
-          #set ($discard = $options.put('root', "document:$spaceHomeRef"))
-          #set ($discard = $options.put('links', 'true'))
-          #set ($discard = $options.put('compact', 'true'))
-          #documentTree($options)
-         &lt;/details&gt;
+          &lt;details class="imported-space"&gt;
+            &lt;summary&gt;
+              $services.icon.renderHTML('caret-down')
+              &lt;p class="sr-only"&gt;$services.localization.render("cfm.sr-only.migrationSheet.expandMigratedSpaces")&lt;p&gt;
+              [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$services.rendering.escape($spaceHomeRef, $xwiki.currentContentSyntaxId)]]
+            &lt;/summary&gt;
+            #set ($discard = $options.put('root', "document:$spaceHomeRef"))
+            #set ($discard = $options.put('links', 'true'))
+            #set ($discard = $options.put('compact', 'true'))
+            &lt;div id="importedSpace${foreach.count}" class="imported-space"&gt;
+              #documentTree($options)
+            &lt;/div&gt;
+          &lt;/details&gt;
         &lt;/li&gt;
       #end
     &lt;/ul&gt;
