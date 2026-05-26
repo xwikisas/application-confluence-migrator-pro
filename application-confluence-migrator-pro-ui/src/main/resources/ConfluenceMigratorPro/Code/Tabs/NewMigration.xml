@@ -104,6 +104,7 @@
 &lt;div class="howToMigrateSubsection"&gt;
   &lt;details class="uploadSubsection"&gt;
     #displaySubsection('caret-down', 'confluencepro.howToMigrate.upload.title', 'cfmTitleSection', {})
+    &lt;br/&gt;
     &lt;div id="cfmHowToMigrateUploadCollapse"&gt;
       &lt;div&gt;
         &lt;button id="facade-upload-button" class="btn btn-primary"&gt;$services.icon.renderHTML('add') $escapetool.xml($services.localization.render('confluencepro.uploadFacadeButton'))&lt;/button&gt;
@@ -142,6 +143,7 @@
 &lt;div class="howToMigrateSubsection"&gt;
   &lt;details class="serverSubsection"&gt;
     #displaySubsection('caret-down', 'confluencepro.howToMigrate.server.title', 'cfmTitleSection', {})
+    &lt;br/&gt;
     &lt;div id="cfmHowToMigrateServerCollapse" class="cfmPrerequisites"&gt;
       #set ($escapedMessage = $escapetool.xml($services.localization.render('confluencepro.packages.serverPath')))
       #set ($editURL = $xwiki.getURL("ConfluenceMigratorPro.Migrations.Migration${datetool.date.time}", 'edit', $escapetool.url({
@@ -170,6 +172,7 @@
 &lt;div class="howToMigrateSubsection"&gt;
   &lt;details class="batchSubsection"&gt;
     #displaySubsection('caret-down', 'confluencepro.howToMigrate.batch.title', 'cfmTitleSection', {})
+    &lt;br/&gt;
     &lt;div id="cfmHowToMigrateBatchesCollapse" class="cfmPrerequisites"&gt;
       &lt;div&gt;
         &lt;a href="$xwiki.getURL('ConfluenceMigratorPro.ConfluenceBatches.New')"&gt;
@@ -208,6 +211,7 @@
         sourceParameters="$parameters"
         sort='creationDate:desc'
         limit="10"}}$jsontool.serialize($liveDataConfig){{/liveData}}
+        
     &lt;/div&gt;
   &lt;/details&gt;
 &lt;/div&gt;
