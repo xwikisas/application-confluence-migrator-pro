@@ -365,7 +365,7 @@ details[open] &gt; summary .cfmTitleIcon {
   margin : 20px;
 }
 
-.howToMigrateSubsection &gt; a
+.howToMigrateSubsection
 {
   color: @text-color;
 }
@@ -387,13 +387,6 @@ details[open] &gt; summary .cfmTitleIcon {
 .cmpServerParametersForm label {
   font-weight: normal;
 }
-.howToMigrateSubsection {
-  margin : 20px;
-}
-
-.howToMigrateSubsection &gt; a {
-  color: @text-color;
-}
 
 .confluence-pro-tab-container-new-migration &gt; p {
   display: none !important;
@@ -408,6 +401,16 @@ summary.cfmTitleSection {
 details[open] &gt; summary.cfmTitleSection {
   font-weight: bold;
   text-decoration: underline;
+}
+
+#xwikicontent:has(details[open]) .cfmTitleSection {
+  font-weight: bold;
+}
+
+#cfmHowToMigrateUploadCollapse,
+#cfmHowToMigrateServerCollapse,
+#cfmHowToMigrateBatchesCollapse {
+  margin-top: 1em;
 }</code>
     </property>
     <property>
