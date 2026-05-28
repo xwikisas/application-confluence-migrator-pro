@@ -325,20 +325,29 @@
   list-style: none;
 }
 
-.cfmTitle::after {
+.cfmTitleSummary {
+  font-size:1.7rem;
+  line-height:1.3rem;
+  margin:0 0 1rem 0;
+}
+
+.cfmTitleSummary::after {
   font-style: italic;
   color: #bbb;
   margin-left: 0.5em;
 }
 
-.cfmTitle.completed::after {
+.cfmTitleSummary.completed::after {
   content: "(${services.localization.render('confluencepro.prerequisites.completed')})"
 }
 
-.cfmTitle.incomplete::after {
+.cfmTitleSummary.incomplete::after {
   content: "(${services.localization.render('confluencepro.prerequisites.incomplete')})"
 }
 
+details[open] &gt; summary .cfmTitleIcon {
+  transform: rotate(180deg);
+}
 
 #confluencePackages .attachmentActions a:nth-last-child(2)
 {
@@ -356,7 +365,7 @@
   margin : 20px;
 }
 
-.howToMigrateSubsection &gt; a
+.howToMigrateSubsection
 {
   color: @text-color;
 }
@@ -378,16 +387,30 @@
 .cmpServerParametersForm label {
   font-weight: normal;
 }
-.howToMigrateSubsection {
-  margin : 20px;
-}
-
-.howToMigrateSubsection &gt; a {
-  color: @text-color;
-}
 
 .confluence-pro-tab-container-new-migration &gt; p {
   display: none !important;
+}
+
+summary.cfmTitleSection {
+  cursor: pointer;
+  list-style: none;
+  font-weight: normal;
+}
+
+details[open] &gt; summary.cfmTitleSection {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+#xwikicontent:has(details[open]) .cfmTitleSection {
+  font-weight: bold;
+}
+
+#cfmHowToMigrateUploadCollapse,
+#cfmHowToMigrateServerCollapse,
+#cfmHowToMigrateBatchesCollapse {
+  margin-top: 1em;
 }</code>
     </property>
     <property>

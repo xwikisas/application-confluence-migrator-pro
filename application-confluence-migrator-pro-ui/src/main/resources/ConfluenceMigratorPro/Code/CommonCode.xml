@@ -680,9 +680,7 @@ require(['jquery', 'xwiki-l10n!confluencemigratorpro.javascript'], function ($, 
   transition: all 0.5s;
 }
 
-.cfmTitleIcon.active {
-  -webkit-transform: rotate(180deg);
-  -moz-transform: rotate(180deg);
+details[open] &gt; summary .cfmTitleIcon {
   transform: rotate(180deg);
 }
 
@@ -701,6 +699,22 @@ require(['jquery', 'xwiki-l10n!confluencemigratorpro.javascript'], function ($, 
 
 .specified-migration.migrationOptionsSelect {
   width: fit-content;
+}
+
+summary.advanced-fields {
+  color: var(--link-color, #0088cc);
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+summary.advanced-fields:hover {
+  color: var(--link-hover-color, #005580);
+}
+
+summary.advanced-fields .advanced-fields-label {
+  text-decoration: underline;
 }</code>
     </property>
     <property>

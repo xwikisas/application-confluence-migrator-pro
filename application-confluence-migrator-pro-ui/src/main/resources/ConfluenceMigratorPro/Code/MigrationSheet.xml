@@ -90,15 +90,19 @@
     #end
   &lt;/div&gt;
   ## Advanced options
-  &lt;a data-toggle="collapse" href="#advancedInputFields" role="button" aria-expanded="false" aria-controls="advancedInputFields" class="advanced-fields collapsed"&gt;
-    &lt;div class="cfmTitleIcon"&gt;
-      $services.icon.renderHTML('caret-down')
-    &lt;/div&gt;
-    $escapetool.xml($services.localization.render('confluencepro.job.question.advanced.link'))
-  &lt;/a&gt;
-  &lt;div class="xform collapse confluence-migrator-collapse" id="advancedInputFields"&gt;
-    #displayMigrationParameterFormFields
-  &lt;/div&gt;
+  &lt;details class="advancedInputFieldsDetails"&gt;
+    &lt;summary class="advanced-fields"&gt;
+      &lt;span class="cfmTitleIcon"&gt;
+        $services.icon.renderHTML('caret-down')
+      &lt;/span&gt;
+      &lt;span class="advanced-fields-label"&gt;
+        $escapetool.xml($services.localization.render('confluencepro.job.question.advanced.link'))
+      &lt;/span&gt;
+    &lt;/summary&gt;
+    &lt;span class="xform confluence-migrator" id="advancedInputFields"&gt;
+      #displayMigrationParameterFormFields
+    &lt;/span&gt;
+  &lt;/details&gt;
   {{/html}}
 
 #end
@@ -303,17 +307,19 @@
         #set ($spaceHomeEntityReference = $services.modelvalidation.transformEntityReference($services.model.createDocumentReference("WebHome", $spaceRef)))
         #set ($spaceHomeRef = $services.model.serialize($spaceHomeEntityReference))
         &lt;li&gt;
-          &lt;a role="button" data-toggle="collapse" href="#importedSpace${foreach.count}" aria-expanded="false" aria-controls="importedSpace${foreach.count}"&gt;
-            $services.icon.renderHTML('caret-down')
-            &lt;p class="sr-only"&gt;$services.localization.render("cfm.sr-only.migrationSheet.expandMigratedSpaces")&lt;p&gt;
-          &lt;/a&gt;
-          [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$services.rendering.escape($spaceHomeRef, $xwiki.currentContentSyntaxId)]]
-          #set ($discard = $options.put('root', "document:$spaceHomeRef"))
-          #set ($discard = $options.put('links', 'true'))
-          #set ($discard = $options.put('compact', 'true'))
-          &lt;div id="importedSpace${foreach.count}" class="imported-space collapse"&gt;
-            #documentTree($options)
-          &lt;/div&gt;
+          &lt;details class="imported-space"&gt;
+            &lt;summary&gt;
+              $services.icon.renderHTML('caret-down')
+              &lt;p class="sr-only"&gt;$services.localization.render("cfm.sr-only.migrationSheet.expandMigratedSpaces")&lt;p&gt;
+              [[$services.rendering.escape($services.rendering.escape($space, $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;$services.rendering.escape($spaceHomeRef, $xwiki.currentContentSyntaxId)]]
+            &lt;/summary&gt;
+            #set ($discard = $options.put('root', "document:$spaceHomeRef"))
+            #set ($discard = $options.put('links', 'true'))
+            #set ($discard = $options.put('compact', 'true'))
+            &lt;div id="importedSpace${foreach.count}" class="imported-space"&gt;
+              #documentTree($options)
+            &lt;/div&gt;
+          &lt;/details&gt;
         &lt;/li&gt;
       #end
     &lt;/ul&gt;
@@ -574,8 +580,8 @@
       #set ($docRef = $services.model.resolveDocument($entry.key))
     #end
     &lt;li class="cfm-problem-page"&gt;
-      &lt;div class="cfm-page"&gt;
-        &lt;a role="button" data-toggle="collapse" href="#cfmPage-${category}-${foreach.count}" aria-expanded="false" aria-controls="cfmPage-${category}-${foreach.count}"&gt;
+      &lt;details class="cfm-page-details"&gt;
+        &lt;summary class="cfm-page"&gt;
           &lt;div class="cfmTitleIcon"&gt;
             $services.icon.renderHTML('caret-down')
             &lt;span class="sr-only"&gt;$services.localization.render("cfm.sr-only.migrationSheet.missingReferences")&lt;span&gt;
@@ -586,9 +592,8 @@
         #else
           $escapetool.xml($entry.key)
         #end
-      &lt;/div&gt;
-      &lt;div id="cfmPage-${category}-${foreach.count}" class="cfm-problems collapse"&gt;
-        &lt;ul&gt;
+      &lt;/summary&gt;
+        &lt;ul class="cfm-problems"&gt;
           #foreach ($problem in $entry.value)
             &lt;li class="cfm-problem"&gt;
               #set ($msg = $problem.get("msg"))
@@ -603,7 +608,7 @@
             &lt;/li&gt;
           #end
         &lt;/ul&gt;
-      &lt;/div&gt;
+      &lt;/details&gt;
     &lt;/li&gt;
   #end
   &lt;/ul&gt;
