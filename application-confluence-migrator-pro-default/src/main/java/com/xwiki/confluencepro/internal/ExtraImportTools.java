@@ -21,6 +21,7 @@ package com.xwiki.confluencepro.internal;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -85,7 +86,8 @@ public class ExtraImportTools
         confluenceProperties.setGroupMapping(groupMapping);
         confluenceProperties.setUserFormat(userFormat);
         confluenceProperties.setGroupFormat(groupFormat);
-        ((DefaultConfluenceInputContext) confluenceInputContext).set(null, confluenceProperties);
+        ((DefaultConfluenceInputContext) confluenceInputContext).set(null, confluenceProperties,
+                Map.of());
     }
 
     /**
