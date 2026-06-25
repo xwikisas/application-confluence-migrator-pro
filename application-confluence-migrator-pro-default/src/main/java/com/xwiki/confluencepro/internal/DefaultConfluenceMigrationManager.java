@@ -46,6 +46,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiAttachmentContent;
+import com.xpn.xwiki.store.DatabaseProduct;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
@@ -518,12 +519,24 @@ public class DefaultConfluenceMigrationManager implements ConfluenceMigrationMan
 
     private Map<String, List<String>> getPermissionIssues(String root, Collection<String> docs)
     {
-        String wiki = getWiki(root);
-
         Map<String, List<String>> permissionIssues = new HashMap<>(2);
-        putMissingSubjects(wiki, docs, permissionIssues, "groups");
-        putMissingSubjects(wiki, docs, permissionIssues, "users");
+        if (checkNotOracle("Detecting missing users and groups from imported rights")) {
+            String wiki = getWiki(root);
+            putMissingSubjects(wiki, docs, permissionIssues, "groups");
+            putMissingSubjects(wiki, docs, permissionIssues, "users");
+        }
         return permissionIssues;
+    }
+
+    private boolean checkNotOracle(String feature)
+    {
+        DatabaseProduct db = contextProvider.get().getWiki().getHibernateStore().getDatabaseProductName();
+        if (DatabaseProduct.ORACLE.equals(db)) {
+            logger.warn("{} isn't possible on Oracle database at this time", feature);
+            return false;
+        }
+
+        return true;
     }
 
     private String getWiki(String root)
