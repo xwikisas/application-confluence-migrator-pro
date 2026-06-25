@@ -30,18 +30,18 @@ import java.util.Collections;
  * @since 1.12.0
  * @version $Id$
  */
-public class ConfluenceObjectsOnlyInstanceOutputFilterStreamDescriptor implements FilterStreamDescriptor
+public class ConfluenceRightsOnlyInstanceOutputFilterStreamDescriptor implements FilterStreamDescriptor
 {
     @Override
     public String getName()
     {
-        return "Confluence Migrator Pro objects only output stream";
+        return "Confluence Migrator Pro rights only output stream";
     }
 
     @Override
     public String getDescription()
     {
-        return "Add objects to pages, ignoring everything else, instead of overwriting them";
+        return "Add rights to pages, ignoring everything else, instead of overwriting them";
     }
 
     @Override

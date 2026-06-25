@@ -25,7 +25,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.internal.filter.output.EntityOutputFilterStream;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.BaseObjectReference;
-import org.apache.commons.lang3.reflect.TypeUtils;
+import org.jodconverter.core.util.StringUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
@@ -48,14 +48,17 @@ import org.xwiki.properties.ConverterManager;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
-import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 /**
  * An output filter stream that only keeps objects, keeping documents as is.
@@ -68,14 +71,42 @@ import java.util.Map;
  *  - com.xpn.xwiki.internal.filter.output.BaseObjectOutputFilterStream
  */
 @Component
-@Named(ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT)
+@Named(ConfluenceRightsOnlyInstanceOutputFilterStream.ROLEHINT)
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
-public class ConfluenceObjectsOnlyInstanceOutputFilterStream
+public class ConfluenceRightsOnlyInstanceOutputFilterStream
     implements OutputFilterStream, EntityOutputFilterStream<Object>, OutputFilterStreamFactory
 {
-    protected static final String ROLEHINT = "confluence+objectsonly";
-    private static final String WEB_PREFERENCES = "WebPreferences";
-    private static final String WEB_HOME = "WebHome";
+    protected static final String ROLEHINT = "confluence+rightsonly";
+
+    private static final class FilteredObject
+    {
+        private final String name;
+        private final FilterEventParameters parameters;
+        private final List<FilteredObjectField> fields = new ArrayList<>();
+
+        FilteredObject(String name, FilterEventParameters parameters)
+        {
+            this.name = name;
+            this.parameters = parameters;
+        }
+
+        void add(FilteredObjectField p)
+        {
+            this.fields.add(p);
+        }
+    }
+
+    private static final class FilteredObjectField
+    {
+        private final String name;
+        private final Object value;
+
+        FilteredObjectField(String name, Object value)
+        {
+            this.name = name;
+            this.value = value;
+        }
+    }
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -98,9 +129,9 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
 
     private EntityReference currentEntityReference;
 
-    private BaseObject currentObject;
+    private FilteredObject currentObject;
 
-    private final List<BaseObject> currentObjects = new ArrayList<>();
+    private List<FilteredObject> currentObjects;
 
     private DocumentInstanceOutputProperties properties;
 
@@ -154,7 +185,7 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
     public void onWikiAttachment(String name, InputStream content, Long size, FilterEventParameters parameters)
         throws FilterException
     {
-        // ignore
+        // ignoreObject
     }
 
     @Override
@@ -192,19 +223,26 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
     @Override
     public void beginWikiDocumentLocale(Locale locale, FilterEventParameters parameters) throws FilterException
     {
-        // ignore
+        currentObjects = null;
+        EntityReference wiki = currentEntityReference.extractReference(EntityType.WIKI);
+        if (wiki == null) {
+            currentEntityReference = currentEntityReference.appendParent(contextProvider.get().getWikiReference());
+        }
+        currentEntityReference = new DocumentReference(currentEntityReference, locale);
     }
 
     @Override
     public void endWikiDocumentLocale(Locale locale, FilterEventParameters parameters) throws FilterException
     {
-        // ignore
+        saveObjectsInCurrentDocumentNoThrow();
+        currentEntityReference = new DocumentReference(currentEntityReference, (Locale) null);
     }
 
     @Override
     public void beginWikiDocumentRevision(String revision, FilterEventParameters parameters) throws FilterException
     {
-        // ignore
+        // We only change the objects of the last revision
+        currentObjects = null;
     }
 
     @Override
@@ -241,126 +279,111 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
     public void beginWikiDocument(String name, FilterEventParameters parameters) throws FilterException
     {
         this.currentEntityReference = new EntityReference(name, EntityType.DOCUMENT, this.currentEntityReference);
-        currentObjects.clear();
+        currentObjects = null;
     }
 
     @Override
     public void endWikiDocument(String name, FilterEventParameters parameters) throws FilterException
     {
-        if (!currentObjects.isEmpty()) {
-            XWikiDocument doc = null;
-            EntityReference docRef = this.currentEntityReference;
-            if (!WEB_PREFERENCES.equals(docRef.getName()) && !WEB_HOME.equals(docRef.getName())) {
-                EntityReference spaceRef = new EntityReference(this.currentEntityReference.getName(), EntityType.SPACE,
-                    this.currentEntityReference.getParent());
-                docRef = new EntityReference(WEB_HOME, EntityType.DOCUMENT, spaceRef);
-            }
-            try {
-                doc = contextProvider.get().getWiki().getDocument(docRef, contextProvider.get());
-            } catch (XWikiException e) {
-                logger.error("Could not get document [{}]", docRef, e);
-            }
-
-            if (doc != null) {
-                for (BaseObject o : currentObjects) {
-                    doc.removeXObjects(o.getXClassReference());
-                }
-
-                for (BaseObject o : currentObjects) {
-                    doc.addXObject(o);
-                }
-
-                try {
-                    contextProvider.get().getWiki().saveDocument(doc, contextProvider.get());
-                    logger.info("Saved document [{}]", docRef);
-                } catch (XWikiException e) {
-                    logger.error("Could not save document [{}]", docRef, e);
-                }
-            }
-
-            currentObjects.clear();
-        }
-
+        saveObjectsInCurrentDocumentNoThrow();
         this.currentEntityReference = this.currentEntityReference.getParent();
     }
 
-    private <T> T get(Type type, String key, FilterEventParameters parameters, T def)
+    private void saveObjectsInCurrentDocumentNoThrow()
     {
-        if (parameters == null) {
-            return def;
+        try {
+            saveObjectsInCurrentDocument();
+        } catch (Exception e) {
+            // saveObjectsInCurrentDocument is only supposed to throw XWikiException, but setting object fields can
+            // throw NPE if the base class isn't found in the wiki.
+            logger.error("Failed to update document [{}]", currentEntityReference, e);
         }
-
-        if (!parameters.containsKey(key)) {
-            return def;
-        }
-
-        Object value = parameters.get(key);
-
-        if (value == null) {
-            return def;
-        }
-
-        if (TypeUtils.isInstance(value, type)) {
-            return (T) value;
-        }
-
-        return this.converter.convert(type, value);
     }
 
-    private int getInt(String key, FilterEventParameters parameters, int def)
+    private void saveObjectsInCurrentDocument() throws XWikiException
     {
-        return get(int.class, key, parameters, def);
-    }
+        if (currentObjects == null) {
+            // no object to save. We don't remove existing objects. Nothing to do.
+            return;
+        }
 
-    private DocumentReference getDocumentReference(String key, FilterEventParameters parameters,
-        DocumentReference def)
-    {
-        DocumentReference result;
-        if (parameters == null) {
-            result = def;
-        } else if (!parameters.containsKey(key)) {
-            result = def;
-        } else {
-            Object value = parameters.get(key);
-            if (value == null) {
-                result = null;
-            } else if (TypeUtils.isInstance(value, Object.class)) {
-                result = (DocumentReference) value;
+        XWikiContext context = contextProvider.get();
+        XWikiDocument doc = context.getWiki().getDocument(currentEntityReference, context).clone();
+
+        Map<EntityReference, Queue<BaseObject>> xobjectsByClass = new HashMap<>();
+        for (FilteredObject o : currentObjects) {
+            // We ignore PARAMETER_NUMBER and PARAMETER_GUID, this code is already complicated enough,
+            // and we don't use that in the migrator
+            EntityReference classReference = getClassReference(o.name, o.parameters);
+            List<BaseObject> xobjectsWithNulls = doc.getXObjects(classReference);
+            Queue<BaseObject> xobjects = xobjectsByClass.get(classReference);
+            if (xobjects == null) {
+                xobjects = new ArrayDeque<>(xobjectsWithNulls.size());
+                xobjectsByClass.put(classReference, xobjects);
+                for (BaseObject object : xobjectsWithNulls) {
+                    if (object != null) {
+                        xobjects.offer(object);
+                    }
+                }
+            }
+            BaseObject obj = xobjects.poll();
+            Set<String> fieldNames;
+            if (obj == null) {
+                fieldNames = new HashSet<>();
+                obj = doc.newXObject(classReference, context);
             } else {
-                result = (DocumentReference) value;
+                fieldNames = new HashSet<>(obj.getPropertyList());
+            }
+
+            updateFields(o, fieldNames, obj);
+        }
+
+        // We remove all the existing objects that we didn't reuse of classes we saw
+        for (Queue<BaseObject> remainingObjects : xobjectsByClass.values()) {
+            for (BaseObject o : remainingObjects) {
+                doc.removeXObject(o);
             }
         }
 
-        return result;
+        try {
+            context.getWiki().saveDocument(doc, "Reimport objects", context);
+        } catch (XWikiException e) {
+            logger.error("Could not save document [{}]", currentEntityReference, e);
+        }
     }
 
-    private EntityReference getEntityReference(String key, FilterEventParameters parameters, EntityReference def)
+    private void updateFields(FilteredObject o, Set<String> fieldNames, BaseObject obj)
     {
-        if (parameters == null) {
-            return def;
+        XWikiContext context = contextProvider.get();
+        for (FilteredObjectField f : o.fields) {
+            fieldNames.remove(f.name);
+            obj.set(f.name, f.value, context);
         }
 
-        if (!parameters.containsKey(key)) {
-            return def;
+        // We remove fields that are not set
+        for (String fieldName : fieldNames) {
+            obj.removeField(fieldName);
         }
+    }
 
-        Object value = parameters.get(key);
-
-        if (value == null) {
-            return null;
-        }
-
-        if (TypeUtils.isInstance(value, Object.class)) {
+    private EntityReference getClassReference(String className, FilterEventParameters parameters)
+    {
+        Object value = parameters.get(WikiObjectFilter.PARAMETER_CLASS_REFERENCE);
+        if (value instanceof EntityReference) {
             return (EntityReference) value;
         }
 
-        return (EntityReference) value;
+        if (value instanceof String) {
+            return documentStringResolver.resolve((String) value, EntityType.DOCUMENT);
+        }
+
+        if (StringUtils.isNotEmpty(className)) {
+            return documentStringResolver.resolve(className, EntityType.DOCUMENT);
+        }
+
+        return new BaseObjectReference(this.currentEntityReference).getXClassReference();
     }
 
-    private String getString(String key, FilterEventParameters parameters, String def)
-    {
-        return get(String.class, key, parameters, def);
-    }
 
     @Override
     public void beginWikiObject(String name, FilterEventParameters parameters) throws FilterException
@@ -370,39 +393,22 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
         }
 
         this.currentEntityReference = new EntityReference(name, EntityType.OBJECT, this.currentEntityReference);
-        currentObject = new BaseObject();
-
-        if (parameters.containsKey(WikiObjectFilter.PARAMETER_NAME)) {
-            currentObject
-                .setDocumentReference(getDocumentReference(WikiObjectFilter.PARAMETER_NAME, parameters, null));
+        if (!"XWiki.XWikiGlobalRights".equals(name) && !"XWiki.XWikiRights".equals(name)) {
+            // We only import rights
+            return;
         }
 
-        int number = getInt(WikiObjectFilter.PARAMETER_NUMBER, parameters, -1);
-
-        EntityReference classReference =
-            getEntityReference(WikiObjectFilter.PARAMETER_CLASS_REFERENCE, parameters, null);
-        if (classReference == null) {
-            BaseObjectReference reference = new BaseObjectReference(this.currentEntityReference);
-
-            classReference = reference.getXClassReference();
-
-            if (number < 0 && reference.getObjectNumber() != null) {
-                number = reference.getObjectNumber();
-            }
+        if (currentObjects == null) {
+            currentObjects = new ArrayList<>();
         }
-        currentObject.setXClassReference(classReference);
-        currentObject.setNumber(number);
-        currentObject.setGuid(getString(WikiObjectFilter.PARAMETER_GUID, parameters, null));
+        currentObject = new FilteredObject(name, parameters);
+        currentObjects.add(currentObject);
     }
 
     @Override
     public void endWikiObject(String name, FilterEventParameters parameters) throws FilterException
     {
-        if (currentObject != null) {
-            currentObjects.add(currentObject);
-            currentObject = null;
-        }
-
+        currentObject = null;
         if (this.currentEntityReference.getType() == EntityType.OBJECT) {
             this.currentEntityReference = this.currentEntityReference.getParent();
         }
@@ -412,7 +418,7 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
     public void onWikiObjectProperty(String name, Object value, FilterEventParameters parameters) throws FilterException
     {
         if (currentObject != null) {
-            currentObject.set(name, value, contextProvider.get());
+            currentObject.add(new FilteredObjectField(name, value));
         }
     }
 
@@ -425,23 +431,23 @@ public class ConfluenceObjectsOnlyInstanceOutputFilterStream
     @Override
     public FilterStreamDescriptor getDescriptor()
     {
-        return new ConfluenceObjectsOnlyInstanceOutputFilterStreamDescriptor();
+        return new ConfluenceRightsOnlyInstanceOutputFilterStreamDescriptor();
     }
 
     @Override
-    public Collection<Class<?>> getFilterInterfaces() throws FilterException
+    public Collection<Class<?>> getFilterInterfaces()
     {
         return null;
     }
 
     @Override
-    public OutputFilterStream createOutputFilterStream(Map<String, Object> properties) throws FilterException
+    public OutputFilterStream createOutputFilterStream(Map<String, Object> properties)
     {
         return this;
     }
 
     @Override
-    public void close() throws IOException
+    public void close()
     {
         // ignore
     }

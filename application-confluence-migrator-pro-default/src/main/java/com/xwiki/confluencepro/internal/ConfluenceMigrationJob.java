@@ -140,7 +140,7 @@ public class ConfluenceMigrationJob
 
         String outputStreamRoleHint;
         if (rightOnly) {
-            outputStreamRoleHint = ConfluenceObjectsOnlyInstanceOutputFilterStream.ROLEHINT;
+            outputStreamRoleHint = ConfluenceRightsOnlyInstanceOutputFilterStream.ROLEHINT;
         } else if (attachmentsOnly) {
             outputStreamRoleHint = ConfluenceAttachmentsOnlyInstanceOutputFilterStream.ROLEHINT;
         } else {

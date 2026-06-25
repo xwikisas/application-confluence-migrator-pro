@@ -8,7 +8,7 @@
   <suppress checks="ClassFanOutComplexity"
             files="src/main/java/com/xwiki/confluencepro/internal/DefaultConfluenceMigrationManager\.java$"/>
   <suppress checks="ClassFanOutComplexity"
-            files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceObjectsOnlyInstanceOutputFilterStream\.java$"/>
+            files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceRightsOnlyInstanceOutputFilterStream\.java$"/>
   <suppress checks="ClassFanOutComplexity"
             files="src/main/java/com/xwiki/confluencepro/internal/ConfluenceAttachmentsOnlyInstanceOutputFilterStream\.java$"/>
   <suppress checks="ClassFanOutComplexity"
