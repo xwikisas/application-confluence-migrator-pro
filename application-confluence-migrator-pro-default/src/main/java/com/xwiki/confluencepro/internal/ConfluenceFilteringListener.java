@@ -117,7 +117,7 @@ public class ConfluenceFilteringListener extends AbstractEventListener
 
         if (status.isCanceled()) {
             ev.cancel();
-        } else if (isPropertyEnabled(status, ONLY_LINK_MAPPING)) {
+        } else if (isOutputPropertyEnabled(status, ONLY_LINK_MAPPING)) {
             // This is a link mapping only phase, let's store the link mapping and cancel the import
             updateLinkMappingAndLookForCollisions(lms);
             ev.cancel();
@@ -131,7 +131,7 @@ public class ConfluenceFilteringListener extends AbstractEventListener
                 lms.removeSpaces(status.getSpaces());
             }
             updateLinkMappingAndLookForCollisions(null);
-        } else if (isPropertyEnabled(status, "saveLinkMapping")) {
+        } else if (isOutputPropertyEnabled(status, "saveLinkMapping")) {
             // We are asked to save the link mapping and storeConfluenceDetailsEnabled is disabled, let's store the
             // link mapping
             if (lms != null) {
@@ -170,13 +170,14 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         }
     }
 
-    private static boolean shouldAskQuestions(ConfluenceMigrationJobStatus status, Job job, Collection<String> spaces)
+    private boolean shouldAskQuestions(ConfluenceMigrationJobStatus status, Job job, Collection<String> spaces)
     {
         if (spaces.size() < 2) {
             return false;
         }
 
-        if (isPropertyEnabled(status, "skipQuestions") || isPropertyEnabled(status, ONLY_LINK_MAPPING))
+        if (isOutputPropertyEnabled(status, "skipQuestions")
+            || isOutputPropertyEnabled(status, ONLY_LINK_MAPPING))
         {
             return false;
         }
@@ -188,16 +189,32 @@ public class ConfluenceFilteringListener extends AbstractEventListener
         return request.isInteractive();
     }
 
-    private static boolean isPropertyEnabled(ConfluenceMigrationJobStatus jobStatusToAsk, String propertyName)
+    private boolean isOutputPropertyEnabled(ConfluenceMigrationJobStatus jobStatusToAsk, String propertyName)
     {
-        String v = (String) jobStatusToAsk.getRequest().getOutputProperties().get(propertyName);
-        return isTrue(v);
+        return isPropertyEnabled(jobStatusToAsk.getRequest().getOutputProperties(), propertyName);
     }
 
-    private static boolean isInputPropertyEnabled(ConfluenceMigrationJobStatus jobStatusToAsk, String propertyName)
+    private boolean isInputPropertyEnabled(ConfluenceMigrationJobStatus jobStatusToAsk, String propertyName)
     {
-        String v = (String) jobStatusToAsk.getRequest().getInputProperties().get(propertyName);
-        return isTrue(v);
+        return isPropertyEnabled(jobStatusToAsk.getRequest().getInputProperties(), propertyName);
+    }
+
+    private boolean isPropertyEnabled(Map<String, Object> properties, String propertyName)
+    {
+        Object v = properties.get(propertyName);
+        if (v instanceof String) {
+            return isTrue((String) v);
+        }
+
+        if (v instanceof Boolean) {
+            return (Boolean) v;
+        }
+
+        if (v != null) {
+            logger.error("Failed to determine if [{}]'s value is truthy, will assume false", propertyName);
+        }
+
+        return false;
     }
 
     static boolean isTrue(String v)
