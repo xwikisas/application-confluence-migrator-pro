@@ -149,17 +149,18 @@ public class ConfluenceReferenceFixerScriptService implements ScriptService
 
     private List<EntityReference> getMigrations(Document statusDocument)
     {
-        List<EntityReference> migrationReferences = Collections.emptyList();
         List<String> migrations = (List<String>) statusDocument.getValue("migrations");
         if (CollectionUtils.isNotEmpty(migrations)) {
+            List<EntityReference> migrationReferences = new ArrayList<>(migrations.size());
             for (String migration : migrations) {
-                migrationReferences = new ArrayList<>(migrations.size());
                 if (StringUtils.isNotEmpty(migration)) {
                     migrationReferences.add(resolver.resolve(migration, EntityType.DOCUMENT));
                 }
             }
+            return migrationReferences;
+        } else {
+            return Collections.emptyList();
         }
-        return migrationReferences;
     }
 
     /**
