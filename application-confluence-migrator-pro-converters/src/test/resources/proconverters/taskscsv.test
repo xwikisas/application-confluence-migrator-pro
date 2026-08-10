@@ -33,10 +33,6 @@
               <date>2023-03-06 12:15:05.149 UTC</date>
             </entry>
             <entry>
-              <string>revision_comment</string>
-              <string></string>
-            </entry>
-            <entry>
               <string>title</string>
               <string>TestTaskPage</string>
             </entry>
@@ -68,10 +64,6 @@
             <entry>
               <string>revision_date</string>
               <date>2023-03-06 12:16:09.600 UTC</date>
-            </entry>
-            <entry>
-              <string>revision_comment</string>
-              <string></string>
             </entry>
             <entry>
               <string>title</string>
@@ -114,10 +106,6 @@ This task was created at 14:16! created by the assignee {{mention reference="XWi
               <date>2023-03-06 12:17:13.317 UTC</date>
             </entry>
             <entry>
-              <string>revision_comment</string>
-              <string></string>
-            </entry>
-            <entry>
               <string>title</string>
               <string>TestTaskPage</string>
             </entry>
@@ -156,10 +144,6 @@ This task was created at 14:16! created by the assignee {{mention reference="XWi
             <entry>
               <string>revision_date</string>
               <date>2023-03-06 12:18:03.400 UTC</date>
-            </entry>
-            <entry>
-              <string>revision_comment</string>
-              <string></string>
             </entry>
             <entry>
               <string>title</string>
@@ -202,10 +186,6 @@ NEW edit of the page at 14:18!</string>
             <entry>
               <string>revision_date</string>
               <date>2023-03-06 12:19:19.536 UTC</date>
-            </entry>
-            <entry>
-              <string>revision_comment</string>
-              <string></string>
             </entry>
             <entry>
               <string>title</string>
@@ -257,10 +237,6 @@ This task was created at 14:19 {{mention reference="XWiki.camille_dupont@xwiki_c
               <date>2023-03-06 12:20:23.681 UTC</date>
             </entry>
             <entry>
-              <string>revision_comment</string>
-              <string></string>
-            </entry>
-            <entry>
               <string>title</string>
               <string>TestTaskPage</string>
             </entry>
@@ -308,10 +284,6 @@ This task was created at 14:19 {{mention reference="XWiki.camille_dupont@xwiki_c
             <entry>
               <string>revision_date</string>
               <date>2023-03-06 12:21:07.35 UTC</date>
-            </entry>
-            <entry>
-              <string>revision_comment</string>
-              <string></string>
             </entry>
             <entry>
               <string>title</string>
@@ -398,10 +370,6 @@ Last edit: 2:21</string>
                 <date>2023-03-13 14:03:40.68 UTC</date>
               </entry>
               <entry>
-                <string>revision_comment</string>
-                <string></string>
-              </entry>
-              <entry>
                 <string>title</string>
                 <string>Child Page</string>
               </entry>
@@ -453,10 +421,6 @@ And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAM
               <entry>
                 <string>revision_date</string>
                 <date>2023-03-13 14:32:20.19 UTC</date>
-              </entry>
-              <entry>
-                <string>revision_comment</string>
-                <string></string>
               </entry>
               <entry>
                 <string>title</string>
@@ -512,10 +476,6 @@ And this!!! {{mention reference="XWiki.camille_dupont@xwiki_com" style="FULL_NAM
                 <date>2023-03-13 14:32:38.180 UTC</date>
               </entry>
               <entry>
-                <string>revision_comment</string>
-                <string></string>
-              </entry>
-              <entry>
                 <string>title</string>
                 <string>Child Page</string>
               </entry>
@@ -569,10 +529,6 @@ Some more editing!!!</string>
               <entry>
                 <string>revision_date</string>
                 <date>2023-03-13 14:32:45.200 UTC</date>
-              </entry>
-              <entry>
-                <string>revision_comment</string>
-                <string></string>
               </entry>
               <entry>
                 <string>title</string>
@@ -651,10 +607,6 @@ Some more editing!!!</string>
                   <date>2023-03-13 14:33:14.547 UTC</date>
                 </entry>
                 <entry>
-                  <string>revision_comment</string>
-                  <string></string>
-                </entry>
-                <entry>
                   <string>title</string>
                   <string>This is one more page!</string>
                 </entry>
@@ -686,10 +638,6 @@ Some more editing!!!</string>
                 <entry>
                   <string>revision_date</string>
                   <date>2023-03-13 14:43:18.736 UTC</date>
-                </entry>
-                <entry>
-                  <string>revision_comment</string>
-                  <string></string>
                 </entry>
                 <entry>
                   <string>title</string>
