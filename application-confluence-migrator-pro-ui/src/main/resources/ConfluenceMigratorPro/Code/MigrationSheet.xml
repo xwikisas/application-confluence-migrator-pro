@@ -1663,6 +1663,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
 
   (function unsupportedMacroDetails() {
     const details = document.getElementById("cfm-unsupported-macros-details");
+    if (!details) { return; }
     async function handleToggle() {
       if (!details.open || details.dataset.loading) {
         // We load stuff only on open, not on close
@@ -1764,6 +1765,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
 
   (function referenceWarnings() {
     const details = document.getElementById("cfm-reference-warnings");
+    if (!details) { return; }
     async function handleToggle() {
       if (!details.open || details.dataset.loading) {
         return;
@@ -1856,22 +1858,23 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
     }
   })();
 
-  function addUnknownParameterWithValue(problematicParameters, macroName, paramName, paramValue) {
-    let byMacro = problematicParameters[macroName];
-    if (!byMacro) {
-      byMacro = problematicParameters[macroName] = {};
-    }
-
-    let byParam = byMacro[paramName];
-    if (!byParam) {
-      byParam = byMacro[paramName] = new Set();
-    }
-
-    byParam.add((paramValue === null || typeof paramName === undefined) ? 'null' : paramValue)
-  }
-
   (function unhandledParameters() {
+    function addUnknownParameterWithValue(problematicParameters, macroName, paramName, paramValue) {
+      let byMacro = problematicParameters[macroName];
+      if (!byMacro) {
+        byMacro = problematicParameters[macroName] = {};
+      }
+
+      let byParam = byMacro[paramName];
+      if (!byParam) {
+        byParam = byMacro[paramName] = new Set();
+      }
+
+      byParam.add((paramValue === null || typeof paramName === undefined) ? 'null' : paramValue)
+    }
+
     const details = document.getElementById("cfm-unhandled-parameters");
+    if (!details) { return; }
     async function handleToggle() {
       if (!this.open || details.dataset.loading) {
         return;
