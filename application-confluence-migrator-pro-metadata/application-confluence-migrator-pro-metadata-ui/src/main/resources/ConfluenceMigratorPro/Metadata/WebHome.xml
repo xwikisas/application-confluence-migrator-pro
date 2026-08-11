@@ -38,17 +38,19 @@
   <hidden>true</hidden>
   <content>{{velocity}}
 
-$services.localization.render("confluencepro.metadata.welcome")
+$services.rendering.escape($services.localization.render("confluencepro.metadata.welcome"), $xwiki.currentContentSyntaxId)
 
 #set ($metadataproref = "MetadataPro.WebHome")
 #if ($xwiki.exists($metadataproref))
 
-  $services.localization.render("confluencepro.metadata.intro")
+  $services.rendering.escape($services.localization.render("confluencepro.metadata.intro"), $xwiki.currentContentSyntaxId)
 
 #else
 
   {{info}}
-  $services.localization.render("confluencepro.metadata.pleaseinstallmetadatapro")
+  $services.rendering.escape($services.localization.render("confluencepro.metadata.pleaseinstallmetadatapro"), $xwiki.currentContentSyntaxId)
+
+  [[$services.rendering.escape($services.rendering.escape($services.localization.render("confluencepro.metadata.metadatapro"), $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;url:https://store.xwiki.com/xwiki/bin/view/Extension/MetadataPro/]]
   {{/info}}
 
 #end
@@ -85,7 +87,7 @@ $xwiki.ssfx.use('uicomponents/widgets/upload.css', true)
 
 {{/html}}
 
-== $services.localization.render("confluencepro.migrations.title")
+== $services.rendering.escape($services.localization.render("confluencepro.migrations.title"), $xwiki.currentContentSyntaxId)
 
 {{liveData 
   id='metadataForConfluenceMigrations'
@@ -353,7 +355,7 @@ $xwiki.ssfx.use('uicomponents/widgets/upload.css', true)
 #if ($isPackageStore &amp;&amp; $services.security.authorization.hasAccess('admin', $xcontext.user) &amp;&amp; $attachment.getFilename().contains(".json"))
 &lt;a class="action" href="$xwiki.getURL("ConfluenceMigratorPro.Metadata.Migrations.Migration$datetool.getSystemTime()", 'edit', "sheet=ConfluenceMigratorPro.Metadata.Code.MigrationSheet&amp;package=$services.model.serialize($attachment.getReference())")"&gt;
   &lt;span class="action-icon"&gt;$services.icon.renderHTML('play')&lt;/span&gt;&lt;span
-    class="action-label"&gt;$services.localization.render('confluencepro.migration.livetable._actions.select')
+    class="action-label"&gt;$services.rendering.escape($services.localization.render('confluencepro.migration.livetable._actions.select'), $xwiki.currentContentSyntaxId)
   &lt;/span&gt;
 &lt;/a&gt;
 #end

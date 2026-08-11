@@ -49,14 +49,7 @@
  *#
 #macro (displaySubtitle $icon $key $class $params)
 &lt;h2 class="cfmTitle $!class"&gt;
-  &lt;span&gt;
-    &lt;span class="cfmTitleIcon"&gt;
-      $services.icon.renderHTML($icon)
-    &lt;/span&gt;
-    &lt;span&gt;
-      $escapetool.xml($services.localization.render($key, $params))
-    &lt;/span&gt;
-  &lt;/span&gt;
+  $escapetool.xml($services.localization.render($key, $params))
 &lt;/h2&gt;
 #end
 #**
@@ -293,7 +286,7 @@
 #end
 #macro (displaySelectMigrations $fieldName $allowEmpty)
   &lt;select name="$fieldName" class="$fieldName migrationOptionsSelect" autocomplete="off"
-    aria-label="$services.localization.render("cmpMigrationOptionField", [$fieldName])"&gt;
+    aria-label="$escapetool.xml($services.localization.render("cmpMigrationOptionField", [$fieldName]))"&gt;
     #if ($allowEmpty)
       &lt;option value="" #if ($specifiedMigration == "") selected="selected"#end&gt;&lt;/option&gt;
     #end
@@ -359,7 +352,7 @@
   #set ($license = $services.licensing.licensor.getLicenseForEntity($mainReference))
   #if (!$services.licensing.licensor.hasLicensureForEntity($mainReference) || $license.type == 'TRIAL')
     #set ($discard = $xwiki.jsx.use('ConfluenceMigratorPro.Code.TrialScript'))
-    {{warning}}$services.localization.render('confluencepro.migration.missingLicense'){{/warning}}
+    {{warning}}$services.rendering.escape($services.localization.render('confluencepro.migration.missingLicense'), $xwiki.currentContentSyntaxId){{/warning}}
   #end
   #set ($confluenceJob = $services.confluenceMigration.getLastJob($migrationDoc.documentReference))
   #set ($package = $obj.getProperty('package').value)
@@ -500,18 +493,6 @@ require(['jquery', 'xwiki-l10n!confluencemigratorpro.javascript'], function ($, 
       parent.find("input[value='specified']").prop("checked", true);
     }else if (parent.find("input[value='specified']").is(":checked")) {
       parent.find("input[value='default']").prop("checked", true);
-    }
-  });
-
-  $('.collapse').on('show.bs.collapse', function () {
-    if ($(this).attr('id')) {
-      $('a[href$="#' + $(this).attr('id') + '"]').find('.cfmTitleIcon').addClass('active');
-    }
-  });
-
-  $('.collapse').on('hide.bs.collapse', function () {
-    if ($(this).attr('id')) {
-      $('a[href$="#' + $(this).attr('id') + '"]').find('.cfmTitleIcon').removeClass('active');
     }
   });
 
@@ -673,17 +654,6 @@ require(['jquery', 'xwiki-l10n!confluencemigratorpro.javascript'], function ($, 
   margin: 1.5em 0;
 }
 
-.cfmTitleIcon {
-  min-width: 1em;
-  display: inline-flex;
-  justify-content: center;
-  transition: all 0.5s;
-}
-
-details[open] &gt; summary .cfmTitleIcon {
-  transform: rotate(180deg);
-}
-
 .cfmTitle a {
   color: inherit;
 }
@@ -699,22 +669,6 @@ details[open] &gt; summary .cfmTitleIcon {
 
 .specified-migration.migrationOptionsSelect {
   width: fit-content;
-}
-
-summary.advanced-fields {
-  color: var(--link-color, #0088cc);
-  list-style: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-}
-
-summary.advanced-fields:hover {
-  color: var(--link-hover-color, #005580);
-}
-
-summary.advanced-fields .advanced-fields-label {
-  text-decoration: underline;
 }</code>
     </property>
     <property>

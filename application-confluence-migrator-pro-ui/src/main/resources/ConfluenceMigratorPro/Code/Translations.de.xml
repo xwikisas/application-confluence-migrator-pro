@@ -214,8 +214,6 @@
 
 ## Screen reader
 ### Missing: cfm.sr-only.newBatch.packages=Select confluence packages.
-### Missing: cfm.sr-only.migrationSheet.missingReferences=Click to expand a list of pages that have missing references.
-### Missing: cfm.sr-only.migrationSheet.expandMigratedSpaces=Click to expand a list with all the migrated spaces.
 
 ##Confluence Pro configs
 ### Missing: ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=Extension IDs

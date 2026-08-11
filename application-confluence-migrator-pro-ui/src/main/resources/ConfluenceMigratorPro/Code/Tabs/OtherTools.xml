@@ -36,8 +36,10 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{velocity}}
-== $services.localization.render("confluencepro.metadata.metadataforconfluence")
+== $services.rendering.escape($services.localization.render("confluencepro.metadata.metadataforconfluence"), $xwiki.currentContentSyntaxId)
 
-$services.localization.render("confluencepro.metadata.metadatamigratorpresentation")
+$services.rendering.escape($services.localization.render("confluencepro.metadata.metadatamigratorpresentation"), $xwiki.currentContentSyntaxId)
+
+[[$services.rendering.escape($services.rendering.escape($services.localization.render('confluencepro.metadata.migrationtool'), $xwiki.currentContentSyntaxId), $xwiki.currentContentSyntaxId)&gt;&gt;ConfluenceMigratorPro.Metadata.WebHome||class="btn btn-primary"]]
 {{/velocity}}</content>
 </xwikidoc>

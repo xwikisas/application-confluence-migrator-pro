@@ -19,7 +19,6 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
-
 <xwikidoc version="1.5" reference="ConfluenceMigratorPro.WebHome" locale="">
   <web>ConfluenceMigratorPro</web>
   <name>WebHome</name>
@@ -331,6 +330,10 @@
   margin:0 0 1rem 0;
 }
 
+.cfmTitleSummary, summary.cfmTitle {
+  display:list-item;
+}
+
 .cfmTitleSummary::after {
   font-style: italic;
   color: #bbb;
@@ -343,10 +346,6 @@
 
 .cfmTitleSummary.incomplete::after {
   content: "(${services.localization.render('confluencepro.prerequisites.incomplete')})"
-}
-
-details[open] &gt; summary .cfmTitleIcon {
-  transform: rotate(180deg);
 }
 
 #confluencePackages .attachmentActions a:nth-last-child(2)
@@ -365,13 +364,11 @@ details[open] &gt; summary .cfmTitleIcon {
   margin : 20px;
 }
 
-.howToMigrateSubsection
-{
+.howToMigrateSubsection {
   color: @text-color;
 }
 
-.cmpServerParametersForm label
-{
+.cmpServerParametersForm label, #confluence-pro-tab-root label {
   font-weight: normal;
 }
 
@@ -392,18 +389,7 @@ details[open] &gt; summary .cfmTitleIcon {
   display: none !important;
 }
 
-summary.cfmTitleSection {
-  cursor: pointer;
-  list-style: none;
-  font-weight: normal;
-}
-
-details[open] &gt; summary.cfmTitleSection {
-  font-weight: bold;
-  text-decoration: underline;
-}
-
-#xwikicontent:has(details[open]) .cfmTitleSection {
+.cfmTitleSection {
   font-weight: bold;
 }
 

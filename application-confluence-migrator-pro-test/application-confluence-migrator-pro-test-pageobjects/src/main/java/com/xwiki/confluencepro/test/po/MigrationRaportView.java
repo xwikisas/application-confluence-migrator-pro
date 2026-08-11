@@ -53,7 +53,7 @@ public class MigrationRaportView extends ViewPage
 
     public int getPagesCount()
     {
-        WebElement span = getDriver().findElement(By.xpath("//span[contains(text(),'imported pages')]"));
+        WebElement span = getDriver().findElement(By.xpath("//h2[contains(text(),'imported pages')]"));
 
         String text = span.getText();
         int index = text.indexOf(" imported pages");

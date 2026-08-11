@@ -214,8 +214,6 @@ cmpMigrationOptionField={0} options de migration
 
 ## Screen reader
 cfm.sr-only.newBatch.packages=Sélectionnez les paquets Confluence.
-cfm.sr-only.migrationSheet.missingReferences=Cliquez pour déplier la liste des pages avec des références manquantes.
-cfm.sr-only.migrationSheet.expandMigratedSpaces=Cliquez pour déplier une liste de tous les espaces migrés.
 
 ##Confluence Pro configs
 ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=IDs des extensions
