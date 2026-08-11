@@ -1380,8 +1380,8 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
     fold.type = unfold.type = "button";
     unfold.textContent = i18n.get("unfoldall");
     fold.textContent = i18n.get("foldall");
-    $(unfold).click(handleUnfoldAll);
-    $(fold).click(handleFoldAll);
+    unfold.addEventListener("click", handleUnfoldAll);
+    fold.addEventListener("click", handleFoldAll);
     p.append(unfold, " ", fold);
     return p;
   }
