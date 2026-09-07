@@ -190,35 +190,38 @@
 ### Missing: confluencepro.job.actionsToCheckboxes.question.hint=This will convert all Confluence action items into checkboxes.
 
 ##Confluence Pro UI translations
-### Missing: confluencemigratorpro.homepage.tab.newMigration.title=New migration
-### Missing: confluencemigratorpro.homepage.tab.allMigrations.title=All migrations
-### Missing: confluencemigratorpro.homepage.tab.importedMacros.title=Imported macros
-### Missing: confluencemigratorpro.homepage.tab.postMigrationFixes.title=Post migration fixes
-### Missing: confluencemigratorpro.homepage.tab.otherTools.title=Other migration tools
-### Missing: confluencepro.howToMigrate.upload.title=Upload a Confluence export (or use an already uploaded one)
-### Missing: confluencepro.howToMigrate.server.title=Select from your server a Confluence export
-### Missing: confluencepro.uploadFacadeButton=Upload export
-### Missing: confluencepro.lastMigration=Last migration
-### Missing: confluencepro.no=No
-### Missing: confluencepro.yes=Yes
+### Missing: confluencemigratorpro.homepage.tab.newMigration.title=
+### Missing: confluencemigratorpro.homepage.tab.allMigrations.title=
+### Missing: confluencemigratorpro.homepage.tab.importedMacros.title=
+### Missing: confluencemigratorpro.homepage.tab.postMigrationFixes.title=
+### Missing: confluencemigratorpro.homepage.tab.otherTools.title=
+### Missing: confluencepro.howToMigrate.upload.title=
+### Missing: confluencepro.howToMigrate.server.title=
+### Missing: confluencepro.uploadFacadeButton=
+### Missing: confluencepro.lastMigration=
+### Missing: confluencepro.no=
+### Missing: confluencepro.yes=
 
 ## Tabs javascript
-### Missing: confluencemigratorpro.javascript.notifications.failedToLoad=The section couldn't be loaded. Please refresh the page, and if the error still persists, contact the XWiki team.
+### Missing: confluencemigratorpro.javascript.notifications.failedToLoad=
 
 ## CommonCode javascript
-### Missing: confluencemigratorpro.javascript.unexpectedFormat=It looks like you are trying to import a file of an unexpected format. Confluence Migrator Pro currently only supports Confluence backup exports, which have a .zip extension.
-### Missing: confluencemigratorpro.javascript.interruptMigrationConfirm=Are you sure you want to interrupt this migration?
+### Missing: confluencemigratorpro.javascript.unexpectedFormat=
+### Missing: confluencemigratorpro.javascript.interruptMigrationConfirm=
 
 ## Accessibility
-### Missing: cmpMigrationOptionField={0} migration option
+### Missing: cmpMigrationOptionField=
 
 ## Screen reader
+### Missing: cfm.sr-only.newBatch.packages=
+### Missing: cfm.sr-only.migrationSheet.missingReferences=
+### Missing: cfm.sr-only.migrationSheet.expandMigratedSpaces=
 ### Missing: cfm.sr-only.newBatch.packages=Select confluence packages.
 
 ##Confluence Pro configs
-### Missing: ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=Extension IDs
-### Missing: ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs.hint=List of extension ids separated by a comma.
-### Missing: admin.cmp.section.title=Confluence Migrator Pro
-### Missing: cmp.extraDetails.title=Extra Details
+### Missing: ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=
+### Missing: ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs.hint=
+### Missing: admin.cmp.section.title=
+### Missing: cmp.extraDetails.title=
 </content>
 </xwikidoc>
