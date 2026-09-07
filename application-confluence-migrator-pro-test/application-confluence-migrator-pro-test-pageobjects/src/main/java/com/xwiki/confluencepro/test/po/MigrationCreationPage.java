@@ -34,7 +34,7 @@ import org.xwiki.test.ui.po.editor.EditPage;
 public class MigrationCreationPage extends EditPage
 {
     public void clickAdvancedMigrationOptions() {
-        getDriver().findElement(By.className("advanced-fields")).click();
+        getDriver().findElement(By.cssSelector(".advancedInputFieldsDetails summary")).click();
     }
     public void setTitle(String title) {
         WebElement webElement =  getDriver().findElement(By.id("xwikidoctitleinput"));

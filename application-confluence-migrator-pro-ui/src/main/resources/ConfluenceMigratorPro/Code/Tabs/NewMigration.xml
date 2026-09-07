@@ -45,16 +45,9 @@
 #template('attachment_macros.vm')
 {{/velocity}}
 {{velocity}}
-#macro (displaySubsection $icon $key $class $params)
+#macro (displaySubsection $key $class $params)
 &lt;summary class="cfmTitle $!class"&gt;
-  &lt;span&gt;
-    &lt;span class="cfmTitleIcon"&gt;
-      $services.icon.renderHTML($icon)
-    &lt;/span&gt;
-    &lt;span&gt;
-      $escapetool.xml($services.localization.render($key, $params))
-    &lt;/span&gt;
-  &lt;/span&gt;
+  $escapetool.xml($services.localization.render($key, $params))
 &lt;/summary&gt;
 #end
 #macro (addPrerequisiteToList $list $icon $translationKey $url $params)
@@ -76,7 +69,7 @@
 {{html}}
 &lt;div class="cfmTitle"&gt;
   &lt;details class="cfmPrerequisitesDetails"&gt;
-    #displaySubsection('caret-down', 'confluencepro.prerequisites.title', "cfmTitleSummary $prerequisitesComplete", {})
+    #displaySubsection('confluencepro.prerequisites.title', "cfmTitleSummary $prerequisitesComplete", {})
     &lt;div class="cfmPrerequisites"&gt;
       &lt;div class="box infomessage"&gt;
         &lt;p&gt;$escapetool.xml($services.localization.render('confluencepro.prerequisites.hint'))&lt;/p&gt;
@@ -101,8 +94,8 @@
 {{/html}}
 #end
 #macro (howToMigrateUploadSubsection)
-&lt;details class="howToMigrateSubsection uploadSubsection"&gt;
-  #displaySubsection('caret-down', 'confluencepro.howToMigrate.upload.title', 'cfmTitleSection', {})
+&lt;details name="migration-option" class="howToMigrateSubsection uploadSubsection"&gt;
+  #displaySubsection('confluencepro.howToMigrate.upload.title', 'cfmTitleSection', {})
   &lt;div id="cfmHowToMigrateUploadCollapse"&gt;
     &lt;div&gt;
       &lt;button id="facade-upload-button" class="btn btn-primary"&gt;$services.icon.renderHTML('add') $escapetool.xml($services.localization.render('confluencepro.uploadFacadeButton'))&lt;/button&gt;
@@ -137,8 +130,8 @@
 &lt;/details&gt;
 #end
 #macro (howToMigrateServerSection)
-&lt;details class="howToMigrateSubsection serverSubsection"&gt;
-  #displaySubsection('caret-down', 'confluencepro.howToMigrate.server.title', 'cfmTitleSection', {})
+&lt;details name="migration-option" class="howToMigrateSubsection serverSubsection"&gt;
+  #displaySubsection('confluencepro.howToMigrate.server.title', 'cfmTitleSection', {})
   &lt;div id="cfmHowToMigrateServerCollapse" class="cfmPrerequisites"&gt;
     #set ($escapedMessage = $escapetool.xml($services.localization.render('confluencepro.packages.serverPath')))
     #set ($editURL = $xwiki.getURL("ConfluenceMigratorPro.Migrations.Migration${datetool.date.time}", 'edit', $escapetool.url({
@@ -163,8 +156,8 @@
 &lt;/details&gt;
 #end
 #macro (howToMigrateBatches)
-&lt;details class="howToMigrateSubsection batchSubsection"&gt;
-  #displaySubsection('caret-down', 'confluencepro.howToMigrate.batch.title', 'cfmTitleSection', {})
+&lt;details name="migration-option" class="howToMigrateSubsection batchSubsection"&gt;
+  #displaySubsection('confluencepro.howToMigrate.batch.title', 'cfmTitleSection', {})
   &lt;div id="cfmHowToMigrateBatchesCollapse" class="cfmPrerequisites"&gt;
     &lt;div&gt;
       &lt;a href="$xwiki.getURL('ConfluenceMigratorPro.ConfluenceBatches.New')"&gt;

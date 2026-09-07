@@ -166,7 +166,7 @@ confluencepro.job.interrupt.button=Interrupt
 confluencepro.job.status.readingPackage=Importing the Confluence package. This may take a while…
 confluencepro.job.status.runningJob=Your pages are being imported. This may take a while…
 confluencepro.job.question.advanced.link=Advanced migration options
-confluencepro.job.question.advanced.input=Properties of the input filter stream (Confluence XML)
+confluencepro.job.question.advanced.input=Properties of the input filter stream (Confluence XML and CSV)
 confluencepro.job.question.advanced.output=Properties of the output filter stream (XWiki instance)
 confluencepro.job.question.advanced.source=The source package
 confluencepro.job.question.advanced.source.description=The path to the package that will be migrated e.g. file://home/user/Downloads/confluencePackage.zip. You can also give the path to a directory containing the unzipped package (an entities.xml file and an attachments folder).
@@ -214,8 +214,6 @@ cmpMigrationOptionField={0} migration option
 
 ## Screen reader
 cfm.sr-only.newBatch.packages=Select confluence packages.
-cfm.sr-only.migrationSheet.missingReferences=Click to expand a list of pages that have missing references.
-cfm.sr-only.migrationSheet.expandMigratedSpaces=Click to expand a list with all the migrated spaces.
 
 ##Confluence Pro configs
 ConfluenceMigratorPro.Code.ConfigurationClass_extensionIDs=Extension IDs

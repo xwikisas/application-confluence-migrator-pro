@@ -29,7 +29,7 @@
   </parent>
   <groupId>com.xwiki.confluencepro</groupId>
   <artifactId>application-confluence-migrator-pro</artifactId>
-  <version>1.42.4-SNAPSHOT</version>
+  <version>1.43.3-SNAPSHOT</version>
   <name>Confluence Migrator Pro - Parent POM</name>
   <packaging>pom</packaging>
   <issueManagement>
@@ -40,13 +40,13 @@
     <connection>scm:git:git://github.com/xwikisas/application-confluence-migrator-pro.git</connection>
     <developerConnection>scm:git:git@github.com:xwikisas/application-confluence-migrator-pro.git</developerConnection>
     <url>https://github.com/xwikisas/application-confluence-migrator-pro/tree/master</url>
-    <tag>application-confluence-migrator-pro-1.42.2</tag>
+    <tag>application-confluence-migrator-pro-1.43.0</tag>
   </scm>
   <properties>
     <licensing.version>1.32.3</licensing.version>
     <listeneradmin.version>1.0.2</listeneradmin.version>
     <xwiki.extension.category>application</xwiki.extension.category>
-    <confluence.version>9.95.1</confluence.version>
+    <confluence.version>9.96.2</confluence.version>
     <diagram.version>2.0</diagram.version>
     <macrojob.version>2.2.2</macrojob.version>
     <xwiki.enforcer.enforce-javase-dependencies.skip>true</xwiki.enforcer.enforce-javase-dependencies.skip>
