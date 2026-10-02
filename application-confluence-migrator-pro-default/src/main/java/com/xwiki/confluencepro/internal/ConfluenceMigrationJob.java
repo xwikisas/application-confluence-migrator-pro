@@ -207,6 +207,8 @@ public class ConfluenceMigrationJob
         if (!licensor.hasLicensure(mainRef) || licensor.getLicense(mainRef) == null
             || licensor.getLicense(mainRef).getType().equals(LicenseType.TRIAL)
         ) {
+            logger.warn("Missing valid paid license, limiting the number of imported pages to [{}]",
+                TRIAL_PAGE_COUNT);
             inputProperties.put(MAX_PAGE_COUNT, TRIAL_PAGE_COUNT);
         }
     }
