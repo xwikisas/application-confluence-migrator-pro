@@ -319,7 +319,7 @@
     {{/html}}
   #else
     {{html clean=false}}
-    &lt;div id="cfm-doc-tree" data-root-space="$escapetool.xml($services.model.serialize($rootSpace))"&gt;&lt;/div&gt;
+    &lt;div id="cfm-doc-tree" data-root="$escapetool.xml($services.model.serialize($rootSpace))" data-root-type="$escapetool.xml($rootSpace.type)"&gt;&lt;/div&gt;
     {{/html}}
   #end
 
@@ -1475,13 +1475,13 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
     return a?.name === b?.name &amp;&amp; entitiesEqual(a.parent, b.parent);
   }
 
-  function addSpaceToDocTree(rootSpace, context, docTree, spaceRef) {
+  function addSpaceToDocTree(root, context, docTree, spaceRef) {
     const initialParentSpace = context.parentSpace;
     const p = spaceRef.parent;
-    if (!p || entitiesEqual(p, rootSpace) ||  p.type === XWiki.EntityType.WIKI) {
+    if (!p || entitiesEqual(p, root) ||  p.type === XWiki.EntityType.WIKI) {
       context.parentSpace = docTree;
     } else {
-       addSpaceToDocTree(rootSpace, context, docTree, p);
+       addSpaceToDocTree(root, context, docTree, p);
        context.parentSpace = context.space;
     }
     const n = spaceRef.getName();
@@ -1493,12 +1493,12 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
     context.parentSpace = initialParentSpace;
   }
 
-  function addDocToDocTree(rootSpace, context, docTree,  docRef) {
+  function addDocToDocTree(root, context, docTree,  docRef) {
     const p = docRef.parent;
-    if (!p || entitiesEqual(p, rootSpace) ||  p.type === XWiki.EntityType.WIKI) {
+    if (!p || entitiesEqual(p, root) ||  p.type === XWiki.EntityType.WIKI) {
       context.space = docTree;
     } else {
-      addSpaceToDocTree(rootSpace, context, docTree, p);
+      addSpaceToDocTree(root, context, docTree, p);
     }
     context.space.set(docRef.getName(), docRef);
   }
@@ -1524,7 +1524,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
           li.className = "cfm-doc-tree-leaf";
           const a = document.createElement("a");
           li.append(a);
-          a.href = new XWiki.Document(webHome).getURL();
+          a.href = getDocumentURL(webHome);
           a.textContent = name;
           if (isRoot) {
             const renaming = displayRenaming(name, spaceTargets);
@@ -1540,7 +1540,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
           if (webHome) {
             const a = document.createElement("a");
             summary.append(a);
-            a.href = new XWiki.Document(webHome).getURL();
+            a.href = getDocumentURL(webHome);
             a.textContent = name;
           } else {
             summary.textContent = name;
@@ -1557,11 +1557,22 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
         li.className = "cfm-doc-tree-leaf";
         const a = document.createElement("a");
         li.append(a);
-        a.href = new XWiki.Document(child).getURL();
+        a.href = getDocumentURL(child);
         a.textContent = name;
       }
     }
     return ul;
+  }
+
+  function getDocumentURL(docRef) {
+    const doc = new XWiki.Document(docRef);
+    const url = doc.getURL();
+    // WORKAROUND: getURL() ignores subwikis.
+    const root = doc?.documentReference?.getRoot();
+    if (root?.type === XWiki.EntityType.WIKI &amp;&amp; root.name !== 'xwiki') {
+      return url.replace(/^\/xwiki\/bin\//, "/xwiki/wiki/" + root.name + "/");
+    }
+    return url;
   }
 
   (async function loadDocTree() {
@@ -1585,10 +1596,14 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
 
         response = await fetch(XWiki.currentDocument.getURL("download") + "/docs.json");
         if (response.ok) {
-          const rootSpace = XWiki.Model.resolve(divDocTree.dataset.rootSpace, XWiki.EntityType.SPACE);
+          // Unfortunately, docs.json contains reference produced with a local serializer
+          // that doesn't contain the root wiki, so we must restore it.
+          const root = XWiki.Model.resolve(divDocTree.dataset.root, XWiki.EntityType[divDocTree.dataset.rootType]);
+          const rootRoot = root.getRoot();
+          const prefix = (rootRoot?.type === XWiki.EntityType.WIKI) ? rootRoot.name + ":" : "";
           for (const docRefStr of await response.json()) {
-            const docRef = XWiki.Model.resolve(docRefStr, XWiki.EntityType.DOCUMENT);
-            addDocToDocTree(rootSpace, {}, docTree, docRef);
+            const docRef = XWiki.Model.resolve(prefix + docRefStr, XWiki.EntityType.DOCUMENT);
+            addDocToDocTree(root, {}, docTree, docRef);
           }
 
           loading.remove();
