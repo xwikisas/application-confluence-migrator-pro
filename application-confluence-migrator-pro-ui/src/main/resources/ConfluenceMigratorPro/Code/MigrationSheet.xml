@@ -2312,6 +2312,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
 
 details.cfm-details {
   summary {
+    display: list-item;
     h3 {
       display: inline;
     }
