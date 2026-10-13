@@ -1837,7 +1837,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
           if (missingPagesIds.size &gt; 0) {
             const sortedMissingPagesIds = Array.from(missingPagesIds);
             sortedMissingPagesIds.sort();
-            d.append(l10n.get("problems.confluencerefids.list") + " " + sortedMissingPagesIds.join(", "));
+            d.append(i18n.get("problems.confluencerefids.list") + " " + sortedMissingPagesIds.join(", "));
           }
           details.append(d);
           details.removeEventListener("toggle", handleToggle);
