@@ -1302,9 +1302,8 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
   function renderReferenceNicely(ref) {
     if (ref.includes(".")) {
       const r = XWiki.Model.resolve(ref, XWiki.EntityType.DOCUMENT);
-      const d = new XWiki.Document(r);
       const a = document.createElement("a");
-      a.href = d.getURL();
+      a.href = getDocumentURL(r);
       a.textContent = r.getReversedReferenceChain()
         .filter(({type}) =&gt; type == XWiki.EntityType.SPACE)
         .map(({name}) =&gt; name)
@@ -1323,12 +1322,12 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
     const method = logs.dataset.logMethod;
 
     const logsURL = method === "attachment"
-      ? XWiki.currentDocument.getURL("download") + "/logs.json"
-      : new XWiki.Document(new XWiki.DocumentReference(
+      ? getDocumentURL(XWiki.currentDocument.documentReference, "download") + "/logs.json"
+      : getDocumentURL(new XWiki.DocumentReference(
             XWiki.currentWiki,
             ["ConfluenceMigratorPro", "Code"],
             "Logs"
-        )).getURL("get") + "?action=alllogs&amp;name=" + encodeURIComponent(XWiki.currentDocument.page);
+        ), "get") + "?action=alllogs&amp;name=" + encodeURIComponent(XWiki.currentDocument.page);
 
     $.get(logsURL).then(function (jsonLogs) {
       const ul = document.createElement("ul");
@@ -1450,7 +1449,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
   }
 
   async function getAndDisplayJSON(name) {
-    const response = await fetch(XWiki.currentDocument.getURL("download") + "/" + name + ".json");
+    const response = await fetch(getDocumentURL(XWiki.currentDocument.documentReference, "download") + "/" + name + ".json");
     if (response.ok) {
       const json = filterCurrentRevision(await response.json());
       return displayJSON(json);
@@ -1564,9 +1563,9 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
     return ul;
   }
 
-  function getDocumentURL(docRef) {
+  function getDocumentURL(docRef, action = "view") {
     const doc = new XWiki.Document(docRef);
-    const url = doc.getURL();
+    const url = doc.getURL(action);
     // WORKAROUND: getURL() ignores subwikis.
     const root = doc?.documentReference?.getRoot();
     if (root?.type === XWiki.EntityType.WIKI &amp;&amp; root.name !== 'xwiki') {
@@ -1585,7 +1584,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
 
     try {
       divDocTree.append(loading);
-      let response = await fetch(XWiki.currentDocument.getURL("download") + "/spaceTargets.json");
+      let response = await fetch(getDocumentURL(XWiki.currentDocument.documentReference, "download") + "/spaceTargets.json");
       if (response.ok) {
         const spaceTargets = await response.json();
         const docTree = new Map();
@@ -1594,7 +1593,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
           invertedSpaceTargets[v] = k;
         }
 
-        response = await fetch(XWiki.currentDocument.getURL("download") + "/docs.json");
+        response = await fetch(getDocumentURL(XWiki.currentDocument.documentReference, "download") + "/docs.json");
         if (response.ok) {
           // Unfortunately, docs.json contains reference produced with a local serializer
           // that doesn't contain the root wiki, so we must restore it.
@@ -1681,7 +1680,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
       try {
         details.append(loading);
 
-        const response = await fetch(XWiki.currentDocument.getURL("download") + "/macroPages.json");
+        const response = await fetch(getDocumentURL(XWiki.currentDocument.documentReference, "download") + "/macroPages.json");
         if (response.ok) {
           const macroPages = await response.json();
           loading.remove();
@@ -1779,7 +1778,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
       try {
         details.append(loading);
 
-        const response = await fetch(XWiki.currentDocument.getURL("download") + "/confluenceRefWarnings.json");
+        const response = await fetch(getDocumentURL(XWiki.currentDocument.documentReference, "download") + "/confluenceRefWarnings.json");
         if (response.ok) {
           loading.remove();
           const json = filterCurrentRevision(await response.json());
@@ -1889,7 +1888,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
         details.append(loading);
 
         const problematicParameters = {};
-        let response = await fetch(XWiki.currentDocument.getURL("download") + "/unhandledParameters.json");
+        let response = await fetch(getDocumentURL(XWiki.currentDocument.documentReference, "download") + "/unhandledParameters.json");
         if (response.ok) {
           let json = filterCurrentRevision(await response.json());
           for (const v of Object.values(json)) {
@@ -1901,7 +1900,7 @@ require(["jquery", "xwiki-l10n!confluence-job", "xwiki-l10n!confluencepro-migrat
             }
           }
 
-          response = await fetch(XWiki.currentDocument.getURL("download") + "/unhandledParameterValues.json");
+          response = await fetch(getDocumentURL(XWiki.currentDocument.documentReference, "download") + "/unhandledParameterValues.json");
           if (response.ok) {
             json = filterCurrentRevision(await response.json());
             for (const v of Object.values(json)) {
