@@ -43,7 +43,7 @@ Hello tab content.
 {{/tab}}
 {{/tab-group}}
 
-{{tab-group disposition="vertical"}}
+{{tab-group tabLocation="LEFT"}}
 {{tab label="Hello tab title"}}
 Hello tab content.
 {{/tab}}
@@ -59,7 +59,7 @@ sit amet
 {{/tab}}
 {{/tab-group}}
 
-{{tab-group disposition="vertical"}}
+{{tab-group tabLocation="LEFT"}}
 {{tab label="Lorem"}}
 Lorem ipsum
 {{/tab}}

@@ -54,7 +54,7 @@ public class NavGroupMacroConverter extends AbstractMacroConverter
         //saveParameter(confluenceParameters, parameters, "color", true);
 
         return (confluenceId.startsWith(VERTICAL) || VERTICAL.equals(confluenceParameters.get(DISPOSITION)))
-            ? Map.of(DISPOSITION, VERTICAL)
+            ? Map.of("tabLocation", "LEFT")
             : Collections.emptyMap();
     }
 
