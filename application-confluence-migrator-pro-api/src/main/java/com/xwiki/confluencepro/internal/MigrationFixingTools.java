@@ -243,7 +243,7 @@ public class MigrationFixingTools
             progressManager.startStep(this);
             EntityReference migratedDocRef = resolver.resolve(migratedDocRefStr, EntityType.DOCUMENT);
             logger.info("Handling document [{}] ({}/{})", migratedDocRef, ++n, size);
-            XWikiDocument migratedDoc = getDocument(migratedDocRef);
+            XWikiDocument migratedDoc = getDocument(migratedDocRef).clone();
             if (migratedDoc == null) {
                 continue;
             }
