@@ -44,7 +44,6 @@
   </scm>
   <properties>
     <licensing.version>1.33.1</licensing.version>
-    <listeneradmin.version>1.0.2</listeneradmin.version>
     <xwiki.extension.category>application</xwiki.extension.category>
     <confluence.version>9.96.7</confluence.version>
     <diagram.version>2.1.0</diagram.version>
