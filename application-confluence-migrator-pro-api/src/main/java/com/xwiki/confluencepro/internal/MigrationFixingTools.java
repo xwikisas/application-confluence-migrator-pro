@@ -176,8 +176,12 @@ public class MigrationFixingTools
             return;
         }
         progressManager.pushLevelProgress(steps, this);
-        fixDocumentsOfMigrations(s, migrationReferences, migrationFixer);
-        fixDocumentsOfSpaces(spaceReferences, migratedDocFixer);
+        if (migrationReferences != null && !migrationReferences.isEmpty()) {
+            fixDocumentsOfMigrations(s, migrationReferences, migrationFixer);
+        }
+        if (spaceReferences != null && !spaceReferences.isEmpty()) {
+            fixDocumentsOfSpaces(spaceReferences, migratedDocFixer);
+        }
         progressManager.popLevelProgress(this);
     }
 
